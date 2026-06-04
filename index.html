@@ -8,7 +8,6 @@
         * {
             box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            -webkit-tap-highlight-color: transparent;
         }
         
         body {
@@ -22,6 +21,82 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 16px;
+        }
+        
+        /* Login Overlay */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-box {
+            background: white;
+            border-radius: 24px;
+            padding: 32px 24px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .login-box h2 {
+            margin: 0 0 8px 0;
+            color: #1e3c32;
+        }
+        
+        .login-box p {
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+        
+        .member-option {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            margin: 8px 0;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .member-option:hover {
+            background: #f8fafc;
+            border-color: #2a5a4a;
+        }
+        
+        .member-avatar {
+            width: 48px;
+            height: 48px;
+            background: #2a5a4a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            margin-right: 16px;
+        }
+        
+        .member-info h4 {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+        }
+        
+        .member-info p {
+            margin: 0;
+            font-size: 12px;
+            color: #64748b;
         }
         
         /* Header */
@@ -45,7 +120,29 @@
             font-size: 12px;
         }
         
-        /* Balance Cards - Unique Design */
+        /* Logged In User Badge */
+        .user-badge {
+            background: rgba(255,255,255,0.2);
+            border-radius: 40px;
+            padding: 6px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        
+        .logout-btn {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        
+        /* Balance Cards */
         .balance-wrapper {
             display: flex;
             gap: 12px;
@@ -83,7 +180,7 @@
             font-weight: 700;
         }
         
-        /* Search Bar */
+        /* Search */
         .search-container {
             background: white;
             border-radius: 16px;
@@ -183,6 +280,8 @@
             color: #1e3c32;
             font-size: 17px;
             font-weight: 600;
+            border-left: 3px solid #2a5a4a;
+            padding-left: 12px;
         }
         
         .form-grid {
@@ -246,10 +345,6 @@
         
         .btn-secondary {
             background: #64748b;
-        }
-        
-        .btn-warning {
-            background: #f59e0b;
         }
         
         .pending-badge {
@@ -400,28 +495,36 @@
             padding: 10px;
             border-bottom: 1px solid #e2e8f0;
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
-<div class="container">
+
+<div id="loginOverlay" class="login-overlay">
+    <div class="login-box">
+        <h2>🏛️ Legacy Builders Group</h2>
+        <p>Select your name to continue</p>
+        <div id="memberOptions"></div>
+    </div>
+</div>
+
+<div class="container" id="appContainer" style="display: none;">
     <div class="header">
         <h1>🏛️ Legacy Builders Group</h1>
         <p>Savings, Loans and Repayments Tracker | Onchari and Kithinji Families</p>
+        <div class="user-badge" id="userBadge">
+            <span>Logged in as: <strong id="loggedInUser"></strong></span>
+            <button class="logout-btn" onclick="logout()">Switch Member</button>
+        </div>
     </div>
     
-    <!-- Balance Cards - Unique Design -->
+    <!-- Balance Cards -->
     <div class="balance-wrapper">
         <div class="balance-card">
-            <h3>💰 Total Savings</h3>
+            <h3>Total Savings</h3>
             <div class="amount" id="totalSavingsTop">KES 0</div>
         </div>
         <div class="balance-card">
-            <h3>📊 Outstanding Loans</h3>
+            <h3>Outstanding Loans</h3>
             <div class="amount" id="outstandingTop">KES 0</div>
         </div>
     </div>
@@ -452,14 +555,14 @@
                     <input type="date" id="date">
                 </div>
                 <div>
-                    <label>Member</label>
+                    <label>Select Member</label>
                     <select id="memberSelect"></select>
                 </div>
                 <div>
-                    <label>Type</label>
+                    <label>Transaction Type</label>
                     <select id="type" onchange="toggleApprovalNotice()">
                         <option value="Savings">Savings (Deposit)</option>
-                        <option value="Loan Taken">Loan Taken (Requires 2 Approvals)</option>
+                        <option value="Loan Taken">Loan Request (Needs 2 Approvals)</option>
                         <option value="Loan Repayment">Loan Repayment</option>
                     </select>
                 </div>
@@ -477,7 +580,7 @@
                 </div>
             </div>
             <div id="approvalNotice" style="background: #fef3c7; padding: 10px; border-radius: 12px; margin-bottom: 15px; font-size: 12px; display: none;">
-                ⚠️ Loan requests need approval from 2 members before being recorded
+                ⚠️ Loan requests need approval from 2 other members before being recorded
             </div>
             <button id="addBtn">Submit Transaction</button>
         </div>
@@ -545,7 +648,7 @@
 </div>
 
 <!-- Tab Bar -->
-<div class="tab-bar">
+<div class="tab-bar" id="tabBar" style="display: none;">
     <button class="tab active" data-panel="transactions">
         <span class="tab-icon">📋</span>
         <span>Transactions</span>
@@ -568,14 +671,58 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbx1ApetXE5XFemRNdwi6D2Mmwvl5Y9dsAVw_qkO2MMzqTPNSyjF9TR1KUlOt30DUbBAvg/exec";
 
 let allRecords = [];
-let allMembers = [];
+let allMembers = ["Mr. Onchari", "Mrs. Onchari", "Mr. Kithinji", "Mrs. Kithinji"];
 let pendingLoans = [];
-let currentUser = localStorage.getItem('currentUser') || prompt("Enter your name (Mr. Onchari, Mrs. Onchari, Mr. Kithinji, Mrs. Kithinji)") || "Member";
-localStorage.setItem('currentUser', currentUser);
-
+let currentUser = null;
 let sortColumn = 'date';
 let sortDirection = 'desc';
 let isLoading = false;
+
+// Login System
+function initLogin() {
+    const container = document.getElementById('memberOptions');
+    container.innerHTML = allMembers.map(member => {
+        const initial = member.charAt(0);
+        return `
+            <div class="member-option" onclick="login('${member}')">
+                <div class="member-avatar">${initial}</div>
+                <div class="member-info">
+                    <h4>${member}</h4>
+                    <p>Select to continue</p>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function login(member) {
+    currentUser = member;
+    localStorage.setItem('legacy_current_user', member);
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('appContainer').style.display = 'block';
+    document.getElementById('tabBar').style.display = 'flex';
+    document.getElementById('loggedInUser').innerText = member;
+    
+    // Load data after login
+    loadAllData();
+    loadPendingLoans();
+}
+
+function logout() {
+    localStorage.removeItem('legacy_current_user');
+    currentUser = null;
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('appContainer').style.display = 'none';
+    document.getElementById('tabBar').style.display = 'none';
+}
+
+// Check for existing login
+const savedUser = localStorage.getItem('legacy_current_user');
+if (savedUser && allMembers.includes(savedUser)) {
+    login(savedUser);
+} else {
+    initLogin();
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
@@ -594,9 +741,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById(tab.dataset.panel + 'Panel').classList.add('active-panel');
         };
     });
-    
-    loadAllData();
-    loadPendingLoans();
 });
 
 function toggleApprovalNotice() {
@@ -624,11 +768,11 @@ async function callAPI(action, data = {}) {
 }
 
 async function loadAllData() {
-    if (isLoading) return;
+    if (isLoading || !currentUser) return;
     isLoading = true;
     try {
         await loadRecords();
-        await loadMembers();
+        await loadMembersFromSheet();
         await loadSummary();
     } catch(error) {
         showToast('Error loading data', 'error');
@@ -645,72 +789,84 @@ async function loadRecords() {
     }
 }
 
-async function loadMembers() {
+async function loadMembersFromSheet() {
     const result = await callAPI('getMembers');
-    if (result.success && result.members) {
+    if (result.success && result.members && result.members.length > 0) {
         allMembers = result.members;
-        const memberSelect = document.getElementById('memberSelect');
-        const filterSelect = document.getElementById('filterMember');
-        const options = allMembers.map(m => `<option value="${m}">${m}</option>`).join('');
-        memberSelect.innerHTML = options;
-        filterSelect.innerHTML = '<option value="">All Members</option>' + options;
-        
-        const memberList = document.getElementById('memberList');
-        memberList.innerHTML = allMembers.map(m => `<div class="member-item"><span>${m}</span></div>`).join('');
     }
+    
+    const memberSelect = document.getElementById('memberSelect');
+    const filterSelect = document.getElementById('filterMember');
+    const options = allMembers.map(m => `<option value="${m}">${m}</option>`).join('');
+    memberSelect.innerHTML = options;
+    filterSelect.innerHTML = '<option value="">All Members</option>' + options;
+    
+    const memberList = document.getElementById('memberList');
+    memberList.innerHTML = allMembers.map(m => `<div class="member-item"><span>${m}</span></div>`).join('');
 }
 
 function loadPendingLoans() {
-    const pending = JSON.parse(localStorage.getItem('pendingLoans') || '[]');
+    const pending = JSON.parse(localStorage.getItem('legacy_pending_loans') || '[]');
     pendingLoans = pending.filter(p => p.approvals.length < 2);
     renderPendingLoans();
 }
 
 function renderPendingLoans() {
     const container = document.getElementById('pendingLoans');
-    if (pendingLoans.length === 0) {
+    if (!container) return;
+    
+    const userPending = pendingLoans.filter(loan => loan.member !== currentUser);
+    
+    if (userPending.length === 0) {
         container.innerHTML = '<div class="empty-state">No pending loan approvals</div>';
         return;
     }
     
-    container.innerHTML = pendingLoans.map(loan => `
-        <div class="loan-item">
-            <div><strong>${loan.member}</strong> requested KES ${loan.amount.toLocaleString('en-KE')}</div>
-            <div style="font-size: 12px; color: #666; margin-top: 5px;">${loan.description}</div>
-            <div style="font-size: 11px; margin-top: 5px;">Approvals: ${loan.approvals.length}/2</div>
-            ${!loan.approvals.includes(currentUser) ? `
-                <div class="approval-buttons">
-                    <button class="approve-btn" onclick="approveLoan('${loan.id}')">✅ Approve</button>
-                    <button class="reject-btn" onclick="rejectLoan('${loan.id}')">❌ Reject</button>
-                </div>
-            ` : '<div style="font-size: 11px; color: #10b981; margin-top: 5px;">✓ You already approved this</div>'}
-        </div>
-    `).join('');
+    container.innerHTML = userPending.map(loan => {
+        const alreadyApproved = loan.approvals.includes(currentUser);
+        return `
+            <div class="loan-item">
+                <div><strong>${loan.member}</strong> requested KES ${loan.amount.toLocaleString('en-KE')}</div>
+                <div style="font-size: 12px; color: #666; margin-top: 5px;">${loan.description}</div>
+                <div style="font-size: 11px; margin-top: 5px;">Approvals: ${loan.approvals.length}/2</div>
+                ${!alreadyApproved ? `
+                    <div class="approval-buttons">
+                        <button class="approve-btn" onclick="approveLoan('${loan.id}')">Approve</button>
+                        <button class="reject-btn" onclick="rejectLoan('${loan.id}')">Reject</button>
+                    </div>
+                ` : '<div style="font-size: 11px; color: #10b981; margin-top: 5px;">✓ You already approved this loan</div>'}
+            </div>
+        `;
+    }).join('');
 }
 
 function approveLoan(loanId) {
     const loan = pendingLoans.find(l => l.id === loanId);
-    if (!loan || loan.approvals.includes(currentUser)) return;
+    if (!loan || loan.approvals.includes(currentUser) || loan.member === currentUser) return;
     
     loan.approvals.push(currentUser);
     
     if (loan.approvals.length >= 2) {
-        // Loan approved - add to actual records
         addApprovedLoan(loan);
-        pendingLoans = pendingLoans.filter(l => l.id !== loanId);
-        showToast('Loan approved and recorded!', 'success');
+        const allPending = JSON.parse(localStorage.getItem('legacy_pending_loans') || '[]');
+        const updatedPending = allPending.filter(l => l.id !== loanId);
+        localStorage.setItem('legacy_pending_loans', JSON.stringify(updatedPending));
+        showToast('Loan approved by 2 members! Recorded successfully.', 'success');
     } else {
+        const allPending = JSON.parse(localStorage.getItem('legacy_pending_loans') || '[]');
+        const updatedPending = allPending.map(l => l.id === loanId ? loan : l);
+        localStorage.setItem('legacy_pending_loans', JSON.stringify(updatedPending));
         showToast(`Approved! Needs ${2 - loan.approvals.length} more approval(s)`, 'success');
     }
     
-    localStorage.setItem('pendingLoans', JSON.stringify(pendingLoans));
-    renderPendingLoans();
+    loadPendingLoans();
 }
 
 function rejectLoan(loanId) {
-    pendingLoans = pendingLoans.filter(l => l.id !== loanId);
-    localStorage.setItem('pendingLoans', JSON.stringify(pendingLoans));
-    renderPendingLoans();
+    const allPending = JSON.parse(localStorage.getItem('legacy_pending_loans') || '[]');
+    const updatedPending = allPending.filter(l => l.id !== loanId);
+    localStorage.setItem('legacy_pending_loans', JSON.stringify(updatedPending));
+    loadPendingLoans();
     showToast('Loan request rejected', 'warning');
 }
 
@@ -730,6 +886,11 @@ async function addApprovedLoan(loan) {
 }
 
 async function addRecord() {
+    if (!currentUser) {
+        showToast('Please login first', 'error');
+        return;
+    }
+    
     const date = document.getElementById('date').value;
     const member = document.getElementById('memberSelect').value;
     const type = document.getElementById('type').value;
@@ -742,7 +903,6 @@ async function addRecord() {
     if (!amount || amount <= 0) { showToast('Enter valid amount', 'error'); return; }
     
     if (type === 'Loan Taken') {
-        // Check if enough savings available
         const savingsResult = await callAPI('getSummary');
         const currentSavings = savingsResult.success ? (savingsResult.savings || 0) : 0;
         
@@ -751,7 +911,6 @@ async function addRecord() {
             return;
         }
         
-        // Create pending loan request
         const loanRequest = {
             id: Date.now().toString(),
             date: date,
@@ -759,23 +918,22 @@ async function addRecord() {
             amount: amount,
             description: description,
             notes: notes,
-            approvals: [currentUser],
+            approvals: [],
+            requestedBy: currentUser,
             createdAt: new Date().toISOString()
         };
         
-        const pending = JSON.parse(localStorage.getItem('pendingLoans') || '[]');
+        const pending = JSON.parse(localStorage.getItem('legacy_pending_loans') || '[]');
         pending.push(loanRequest);
-        localStorage.setItem('pendingLoans', JSON.stringify(pending));
+        localStorage.setItem('legacy_pending_loans', JSON.stringify(pending));
         
-        showToast(`Loan request submitted! Needs 2 approvals (${currentUser} approved)`, 'success');
+        showToast(`Loan request submitted! Waiting for 2 member approvals`, 'success');
         loadPendingLoans();
         
-        // Clear form
         document.getElementById('amount').value = '';
         document.getElementById('desc').value = '';
         document.getElementById('notes').value = '';
     } else {
-        // Savings or Repayment - add directly
         const btn = document.getElementById('addBtn');
         btn.disabled = true;
         btn.textContent = 'Processing...';
@@ -813,7 +971,6 @@ async function loadSummary() {
         document.getElementById('totalRepaid').innerHTML = `KES ${repaid.toLocaleString('en-KE')}`;
         document.getElementById('netBalance').innerHTML = `KES ${netBalance.toLocaleString('en-KE')}`;
         
-        // Member summary
         const memberData = {};
         allRecords.forEach(r => {
             if (!memberData[r.member]) memberData[r.member] = { savings: 0, loans: 0, repaid: 0 };
