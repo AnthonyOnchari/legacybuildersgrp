@@ -30,46 +30,38 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            animation: fadeIn 0.5s ease;
         }
         
         .login-box {
             background: white;
             border-radius: 32px;
-            padding: 40px 28px;
-            max-width: 450px;
+            padding: 32px 24px;
+            max-width: 400px;
             width: 100%;
             text-align: center;
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-            animation: slideUp 0.5s ease;
         }
         
         .login-box h1 {
             color: #1e3c32;
-            font-size: 32px;
-            margin-bottom: 8px;
+            font-size: 28px;
+            margin-bottom: 6px;
         }
         
         .login-box .subtitle {
             color: #64748b;
-            font-size: 14px;
-            margin-bottom: 32px;
-        }
-        
-        .member-list {
-            max-height: 400px;
-            overflow-y: auto;
-            margin: 20px 0;
+            font-size: 13px;
+            margin-bottom: 24px;
         }
         
         .member-option {
             display: flex;
             align-items: center;
-            padding: 16px;
+            padding: 12px 14px;
             margin: 8px 0;
             background: #f8fafc;
-            border: 2px solid #e2e8f0;
-            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -77,176 +69,128 @@
         .member-option:hover {
             background: white;
             border-color: #2a5a4a;
-            transform: translateX(4px);
-        }
-        
-        .member-option:active {
-            transform: scale(0.98);
         }
         
         .member-avatar {
-            width: 56px;
-            height: 56px;
+            width: 44px;
+            height: 44px;
             background: linear-gradient(135deg, #2a5a4a, #1e3c32);
-            border-radius: 28px;
+            border-radius: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: bold;
-            font-size: 24px;
-            margin-right: 16px;
+            font-size: 18px;
+            margin-right: 14px;
         }
         
         .member-info h3 {
-            font-size: 18px;
+            font-size: 16px;
             color: #1e293b;
-            margin-bottom: 4px;
         }
         
         .member-info p {
-            font-size: 13px;
+            font-size: 11px;
             color: #64748b;
         }
         
         .add-member-link {
-            margin-top: 24px;
-            padding-top: 20px;
+            margin-top: 20px;
+            padding-top: 16px;
             border-top: 1px solid #e2e8f0;
             color: #2a5a4a;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             display: inline-block;
         }
         
         .add-member-form {
-            margin-top: 16px;
+            margin-top: 14px;
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
         
         .add-member-form input {
             flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #e2e8f0;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
             border-radius: 40px;
-            font-size: 14px;
+            font-size: 13px;
         }
         
         .add-member-form button {
-            padding: 12px 20px;
+            padding: 10px 18px;
             background: #2a5a4a;
             color: white;
             border: none;
             border-radius: 40px;
             font-weight: 600;
             cursor: pointer;
+            font-size: 13px;
         }
         
         /* ===== MAIN APP ===== */
         .app-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 16px 16px 80px;
+            padding: 12px 12px 70px;
             display: none;
         }
         
-        /* Header */
         .header {
             background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
             color: white;
-            padding: 24px 20px;
-            border-radius: 28px;
-            margin-bottom: 20px;
+            padding: 16px 16px;
+            border-radius: 24px;
+            margin-bottom: 16px;
             text-align: center;
         }
         
         .header h1 {
-            font-size: 28px;
-            margin-bottom: 6px;
+            font-size: 22px;
+            margin-bottom: 4px;
         }
         
         .header p {
-            font-size: 13px;
+            font-size: 11px;
             opacity: 0.9;
         }
         
         .user-badge {
             background: rgba(255,255,255,0.15);
             border-radius: 40px;
-            padding: 8px 16px;
+            padding: 5px 12px;
             display: inline-flex;
             align-items: center;
-            gap: 12px;
-            margin-top: 12px;
-            font-size: 13px;
+            gap: 10px;
+            margin-top: 8px;
+            font-size: 12px;
         }
         
         .logout-btn {
             background: rgba(255,255,255,0.25);
             border: none;
             color: white;
-            padding: 5px 12px;
+            padding: 4px 10px;
             border-radius: 30px;
             cursor: pointer;
-            font-size: 12px;
-            transition: 0.2s;
+            font-size: 11px;
         }
         
-        .logout-btn:hover {
-            background: rgba(255,255,255,0.4);
-        }
-        
-        /* Welcome Banner */
-        .welcome-banner {
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            border-radius: 20px;
-            padding: 16px 20px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-            animation: slideDown 0.4s ease;
-        }
-        
-        .welcome-text h3 {
-            color: #065f46;
-            font-size: 18px;
-            margin-bottom: 4px;
-        }
-        
-        .welcome-text p {
-            color: #047857;
-            font-size: 13px;
-        }
-        
-        .loading-spinner-small {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #a7f3d0;
-            border-top-color: #065f46;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-        
-        /* Balance Cards */
+        /* Balance Cards - SMALLER */
         .balance-wrapper {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 16px;
         }
         
         .balance-card {
-            border-radius: 24px;
-            padding: 20px;
+            border-radius: 18px;
+            padding: 12px;
             text-align: center;
-            transition: transform 0.2s;
-            animation: fadeInUp 0.4s ease;
         }
         
         .balance-card:first-child {
@@ -260,14 +204,14 @@
         }
         
         .balance-card h3 {
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 500;
             opacity: 0.9;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
         
         .balance-card .amount {
-            font-size: 28px;
+            font-size: 20px;
             font-weight: 700;
         }
         
@@ -277,28 +221,27 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
+            background: white;
             display: flex;
             justify-content: space-around;
-            padding: 10px 16px 22px;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
-            border-top-left-radius: 28px;
-            border-top-right-radius: 28px;
+            padding: 6px 12px 18px;
+            box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
             z-index: 100;
         }
         
         .tab {
             flex: 1;
             text-align: center;
-            padding: 10px 6px;
+            padding: 8px 4px;
             background: none;
             border: none;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 500;
             color: #94a3b8;
             cursor: pointer;
-            border-radius: 30px;
+            border-radius: 24px;
             transition: all 0.2s;
         }
         
@@ -308,43 +251,41 @@
         }
         
         .tab-icon {
-            font-size: 22px;
+            font-size: 20px;
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
         
         /* Panels */
         .panel {
             display: none;
-            animation: fadeIn 0.25s ease;
         }
         
         .panel.active-panel {
             display: block;
         }
         
-        /* Cards */
         .card {
             background: white;
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         
         .card h2 {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             color: #1e3c32;
-            border-left: 4px solid #2a5a4a;
-            padding-left: 14px;
-            margin-bottom: 18px;
+            border-left: 3px solid #2a5a4a;
+            padding-left: 10px;
+            margin-bottom: 14px;
         }
         
         .form-grid {
             display: grid;
-            gap: 14px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 16px;
         }
         
         @media (min-width: 640px) {
@@ -353,13 +294,12 @@
             }
         }
         
-        input, select, textarea {
+        input, select {
             width: 100%;
-            padding: 12px 14px;
-            border: 2px solid #e2e8f0;
-            border-radius: 16px;
-            font-size: 14px;
-            transition: 0.2s;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            font-size: 13px;
             background: white;
         }
         
@@ -369,10 +309,10 @@
         }
         
         label {
-            font-weight: 600;
-            margin-bottom: 6px;
+            font-weight: 500;
+            margin-bottom: 4px;
             display: block;
-            font-size: 12px;
+            font-size: 11px;
             color: #334155;
         }
         
@@ -380,27 +320,18 @@
             background: #2a5a4a;
             color: white;
             border: none;
-            padding: 14px 24px;
+            padding: 12px 20px;
             border-radius: 40px;
-            font-size: 15px;
-            font-weight: 600;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            transition: 0.2s;
             width: 100%;
-        }
-        
-        button:active {
-            transform: scale(0.97);
-        }
-        
-        .btn-secondary {
-            background: #64748b;
         }
         
         .approve-btn, .reject-btn {
             width: auto;
-            padding: 8px 16px;
-            font-size: 13px;
+            padding: 6px 14px;
+            font-size: 12px;
             margin: 4px;
         }
         
@@ -409,9 +340,9 @@
         
         .loan-item {
             background: #f8fafc;
-            border-radius: 16px;
-            padding: 14px;
-            margin-bottom: 12px;
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 10px;
             border-left: 3px solid #f59e0b;
         }
         
@@ -422,31 +353,30 @@
         
         .completed-loan-item {
             background: #e8f0ed;
-            border-radius: 16px;
-            padding: 12px;
-            margin-bottom: 10px;
-            opacity: 0.85;
+            border-radius: 14px;
+            padding: 10px;
+            margin-bottom: 8px;
         }
         
         .search-container {
             background: white;
-            border-radius: 20px;
-            padding: 14px;
-            margin-bottom: 16px;
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 14px;
         }
         
         .search-input {
             width: 100%;
-            padding: 12px 14px;
-            border: 2px solid #e2e8f0;
-            border-radius: 40px;
-            font-size: 14px;
-            margin-bottom: 12px;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 30px;
+            font-size: 13px;
+            margin-bottom: 10px;
         }
         
         .filter-row {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
         
         .filter-row select {
@@ -460,11 +390,11 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: 12px;
         }
         
         th, td {
-            padding: 12px 8px;
+            padding: 8px 6px;
             text-align: left;
             border-bottom: 1px solid #e2e8f0;
         }
@@ -473,14 +403,12 @@
             background: #f8fafc;
             font-weight: 600;
             cursor: pointer;
-            position: sticky;
-            top: 0;
         }
         
         .badge {
-            padding: 4px 10px;
-            border-radius: 30px;
-            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 10px;
             font-weight: 600;
             display: inline-block;
         }
@@ -491,110 +419,109 @@
         
         .empty-state {
             text-align: center;
-            padding: 40px;
+            padding: 30px;
             color: #64748b;
+            font-size: 13px;
         }
         
+        /* Toast Notification */
         .toast {
             position: fixed;
-            bottom: 90px;
+            bottom: 80px;
             left: 16px;
             right: 16px;
             background: #1e293b;
             color: white;
-            padding: 14px 20px;
-            border-radius: 60px;
+            padding: 10px 16px;
+            border-radius: 50px;
             text-align: center;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 13px;
             z-index: 2000;
             animation: slideUp 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         
         .toast.success { background: #2a5a4a; }
         .toast.error { background: #dc2626; }
-        .toast.info { background: #3b82f6; }
         
         .summary-stats {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
+            gap: 10px;
         }
         
         .stat {
             background: #f8fafc;
-            padding: 14px;
-            border-radius: 16px;
+            padding: 10px;
+            border-radius: 14px;
             text-align: center;
         }
         
         .stat h3 {
-            font-size: 11px;
+            font-size: 10px;
             color: #64748b;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
         
         .stat .number {
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 700;
             color: #1e3c32;
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        /* Popup Greeting */
+        .greeting-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 60px;
+            padding: 20px 32px;
+            text-align: center;
+            z-index: 2000;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: popIn 0.3s ease;
         }
         
-        @keyframes fadeInUp {
+        .greeting-popup h2 {
+            color: #1e3c32;
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+        
+        .greeting-popup p {
+            color: #64748b;
+            font-size: 13px;
+        }
+        
+        @keyframes popIn {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translate(-50%, -50%) scale(0.9);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+                transform: translate(-50%, -50%) scale(1);
             }
         }
         
         @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(100%);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .loading-spinner-small {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e2e8f0;
+            border-top-color: #2a5a4a;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
         }
         
         @keyframes spin {
             to { transform: rotate(360deg); }
-        }
-        
-        .loading-container {
-            text-align: center;
-            padding: 40px;
-        }
-        
-        .pulse {
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
         }
     </style>
 </head>
@@ -606,7 +533,7 @@
         <h1>🏛️ Legacy Builders Group</h1>
         <div class="subtitle">Savings & Loans Tracker</div>
         <div id="memberOptions">
-            <div class="loading-container">Loading members please wait...</div>
+            <div style="text-align:center;padding:20px;">Loading members...</div>
         </div>
         <div>
             <div class="add-member-link" onclick="showAddMemberForm()">+ New member? Join here</div>
@@ -622,30 +549,21 @@
 <div class="app-container" id="appContainer">
     <div class="header">
         <h1>🏛️ Legacy Builders Group</h1>
-        <p>Onchari and Kithinji Families Corp</p>
+        <p>Onchari and Kithinji Families</p>
         <div class="user-badge">
-            <span>👤 <strong id="loggedInUser"></strong></span>
-            <button class="logout-btn" onclick="logout()">Switch Member</button>
+            <span><strong id="loggedInUser"></strong></span>
+            <button class="logout-btn" onclick="logout()">Switch</button>
         </div>
-    </div>
-    
-    <!-- Welcome Banner (shows after login while loading) -->
-    <div id="welcomeBanner" class="welcome-banner" style="display: none;">
-        <div class="welcome-text">
-            <h3 id="welcomeMessage">Welcome back! 👋</h3>
-            <p id="welcomeSubMessage">Loading your financial data...</p>
-        </div>
-        <div class="loading-spinner-small"></div>
     </div>
     
     <!-- Balance Cards -->
     <div class="balance-wrapper">
         <div class="balance-card">
-            <h3>💰 Total Savings</h3>
+            <h3>Total Savings</h3>
             <div class="amount" id="totalSavingsTop">KES --</div>
         </div>
         <div class="balance-card">
-            <h3>📊 Outstanding Loans</h3>
+            <h3>Outstanding Loans</h3>
             <div class="amount" id="outstandingTop">KES --</div>
         </div>
     </div>
@@ -653,54 +571,54 @@
     <!-- Panel 1: Transactions -->
     <div id="transactionsPanel" class="panel">
         <div class="card">
-            <h2>➕ Add Transaction</h2>
+            <h2>Add Transaction</h2>
             <div class="form-grid">
                 <div>
-                    <label>📅 Date</label>
+                    <label>Date</label>
                     <input type="date" id="date">
                 </div>
                 <div>
-                    <label>👤 Select Member</label>
+                    <label>Select Member</label>
                     <select id="memberSelect"></select>
                 </div>
                 <div>
-                    <label>📋 Transaction Type</label>
+                    <label>Transaction Type</label>
                     <select id="type" onchange="toggleApprovalNotice()">
-                        <option value="Savings">💵 Savings (Deposit)</option>
-                        <option value="Loan Taken">🏦 Loan Request (Needs 2 Approvals)</option>
-                        <option value="Loan Repayment">💳 Loan Repayment</option>
+                        <option value="Savings">Savings (Deposit)</option>
+                        <option value="Loan Taken">Loan Request (Needs 2 Approvals)</option>
+                        <option value="Loan Repayment">Loan Repayment</option>
                     </select>
                 </div>
                 <div>
-                    <label>💲 Amount (KES)</label>
+                    <label>Amount (KES)</label>
                     <input type="number" id="amount" placeholder="0">
                 </div>
                 <div>
-                    <label>📝 Transaction Message</label>
+                    <label>Transaction Message</label>
                     <input type="text" id="message" placeholder="e.g., Monthly savings">
                 </div>
             </div>
-            <div id="approvalNotice" style="background:#fef3c7; padding:12px; border-radius:16px; margin-bottom:16px; font-size:12px; display:none;">
-                ⚡ Loan requests need approval from 2 other members before being recorded
+            <div id="approvalNotice" style="background:#fef3c7; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">
+                Loan requests need approval from 2 other members before being recorded
             </div>
             <button id="addBtn">Submit Transaction</button>
         </div>
         
         <div class="card">
-            <h2>📜 Transaction History</h2>
+            <h2>Transaction History</h2>
             <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
-                            <th onclick="sortTable('date')">Date ⬍</th>
-                            <th onclick="sortTable('member')">Member ⬍</th>
-                            <th onclick="sortTable('type')">Type ⬍</th>
-                            <th onclick="sortTable('amount')">Amount ⬍</th>
+                            <th onclick="sortTable('date')">Date</th>
+                            <th onclick="sortTable('member')">Member</th>
+                            <th onclick="sortTable('type')">Type</th>
+                            <th onclick="sortTable('amount')">Amount</th>
                             <th>Message</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        <tr><td colspan="5"><div class="empty-state">Loading transactions...</div></td></tr>
+                        <tr><td colspan="5"><div class="empty-state">Loading...</div></td></tr>
                     </tbody>
                 </table>
             </div>
@@ -710,9 +628,9 @@
     <!-- Panel 2: Summary -->
     <div id="summaryPanel" class="panel">
         <div class="card">
-            <h2>🔍 Search & Filter</h2>
+            <h2>Search & Filter</h2>
             <div class="search-container" style="padding:0;">
-                <input type="text" id="searchInput" class="search-input" placeholder="Search by member or message...">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search by member or message">
                 <div class="filter-row">
                     <select id="filterMember"><option value="">All Members</option></select>
                     <select id="filterType"><option value="">All Types</option><option value="Savings">Savings</option><option value="Loan Taken">Loans Taken</option><option value="Loan Repayment">Repayments</option></select>
@@ -721,7 +639,7 @@
         </div>
         
         <div class="card">
-            <h2>📊 Financial Summary</h2>
+            <h2>Financial Summary</h2>
             <div class="summary-stats">
                 <div class="stat"><h3>Total Savings</h3><div class="number" id="totalSavings">KES --</div></div>
                 <div class="stat"><h3>Loans Taken</h3><div class="number" id="totalLoans">KES --</div></div>
@@ -731,7 +649,7 @@
         </div>
         
         <div class="card">
-            <h2>👥 Member Summary</h2>
+            <h2>Member Summary</h2>
             <div id="memberSummary">Loading...</div>
         </div>
     </div>
@@ -739,20 +657,20 @@
     <!-- Panel 3: Export -->
     <div id="exportPanel" class="panel">
         <div class="card">
-            <h2>📎 Export Data</h2>
-            <button id="exportBtn" style="margin-bottom:12px;">📥 Download CSV (Excel)</button>
-            <button id="refreshBtn" class="btn-secondary">🔄 Refresh Data</button>
+            <h2>Export Data</h2>
+            <button id="exportBtn" style="margin-bottom:12px;">Download CSV</button>
+            <button id="refreshBtn" class="btn-secondary">Refresh Data</button>
         </div>
     </div>
     
     <!-- Panel 4: Loans -->
     <div id="loansPanel" class="panel">
         <div class="card">
-            <h2>⏳ Pending Loan Approvals</h2>
+            <h2>Pending Loan Approvals</h2>
             <div id="pendingLoans">Loading...</div>
         </div>
         <div class="card">
-            <h2>✅ Completed Loans (Approved)</h2>
+            <h2>Completed Loans</h2>
             <div id="completedLoans">Loading...</div>
         </div>
     </div>
@@ -800,17 +718,11 @@ async function callAPI(action, data = {}) {
 }
 
 // ============================================================
-// LOAD ALL DATA (PARALLEL FOR SPEED)
+// LOAD ALL DATA
 // ============================================================
-async function loadAllData(showLoading = true) {
+async function loadAllData() {
     if (isLoading || !currentUser) return;
     isLoading = true;
-    
-    if (showLoading) {
-        const welcomeBanner = document.getElementById('welcomeBanner');
-        welcomeBanner.style.display = 'flex';
-        document.getElementById('welcomeSubMessage').innerHTML = 'Loading your balances... <span class="loading-spinner-small"></span>';
-    }
     
     try {
         const [recordsRes, membersRes, summaryRes] = await Promise.all([
@@ -834,13 +746,6 @@ async function loadAllData(showLoading = true) {
         }
         
         await loadPendingLoans();
-        
-        // Hide welcome banner after loading
-        if (showLoading) {
-            setTimeout(() => {
-                document.getElementById('welcomeBanner').style.display = 'none';
-            }, 800);
-        }
         
     } catch(e) {
         console.error(e);
@@ -876,9 +781,9 @@ function updateBalanceDisplays(summary) {
     const summaryHtml = Object.entries(memberData).map(([name, data]) => `
         <div class="stat">
             <h3>${name}</h3>
-            <div style="font-size:12px;">Savings: KES ${data.savings.toLocaleString()}</div>
-            <div style="font-size:12px;">Loans: KES ${data.loans.toLocaleString()}</div>
-            <div style="font-size:12px;">Repaid: KES ${data.repaid.toLocaleString()}</div>
+            <div style="font-size:11px;">Savings: KES ${data.savings.toLocaleString()}</div>
+            <div style="font-size:11px;">Loans: KES ${data.loans.toLocaleString()}</div>
+            <div style="font-size:11px;">Repaid: KES ${data.repaid.toLocaleString()}</div>
         </div>
     `).join('');
     
@@ -906,16 +811,16 @@ function renderPendingLoans() {
         const isRequester = (loan.member === currentUser);
         const alreadyApproved = loan.approvals.includes(currentUser);
         const showButtons = !isRequester && !alreadyApproved;
-        const statusText = isRequester ? ' (Your request - waiting for approvals)' : (alreadyApproved ? ' (You approved)' : '');
+        const statusText = isRequester ? ' (Your request)' : (alreadyApproved ? ' (You approved)' : '');
         return `
             <div class="loan-item ${isRequester ? 'own-loan' : ''}">
                 <div><strong>${loan.member}</strong> requested <strong>KES ${loan.amount.toLocaleString('en-KE')}</strong>${statusText}</div>
-                <div style="font-size:13px; color:#666; margin-top:6px;">${loan.message || ''}</div>
-                <div style="font-size:12px; margin-top:6px;">✅ Approvals: ${loan.approvals.length}/2</div>
+                <div style="font-size:12px; color:#666; margin-top:5px;">${loan.message || ''}</div>
+                <div style="font-size:11px; margin-top:5px;">Approvals: ${loan.approvals.length}/2</div>
                 ${showButtons ? `
-                    <div style="margin-top:10px; display:flex; gap:8px;">
-                        <button class="approve-btn" onclick="approveLoan('${loan.id}')">✓ Approve</button>
-                        <button class="reject-btn" onclick="rejectLoan('${loan.id}')">✗ Reject</button>
+                    <div style="margin-top:8px; display:flex; gap:8px;">
+                        <button class="approve-btn" onclick="approveLoan('${loan.id}')">Approve</button>
+                        <button class="reject-btn" onclick="rejectLoan('${loan.id}')">Reject</button>
                     </div>
                 ` : ''}
             </div>
@@ -931,9 +836,9 @@ function renderCompletedLoans() {
     }
     container.innerHTML = completedLoans.map(loan => `
         <div class="completed-loan-item">
-            <div><strong>${loan.member}</strong> borrowed <strong>KES ${loan.amount.toLocaleString('en-KE')}</strong></div>
-            <div style="font-size:11px; color:#64748b; margin-top:4px;">Approved by: ${loan.approvals.join(', ')}</div>
-            <div style="font-size:12px;">${loan.message || ''}</div>
+            <div><strong>${loan.member}</strong> borrowed KES ${loan.amount.toLocaleString('en-KE')}</div>
+            <div style="font-size:10px; color:#64748b;">Approved by: ${loan.approvals.join(', ')}</div>
+            <div style="font-size:11px;">${loan.message || ''}</div>
         </div>
     `).join('');
 }
@@ -956,9 +861,9 @@ async function approveLoan(loanId) {
     btn.textContent = '...';
     const res = await callAPI('approveLoan', { loanId, approver: currentUser });
     if (res.success) {
-        showToast('✅ Loan approved! Amount deducted from savings.', 'success');
+        showToast('Loan approved! Amount deducted from savings.', 'success');
         await loadPendingLoans();
-        await loadAllData(false);
+        await loadAllData();
     } else {
         showToast('Error: ' + res.error, 'error');
         btn.disabled = false;
@@ -969,7 +874,7 @@ async function approveLoan(loanId) {
 async function rejectLoan(loanId) {
     const res = await callAPI('rejectLoan', { loanId });
     if (res.success) {
-        showToast('❌ Loan rejected', 'warning');
+        showToast('Loan rejected', 'success');
         await loadPendingLoans();
     } else {
         showToast('Error: ' + res.error, 'error');
@@ -995,20 +900,20 @@ async function addRecord() {
     
     const btn = document.getElementById('addBtn');
     btn.disabled = true;
-    btn.innerHTML = '⏳ Processing...';
+    btn.innerHTML = 'Processing...';
     
     if (type === 'Loan Taken') {
         const savingsRes = await callAPI('getSummary');
         const currentSavings = savingsRes.success ? (savingsRes.savings || 0) : 0;
         if (amount > currentSavings) {
-            showToast(`Cannot borrow KES ${amount.toLocaleString()}. Available savings: KES ${currentSavings.toLocaleString()}`, 'error');
+            showToast(`Cannot borrow KES ${amount.toLocaleString()}. Available: KES ${currentSavings.toLocaleString()}`, 'error');
             btn.disabled = false;
             btn.innerHTML = 'Submit Transaction';
             return;
         }
         const res = await callAPI('submitLoan', { date, member, amount, message, notes: '', requestedBy: currentUser });
         if (res.success) {
-            showToast(`✅ Loan request submitted! Needs 2 approvals.`, 'success');
+            showToast(`Loan request submitted! Needs 2 approvals.`, 'success');
             document.getElementById('amount').value = '';
             document.getElementById('message').value = '';
             await loadPendingLoans();
@@ -1018,11 +923,10 @@ async function addRecord() {
     } else {
         const res = await callAPI('add', { date, member, type, amount, message });
         if (res.success) {
-            const actionText = type === 'Savings' ? 'deposited' : 'repayment added';
-            showToast(`✅ ${type} of KES ${amount.toLocaleString()} ${actionText}`, 'success');
+            showToast(`${type} of KES ${amount.toLocaleString()} added`, 'success');
             document.getElementById('amount').value = '';
             document.getElementById('message').value = '';
-            await loadAllData(false);
+            await loadAllData();
         } else {
             showToast('Error: ' + (res.error || 'Failed'), 'error');
         }
@@ -1153,6 +1057,32 @@ async function refreshLoginScreen() {
     }).join('');
 }
 
+// Show popup greeting then load data in background
+function showGreeting(member) {
+    return new Promise((resolve) => {
+        const hour = new Date().getHours();
+        let greeting = "Welcome";
+        if (hour < 12) greeting = "Good morning";
+        else if (hour < 17) greeting = "Good afternoon";
+        else greeting = "Good evening";
+        
+        const popup = document.createElement('div');
+        popup.className = 'greeting-popup';
+        popup.innerHTML = `
+            <h2>${greeting}, ${member}! 👋</h2>
+            <p>Loading your financial data...</p>
+        `;
+        document.body.appendChild(popup);
+        
+        // Load data in background while popup shows
+        setTimeout(async () => {
+            await loadAllData();
+            popup.remove();
+            resolve();
+        }, 800);
+    });
+}
+
 async function login(member) {
     currentUser = member;
     localStorage.setItem('legacy_current_user', member);
@@ -1163,30 +1093,20 @@ async function login(member) {
     document.getElementById('tabBar').style.display = 'flex';
     document.getElementById('loggedInUser').innerText = member;
     
-    // Set welcome message based on time of day
-    const hour = new Date().getHours();
-    let greeting = "Welcome";
-    if (hour < 12) greeting = "Good morning";
-    else if (hour < 17) greeting = "Good afternoon";
-    else greeting = "Good evening";
-    
-    const welcomeBanner = document.getElementById('welcomeBanner');
-    welcomeBanner.style.display = 'flex';
-    document.getElementById('welcomeMessage').innerHTML = `${greeting}, ${member}! 👋`;
-    document.getElementById('welcomeSubMessage').innerHTML = 'Loading your financial data... <span class="loading-spinner-small"></span>';
-    
     // Set default date
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
     
-    // Load all data
-    await loadAllData(true);
+    // Show popup greeting and load data in background
+    await showGreeting(member);
+    
+    // Restore last active tab
     activateTab(currentTab);
     
     // Auto-refresh every 15 seconds
     if (window.refreshInterval) clearInterval(window.refreshInterval);
     window.refreshInterval = setInterval(() => {
         if (currentUser && (currentTab === 'summary' || currentTab === 'loans')) {
-            loadAllData(false);
+            loadAllData();
             loadPendingLoans();
         }
     }, 15000);
@@ -1213,7 +1133,7 @@ async function addNewMember() {
     if (!name) { showToast('Please enter your name', 'error'); return; }
     const res = await callAPI('addMember', { name });
     if (res.success) {
-        showToast(`✅ Welcome ${name}! You can now login.`, 'success');
+        showToast(`Welcome ${name}! You can now login.`, 'success');
         nameInput.value = '';
         document.getElementById('addMemberForm').style.display = 'none';
         await refreshLoginScreen();
@@ -1230,7 +1150,26 @@ if (savedUser) {
     (async () => {
         await loadMembersList();
         if (allMembers.includes(savedUser)) {
-            login(savedUser);
+            // Restore session without showing login screen
+            currentUser = savedUser;
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            document.getElementById('tabBar').style.display = 'flex';
+            document.getElementById('loggedInUser').innerText = savedUser;
+            document.getElementById('date').value = new Date().toISOString().split('T')[0];
+            
+            // Show popup and load data
+            await showGreeting(savedUser);
+            activateTab(currentTab);
+            
+            // Auto-refresh
+            if (window.refreshInterval) clearInterval(window.refreshInterval);
+            window.refreshInterval = setInterval(() => {
+                if (currentUser && (currentTab === 'summary' || currentTab === 'loans')) {
+                    loadAllData();
+                    loadPendingLoans();
+                }
+            }, 15000);
         } else {
             refreshLoginScreen();
         }
@@ -1241,7 +1180,7 @@ if (savedUser) {
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addBtn').onclick = addRecord;
-    document.getElementById('refreshBtn').onclick = () => { loadAllData(false); loadPendingLoans(); };
+    document.getElementById('refreshBtn').onclick = () => { loadAllData(); loadPendingLoans(); };
     document.getElementById('exportBtn').onclick = exportToCSV;
     document.getElementById('searchInput').oninput = () => applyFilters();
     document.getElementById('filterMember').onchange = () => applyFilters();
