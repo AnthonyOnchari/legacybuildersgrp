@@ -440,22 +440,22 @@
             transform: translate(-50%, -50%);
             background: white;
             border-radius: 60px;
-            padding: 20px 32px;
+            padding: 16px 28px;
             text-align: center;
             z-index: 2000;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            animation: popIn 0.3s ease;
+            animation: popIn 0.25s ease;
         }
         
         .greeting-popup h2 {
             color: #1e3c32;
-            font-size: 22px;
-            margin-bottom: 6px;
+            font-size: 20px;
+            margin-bottom: 4px;
         }
         
         .greeting-popup p {
             color: #64748b;
-            font-size: 12px;
+            font-size: 11px;
         }
         
         @keyframes popIn {
@@ -655,7 +655,7 @@
 // ============================================================
 // CONFIGURATION - REPLACE WITH YOUR APPS SCRIPT URL
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbw8Pue8S9cMCFtEulLbCr_C8UhW4QFurlHWbprScwpcB9inMcmxqZC175wJ7FH6rk3Wxw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyYuCF9QRndAOdIesTbJvBLdYK70UfrUAyJX1DeHYiN0sIsx_Tyiom3Nkk-LAUoL_wOqQ/exec";
 
 // ============================================================
 // GLOBAL STATE
@@ -669,6 +669,7 @@ let sortColumn = 'date';
 let sortDirection = 'desc';
 let isLoading = false;
 let currentTab = localStorage.getItem('legacy_active_tab') || 'transactions';
+let hasShownGreeting = false; // Track if greeting already shown for this session
 
 // ============================================================
 // API CALL
@@ -687,9 +688,13 @@ async function callAPI(action, data = {}) {
 // ============================================================
 // LOAD ALL DATA
 // ============================================================
-async function loadAllData() {
+async function loadAllData(showLoadingSpinner = false) {
     if (isLoading || !currentUser) return;
     isLoading = true;
+    
+    if (showLoadingSpinner) {
+        showToast('Refreshing data...', 'info');
+    }
     
     try {
         const [recordsRes, membersRes, summaryRes] = await Promise.all([
@@ -760,8 +765,8 @@ async function loadCompletedLoans() {
     const res = await callAPI('getPendingLoans');
     if (res.success) {
         const allLoans = res.loans || [];
-        pendingLoans = allLoans.filter(l => l.approvals.length < 2);
-        completedLoans = allLoans.filter(l => l.approvals.length >= 2);
+        pendingLoans = allLoans.filter(l => l.approvals.length < 2 && l.status !== 'completed' && l.status !== 'rejected');
+        completedLoans = allLoans.filter(l => l.approvals.length >= 2 || l.status === 'completed');
         renderPendingLoans();
         renderCompletedLoans();
     }
@@ -828,7 +833,7 @@ async function approveLoan(loanId) {
     const res = await callAPI('approveLoan', { loanId, approver: currentUser });
     if (res.success) {
         if (res.approvals === 1) {
-            showToast('Loan approved! Needs 1 more approval.', 'success');
+            showToast('Approved! Needs 1 more approval.', 'success');
         } else {
             showToast('Loan fully approved! Amount deducted from savings.', 'success');
         }
@@ -998,6 +1003,41 @@ function activateTab(tabId) {
 }
 
 // ============================================================
+// GREETING - ONLY ON FIRST LOGIN, NOT ON REFRESH
+// ============================================================
+function showGreeting(member) {
+    return new Promise((resolve) => {
+        // Only show greeting if not shown this session
+        if (hasShownGreeting) {
+            resolve();
+            return;
+        }
+        
+        const hour = new Date().getHours();
+        let greeting = "Welcome";
+        if (hour < 12) greeting = "Good morning";
+        else if (hour < 17) greeting = "Good afternoon";
+        else greeting = "Good evening";
+        
+        const popup = document.createElement('div');
+        popup.className = 'greeting-popup';
+        popup.innerHTML = `
+            <h2>${greeting}, ${member}! 👋</h2>
+            <p>Welcome to Legacy Builders Group</p>
+        `;
+        document.body.appendChild(popup);
+        
+        hasShownGreeting = true;
+        
+        // Shorter timeout - 500ms instead of 800ms
+        setTimeout(() => {
+            popup.remove();
+            resolve();
+        }, 500);
+    });
+}
+
+// ============================================================
 // LOGIN SYSTEM
 // ============================================================
 async function loadMembersList() {
@@ -1027,30 +1067,6 @@ async function refreshLoginScreen() {
     }).join('');
 }
 
-function showGreeting(member) {
-    return new Promise((resolve) => {
-        const hour = new Date().getHours();
-        let greeting = "Welcome";
-        if (hour < 12) greeting = "Good morning";
-        else if (hour < 17) greeting = "Good afternoon";
-        else greeting = "Good evening";
-        
-        const popup = document.createElement('div');
-        popup.className = 'greeting-popup';
-        popup.innerHTML = `
-            <h2>${greeting}, ${member}! 👋</h2>
-            <p>Loading your financial data...</p>
-        `;
-        document.body.appendChild(popup);
-        
-        setTimeout(async () => {
-            await loadAllData();
-            popup.remove();
-            resolve();
-        }, 800);
-    });
-}
-
 async function login(member) {
     currentUser = member;
     localStorage.setItem('legacy_current_user', member);
@@ -1061,7 +1077,13 @@ async function login(member) {
     document.getElementById('loggedInUser').innerText = member;
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
     
+    // Load data first (fast, no greeting yet)
+    await loadAllData();
+    await loadCompletedLoans();
+    
+    // Show greeting after data loads (only on first login)
     await showGreeting(member);
+    
     activateTab(currentTab);
     
     if (window.refreshInterval) clearInterval(window.refreshInterval);
@@ -1077,6 +1099,7 @@ function logout() {
     if (window.refreshInterval) clearInterval(window.refreshInterval);
     localStorage.removeItem('legacy_current_user');
     currentUser = null;
+    hasShownGreeting = false; // Reset greeting flag for next login
     document.getElementById('loginOverlay').style.display = 'flex';
     document.getElementById('appContainer').style.display = 'none';
     document.getElementById('tabBar').style.display = 'none';
@@ -1104,7 +1127,7 @@ async function addNewMember() {
 }
 
 // ============================================================
-// INITIALIZATION
+// INITIALIZATION - NO GREETING ON REFRESH
 // ============================================================
 const savedUser = localStorage.getItem('legacy_current_user');
 if (savedUser) {
@@ -1117,8 +1140,13 @@ if (savedUser) {
             document.getElementById('tabBar').style.display = 'flex';
             document.getElementById('loggedInUser').innerText = savedUser;
             document.getElementById('date').value = new Date().toISOString().split('T')[0];
-            await showGreeting(savedUser);
+            
+            // Load data directly WITHOUT greeting on page refresh
+            await loadAllData();
+            await loadCompletedLoans();
+            
             activateTab(currentTab);
+            
             if (window.refreshInterval) clearInterval(window.refreshInterval);
             window.refreshInterval = setInterval(() => {
                 if (currentUser && (currentTab === 'summary' || currentTab === 'loans')) {
@@ -1136,7 +1164,7 @@ if (savedUser) {
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addBtn').onclick = addRecord;
-    document.getElementById('refreshBtn').onclick = () => { loadAllData(); loadCompletedLoans(); };
+    document.getElementById('refreshBtn').onclick = () => { loadAllData(true); loadCompletedLoans(); };
     document.getElementById('exportBtn').onclick = exportToCSV;
     document.getElementById('searchInput').oninput = () => applyFilters();
     document.getElementById('filterMember').onchange = () => applyFilters();
