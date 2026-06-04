@@ -120,7 +120,6 @@
             font-size: 12px;
         }
         
-        /* Logged In User Badge */
         .user-badge {
             background: rgba(255,255,255,0.2);
             border-radius: 40px;
@@ -178,38 +177,6 @@
         .balance-card .amount {
             font-size: 22px;
             font-weight: 700;
-        }
-        
-        /* Search */
-        .search-container {
-            background: white;
-            border-radius: 16px;
-            padding: 12px;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-        }
-        
-        .search-input {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        
-        .filter-row {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .filter-row select {
-            flex: 1;
-            padding: 10px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 13px;
-            background: white;
         }
         
         /* Tab Bar */
@@ -357,16 +324,6 @@
             display: inline-block;
         }
         
-        .approved-badge {
-            background: #dcfce7;
-            color: #166534;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            display: inline-block;
-        }
-        
         .approval-buttons {
             display: flex;
             gap: 8px;
@@ -390,6 +347,37 @@
             border-radius: 12px;
             padding: 12px;
             margin-bottom: 10px;
+        }
+        
+        .search-container {
+            background: white;
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .filter-row {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .filter-row select {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 13px;
+            background: white;
         }
         
         .table-wrapper {
@@ -529,22 +517,6 @@
         </div>
     </div>
     
-    <!-- Search -->
-    <div class="search-container">
-        <input type="text" id="searchInput" class="search-input" placeholder="Search transactions...">
-        <div class="filter-row">
-            <select id="filterMember">
-                <option value="">All Members</option>
-            </select>
-            <select id="filterType">
-                <option value="">All Types</option>
-                <option value="Savings">Savings</option>
-                <option value="Loan Taken">Loans Taken</option>
-                <option value="Loan Repayment">Repayments</option>
-            </select>
-        </div>
-    </div>
-    
     <!-- Panel 1: Transactions -->
     <div id="transactionsPanel" class="panel active-panel">
         <div class="card">
@@ -580,14 +552,9 @@
                 </div>
             </div>
             <div id="approvalNotice" style="background: #fef3c7; padding: 10px; border-radius: 12px; margin-bottom: 15px; font-size: 12px; display: none;">
-                ⚠️ Loan requests need approval from 2 other members before being recorded
+                Loan requests need approval from 2 other members before being recorded
             </div>
             <button id="addBtn">Submit Transaction</button>
-        </div>
-        
-        <div class="card">
-            <h2>Pending Loan Approvals</h2>
-            <div id="pendingLoans"></div>
         </div>
         
         <div class="card">
@@ -611,8 +578,23 @@
         </div>
     </div>
     
-    <!-- Panel 2: Summary -->
+    <!-- Panel 2: Summary with Search -->
     <div id="summaryPanel" class="panel">
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search transactions...">
+            <div class="filter-row">
+                <select id="filterMember">
+                    <option value="">All Members</option>
+                </select>
+                <select id="filterType">
+                    <option value="">All Types</option>
+                    <option value="Savings">Savings</option>
+                    <option value="Loan Taken">Loans Taken</option>
+                    <option value="Loan Repayment">Repayments</option>
+                </select>
+            </div>
+        </div>
+        
         <div class="card">
             <h2>Financial Summary</h2>
             <div class="summary-stats">
@@ -638,11 +620,11 @@
         </div>
     </div>
     
-    <!-- Panel 4: Members -->
-    <div id="membersPanel" class="panel">
+    <!-- Panel 4: Loans (Pending Approvals) -->
+    <div id="loansPanel" class="panel">
         <div class="card">
-            <h2>Member List</h2>
-            <div id="memberList" class="member-list"></div>
+            <h2>Pending Loan Approvals</h2>
+            <div id="pendingLoans"></div>
         </div>
     </div>
 </div>
@@ -661,9 +643,9 @@
         <span class="tab-icon">📥</span>
         <span>Export</span>
     </button>
-    <button class="tab" data-panel="members">
-        <span class="tab-icon">👥</span>
-        <span>Members</span>
+    <button class="tab" data-panel="loans">
+        <span class="tab-icon">💰</span>
+        <span>Loans</span>
     </button>
 </div>
 
@@ -703,7 +685,12 @@ function login(member) {
     document.getElementById('tabBar').style.display = 'flex';
     document.getElementById('loggedInUser').innerText = member;
     
-    // Load data after login
+    // Set default selected member in dropdown to current user
+    const memberSelect = document.getElementById('memberSelect');
+    if (memberSelect) {
+        memberSelect.value = member;
+    }
+    
     loadAllData();
     loadPendingLoans();
 }
@@ -801,8 +788,10 @@ async function loadMembersFromSheet() {
     memberSelect.innerHTML = options;
     filterSelect.innerHTML = '<option value="">All Members</option>' + options;
     
-    const memberList = document.getElementById('memberList');
-    memberList.innerHTML = allMembers.map(m => `<div class="member-item"><span>${m}</span></div>`).join('');
+    // Set current user as selected
+    if (currentUser && memberSelect) {
+        memberSelect.value = currentUser;
+    }
 }
 
 function loadPendingLoans() {
@@ -834,7 +823,7 @@ function renderPendingLoans() {
                         <button class="approve-btn" onclick="approveLoan('${loan.id}')">Approve</button>
                         <button class="reject-btn" onclick="rejectLoan('${loan.id}')">Reject</button>
                     </div>
-                ` : '<div style="font-size: 11px; color: #10b981; margin-top: 5px;">✓ You already approved this loan</div>'}
+                ` : '<div style="font-size: 11px; color: #10b981; margin-top: 5px;">You already approved this loan</div>'}
             </div>
         `;
     }).join('');
