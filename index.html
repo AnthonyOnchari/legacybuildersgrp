@@ -507,6 +507,21 @@
             font-weight: 700;
             color: #1e3c32;
         }
+        
+        .progress-bar {
+            background: #e2e8f0;
+            border-radius: 10px;
+            height: 6px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: #10b981;
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
     </style>
 </head>
 <body>
@@ -565,7 +580,7 @@
                     <label>Transaction Type</label>
                     <select id="type" onchange="toggleApprovalNotice()">
                         <option value="Savings">Savings (Deposit)</option>
-                        <option value="Loan Taken">Loan Request (Needs 2 Approvals)</option>
+                        <option value="Loan Taken">Loan Request (Needs ALL Members to Approve)</option>
                         <option value="Loan Repayment">Loan Repayment</option>
                     </select>
                 </div>
@@ -580,7 +595,7 @@
                 </div>
             </div>
             <div id="approvalNotice" style="background:#fef3c7; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">
-                Loan requests need approval from 2 other members. 10% interest will be added to the loan.
+                Loan requests need approval from ALL other members. 10% interest will be added to the loan.
             </div>
             <button id="addBtn">Submit Transaction</button>
         </div>
@@ -688,12 +703,9 @@ async function callAPI(action, data = {}) {
     try {
         const params = new URLSearchParams({action, ...data});
         const url = `${API_URL}?${params.toString()}`;
-        console.log("Calling API:", url);
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const result = await response.json();
-        console.log("API Response:", result);
-        return result;
+        return await response.json();
     } catch(e) {
         console.error("API Error:", e);
         return { success: false, error: e.message };
@@ -721,21 +733,15 @@ async function loadAllData(showLoadingSpinner = false) {
         if (recordsRes.success) {
             allRecords = recordsRes.records || [];
             applyFilters();
-        } else {
-            console.error("Records error:", recordsRes.error);
         }
         
         if (membersRes.success && membersRes.members?.length) {
             allMembers = membersRes.members;
             updateMemberDropdowns();
-        } else {
-            console.error("Members error:", membersRes.error);
         }
         
         if (summaryRes.success) {
             updateBalanceDisplays(summaryRes);
-        } else {
-            console.error("Summary error:", summaryRes.error);
         }
         
         await loadCompletedLoans();
@@ -786,12 +792,11 @@ async function loadCompletedLoans() {
     const res = await callAPI('getPendingLoans');
     if (res.success) {
         const allLoans = res.loans || [];
-        pendingLoans = allLoans.filter(l => l.approvals.length < 2 && l.status !== 'completed' && l.status !== 'rejected');
-        completedLoans = allLoans.filter(l => l.approvals.length >= 2 || l.status === 'completed');
+        const totalMembers = allMembers.length;
+        pendingLoans = allLoans.filter(l => l.approvals.length < (totalMembers - 1) && l.status !== 'completed' && l.status !== 'rejected');
+        completedLoans = allLoans.filter(l => l.approvals.length >= (totalMembers - 1) || l.status === 'completed');
         renderPendingLoans();
         renderCompletedLoans();
-    } else {
-        console.error("Pending loans error:", res.error);
     }
 }
 
@@ -805,12 +810,18 @@ function renderPendingLoans() {
         const isRequester = (loan.member === currentUser);
         const alreadyApproved = loan.approvals.includes(currentUser);
         const showButtons = !isRequester && !alreadyApproved;
-        const statusText = isRequester ? ' (Your request)' : (alreadyApproved ? ' (You approved)' : '');
+        const statusText = isRequester ? ' (Your request - you cannot approve your own loan)' : (alreadyApproved ? ' (You approved)' : '');
+        const totalNeeded = allMembers.length - 1;
+        const progressPercent = (loan.approvals.length / totalNeeded) * 100;
+        
         return `
             <div class="loan-item ${isRequester ? 'own-loan' : ''}">
                 <div><strong>${loan.member}</strong> requested <strong>KES ${loan.principal?.toLocaleString('en-KE') || 0}</strong> + 10% interest = <strong>KES ${loan.totalDue?.toLocaleString('en-KE') || 0}</strong>${statusText}</div>
                 <div style="font-size:12px; color:#666; margin-top:5px;">${loan.message || ''}</div>
-                <div style="font-size:11px; margin-top:5px;">Approvals: ${loan.approvals.length}/2</div>
+                <div style="font-size:11px; margin-top:5px;">Approvals: ${loan.approvals.length}/${totalNeeded} members</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${progressPercent}%;"></div>
+                </div>
                 ${showButtons ? `
                     <div style="margin-top:8px; display:flex; gap:8px;">
                         <button class="approve-btn" onclick="approveLoan('${loan.id}')">Approve</button>
@@ -859,10 +870,11 @@ async function approveLoan(loanId) {
     btn.textContent = '...';
     const res = await callAPI('approveLoan', { loanId, approver: currentUser });
     if (res.success) {
-        if (res.approvals === 1) {
-            showToast('Approved! Needs 1 more approval.', 'success');
+        const remainingNeeded = (allMembers.length - 1) - (res.approvals || 0);
+        if (remainingNeeded > 0) {
+            showToast(`Approved! Need ${remainingNeeded} more member approval(s).`, 'success');
         } else {
-            showToast(`Loan fully approved! Amount deducted from savings.`, 'success');
+            showToast(`Loan fully approved by all members! Amount deducted from savings.`, 'success');
         }
         await loadCompletedLoans();
         await loadAllData();
@@ -915,7 +927,8 @@ async function addRecord() {
         }
         const res = await callAPI('submitLoan', { date, member, amount, message, notes: '', requestedBy: currentUser });
         if (res.success) {
-            showToast(`Loan request submitted! Principal: KES ${res.principal?.toLocaleString()}, +10% interest = KES ${res.totalDue?.toLocaleString()} total due. Needs 2 approvals.`, 'success');
+            const totalMembers = allMembers.length;
+            showToast(`Loan request submitted! Principal: KES ${res.principal?.toLocaleString()}, +10% interest = KES ${res.totalDue?.toLocaleString()} total due. Needs approval from all ${totalMembers - 1} other members.`, 'success');
             document.getElementById('amount').value = '';
             document.getElementById('message').value = '';
             await loadCompletedLoans();
