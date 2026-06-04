@@ -54,6 +54,77 @@
             margin-bottom: 24px;
         }
         
+        /* Member List Container */
+        .member-list-container {
+            min-height: 200px;
+            margin-bottom: 16px;
+        }
+        
+        /* Skeleton Loader for Members */
+        .skeleton-member {
+            display: flex;
+            align-items: center;
+            padding: 12px 14px;
+            margin: 8px 0;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+        }
+        
+        .skeleton-member-avatar {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 22px;
+            margin-right: 14px;
+        }
+        
+        .skeleton-member-info {
+            flex: 1;
+            text-align: left;
+        }
+        
+        .skeleton-member-name {
+            width: 120px;
+            height: 16px;
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .skeleton-member-role {
+            width: 80px;
+            height: 12px;
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 6px;
+        }
+        
+        /* Loading Spinner */
+        .loading-spinner-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #2a5a4a;
+            border-right-color: #2a5a4a;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+        
         .member-select {
             width: 100%;
             padding: 14px;
@@ -85,6 +156,7 @@
             font-weight: 600;
             cursor: pointer;
             width: 100%;
+            transition: transform 0.1s;
         }
         
         .login-btn:active {
@@ -98,7 +170,63 @@
             display: none;
         }
         
-        /* Main App */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Member Option Styling */
+        .member-option {
+            display: flex;
+            align-items: center;
+            padding: 12px 14px;
+            margin: 8px 0;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .member-option:hover {
+            background: white;
+            border-color: #2a5a4a;
+            transform: translateX(4px);
+        }
+        
+        .member-avatar {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #2a5a4a, #1e3c32);
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 14px;
+        }
+        
+        .member-info {
+            text-align: left;
+        }
+        
+        .member-info h3 {
+            font-size: 16px;
+            color: #1e293b;
+        }
+        
+        .member-info p {
+            font-size: 11px;
+            color: #64748b;
+        }
+        
+        /* Main App Styles (rest of your existing styles) */
         .app-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -106,7 +234,6 @@
             display: none;
         }
         
-        /* Header with profile on top right */
         .header {
             background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
             color: white;
@@ -191,73 +318,6 @@
         .balance-card .amount {
             font-size: 20px;
             font-weight: 700;
-        }
-        
-        /* Loading Animation */
-        .loading-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-        }
-        
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #e2e8f0;
-            border-top-color: #2a5a4a;
-            border-right-color: #2a5a4a;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 12px;
-        }
-        
-        .loading-text {
-            color: #64748b;
-            font-size: 13px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Skeleton Loaders */
-        .skeleton-transaction {
-            display: flex;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .skeleton-line {
-            height: 14px;
-            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 8px;
-        }
-        
-        .skeleton-date { width: 80px; margin-right: 15px; }
-        .skeleton-member { width: 100px; margin-right: 15px; }
-        .skeleton-type { width: 70px; margin-right: 15px; }
-        .skeleton-amount { width: 80px; margin-right: 15px; }
-        .skeleton-message { width: 120px; }
-        
-        .skeleton-loan {
-            background: #f8fafc;
-            border-radius: 14px;
-            padding: 12px;
-            margin-bottom: 10px;
-        }
-        
-        .skeleton-loan-title { width: 60%; height: 16px; margin-bottom: 8px; }
-        .skeleton-loan-text { width: 80%; height: 12px; margin-bottom: 6px; }
-        .skeleton-loan-small { width: 40%; height: 10px; }
-        
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
         }
         
         .tab-bar {
@@ -531,6 +591,11 @@
             transition: width 0.3s ease;
         }
         
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
         @media (max-width: 480px) {
             .user-badge {
                 position: static;
@@ -549,11 +614,42 @@
     <div class="login-box">
         <h1>🏛️ Legacy Builders Group</h1>
         <div class="subtitle">Enter your PIN to access</div>
-        <select id="memberSelectLogin" class="member-select">
-            <option value="">Select Member</option>
-        </select>
-        <input type="password" id="pinInput" class="pin-input" placeholder="Enter PIN" maxlength="4" inputmode="numeric">
-        <button class="login-btn" onclick="verifyLogin()">Login</button>
+        
+        <!-- Member List with Loading Animation -->
+        <div id="memberListContainer" class="member-list-container">
+            <!-- Skeleton Loaders - shown while loading -->
+            <div class="skeleton-member">
+                <div class="skeleton-member-avatar"></div>
+                <div class="skeleton-member-info">
+                    <div class="skeleton-member-name"></div>
+                    <div class="skeleton-member-role"></div>
+                </div>
+            </div>
+            <div class="skeleton-member">
+                <div class="skeleton-member-avatar"></div>
+                <div class="skeleton-member-info">
+                    <div class="skeleton-member-name"></div>
+                    <div class="skeleton-member-role"></div>
+                </div>
+            </div>
+            <div class="skeleton-member">
+                <div class="skeleton-member-avatar"></div>
+                <div class="skeleton-member-info">
+                    <div class="skeleton-member-name"></div>
+                    <div class="skeleton-member-role"></div>
+                </div>
+            </div>
+            <div class="skeleton-member">
+                <div class="skeleton-member-avatar"></div>
+                <div class="skeleton-member-info">
+                    <div class="skeleton-member-name"></div>
+                    <div class="skeleton-member-role"></div>
+                </div>
+            </div>
+        </div>
+        
+        <input type="password" id="pinInput" class="pin-input" placeholder="Enter PIN" maxlength="4" inputmode="numeric" disabled>
+        <button class="login-btn" onclick="verifyLogin()" disabled>Login</button>
         <div id="loginError" class="error-message">Invalid PIN. Please try again.</div>
     </div>
 </div>
@@ -722,7 +818,6 @@ async function loadAllData() {
     if (isLoading || !currentUser) return;
     isLoading = true;
     
-    // Show skeletons based on current tab
     if (currentTab === 'transactions') showTransactionLoading(true);
     if (currentTab === 'summary') showSummaryLoading(true);
     if (currentTab === 'loans') showPendingLoading(true);
@@ -744,7 +839,6 @@ async function loadAllData() {
             renderCompletedLoans();
         }
         
-        // Hide skeletons after loading
         showTransactionLoading(false);
         showSummaryLoading(false);
         showPendingLoading(false);
@@ -865,7 +959,13 @@ function applyFilters() {
 function renderTable(records) {
     const tbody = document.getElementById('tableBody');
     if (!records.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No transactions found</td></tr>'; return; }
-    tbody.innerHTML = records.map(r => { let cls = r.type === 'Savings' ? 'badge-savings' : (r.type === 'Loan Taken' ? 'badge-loan' : 'badge-repayment'); let sign = r.type === 'Loan Repayment' ? '+' : (r.type === 'Savings' ? '+' : '-'); return `<tr><td>${new Date(r.date).toLocaleDateString('en-KE')}</td><td><strong>${r.member}</strong></td><td><span class="badge ${cls}">${r.type}</span></td><td>${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td><td>${r.message || '-'}</td></tr>`; }).join('');
+    tbody.innerHTML = records.map(r => { let cls = r.type === 'Savings' ? 'badge-savings' : (r.type === 'Loan Taken' ? 'badge-loan' : 'badge-repayment'); let sign = r.type === 'Loan Repayment' ? '+' : (r.type === 'Savings' ? '+' : '-'); return `<tr>
+        <td>${new Date(r.date).toLocaleDateString('en-KE')}</td>
+        <td><strong>${r.member}</strong></td>
+        <td><span class="badge ${cls}">${r.type}</span></td>
+        <td>${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td>
+        <td>${r.message || '-'}</td>
+    </tr>`; }).join('');
 }
 
 function sortTable(column) { if (sortColumn === column) sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'; else { sortColumn = column; sortDirection = 'desc'; } applyFilters(); }
@@ -874,19 +974,65 @@ function showToast(message, type) { const toast = document.createElement('div');
 function activateTab(tabId) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel')); const tabBtn = document.querySelector(`.tab[data-panel="${tabId}"]`); if (tabBtn) tabBtn.classList.add('active'); const panel = document.getElementById(tabId + 'Panel'); if (panel) panel.classList.add('active-panel'); localStorage.setItem('legacy_active_tab', tabId); currentTab = tabId; }
 
 // ============================================================
-// LOGIN SYSTEM
+// LOGIN SYSTEM WITH LOADING ANIMATION
 // ============================================================
 async function loadMembersForLogin() {
+    const container = document.getElementById('memberListContainer');
+    const pinInput = document.getElementById('pinInput');
+    const loginBtn = document.querySelector('.login-btn');
+    
+    // Disable inputs while loading
+    pinInput.disabled = true;
+    loginBtn.disabled = true;
+    
     const res = await callAPI('getMembers');
     if (res.success && res.members) {
         allMembers = res.members;
-        const select = document.getElementById('memberSelectLogin');
-        select.innerHTML = '<option value="">Select Member</option>' + allMembers.map(m => `<option value="${m}">${m}</option>`).join('');
+        
+        // Replace skeletons with actual member list
+        container.innerHTML = allMembers.map(member => {
+            const initial = member.charAt(0);
+            return `
+                <div class="member-option" onclick="selectMember('${member}')">
+                    <div class="member-avatar">${initial}</div>
+                    <div class="member-info">
+                        <h3>${member}</h3>
+                        <p>Click to select</p>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Enable inputs after loading
+        pinInput.disabled = false;
+        loginBtn.disabled = false;
+    } else {
+        container.innerHTML = '<div class="empty-state">Failed to load members. Please refresh.</div>';
     }
 }
 
+let selectedMemberForLogin = null;
+
+function selectMember(member) {
+    selectedMemberForLogin = member;
+    const memberSelect = document.getElementById('memberSelectLogin');
+    if (memberSelect) {
+        memberSelect.value = member;
+    }
+    // Highlight the selected member
+    document.querySelectorAll('.member-option').forEach(opt => {
+        opt.style.background = '#f8fafc';
+        opt.style.borderColor = '#e2e8f0';
+    });
+    event.target.closest('.member-option').style.background = '#e8f0ed';
+    event.target.closest('.member-option').style.borderColor = '#2a5a4a';
+    
+    // Focus on PIN input
+    document.getElementById('pinInput').focus();
+}
+
 async function verifyLogin() {
-    const member = document.getElementById('memberSelectLogin').value;
+    const member = selectedMemberForLogin || document.getElementById('memberSelectLogin')?.value;
     const pin = document.getElementById('pinInput').value;
     
     if (!member) {
@@ -932,12 +1078,14 @@ function logout() {
     localStorage.removeItem('legacy_active_tab');
     if (window.refreshInterval) clearInterval(window.refreshInterval);
     currentUser = null;
+    selectedMemberForLogin = null;
     document.getElementById('loginOverlay').style.display = 'flex';
     document.getElementById('appContainer').style.display = 'none';
     document.getElementById('tabBar').style.display = 'none';
     document.getElementById('pinInput').value = '';
-    document.getElementById('memberSelectLogin').value = '';
     document.getElementById('loginError').style.display = 'none';
+    // Reload members for login
+    loadMembersForLogin();
 }
 
 // ============================================================
