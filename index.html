@@ -17,7 +17,6 @@
             min-height: 100vh;
         }
         
-        /* ===== LOGIN SCREEN ===== */
         .login-overlay {
             position: fixed;
             top: 0;
@@ -63,7 +62,6 @@
             border: 1px solid #e2e8f0;
             border-radius: 16px;
             cursor: pointer;
-            transition: all 0.2s;
         }
         
         .member-option:hover {
@@ -102,7 +100,6 @@
             color: #2a5a4a;
             cursor: pointer;
             font-size: 13px;
-            font-weight: 500;
             display: inline-block;
         }
         
@@ -128,10 +125,8 @@
             border-radius: 40px;
             font-weight: 600;
             cursor: pointer;
-            font-size: 13px;
         }
         
-        /* ===== MAIN APP ===== */
         .app-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -142,7 +137,7 @@
         .header {
             background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
             color: white;
-            padding: 16px 16px;
+            padding: 16px;
             border-radius: 24px;
             margin-bottom: 16px;
             text-align: center;
@@ -179,7 +174,6 @@
             font-size: 11px;
         }
         
-        /* Balance Cards - SMALLER */
         .balance-wrapper {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -215,7 +209,6 @@
             font-weight: 700;
         }
         
-        /* Tab Navigation */
         .tab-bar {
             position: fixed;
             bottom: 0;
@@ -242,7 +235,6 @@
             color: #94a3b8;
             cursor: pointer;
             border-radius: 24px;
-            transition: all 0.2s;
         }
         
         .tab.active {
@@ -256,7 +248,6 @@
             margin-bottom: 2px;
         }
         
-        /* Panels */
         .panel {
             display: none;
         }
@@ -424,7 +415,6 @@
             font-size: 13px;
         }
         
-        /* Toast Notification */
         .toast {
             position: fixed;
             bottom: 80px;
@@ -442,6 +432,47 @@
         
         .toast.success { background: #2a5a4a; }
         .toast.error { background: #dc2626; }
+        
+        .greeting-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 60px;
+            padding: 20px 32px;
+            text-align: center;
+            z-index: 2000;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: popIn 0.3s ease;
+        }
+        
+        .greeting-popup h2 {
+            color: #1e3c32;
+            font-size: 22px;
+            margin-bottom: 6px;
+        }
+        
+        .greeting-popup p {
+            color: #64748b;
+            font-size: 12px;
+        }
+        
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
         
         .summary-stats {
             display: grid;
@@ -467,67 +498,10 @@
             font-weight: 700;
             color: #1e3c32;
         }
-        
-        /* Popup Greeting */
-        .greeting-popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            border-radius: 60px;
-            padding: 20px 32px;
-            text-align: center;
-            z-index: 2000;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            animation: popIn 0.3s ease;
-        }
-        
-        .greeting-popup h2 {
-            color: #1e3c32;
-            font-size: 24px;
-            margin-bottom: 6px;
-        }
-        
-        .greeting-popup p {
-            color: #64748b;
-            font-size: 13px;
-        }
-        
-        @keyframes popIn {
-            from {
-                opacity: 0;
-                transform: translate(-50%, -50%) scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: translate(-50%, -50%) scale(1);
-            }
-        }
-        
-        @keyframes slideUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
-        .loading-spinner-small {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #e2e8f0;
-            border-top-color: #2a5a4a;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
 
-<!-- LOGIN OVERLAY -->
 <div id="loginOverlay" class="login-overlay">
     <div class="login-box">
         <h1>🏛️ Legacy Builders Group</h1>
@@ -545,7 +519,6 @@
     </div>
 </div>
 
-<!-- MAIN APP -->
 <div class="app-container" id="appContainer">
     <div class="header">
         <h1>🏛️ Legacy Builders Group</h1>
@@ -556,7 +529,6 @@
         </div>
     </div>
     
-    <!-- Balance Cards -->
     <div class="balance-wrapper">
         <div class="balance-card">
             <h3>Total Savings</h3>
@@ -568,7 +540,6 @@
         </div>
     </div>
     
-    <!-- Panel 1: Transactions -->
     <div id="transactionsPanel" class="panel">
         <div class="card">
             <h2>Add Transaction</h2>
@@ -625,7 +596,6 @@
         </div>
     </div>
     
-    <!-- Panel 2: Summary -->
     <div id="summaryPanel" class="panel">
         <div class="card">
             <h2>Search & Filter</h2>
@@ -654,7 +624,6 @@
         </div>
     </div>
     
-    <!-- Panel 3: Export -->
     <div id="exportPanel" class="panel">
         <div class="card">
             <h2>Export Data</h2>
@@ -663,7 +632,6 @@
         </div>
     </div>
     
-    <!-- Panel 4: Loans -->
     <div id="loansPanel" class="panel">
         <div class="card">
             <h2>Pending Loan Approvals</h2>
@@ -676,7 +644,6 @@
     </div>
 </div>
 
-<!-- Tab Bar -->
 <div class="tab-bar" id="tabBar" style="display: none;">
     <button class="tab" data-panel="transactions"><span class="tab-icon">📋</span><span>Transactions</span></button>
     <button class="tab" data-panel="summary"><span class="tab-icon">📊</span><span>Summary</span></button>
@@ -688,7 +655,7 @@
 // ============================================================
 // CONFIGURATION - REPLACE WITH YOUR APPS SCRIPT URL
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbxp5W_mW-UM0-zeb8lmlZj5qm3OvVCQnODF1yXsykzTw6SANx_pkbfjJfLj_6Pp2AJMsg/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbw8Pue8S9cMCFtEulLbCr_C8UhW4QFurlHWbprScwpcB9inMcmxqZC175wJ7FH6rk3Wxw/exec";
 
 // ============================================================
 // GLOBAL STATE
@@ -745,7 +712,7 @@ async function loadAllData() {
             updateBalanceDisplays(summaryRes);
         }
         
-        await loadPendingLoans();
+        await loadCompletedLoans();
         
     } catch(e) {
         console.error(e);
@@ -769,7 +736,6 @@ function updateBalanceDisplays(summary) {
     document.getElementById('totalRepaid').innerHTML = `KES ${repaid.toLocaleString('en-KE')}`;
     document.getElementById('netBalance').innerHTML = `KES ${(savings - outstanding).toLocaleString('en-KE')}`;
     
-    // Member summary
     const memberData = {};
     allRecords.forEach(r => {
         if (!memberData[r.member]) memberData[r.member] = { savings: 0, loans: 0, repaid: 0 };
@@ -790,7 +756,7 @@ function updateBalanceDisplays(summary) {
     document.getElementById('memberSummary').innerHTML = summaryHtml || '<div class="empty-state">No transactions yet</div>';
 }
 
-async function loadPendingLoans() {
+async function loadCompletedLoans() {
     const res = await callAPI('getPendingLoans');
     if (res.success) {
         const allLoans = res.loans || [];
@@ -861,8 +827,12 @@ async function approveLoan(loanId) {
     btn.textContent = '...';
     const res = await callAPI('approveLoan', { loanId, approver: currentUser });
     if (res.success) {
-        showToast('Loan approved! Amount deducted from savings.', 'success');
-        await loadPendingLoans();
+        if (res.approvals === 1) {
+            showToast('Loan approved! Needs 1 more approval.', 'success');
+        } else {
+            showToast('Loan fully approved! Amount deducted from savings.', 'success');
+        }
+        await loadCompletedLoans();
         await loadAllData();
     } else {
         showToast('Error: ' + res.error, 'error');
@@ -875,7 +845,7 @@ async function rejectLoan(loanId) {
     const res = await callAPI('rejectLoan', { loanId });
     if (res.success) {
         showToast('Loan rejected', 'success');
-        await loadPendingLoans();
+        await loadCompletedLoans();
     } else {
         showToast('Error: ' + res.error, 'error');
     }
@@ -916,7 +886,7 @@ async function addRecord() {
             showToast(`Loan request submitted! Needs 2 approvals.`, 'success');
             document.getElementById('amount').value = '';
             document.getElementById('message').value = '';
-            await loadPendingLoans();
+            await loadCompletedLoans();
         } else {
             showToast('Error: ' + res.error, 'error');
         }
@@ -1057,7 +1027,6 @@ async function refreshLoginScreen() {
     }).join('');
 }
 
-// Show popup greeting then load data in background
 function showGreeting(member) {
     return new Promise((resolve) => {
         const hour = new Date().getHours();
@@ -1074,7 +1043,6 @@ function showGreeting(member) {
         `;
         document.body.appendChild(popup);
         
-        // Load data in background while popup shows
         setTimeout(async () => {
             await loadAllData();
             popup.remove();
@@ -1087,27 +1055,20 @@ async function login(member) {
     currentUser = member;
     localStorage.setItem('legacy_current_user', member);
     
-    // Hide login, show app
     document.getElementById('loginOverlay').style.display = 'none';
     document.getElementById('appContainer').style.display = 'block';
     document.getElementById('tabBar').style.display = 'flex';
     document.getElementById('loggedInUser').innerText = member;
-    
-    // Set default date
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
     
-    // Show popup greeting and load data in background
     await showGreeting(member);
-    
-    // Restore last active tab
     activateTab(currentTab);
     
-    // Auto-refresh every 15 seconds
     if (window.refreshInterval) clearInterval(window.refreshInterval);
     window.refreshInterval = setInterval(() => {
         if (currentUser && (currentTab === 'summary' || currentTab === 'loans')) {
             loadAllData();
-            loadPendingLoans();
+            loadCompletedLoans();
         }
     }, 15000);
 }
@@ -1150,24 +1111,19 @@ if (savedUser) {
     (async () => {
         await loadMembersList();
         if (allMembers.includes(savedUser)) {
-            // Restore session without showing login screen
             currentUser = savedUser;
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
             document.getElementById('tabBar').style.display = 'flex';
             document.getElementById('loggedInUser').innerText = savedUser;
             document.getElementById('date').value = new Date().toISOString().split('T')[0];
-            
-            // Show popup and load data
             await showGreeting(savedUser);
             activateTab(currentTab);
-            
-            // Auto-refresh
             if (window.refreshInterval) clearInterval(window.refreshInterval);
             window.refreshInterval = setInterval(() => {
                 if (currentUser && (currentTab === 'summary' || currentTab === 'loans')) {
                     loadAllData();
-                    loadPendingLoans();
+                    loadCompletedLoans();
                 }
             }, 15000);
         } else {
@@ -1180,7 +1136,7 @@ if (savedUser) {
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addBtn').onclick = addRecord;
-    document.getElementById('refreshBtn').onclick = () => { loadAllData(); loadPendingLoans(); };
+    document.getElementById('refreshBtn').onclick = () => { loadAllData(); loadCompletedLoans(); };
     document.getElementById('exportBtn').onclick = exportToCSV;
     document.getElementById('searchInput').oninput = () => applyFilters();
     document.getElementById('filterMember').onchange = () => applyFilters();
