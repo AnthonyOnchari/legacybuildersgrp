@@ -345,8 +345,8 @@
         .completed-loan-item {
             background: #e8f0ed;
             border-radius: 14px;
-            padding: 10px;
-            margin-bottom: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
         }
         
         .search-container {
@@ -432,6 +432,7 @@
         
         .toast.success { background: #2a5a4a; }
         .toast.error { background: #dc2626; }
+        .toast.info { background: #3b82f6; }
         
         .greeting-popup {
             position: fixed;
@@ -498,6 +499,17 @@
             font-weight: 700;
             color: #1e3c32;
         }
+        
+        .interest-badge {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+            display: inline-block;
+            margin-left: 6px;
+        }
     </style>
 </head>
 <body>
@@ -563,6 +575,7 @@
                 <div>
                     <label>Amount (KES)</label>
                     <input type="number" id="amount" placeholder="0">
+                    <small style="font-size:10px; color:#64748b;">For loans: Enter PRINCIPAL amount (10% interest will be added)</small>
                 </div>
                 <div>
                     <label>Transaction Message</label>
@@ -570,7 +583,7 @@
                 </div>
             </div>
             <div id="approvalNotice" style="background:#fef3c7; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">
-                Loan requests need approval from 2 other members before being recorded
+                Loan requests need approval from 2 other members. 10% interest will be added to the loan.
             </div>
             <button id="addBtn">Submit Transaction</button>
         </div>
@@ -589,7 +602,7 @@
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        <tr><td colspan="5"><div class="empty-state">Loading...</div></td></tr>
+                        <tr><td colspan="5"><div class="empty-state">Loading...</div><tr></tr>
                     </tbody>
                 </table>
             </div>
@@ -655,7 +668,7 @@
 // ============================================================
 // CONFIGURATION - REPLACE WITH YOUR APPS SCRIPT URL
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbxB3NuIQlD6Y3AZAPOixCgxzn6lpRPUivNtGCzMYWNZTkG-PhmTr2Kangi913ztJNtNZA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbw4vyqdrRKz_1bZHSXbH1tAaE6q4z0-7EA8ZmaSd6YzMlvnC925lOEyNRhbyCKXF_-bcw/exec";
 
 // ============================================================
 // GLOBAL STATE
@@ -669,7 +682,7 @@ let sortColumn = 'date';
 let sortDirection = 'desc';
 let isLoading = false;
 let currentTab = localStorage.getItem('legacy_active_tab') || 'transactions';
-let hasShownGreeting = false; // Track if greeting already shown for this session
+let hasShownGreeting = false;
 
 // ============================================================
 // API CALL
@@ -785,7 +798,7 @@ function renderPendingLoans() {
         const statusText = isRequester ? ' (Your request)' : (alreadyApproved ? ' (You approved)' : '');
         return `
             <div class="loan-item ${isRequester ? 'own-loan' : ''}">
-                <div><strong>${loan.member}</strong> requested <strong>KES ${loan.amount.toLocaleString('en-KE')}</strong>${statusText}</div>
+                <div><strong>${loan.member}</strong> requested <strong>KES ${loan.principal.toLocaleString('en-KE')}</strong> + 10% interest = <strong>KES ${loan.totalDue.toLocaleString('en-KE')}</strong>${statusText}</div>
                 <div style="font-size:12px; color:#666; margin-top:5px;">${loan.message || ''}</div>
                 <div style="font-size:11px; margin-top:5px;">Approvals: ${loan.approvals.length}/2</div>
                 ${showButtons ? `
@@ -805,13 +818,19 @@ function renderCompletedLoans() {
         container.innerHTML = '<div class="empty-state">No completed loans yet</div>';
         return;
     }
-    container.innerHTML = completedLoans.map(loan => `
-        <div class="completed-loan-item">
-            <div><strong>${loan.member}</strong> borrowed KES ${loan.amount.toLocaleString('en-KE')}</div>
-            <div style="font-size:10px; color:#64748b;">Approved by: ${loan.approvals.join(', ')}</div>
-            <div style="font-size:11px;">${loan.message || ''}</div>
-        </div>
-    `).join('');
+    container.innerHTML = completedLoans.map(loan => {
+        // Calculate how much is still owed (totalDue minus any repayments made)
+        // This would require tracking repayments per loan - for now show total due
+        return `
+            <div class="completed-loan-item">
+                <div><strong>${loan.member}</strong> borrowed <strong>KES ${loan.principal.toLocaleString('en-KE')}</strong></div>
+                <div style="font-size:11px; margin-top:4px;">💰 Interest (10%): KES ${loan.interest.toLocaleString('en-KE')}</div>
+                <div style="font-size:12px; font-weight:600; margin-top:4px;">📋 Total Owing: KES ${loan.totalDue.toLocaleString('en-KE')}</div>
+                <div style="font-size:10px; color:#64748b; margin-top:4px;">Approved by: ${loan.approvals.join(', ')}</div>
+                <div style="font-size:11px; margin-top:4px;">${loan.message || ''}</div>
+            </div>
+        `;
+    }).join('');
 }
 
 function updateMemberDropdowns() {
@@ -835,7 +854,7 @@ async function approveLoan(loanId) {
         if (res.approvals === 1) {
             showToast('Approved! Needs 1 more approval.', 'success');
         } else {
-            showToast('Loan fully approved! Amount deducted from savings.', 'success');
+            showToast(`Loan fully approved! Principal: KES ${res.principal?.toLocaleString()}, Interest: KES ${res.interest?.toLocaleString()}, Total Due: KES ${res.totalDue?.toLocaleString()}`, 'success');
         }
         await loadCompletedLoans();
         await loadAllData();
@@ -881,14 +900,14 @@ async function addRecord() {
         const savingsRes = await callAPI('getSummary');
         const currentSavings = savingsRes.success ? (savingsRes.savings || 0) : 0;
         if (amount > currentSavings) {
-            showToast(`Cannot borrow KES ${amount.toLocaleString()}. Available: KES ${currentSavings.toLocaleString()}`, 'error');
+            showToast(`Cannot borrow KES ${amount.toLocaleString()}. Available savings: KES ${currentSavings.toLocaleString()}`, 'error');
             btn.disabled = false;
             btn.innerHTML = 'Submit Transaction';
             return;
         }
         const res = await callAPI('submitLoan', { date, member, amount, message, notes: '', requestedBy: currentUser });
         if (res.success) {
-            showToast(`Loan request submitted! Needs 2 approvals.`, 'success');
+            showToast(`Loan request submitted! Principal: KES ${res.principal?.toLocaleString()}, +10% interest = KES ${res.totalDue?.toLocaleString()} total due. Needs 2 approvals.`, 'success');
             document.getElementById('amount').value = '';
             document.getElementById('message').value = '';
             await loadCompletedLoans();
@@ -1003,11 +1022,10 @@ function activateTab(tabId) {
 }
 
 // ============================================================
-// GREETING - ONLY ON FIRST LOGIN, NOT ON REFRESH
+// GREETING
 // ============================================================
 function showGreeting(member) {
     return new Promise((resolve) => {
-        // Only show greeting if not shown this session
         if (hasShownGreeting) {
             resolve();
             return;
@@ -1029,7 +1047,6 @@ function showGreeting(member) {
         
         hasShownGreeting = true;
         
-        // Shorter timeout - 500ms instead of 800ms
         setTimeout(() => {
             popup.remove();
             resolve();
@@ -1077,11 +1094,9 @@ async function login(member) {
     document.getElementById('loggedInUser').innerText = member;
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
     
-    // Load data first (fast, no greeting yet)
     await loadAllData();
     await loadCompletedLoans();
     
-    // Show greeting after data loads (only on first login)
     await showGreeting(member);
     
     activateTab(currentTab);
@@ -1099,7 +1114,7 @@ function logout() {
     if (window.refreshInterval) clearInterval(window.refreshInterval);
     localStorage.removeItem('legacy_current_user');
     currentUser = null;
-    hasShownGreeting = false; // Reset greeting flag for next login
+    hasShownGreeting = false;
     document.getElementById('loginOverlay').style.display = 'flex';
     document.getElementById('appContainer').style.display = 'none';
     document.getElementById('tabBar').style.display = 'none';
@@ -1127,7 +1142,7 @@ async function addNewMember() {
 }
 
 // ============================================================
-// INITIALIZATION - NO GREETING ON REFRESH
+// INITIALIZATION
 // ============================================================
 const savedUser = localStorage.getItem('legacy_current_user');
 if (savedUser) {
@@ -1141,7 +1156,6 @@ if (savedUser) {
             document.getElementById('loggedInUser').innerText = savedUser;
             document.getElementById('date').value = new Date().toISOString().split('T')[0];
             
-            // Load data directly WITHOUT greeting on page refresh
             await loadAllData();
             await loadCompletedLoans();
             
