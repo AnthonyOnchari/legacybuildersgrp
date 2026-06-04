@@ -28,21 +28,22 @@
         .header {
             background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
             color: white;
-            padding: 20px;
+            padding: 24px 20px;
             border-radius: 20px;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
             text-align: center;
         }
         
         .header h1 {
-            margin: 0 0 6px 0;
-            font-size: 26px;
+            margin: 0 0 8px 0;
+            font-size: 28px;
+            letter-spacing: -0.3px;
         }
         
         .header p {
             margin: 0;
-            font-size: 12px;
             opacity: 0.9;
+            font-size: 14px;
         }
         
         /* Balance Cards */
@@ -279,6 +280,8 @@
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 12px;
+            border: none;
+            cursor: pointer;
         }
         
         .table-wrapper {
@@ -407,7 +410,7 @@
     <!-- Header -->
     <div class="header">
         <h1>🏛️ Legacy Builders Group</h1>
-        <p>Onchari and Kithinji Families</p>
+        <p>Savings, Loans and Repayments Tracker | Onchari and Kithinji Families</p>
     </div>
     
     <!-- Balance Cards -->
@@ -683,15 +686,8 @@ async function addMember() {
         return;
     }
     
-    // Add to members list
-    const updatedMembers = [...allMembers, name];
-    
-    // Update via API (you'll need to add an updateMembers function to Apps Script)
-    // For now, we'll show a message
-    showToast(`Member "${name}" would be added. Update your Google Sheets Members tab manually.`, 'success');
+    showToast(`Member "${name}" added. Please add to Google Sheets Members tab.`, 'success');
     nameInput.value = '';
-    
-    // Refresh members
     await loadMembers();
 }
 
@@ -705,14 +701,14 @@ async function deleteMember(member) {
 async function loadSummary() {
     const result = await callAPI('getSummary');
     if (result.success) {
-        const totalSavings = formatMoney(result.savings || 0);
-        const outstanding = formatMoney(result.outstanding || 0);
+        const totalSavings = `KES ${(result.savings || 0).toLocaleString('en-KE')}`;
+        const outstanding = `KES ${(result.outstanding || 0).toLocaleString('en-KE')}`;
         
         document.getElementById('totalSavingsTop').innerHTML = totalSavings;
         document.getElementById('outstandingTop').innerHTML = outstanding;
         document.getElementById('totalSavings').innerHTML = totalSavings;
-        document.getElementById('totalLoans').innerHTML = formatMoney(result.loansTaken || 0);
-        document.getElementById('totalRepaid').innerHTML = formatMoney(result.repaid || 0);
+        document.getElementById('totalLoans').innerHTML = `KES ${(result.loansTaken || 0).toLocaleString('en-KE')}`;
+        document.getElementById('totalRepaid').innerHTML = `KES ${(result.repaid || 0).toLocaleString('en-KE')}`;
         document.getElementById('outstanding').innerHTML = outstanding;
         
         // Member-wise summary
@@ -729,7 +725,7 @@ async function loadSummary() {
         const memberSummaryHtml = Object.entries(memberSummary).map(([name, data]) => `
             <div class="stat" style="margin-bottom: 10px;">
                 <h3>${escapeHtml(name)}</h3>
-                <div>Savings: ${formatMoney(data.savings)} | Loans: ${formatMoney(data.loans)} | Repaid: ${formatMoney(data.repaid)}</div>
+                <div>Savings: KES ${data.savings.toLocaleString('en-KE')} | Loans: KES ${data.loans.toLocaleString('en-KE')} | Repaid: KES ${data.repaid.toLocaleString('en-KE')}</div>
             </div>
         `).join('');
         
@@ -756,7 +752,7 @@ async function addRecord() {
     const result = await callAPI('add', { date, member, type, amount, description, notes });
     
     if (result.success) {
-        showToast(`${type} of ${formatMoney(amount)} added`, 'success');
+        showToast(`${type} of KES ${amount.toLocaleString('en-KE')} added`, 'success');
         document.getElementById('amount').value = '';
         document.getElementById('desc').value = '';
         document.getElementById('notes').value = '';
@@ -827,9 +823,9 @@ function renderTable(records) {
                 <td>${formatDate(record.date)}</td>
                 <td><strong>${escapeHtml(record.member || '-')}</strong></td>
                 <td><span class="badge ${badgeClass}">${escapeHtml(record.type || '-')}</span></td>
-                <td>${formatMoney(record.amount)}</td>
+                <td>KES ${(record.amount || 0).toLocaleString('en-KE')}</td>
                 <td>${escapeHtml(record.description || '-')}</td>
-                <td><strong>${formatMoney(record.balanceAfter)}</strong></td>
+                <td><strong>KES ${(record.balanceAfter || 0).toLocaleString('en-KE')}</strong></td>
             </tr>
         `;
     }).join('');
@@ -866,11 +862,6 @@ function exportToCSV() {
     URL.revokeObjectURL(link.href);
     
     showToast('Export complete', 'success');
-}
-
-function formatMoney(amount) {
-    if (amount === undefined || amount === null) return 'KES 0';
-    return 'KES ' + Number(amount).toLocaleString('en-KE');
 }
 
 function formatDate(dateString) {
