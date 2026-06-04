@@ -36,17 +36,16 @@
         
         .header h1 {
             margin: 0 0 8px 0;
-            font-size: 28px;
-            letter-spacing: -0.3px;
+            font-size: 26px;
         }
         
         .header p {
             margin: 0;
             opacity: 0.9;
-            font-size: 14px;
+            font-size: 13px;
         }
         
-        /* Balance Cards */
+        /* Balance Cards - Clean & Simple */
         .balance-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -57,30 +56,29 @@
         .balance-card {
             background: white;
             border-radius: 16px;
-            padding: 16px;
+            padding: 14px;
             text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
         
         .balance-card.green {
-            border-left: 4px solid #10b981;
+            border-top: 3px solid #10b981;
         }
         
         .balance-card.red {
-            border-left: 4px solid #ef4444;
+            border-top: 3px solid #ef4444;
         }
         
         .balance-card h3 {
-            margin: 0 0 8px 0;
-            font-size: 13px;
+            margin: 0 0 6px 0;
+            font-size: 12px;
             color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-weight: 500;
         }
         
         .balance-card .amount {
-            font-size: 28px;
-            font-weight: bold;
+            font-size: 18px;
+            font-weight: 600;
         }
         
         .balance-card.green .amount {
@@ -97,15 +95,15 @@
             border-radius: 16px;
             padding: 12px;
             margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
         
         .search-input {
             width: 100%;
-            padding: 12px 14px;
+            padding: 10px 14px;
             border: 1.5px solid #e2e8f0;
             border-radius: 40px;
-            font-size: 15px;
+            font-size: 14px;
             margin-bottom: 10px;
         }
         
@@ -116,10 +114,10 @@
         
         .filter-row select {
             flex: 1;
-            padding: 10px 12px;
+            padding: 8px 12px;
             border: 1.5px solid #e2e8f0;
             border-radius: 40px;
-            font-size: 14px;
+            font-size: 13px;
             background: white;
         }
         
@@ -132,7 +130,7 @@
             background: white;
             display: flex;
             justify-content: space-around;
-            padding: 10px 16px 20px;
+            padding: 8px 16px 18px;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
             border-top-left-radius: 20px;
             border-top-right-radius: 20px;
@@ -142,11 +140,11 @@
         .tab {
             flex: 1;
             text-align: center;
-            padding: 8px 4px;
+            padding: 6px 4px;
             background: none;
             border: none;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 500;
             color: #94a3b8;
             cursor: pointer;
             transition: all 0.2s;
@@ -159,9 +157,9 @@
         }
         
         .tab-icon {
-            font-size: 22px;
+            font-size: 20px;
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
         
         /* Content Panels */
@@ -183,22 +181,22 @@
         .card {
             background: white;
             border-radius: 20px;
-            padding: 20px;
+            padding: 18px;
             margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
         
         .card h2 {
-            margin: 0 0 16px 0;
+            margin: 0 0 14px 0;
             color: #1e3c32;
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 600;
         }
         
         .form-grid {
             display: grid;
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
         
         @media (min-width: 640px) {
@@ -209,10 +207,10 @@
         
         input, select, textarea {
             width: 100%;
-            padding: 12px 14px;
+            padding: 10px 12px;
             border: 1.5px solid #e2e8f0;
             border-radius: 12px;
-            font-size: 15px;
+            font-size: 14px;
             background: white;
         }
         
@@ -222,10 +220,10 @@
         }
         
         label {
-            font-weight: 600;
-            margin-bottom: 6px;
+            font-weight: 500;
+            margin-bottom: 5px;
             display: block;
-            font-size: 13px;
+            font-size: 12px;
             color: #334155;
         }
         
@@ -233,10 +231,10 @@
             background: #2a5a4a;
             color: white;
             border: none;
-            padding: 12px 20px;
+            padding: 10px 18px;
             border-radius: 40px;
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
         }
         
@@ -248,13 +246,9 @@
             background: #64748b;
         }
         
-        .btn-danger {
-            background: #ef4444;
-        }
-        
         .btn-small {
-            padding: 8px 16px;
-            font-size: 13px;
+            padding: 7px 14px;
+            font-size: 12px;
         }
         
         .member-list {
@@ -266,20 +260,21 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px;
+            padding: 10px;
             border-bottom: 1px solid #e2e8f0;
         }
         
         .member-name {
             font-weight: 500;
+            font-size: 14px;
         }
         
         .delete-member {
             background: #fee2e2;
             color: #ef4444;
-            padding: 6px 12px;
+            padding: 5px 10px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 11px;
             border: none;
             cursor: pointer;
         }
@@ -291,11 +286,11 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: 12px;
         }
         
         th, td {
-            padding: 10px 8px;
+            padding: 10px 6px;
             text-align: left;
             border-bottom: 1px solid #e2e8f0;
         }
@@ -306,12 +301,13 @@
             cursor: pointer;
             position: sticky;
             top: 0;
+            font-size: 11px;
         }
         
         .badge {
-            padding: 4px 10px;
+            padding: 3px 8px;
             border-radius: 20px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             display: inline-block;
         }
@@ -322,23 +318,24 @@
         
         .empty-state {
             text-align: center;
-            padding: 40px;
+            padding: 30px;
             color: #64748b;
+            font-size: 13px;
         }
         
         .loading {
             text-align: center;
-            padding: 40px;
+            padding: 30px;
         }
         
         .spinner {
             border: 3px solid #e2e8f0;
             border-top: 3px solid #2a5a4a;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 30px;
+            height: 30px;
             animation: spin 0.8s linear infinite;
-            margin: 0 auto 12px;
+            margin: 0 auto 10px;
         }
         
         @keyframes spin {
@@ -353,10 +350,10 @@
             right: 16px;
             background: #1e293b;
             color: white;
-            padding: 12px 16px;
+            padding: 10px 14px;
             border-radius: 12px;
             text-align: center;
-            font-size: 13px;
+            font-size: 12px;
             z-index: 2000;
             animation: slideUp 0.3s ease;
         }
@@ -372,25 +369,25 @@
         .summary-stats {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
+            gap: 10px;
         }
         
         .stat {
             background: #f8fafc;
-            padding: 14px;
+            padding: 12px;
             border-radius: 12px;
             text-align: center;
         }
         
         .stat h3 {
-            margin: 0 0 6px 0;
-            font-size: 11px;
+            margin: 0 0 5px 0;
+            font-size: 10px;
             color: #64748b;
         }
         
         .stat .number {
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 16px;
+            font-weight: 600;
             color: #1e3c32;
         }
         
@@ -413,7 +410,7 @@
         <p>Savings, Loans and Repayments Tracker | Onchari and Kithinji Families</p>
     </div>
     
-    <!-- Balance Cards -->
+    <!-- Balance Cards - Clean with smaller font -->
     <div class="balance-container">
         <div class="balance-card green">
             <h3>Total Savings</h3>
@@ -701,15 +698,15 @@ async function deleteMember(member) {
 async function loadSummary() {
     const result = await callAPI('getSummary');
     if (result.success) {
-        const totalSavings = `KES ${(result.savings || 0).toLocaleString('en-KE')}`;
-        const outstanding = `KES ${(result.outstanding || 0).toLocaleString('en-KE')}`;
+        const savings = result.savings || 0;
+        const outstanding = result.outstanding || 0;
         
-        document.getElementById('totalSavingsTop').innerHTML = totalSavings;
-        document.getElementById('outstandingTop').innerHTML = outstanding;
-        document.getElementById('totalSavings').innerHTML = totalSavings;
+        document.getElementById('totalSavingsTop').innerHTML = `KES ${savings.toLocaleString('en-KE')}`;
+        document.getElementById('outstandingTop').innerHTML = `KES ${outstanding.toLocaleString('en-KE')}`;
+        document.getElementById('totalSavings').innerHTML = `KES ${savings.toLocaleString('en-KE')}`;
         document.getElementById('totalLoans').innerHTML = `KES ${(result.loansTaken || 0).toLocaleString('en-KE')}`;
         document.getElementById('totalRepaid').innerHTML = `KES ${(result.repaid || 0).toLocaleString('en-KE')}`;
-        document.getElementById('outstanding').innerHTML = outstanding;
+        document.getElementById('outstanding').innerHTML = `KES ${outstanding.toLocaleString('en-KE')}`;
         
         // Member-wise summary
         const memberSummary = {};
@@ -725,7 +722,7 @@ async function loadSummary() {
         const memberSummaryHtml = Object.entries(memberSummary).map(([name, data]) => `
             <div class="stat" style="margin-bottom: 10px;">
                 <h3>${escapeHtml(name)}</h3>
-                <div>Savings: KES ${data.savings.toLocaleString('en-KE')} | Loans: KES ${data.loans.toLocaleString('en-KE')} | Repaid: KES ${data.repaid.toLocaleString('en-KE')}</div>
+                <div style="font-size: 12px;">Savings: KES ${data.savings.toLocaleString('en-KE')} | Loans: KES ${data.loans.toLocaleString('en-KE')} | Repaid: KES ${data.repaid.toLocaleString('en-KE')}</div>
             </div>
         `).join('');
         
