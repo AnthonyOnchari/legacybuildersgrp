@@ -62,11 +62,13 @@
             border: 1px solid #e2e8f0;
             border-radius: 16px;
             cursor: pointer;
+            transition: all 0.2s;
         }
         
         .member-option:hover {
             background: white;
             border-color: #2a5a4a;
+            transform: translateX(4px);
         }
         
         .member-avatar {
@@ -235,6 +237,7 @@
             color: #94a3b8;
             cursor: pointer;
             border-radius: 24px;
+            transition: all 0.2s;
         }
         
         .tab.active {
@@ -317,6 +320,11 @@
             font-weight: 500;
             cursor: pointer;
             width: 100%;
+            transition: all 0.2s;
+        }
+        
+        button:active {
+            transform: scale(0.97);
         }
         
         .approve-btn, .reject-btn {
@@ -499,17 +507,6 @@
             font-weight: 700;
             color: #1e3c32;
         }
-        
-        .interest-badge {
-            background: #fef3c7;
-            color: #92400e;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 10px;
-            font-weight: 600;
-            display: inline-block;
-            margin-left: 6px;
-        }
     </style>
 </head>
 <body>
@@ -602,7 +599,7 @@
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        <tr><td colspan="5"><div class="empty-state">Loading...</div><tr></tr>
+                        <tr><td colspan="5"><div class="empty-state">Loading...</div></td></tr>
                     </tbody>
                 </table>
             </div>
@@ -666,7 +663,7 @@
 
 <script>
 // ============================================================
-// CONFIGURATION - REPLACE WITH YOUR APPS SCRIPT URL
+// CONFIGURATION - USE YOUR WORKING APPS SCRIPT URL
 // ============================================================
 const API_URL = "https://script.google.com/macros/s/AKfycbw4vyqdrRKz_1bZHSXbH1tAaE6q4z0-7EA8ZmaSd6YzMlvnC925lOEyNRhbyCKXF_-bcw/exec";
 
@@ -690,10 +687,15 @@ let hasShownGreeting = false;
 async function callAPI(action, data = {}) {
     try {
         const params = new URLSearchParams({action, ...data});
-        const response = await fetch(`${API_URL}?${params.toString()}`);
+        const url = `${API_URL}?${params.toString()}`;
+        console.log("Calling API:", url);
+        const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return await response.json();
+        const result = await response.json();
+        console.log("API Response:", result);
+        return result;
     } catch(e) {
+        console.error("API Error:", e);
         return { success: false, error: e.message };
     }
 }
@@ -719,22 +721,28 @@ async function loadAllData(showLoadingSpinner = false) {
         if (recordsRes.success) {
             allRecords = recordsRes.records || [];
             applyFilters();
+        } else {
+            console.error("Records error:", recordsRes.error);
         }
         
         if (membersRes.success && membersRes.members?.length) {
             allMembers = membersRes.members;
             updateMemberDropdowns();
+        } else {
+            console.error("Members error:", membersRes.error);
         }
         
         if (summaryRes.success) {
             updateBalanceDisplays(summaryRes);
+        } else {
+            console.error("Summary error:", summaryRes.error);
         }
         
         await loadCompletedLoans();
         
     } catch(e) {
         console.error(e);
-        showToast('Error loading data', 'error');
+        showToast('Error loading data: ' + e.message, 'error');
     } finally {
         isLoading = false;
     }
@@ -782,6 +790,8 @@ async function loadCompletedLoans() {
         completedLoans = allLoans.filter(l => l.approvals.length >= 2 || l.status === 'completed');
         renderPendingLoans();
         renderCompletedLoans();
+    } else {
+        console.error("Pending loans error:", res.error);
     }
 }
 
@@ -798,7 +808,7 @@ function renderPendingLoans() {
         const statusText = isRequester ? ' (Your request)' : (alreadyApproved ? ' (You approved)' : '');
         return `
             <div class="loan-item ${isRequester ? 'own-loan' : ''}">
-                <div><strong>${loan.member}</strong> requested <strong>KES ${loan.principal.toLocaleString('en-KE')}</strong> + 10% interest = <strong>KES ${loan.totalDue.toLocaleString('en-KE')}</strong>${statusText}</div>
+                <div><strong>${loan.member}</strong> requested <strong>KES ${loan.principal?.toLocaleString('en-KE') || 0}</strong> + 10% interest = <strong>KES ${loan.totalDue?.toLocaleString('en-KE') || 0}</strong>${statusText}</div>
                 <div style="font-size:12px; color:#666; margin-top:5px;">${loan.message || ''}</div>
                 <div style="font-size:11px; margin-top:5px;">Approvals: ${loan.approvals.length}/2</div>
                 ${showButtons ? `
@@ -819,13 +829,11 @@ function renderCompletedLoans() {
         return;
     }
     container.innerHTML = completedLoans.map(loan => {
-        // Calculate how much is still owed (totalDue minus any repayments made)
-        // This would require tracking repayments per loan - for now show total due
         return `
             <div class="completed-loan-item">
-                <div><strong>${loan.member}</strong> borrowed <strong>KES ${loan.principal.toLocaleString('en-KE')}</strong></div>
-                <div style="font-size:11px; margin-top:4px;">💰 Interest (10%): KES ${loan.interest.toLocaleString('en-KE')}</div>
-                <div style="font-size:12px; font-weight:600; margin-top:4px;">📋 Total Owing: KES ${loan.totalDue.toLocaleString('en-KE')}</div>
+                <div><strong>${loan.member}</strong> borrowed <strong>KES ${loan.principal?.toLocaleString('en-KE') || 0}</strong></div>
+                <div style="font-size:11px; margin-top:4px;">Interest (10%): KES ${loan.interest?.toLocaleString('en-KE') || 0}</div>
+                <div style="font-size:12px; font-weight:600; margin-top:4px;">Total Owing: KES ${loan.totalDue?.toLocaleString('en-KE') || 0}</div>
                 <div style="font-size:10px; color:#64748b; margin-top:4px;">Approved by: ${loan.approvals.join(', ')}</div>
                 <div style="font-size:11px; margin-top:4px;">${loan.message || ''}</div>
             </div>
@@ -854,7 +862,7 @@ async function approveLoan(loanId) {
         if (res.approvals === 1) {
             showToast('Approved! Needs 1 more approval.', 'success');
         } else {
-            showToast(`Loan fully approved! Principal: KES ${res.principal?.toLocaleString()}, Interest: KES ${res.interest?.toLocaleString()}, Total Due: KES ${res.totalDue?.toLocaleString()}`, 'success');
+            showToast(`Loan fully approved! Amount deducted from savings.`, 'success');
         }
         await loadCompletedLoans();
         await loadAllData();
