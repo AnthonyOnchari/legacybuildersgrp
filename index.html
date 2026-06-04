@@ -8,42 +8,55 @@
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         body { background: #f0f2f5; margin: 0; padding: 0; padding-bottom: 70px; }
         .container { max-width: 1200px; margin: 0 auto; padding: 16px; }
+        
+        /* Login Overlay */
         .login-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.9); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
         .login-box { background:white; border-radius:24px; padding:32px 24px; max-width:400px; width:100%; text-align:center; max-height:90vh; overflow-y:auto; }
-        .member-option { display:flex; align-items:center; padding:14px 16px; margin:8px 0; border:1px solid #e2e8f0; border-radius:16px; cursor:pointer; }
-        .member-option:hover { background:#f8fafc; border-color:#2a5a4a; }
+        .member-option { display:flex; align-items:center; padding:14px 16px; margin:8px 0; border:1px solid #e2e8f0; border-radius:16px; cursor:pointer; transition:0.1s; }
+        .member-option:active { background:#f8fafc; transform:scale(0.98); }
         .member-avatar { width:48px; height:48px; background:#2a5a4a; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:20px; margin-right:16px; }
         .add-member-link { margin-top:20px; padding-top:16px; border-top:1px solid #e2e8f0; font-size:13px; color:#2a5a4a; cursor:pointer; display:inline-block; }
         .add-member-form { margin-top:16px; display:flex; gap:8px; }
         .add-member-form input { flex:1; padding:10px; border:1px solid #e2e8f0; border-radius:40px; }
         .add-member-form button { padding:10px 16px; background:#2a5a4a; color:white; border:none; border-radius:40px; }
+        
+        /* Header */
         .header { background:linear-gradient(135deg,#1e3c32,#2a5a4a); color:white; padding:20px; border-radius:20px; margin-bottom:16px; text-align:center; }
         .user-badge { background:rgba(255,255,255,0.2); border-radius:40px; padding:6px 12px; display:inline-flex; align-items:center; gap:8px; margin-top:10px; font-size:12px; }
         .logout-btn { background:rgba(255,255,255,0.3); border:none; color:white; padding:4px 10px; border-radius:20px; cursor:pointer; }
+        
+        /* Balance Cards */
         .balance-wrapper { display:flex; gap:12px; margin-bottom:16px; }
         .balance-card { flex:1; border-radius:20px; padding:16px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
         .balance-card:first-child { background:linear-gradient(135deg,#10b981,#059669); color:white; }
         .balance-card:last-child { background:linear-gradient(135deg,#ef4444,#dc2626); color:white; }
         .balance-card .amount { font-size:22px; font-weight:700; }
+        
+        /* Tab Bar */
         .tab-bar { position:fixed; bottom:0; left:0; right:0; background:white; display:flex; justify-content:space-around; padding:8px 16px 20px; box-shadow:0 -2px 10px rgba(0,0,0,0.08); border-top-left-radius:20px; border-top-right-radius:20px; z-index:100; }
-        .tab { text-align:center; padding:8px 4px; background:none; border:none; font-size:11px; font-weight:500; color:#94a3b8; cursor:pointer; border-radius:12px; }
+        .tab { text-align:center; padding:8px 4px; background:none; border:none; font-size:11px; font-weight:500; color:#94a3b8; cursor:pointer; border-radius:12px; transition:0.1s; }
         .tab.active { color:#2a5a4a; background:#e8f0ed; }
         .tab-icon { font-size:20px; display:block; margin-bottom:4px; }
-        .panel { display: none; animation: fadeIn 0.2s ease; }
+        
+        /* Panels */
+        .panel { display: none; animation: fadeIn 0.15s ease; }
         .panel.active-panel { display: block; }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        
         .card { background:white; border-radius:20px; padding:18px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
         .card h2 { margin:0 0 14px 0; font-size:17px; font-weight:600; border-left:3px solid #2a5a4a; padding-left:12px; }
         .form-grid { display:grid; gap:12px; margin-bottom:18px; }
         @media (min-width:640px) { .form-grid { grid-template-columns:repeat(2,1fr); } }
-        input, select, textarea { width:100%; padding:12px; border:1px solid #e2e8f0; border-radius:12px; font-size:14px; }
+        input, select { width:100%; padding:12px; border:1px solid #e2e8f0; border-radius:12px; font-size:14px; background:white; }
         select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; background-size:16px; }
         label { font-weight:500; margin-bottom:5px; display:block; font-size:12px; color:#334155; }
-        button { background:#2a5a4a; color:white; border:none; padding:12px 20px; border-radius:40px; font-size:14px; font-weight:500; cursor:pointer; }
+        button { background:#2a5a4a; color:white; border:none; padding:12px 20px; border-radius:40px; font-size:14px; font-weight:500; cursor:pointer; transition:0.1s; }
+        button:active { transform:scale(0.97); }
         .approve-btn { background:#10b981; padding:6px 12px; font-size:12px; }
         .reject-btn { background:#ef4444; padding:6px 12px; font-size:12px; }
         .loan-item { background:#f8fafc; border-radius:12px; padding:12px; margin-bottom:10px; }
         .loan-item.own-loan { background:#fef3c7; border-left:3px solid #f59e0b; }
+        .completed-loan-item { background:#e8f0ed; border-radius:12px; padding:12px; margin-bottom:8px; opacity:0.8; }
         .search-container { background:white; border-radius:16px; padding:12px; margin-bottom:16px; }
         .search-input { width:100%; padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:10px; }
         .filter-row { display:flex; gap:10px; }
@@ -56,13 +69,15 @@
         .badge-loan { background:#fee2e2; color:#991b1b; }
         .badge-repayment { background:#fef3c7; color:#92400e; }
         .empty-state { text-align:center; padding:30px; color:#64748b; }
-        .toast { position:fixed; bottom:80px; left:16px; right:16px; background:#1e293b; color:white; padding:12px; border-radius:12px; text-align:center; z-index:2000; animation:slideUp 0.3s ease; }
+        .toast { position:fixed; bottom:80px; left:16px; right:16px; background:#1e293b; color:white; padding:12px; border-radius:12px; text-align:center; z-index:2000; animation:slideUp 0.2s ease; }
         .toast.success { background:#2a5a4a; }
         .toast.error { background:#dc2626; }
         @keyframes slideUp { from { transform:translateY(100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
         .summary-stats { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
         .stat { background:#f8fafc; padding:12px; border-radius:12px; text-align:center; }
         .stat .number { font-size:16px; font-weight:600; }
+        .loading-spinner { display:inline-block; width:16px; height:16px; border:2px solid #e2e8f0; border-top-color:#2a5a4a; border-radius:50%; animation:spin 0.6s linear infinite; margin-right:8px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -71,7 +86,7 @@
     <div class="login-box">
         <h2>🏛️ Legacy Builders Group</h2>
         <p>Select your name to continue</p>
-        <div id="memberOptions"></div>
+        <div id="memberOptions"><div style="text-align:center;padding:20px;">Loading members...</div></div>
         <div id="addMemberSection" style="margin-top:20px;">
             <div class="add-member-link" onclick="showAddMemberForm()">+ New member? Join here</div>
             <div id="addMemberForm" style="display:none;" class="add-member-form">
@@ -93,11 +108,10 @@
     </div>
     
     <div class="balance-wrapper">
-        <div class="balance-card"><h3>Total Savings</h3><div class="amount" id="totalSavingsTop">KES 0</div></div>
-        <div class="balance-card"><h3>Outstanding Loans</h3><div class="amount" id="outstandingTop">KES 0</div></div>
+        <div class="balance-card"><h3>Total Savings</h3><div class="amount" id="totalSavingsTop">KES --</div></div>
+        <div class="balance-card"><h3>Outstanding Loans</h3><div class="amount" id="outstandingTop">KES --</div></div>
     </div>
     
-    <!-- Panel 1: Transactions -->
     <div id="transactionsPanel" class="panel">
         <div class="card">
             <h2>Add Transaction</h2>
@@ -115,7 +129,7 @@
                 <div><label>Transaction Message</label><input type="text" id="message" placeholder="e.g., Monthly savings"></div>
             </div>
             <div id="approvalNotice" style="background:#fef3c7; padding:10px; border-radius:12px; margin-bottom:15px; font-size:12px; display:none;">
-                Loan requests need approval from 2 other members before being recorded
+                ⚡ Loan requests need approval from 2 other members before being recorded
             </div>
             <button id="addBtn">Submit Transaction</button>
         </div>
@@ -125,13 +139,12 @@
             <div class="table-wrapper">
                 <table>
                     <thead><tr><th onclick="sortTable('date')">Date</th><th onclick="sortTable('member')">Member</th><th onclick="sortTable('type')">Type</th><th onclick="sortTable('amount')">Amount</th><th>Message</th></tr></thead>
-                    <tbody id="tableBody"><tr><td colspan="5"><div style="text-align:center;padding:20px;">Loading...</div></tr></tbody>
+                    <tbody id="tableBody"><tr><td colspan="5"><div style="text-align:center;padding:20px;">Loading...</div></td></tr></tbody>
                 </table>
             </div>
         </div>
     </div>
     
-    <!-- Panel 2: Summary with Search -->
     <div id="summaryPanel" class="panel">
         <div class="search-container">
             <input type="text" id="searchInput" class="search-input" placeholder="Search transactions...">
@@ -143,29 +156,31 @@
         <div class="card">
             <h2>Financial Summary</h2>
             <div class="summary-stats">
-                <div class="stat"><h3>Total Savings</h3><div class="number" id="totalSavings">KES 0</div></div>
-                <div class="stat"><h3>Loans Taken</h3><div class="number" id="totalLoans">KES 0</div></div>
-                <div class="stat"><h3>Total Repaid</h3><div class="number" id="totalRepaid">KES 0</div></div>
-                <div class="stat"><h3>Net Balance</h3><div class="number" id="netBalance">KES 0</div></div>
+                <div class="stat"><h3>Total Savings</h3><div class="number" id="totalSavings">KES --</div></div>
+                <div class="stat"><h3>Loans Taken</h3><div class="number" id="totalLoans">KES --</div></div>
+                <div class="stat"><h3>Total Repaid</h3><div class="number" id="totalRepaid">KES --</div></div>
+                <div class="stat"><h3>Net Balance</h3><div class="number" id="netBalance">KES --</div></div>
             </div>
         </div>
-        <div class="card"><h2>Member Summary</h2><div id="memberSummary"></div></div>
+        <div class="card"><h2>Member Summary</h2><div id="memberSummary">Loading...</div></div>
     </div>
     
-    <!-- Panel 3: Export -->
     <div id="exportPanel" class="panel">
         <div class="card">
             <h2>Export Data</h2>
             <button id="exportBtn" style="width:100%; margin-bottom:12px;">Download CSV</button>
-            <button id="refreshBtn" class="btn-secondary" style="width:100%;">Refresh Data</button>
+            <button id="refreshBtn" style="width:100%; background:#64748b;">Refresh Data</button>
         </div>
     </div>
     
-    <!-- Panel 4: Loans (Pending Approvals) -->
     <div id="loansPanel" class="panel">
         <div class="card">
             <h2>Pending Loan Approvals</h2>
-            <div id="pendingLoans"></div>
+            <div id="pendingLoans">Loading...</div>
+        </div>
+        <div class="card">
+            <h2>Completed Loans (Approved)</h2>
+            <div id="completedLoans">Loading...</div>
         </div>
     </div>
 </div>
@@ -178,75 +193,318 @@
 </div>
 
 <script>
+// ============================================================
 // REPLACE WITH YOUR APPS SCRIPT URL
+// ============================================================
 const API_URL = "https://script.google.com/macros/s/AKfycbxp5W_mW-UM0-zeb8lmlZj5qm3OvVCQnODF1yXsykzTw6SANx_pkbfjJfLj_6Pp2AJMsg/exec";
 
-let allRecords = [], allMembers = [], pendingLoans = [], currentUser = null, sortColumn = 'date', sortDirection = 'desc', isLoading = false;
-
-// Tab persistence
+// Global state
+let allRecords = [];
+let allMembers = [];
+let pendingLoans = [];
+let completedLoans = [];
+let currentUser = null;
+let sortColumn = 'date';
+let sortDirection = 'desc';
+let isLoading = false;
 let currentTab = localStorage.getItem('legacy_active_tab') || 'transactions';
 
-async function loadMembersList() {
-    const res = await callAPI('getMembers');
-    if (res.success && res.members) {
-        allMembers = res.members;
-    } else {
-        allMembers = ["Mr. Onchari", "Mrs. Onchari", "Mr. Kithinji", "Mrs. Kithinji"];
+// Cache for summary (updates every 5 seconds if on summary tab)
+let lastSummaryFetch = 0;
+let cachedSummary = null;
+
+// ============================================================
+// API CALL - SINGLE FUNCTION
+// ============================================================
+async function callAPI(action, data = {}) {
+    try {
+        const params = new URLSearchParams({action, ...data});
+        const response = await fetch(`${API_URL}?${params.toString()}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+    } catch(e) {
+        return { success: false, error: e.message };
     }
-    return allMembers;
 }
 
-async function refreshLoginScreen() {
-    await loadMembersList();
-    const container = document.getElementById('memberOptions');
-    container.innerHTML = allMembers.map(m => `<div class="member-option" onclick="login('${m}')"><div class="member-avatar">${m.charAt(0)}</div><div class="member-info"><h4>${m}</h4><p>Select to continue</p></div></div>`).join('');
+// ============================================================
+// LOAD ALL DATA IN PARALLEL (FAST!)
+// ============================================================
+async function loadAllData(forceRefresh = false) {
+    if (isLoading || !currentUser) return;
+    isLoading = true;
+    
+    try {
+        // Parallel API calls for speed
+        const [recordsRes, membersRes, summaryRes] = await Promise.all([
+            callAPI('get'),
+            callAPI('getMembers'),
+            callAPI('getSummary')
+        ]);
+        
+        if (recordsRes.success) {
+            allRecords = recordsRes.records || [];
+            applyFilters();
+        }
+        
+        if (membersRes.success && membersRes.members?.length) {
+            allMembers = membersRes.members;
+            updateMemberDropdowns();
+        }
+        
+        if (summaryRes.success) {
+            cachedSummary = summaryRes;
+            updateBalanceDisplays(summaryRes);
+        }
+        
+        // Load pending loans separately (not critical for speed)
+        loadPendingLoans();
+        
+    } catch(e) {
+        showToast('Error loading data', 'error');
+    } finally {
+        isLoading = false;
+    }
 }
 
-async function login(member) {
-    currentUser = member;
-    localStorage.setItem('legacy_current_user', member);
-    document.getElementById('loginOverlay').style.display = 'none';
-    document.getElementById('appContainer').style.display = 'block';
-    document.getElementById('tabBar').style.display = 'flex';
-    document.getElementById('loggedInUser').innerText = member;
-    if(document.getElementById('memberSelect')) document.getElementById('memberSelect').value = member;
-    await loadAllData();
-    await loadPendingLoans();
-    // Restore last active tab
-    activateTab(currentTab);
+function updateBalanceDisplays(summary) {
+    if (!summary) return;
+    const savings = summary.savings || 0;
+    const outstanding = summary.outstanding || 0;
+    document.getElementById('totalSavingsTop').innerHTML = `KES ${savings.toLocaleString('en-KE')}`;
+    document.getElementById('outstandingTop').innerHTML = `KES ${outstanding.toLocaleString('en-KE')}`;
+    document.getElementById('totalSavings').innerHTML = `KES ${savings.toLocaleString('en-KE')}`;
+    document.getElementById('totalLoans').innerHTML = `KES ${(summary.loansTaken || 0).toLocaleString('en-KE')}`;
+    document.getElementById('totalRepaid').innerHTML = `KES ${(summary.repaid || 0).toLocaleString('en-KE')}`;
+    document.getElementById('netBalance').innerHTML = `KES ${(savings - outstanding).toLocaleString('en-KE')}`;
+    
+    // Member summary
+    const memberData = {};
+    allRecords.forEach(r => {
+        if (!memberData[r.member]) memberData[r.member] = { savings: 0, loans: 0, repaid: 0 };
+        if (r.type === 'Savings') memberData[r.member].savings += r.amount;
+        else if (r.type === 'Loan Taken') memberData[r.member].loans += r.amount;
+        else if (r.type === 'Loan Repayment') memberData[r.member].repaid += r.amount;
+    });
+    const summaryHtml = Object.entries(memberData).map(([n, d]) => `
+        <div class="stat"><h3>${n}</h3>
+        <div style="font-size:11px;">Savings: KES ${d.savings.toLocaleString()} | Loans: KES ${d.loans.toLocaleString()} | Repaid: KES ${d.repaid.toLocaleString()}</div></div>
+    `).join('');
+    document.getElementById('memberSummary').innerHTML = summaryHtml || '<div class="empty-state">No transactions yet</div>';
 }
 
-function logout() {
-    localStorage.removeItem('legacy_current_user');
-    currentUser = null;
-    document.getElementById('loginOverlay').style.display = 'flex';
-    document.getElementById('appContainer').style.display = 'none';
-    document.getElementById('tabBar').style.display = 'none';
-    refreshLoginScreen(); // reload members list
-}
-
-function showAddMemberForm() {
-    const formDiv = document.getElementById('addMemberForm');
-    formDiv.style.display = formDiv.style.display === 'none' ? 'flex' : 'none';
-}
-
-async function addNewMember() {
-    const nameInput = document.getElementById('newMemberNameInput');
-    const name = nameInput.value.trim();
-    if (!name) { showToast('Please enter a name', 'error'); return; }
-    const res = await callAPI('addMember', { name });
+async function loadPendingLoans() {
+    const res = await callAPI('getPendingLoans');
     if (res.success) {
-        showToast(`Member ${name} added successfully`, 'success');
-        nameInput.value = '';
-        document.getElementById('addMemberForm').style.display = 'none';
-        await refreshLoginScreen();
-    } else {
-        showToast(res.error || 'Failed to add member', 'error');
+        const allLoans = res.loans || [];
+        // Separate into pending and completed
+        pendingLoans = allLoans.filter(l => l.approvals.length < 2);
+        completedLoans = allLoans.filter(l => l.approvals.length >= 2);
+        renderPendingLoans();
+        renderCompletedLoans();
     }
 }
 
-async function initLogin() {
-    await refreshLoginScreen();
+function renderPendingLoans() {
+    const container = document.getElementById('pendingLoans');
+    if (!pendingLoans.length) {
+        container.innerHTML = '<div class="empty-state">No pending loan approvals</div>';
+        return;
+    }
+    container.innerHTML = pendingLoans.map(loan => {
+        const isRequester = (loan.member === currentUser);
+        const alreadyApproved = loan.approvals.includes(currentUser);
+        const showButtons = !isRequester && !alreadyApproved;
+        const statusText = isRequester ? ' (Your request - waiting)' : (alreadyApproved ? ' (You approved)' : '');
+        return `<div class="loan-item ${isRequester ? 'own-loan' : ''}">
+            <div><strong>${loan.member}</strong> requested KES ${loan.amount.toLocaleString('en-KE')}${statusText}</div>
+            <div style="font-size:12px;color:#666;">${loan.message || ''}</div>
+            <div style="font-size:11px;">Approvals: ${loan.approvals.length}/2</div>
+            ${showButtons ? `<div style="margin-top:8px;"><button class="approve-btn" onclick="approveLoan('${loan.id}')">Approve</button> <button class="reject-btn" onclick="rejectLoan('${loan.id}')">Reject</button></div>` : ''}
+        </div>`;
+    }).join('');
+}
+
+function renderCompletedLoans() {
+    const container = document.getElementById('completedLoans');
+    if (!completedLoans.length) {
+        container.innerHTML = '<div class="empty-state">No completed loans yet</div>';
+        return;
+    }
+    container.innerHTML = completedLoans.map(loan => `
+        <div class="completed-loan-item">
+            <div><strong>${loan.member}</strong> borrowed KES ${loan.amount.toLocaleString('en-KE')}</div>
+            <div style="font-size:11px;color:#64748b;">Approved by: ${loan.approvals.join(', ')}</div>
+            <div style="font-size:11px;">${loan.message || ''}</div>
+        </div>
+    `).join('');
+}
+
+function updateMemberDropdowns() {
+    const opts = allMembers.map(m => `<option value="${m}">${m}</option>`).join('');
+    document.getElementById('memberSelect').innerHTML = opts;
+    document.getElementById('filterMember').innerHTML = '<option value="">All Members</option>' + opts;
+    if (currentUser) document.getElementById('memberSelect').value = currentUser;
+}
+
+// ============================================================
+// APPROVAL ACTIONS
+// ============================================================
+async function approveLoan(loanId) {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = '...';
+    const res = await callAPI('approveLoan', { loanId, approver: currentUser });
+    if (res.success) {
+        showToast('✅ Loan approved! Balance updated.', 'success');
+        await loadPendingLoans();
+        await loadAllData();
+    } else {
+        showToast('Error: ' + res.error, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Approve';
+    }
+}
+
+async function rejectLoan(loanId) {
+    const res = await callAPI('rejectLoan', { loanId });
+    if (res.success) {
+        showToast('Loan rejected', 'warning');
+        await loadPendingLoans();
+    } else {
+        showToast('Error: ' + res.error, 'error');
+    }
+}
+
+// ============================================================
+// ADD TRANSACTION
+// ============================================================
+async function addRecord() {
+    if (!currentUser) { showToast('Please login first', 'error'); return; }
+    const date = document.getElementById('date').value;
+    const member = document.getElementById('memberSelect').value;
+    const type = document.getElementById('type').value;
+    const amount = parseFloat(document.getElementById('amount').value);
+    const message = document.getElementById('message').value;
+    
+    if (!date || !member || !amount || amount <= 0) {
+        showToast('Please fill all required fields', 'error');
+        return;
+    }
+    
+    const btn = document.getElementById('addBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading-spinner"></span> Processing...';
+    
+    if (type === 'Loan Taken') {
+        const savingsRes = await callAPI('getSummary');
+        const currentSavings = savingsRes.success ? (savingsRes.savings || 0) : 0;
+        if (amount > currentSavings) {
+            showToast(`Cannot borrow KES ${amount.toLocaleString()}. Available: KES ${currentSavings.toLocaleString()}`, 'error');
+            btn.disabled = false;
+            btn.innerHTML = 'Submit Transaction';
+            return;
+        }
+        const res = await callAPI('submitLoan', { date, member, amount, message, notes: '', requestedBy: currentUser });
+        if (res.success) {
+            showToast('✅ Loan request submitted! Needs 2 approvals.', 'success');
+            document.getElementById('amount').value = '';
+            document.getElementById('message').value = '';
+            await loadPendingLoans();
+        } else {
+            showToast('Error: ' + res.error, 'error');
+        }
+    } else {
+        const res = await callAPI('add', { date, member, type, amount, message });
+        if (res.success) {
+            showToast(`✅ ${type} of KES ${amount.toLocaleString()} added`, 'success');
+            document.getElementById('amount').value = '';
+            document.getElementById('message').value = '';
+            await loadAllData();
+        } else {
+            showToast('Error: ' + (res.error || 'Failed'), 'error');
+        }
+    }
+    
+    btn.disabled = false;
+    btn.innerHTML = 'Submit Transaction';
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function toggleApprovalNotice() {
+    document.getElementById('approvalNotice').style.display = document.getElementById('type').value === 'Loan Taken' ? 'block' : 'none';
+}
+
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+    const filterMember = document.getElementById('filterMember')?.value || '';
+    const filterType = document.getElementById('filterType')?.value || '';
+    
+    let filtered = [...allRecords];
+    if (filterMember) filtered = filtered.filter(r => r.member === filterMember);
+    if (filterType) filtered = filtered.filter(r => r.type === filterType);
+    if (searchTerm) {
+        filtered = filtered.filter(r => 
+            r.member.toLowerCase().includes(searchTerm) || 
+            (r.message || '').toLowerCase().includes(searchTerm)
+        );
+    }
+    filtered.sort((a, b) => {
+        let av = a[sortColumn], bv = b[sortColumn];
+        if (sortColumn === 'amount') { av = Number(av); bv = Number(bv); }
+        else if (sortColumn === 'date') { av = new Date(av); bv = new Date(bv); }
+        else { av = (av || '').toString().toLowerCase(); bv = (bv || '').toString().toLowerCase(); }
+        return av < bv ? (sortDirection === 'asc' ? -1 : 1) : av > bv ? (sortDirection === 'asc' ? 1 : -1) : 0;
+    });
+    renderTable(filtered);
+}
+
+function renderTable(records) {
+    const tbody = document.getElementById('tableBody');
+    if (!records.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No transactions found</td></tr>';
+        return;
+    }
+    tbody.innerHTML = records.map(r => {
+        let cls = r.type === 'Savings' ? 'badge-savings' : (r.type === 'Loan Taken' ? 'badge-loan' : 'badge-repayment');
+        return `<tr>
+            <td>${new Date(r.date).toLocaleDateString('en-KE')}</td>
+            <td><strong>${r.member}</strong></td>
+            <td><span class="badge ${cls}">${r.type}</span></td>
+            <td>KES ${(r.amount || 0).toLocaleString('en-KE')}</td>
+            <td>${r.message || '-'}</td>
+        </tr>`;
+    }).join('');
+}
+
+function sortTable(column) {
+    if (sortColumn === column) sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    else { sortColumn = column; sortDirection = 'desc'; }
+    applyFilters();
+}
+
+function exportToCSV() {
+    if (!allRecords.length) { showToast('No data to export', 'error'); return; }
+    const headers = ['Date', 'Member', 'Type', 'Amount (KES)', 'Message', 'Balance'];
+    const rows = allRecords.map(r => [r.date, r.member, r.type, r.amount, r.message || '', r.balanceAfter]);
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `legacy_builders_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    showToast('Export complete', 'success');
+}
+
+function showToast(msg, type) {
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
 }
 
 function activateTab(tabId) {
@@ -260,24 +518,89 @@ function activateTab(tabId) {
     currentTab = tabId;
 }
 
-// Check for existing login
+// ============================================================
+// LOGIN SYSTEM
+// ============================================================
+async function loadMembersList() {
+    const res = await callAPI('getMembers');
+    if (res.success && res.members) {
+        allMembers = res.members;
+    } else {
+        allMembers = ["Mr. Onchari", "Mrs. Onchari", "Mr. Kithinji", "Mrs. Kithinji"];
+    }
+    return allMembers;
+}
+
+async function refreshLoginScreen() {
+    await loadMembersList();
+    const container = document.getElementById('memberOptions');
+    container.innerHTML = allMembers.map(m => `
+        <div class="member-option" onclick="login('${m}')">
+            <div class="member-avatar">${m.charAt(0)}</div>
+            <div class="member-info"><h4>${m}</h4><p>Select to continue</p></div>
+        </div>
+    `).join('');
+}
+
+async function login(member) {
+    currentUser = member;
+    localStorage.setItem('legacy_current_user', member);
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('appContainer').style.display = 'block';
+    document.getElementById('tabBar').style.display = 'flex';
+    document.getElementById('loggedInUser').innerText = member;
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    await loadAllData();
+    activateTab(currentTab);
+}
+
+function logout() {
+    localStorage.removeItem('legacy_current_user');
+    currentUser = null;
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('appContainer').style.display = 'none';
+    document.getElementById('tabBar').style.display = 'none';
+    refreshLoginScreen();
+}
+
+function showAddMemberForm() {
+    const formDiv = document.getElementById('addMemberForm');
+    formDiv.style.display = formDiv.style.display === 'none' ? 'flex' : 'none';
+}
+
+async function addNewMember() {
+    const nameInput = document.getElementById('newMemberNameInput');
+    const name = nameInput.value.trim();
+    if (!name) { showToast('Please enter a name', 'error'); return; }
+    const res = await callAPI('addMember', { name });
+    if (res.success) {
+        showToast(`✅ Member ${name} added!`, 'success');
+        nameInput.value = '';
+        document.getElementById('addMemberForm').style.display = 'none';
+        await refreshLoginScreen();
+    } else {
+        showToast(res.error || 'Failed to add member', 'error');
+    }
+}
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
 const savedUser = localStorage.getItem('legacy_current_user');
 if (savedUser) {
-    // We'll check if member exists after loading members
     (async () => {
         await loadMembersList();
         if (allMembers.includes(savedUser)) {
             login(savedUser);
         } else {
-            initLogin();
+            refreshLoginScreen();
         }
     })();
 } else {
-    initLogin();
+    refreshLoginScreen();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('date').value = new Date().toISOString().split('T')[0];
     document.getElementById('addBtn').onclick = addRecord;
     document.getElementById('refreshBtn').onclick = () => { loadAllData(); loadPendingLoans(); };
     document.getElementById('exportBtn').onclick = exportToCSV;
@@ -285,123 +608,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('filterMember').onchange = () => applyFilters();
     document.getElementById('filterType').onchange = () => applyFilters();
     document.querySelectorAll('.tab').forEach(tab => {
-        tab.onclick = () => {
-            activateTab(tab.dataset.panel);
-        };
+        tab.onclick = () => activateTab(tab.dataset.panel);
     });
 });
 
-function toggleApprovalNotice() { document.getElementById('approvalNotice').style.display = document.getElementById('type').value === 'Loan Taken' ? 'block' : 'none'; }
-
-async function callAPI(action, data={}) {
-    try {
-        const params = new URLSearchParams({action,...data});
-        const response = await fetch(`${API_URL}?${params.toString()}`);
-        if(!response.ok) throw new Error(`HTTP ${response.status}`);
-        return await response.json();
-    } catch(e) { return { success: false, error: e.message }; }
-}
-
-async function loadAllData() {
-    if(isLoading || !currentUser) return;
-    isLoading = true;
-    try { await loadRecords(); await loadMembersFromSheet(); await loadSummary(); } catch(e) { showToast('Error loading data','error'); }
-    finally { isLoading = false; }
-}
-async function loadRecords() { const r=await callAPI('get'); if(r.success) { allRecords=r.records||[]; applyFilters(); } }
-async function loadMembersFromSheet() {
-    const r=await callAPI('getMembers');
-    if(r.success && r.members?.length) allMembers=r.members;
-    const opts = allMembers.map(m=>`<option value="${m}">${m}</option>`).join('');
-    document.getElementById('memberSelect').innerHTML = opts;
-    document.getElementById('filterMember').innerHTML = '<option value="">All Members</option>'+opts;
-    if(currentUser) document.getElementById('memberSelect').value = currentUser;
-}
-async function loadPendingLoans() { const r=await callAPI('getPendingLoans'); if(r.success) { pendingLoans=r.loans||[]; renderPendingLoans(); } }
-function renderPendingLoans() {
-    const container = document.getElementById('pendingLoans');
-    if(!pendingLoans.length) { container.innerHTML='<div class="empty-state">No pending loan approvals</div>'; return; }
-    container.innerHTML = pendingLoans.map(loan=>{
-        const isRequester = (loan.member === currentUser);
-        const alreadyApproved = loan.approvals.includes(currentUser);
-        const showButtons = !isRequester && !alreadyApproved;
-        const statusText = isRequester ? ' (Your request - waiting for approvals)' : (alreadyApproved ? ' (You approved)' : '');
-        return `<div class="loan-item ${isRequester ? 'own-loan' : ''}">
-            <div><strong>${loan.member}</strong> requested KES ${loan.amount.toLocaleString('en-KE')}${statusText}</div>
-            <div style="font-size:12px;color:#666;">${loan.message||''}</div>
-            <div style="font-size:11px;">Approvals: ${loan.approvals.length}/2</div>
-            ${showButtons ? `<div class="approval-buttons"><button class="approve-btn" onclick="approveLoan('${loan.id}')">Approve</button><button class="reject-btn" onclick="rejectLoan('${loan.id}')">Reject</button></div>` : ''}
-        </div>`;
-    }).join('');
-}
-async function approveLoan(loanId) { const r=await callAPI('approveLoan',{loanId,approver:currentUser}); if(r.success) { showToast('Loan approved','success'); await loadPendingLoans(); await loadAllData(); } else showToast('Error: '+r.error,'error'); }
-async function rejectLoan(loanId) { const r=await callAPI('rejectLoan',{loanId}); if(r.success) { showToast('Loan rejected','warning'); await loadPendingLoans(); } else showToast('Error: '+r.error,'error'); }
-
-async function addRecord() {
-    if(!currentUser){ showToast('Please login first','error'); return; }
-    const date=document.getElementById('date').value, member=document.getElementById('memberSelect').value, type=document.getElementById('type').value, amount=parseFloat(document.getElementById('amount').value), message=document.getElementById('message').value;
-    if(!date||!member||!amount||amount<=0){ showToast('Please fill all required fields','error'); return; }
-    if(type==='Loan Taken'){
-        const savingsRes=await callAPI('getSummary');
-        const currentSavings=savingsRes.success?(savingsRes.savings||0):0;
-        if(amount>currentSavings){ showToast(`Cannot borrow KES ${amount.toLocaleString()}. Available savings: KES ${currentSavings.toLocaleString()}`,'error'); return; }
-        const res=await callAPI('submitLoan',{date,member,amount,message,notes:'',requestedBy:currentUser});
-        if(res.success){ showToast('Loan request submitted! Waiting for 2 approvals','success'); document.getElementById('amount').value=''; document.getElementById('message').value=''; await loadPendingLoans(); }
-        else showToast('Error: '+res.error,'error');
-    } else {
-        const btn=document.getElementById('addBtn'); btn.disabled=true; btn.textContent='Processing...';
-        const res=await callAPI('add',{date,member,type,amount,message});
-        if(res.success){ showToast(`${type} of KES ${amount.toLocaleString()} added`,'success'); document.getElementById('amount').value=''; document.getElementById('message').value=''; await loadAllData(); }
-        else showToast('Error: '+(res.error||'Failed'),'error');
-        btn.disabled=false; btn.textContent='Submit Transaction';
+// Auto-refresh every 10 seconds when on Summary or Loans tab
+setInterval(() => {
+    if (currentUser && (currentTab === 'summary' || currentTab === 'loans')) {
+        loadAllData();
+        loadPendingLoans();
     }
-}
-
-async function loadSummary() {
-    const r=await callAPI('getSummary');
-    if(r.success){
-        const savings=r.savings||0, loans=r.loansTaken||0, repaid=r.repaid||0, outstanding=loans-repaid, net=savings-outstanding;
-        document.getElementById('totalSavingsTop').innerHTML=`KES ${savings.toLocaleString('en-KE')}`;
-        document.getElementById('outstandingTop').innerHTML=`KES ${outstanding.toLocaleString('en-KE')}`;
-        document.getElementById('totalSavings').innerHTML=`KES ${savings.toLocaleString('en-KE')}`;
-        document.getElementById('totalLoans').innerHTML=`KES ${loans.toLocaleString('en-KE')}`;
-        document.getElementById('totalRepaid').innerHTML=`KES ${repaid.toLocaleString('en-KE')}`;
-        document.getElementById('netBalance').innerHTML=`KES ${net.toLocaleString('en-KE')}`;
-        const memberData={};
-        allRecords.forEach(r=>{ if(!memberData[r.member]) memberData[r.member]={savings:0,loans:0,repaid:0}; if(r.type==='Savings') memberData[r.member].savings+=r.amount; else if(r.type==='Loan Taken') memberData[r.member].loans+=r.amount; else if(r.type==='Loan Repayment') memberData[r.member].repaid+=r.amount; });
-        document.getElementById('memberSummary').innerHTML = Object.entries(memberData).map(([n,d])=>`<div class="stat"><h3>${n}</h3><div>Savings: KES ${d.savings.toLocaleString()} | Loans: KES ${d.loans.toLocaleString()} | Repaid: KES ${d.repaid.toLocaleString()}</div></div>`).join('')||'<div class="empty-state">No transactions yet</div>';
-    }
-}
-
-function applyFilters(){
-    let filtered=[...allRecords];
-    const filterMember=document.getElementById('filterMember').value, filterType=document.getElementById('filterType').value, search=document.getElementById('searchInput').value.toLowerCase();
-    if(filterMember) filtered=filtered.filter(r=>r.member===filterMember);
-    if(filterType) filtered=filtered.filter(r=>r.type===filterType);
-    if(search) filtered=filtered.filter(r=>r.member.toLowerCase().includes(search)||r.message.toLowerCase().includes(search));
-    filtered.sort((a,b)=>{ let av=a[sortColumn],bv=b[sortColumn]; if(sortColumn==='amount'){av=Number(av);bv=Number(bv);} else if(sortColumn==='date'){av=new Date(av);bv=new Date(bv);} else{av=(av||'').toLowerCase();bv=(bv||'').toLowerCase();} return av<bv?(sortDirection==='asc'?-1:1):av>bv?(sortDirection==='asc'?1:-1):0; });
-    renderTable(filtered);
-}
-function renderTable(records){
-    const tbody=document.getElementById('tableBody');
-    if(!records.length){ tbody.innerHTML='<tr><td colspan="5" class="empty-state">No transactions found</td></tr>'; return; }
-    tbody.innerHTML=records.map(r=>{ let cls=r.type==='Savings'?'badge-savings':(r.type==='Loan Taken'?'badge-loan':'badge-repayment'); return `<tr>
-        <td>${new Date(r.date).toLocaleDateString('en-KE')}</td>
-        <td><strong>${r.member}</strong></td>
-        <td><span class="badge ${cls}">${r.type}</span></td>
-        <td>KES ${(r.amount||0).toLocaleString('en-KE')}</td>
-        <td>${r.message||'-'}</td>
-    </tr>`; }).join('');
-}
-function sortTable(column){ if(sortColumn===column) sortDirection=sortDirection==='asc'?'desc':'asc'; else{ sortColumn=column; sortDirection='desc'; } applyFilters(); }
-function exportToCSV(){
-    if(!allRecords.length){ showToast('No data to export','error'); return; }
-    const headers=['Date','Member','Type','Amount (KES)','Message','Balance'];
-    const rows=allRecords.map(r=>[r.date,r.member,r.type,r.amount,r.message||'',r.balanceAfter]);
-    const csv=[headers,...rows].map(row=>row.map(cell=>`"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
-    const blob=new Blob([csv],{type:'text/csv'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`legacy_builders_${new Date().toISOString().split('T')[0]}.csv`; link.click(); URL.revokeObjectURL(link.href); showToast('Export complete','success');
-}
-function showToast(msg,type){ const t=document.createElement('div'); t.className=`toast ${type}`; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3000); }
+}, 10000);
 </script>
 </body>
 </html>
