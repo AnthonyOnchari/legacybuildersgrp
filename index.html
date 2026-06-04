@@ -53,6 +53,109 @@
             margin-bottom: 24px;
         }
         
+        /* Loading Animation */
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #2a5a4a;
+            border-right-color: #2a5a4a;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+        }
+        
+        .loading-text {
+            color: #64748b;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .loading-dots {
+            display: inline-flex;
+            gap: 4px;
+        }
+        
+        .loading-dots span {
+            width: 6px;
+            height: 6px;
+            background: #64748b;
+            border-radius: 50%;
+            animation: bounce 1.4s ease-in-out infinite;
+        }
+        
+        .loading-dots span:nth-child(1) { animation-delay: 0s; }
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+            30% { transform: translateY(-8px); opacity: 1; }
+        }
+        
+        /* Skeleton loading for members */
+        .skeleton-member {
+            display: flex;
+            align-items: center;
+            padding: 12px 14px;
+            margin: 8px 0;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+        }
+        
+        .skeleton-avatar {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 22px;
+            margin-right: 14px;
+        }
+        
+        .skeleton-text {
+            flex: 1;
+        }
+        
+        .skeleton-name {
+            width: 120px;
+            height: 16px;
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .skeleton-subtitle {
+            width: 80px;
+            height: 12px;
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 6px;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
         .member-option {
             display: flex;
             align-items: center;
@@ -63,12 +166,24 @@
             border-radius: 16px;
             cursor: pointer;
             transition: all 0.2s;
+            animation: fadeInUp 0.3s ease;
         }
         
         .member-option:hover {
             background: white;
             border-color: #2a5a4a;
             transform: translateX(4px);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .member-avatar {
@@ -522,18 +637,6 @@
             border-radius: 10px;
             transition: width 0.3s ease;
         }
-        
-        .skeleton {
-            background: linear-gradient(90deg, #f0f2f5 25%, #e2e8f0 50%, #f0f2f5 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 8px;
-        }
-        
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
     </style>
 </head>
 <body>
@@ -543,7 +646,16 @@
         <h1>🏛️ Legacy Builders Group</h1>
         <div class="subtitle">Savings & Loans Tracker</div>
         <div id="memberOptions">
-            <div style="text-align:center;padding:20px;">Loading members...</div>
+            <!-- Loading animation will be shown here -->
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">
+                    Loading members
+                    <div class="loading-dots">
+                        <span>.</span><span>.</span><span>.</span>
+                    </div>
+                </div>
+            </div>
         </div>
         <div>
             <div class="add-member-link" onclick="showAddMemberForm()">+ New member? Join here</div>
@@ -626,7 +738,7 @@
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        <tr><td colspan="5"><div class="empty-state">Loading...</div></td></tr>
+                        <tr><td colspan="5"><div class="empty-state">Loading...</div><tr></tr>
                     </tbody>
                 </table>
             </div>
@@ -690,7 +802,7 @@
 
 <script>
 // ============================================================
-// CONFIGURATION - USE YOUR WORKING APPS SCRIPT URL
+// CONFIGURATION - REPLACE WITH YOUR APPS SCRIPT URL
 // ============================================================
 const API_URL = "https://script.google.com/macros/s/AKfycbwop5qev5BSXw4f-cKuHs9Ljo8IAavndn-QCjex_X-NqAyF5oaS7ojnpbvig30zeWY3/exec";
 
@@ -709,7 +821,7 @@ let currentTab = localStorage.getItem('legacy_active_tab') || 'transactions';
 let hasShownGreeting = false;
 
 // ============================================================
-// API CALL - Single function
+// API CALL
 // ============================================================
 async function callAPI(action, data = {}) {
     try {
@@ -736,7 +848,6 @@ async function loadAllData(showToastMsg = false) {
     }
     
     try {
-        // Parallel API calls - much faster!
         const [recordsRes, membersRes, summaryRes, loansRes] = await Promise.all([
             callAPI('get'),
             callAPI('getMembers'),
@@ -995,7 +1106,7 @@ function applyFilters() {
 function renderTable(records) {
     const tbody = document.getElementById('tableBody');
     if (!records.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No transactions found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No transactions found</td></td>';
         return;
     }
     tbody.innerHTML = records.map(r => {
@@ -1097,8 +1208,42 @@ async function loadMembersList() {
 }
 
 async function refreshLoginScreen() {
-    await loadMembersList();
     const container = document.getElementById('memberOptions');
+    
+    // Show skeleton loading animation
+    container.innerHTML = `
+        <div class="skeleton-member">
+            <div class="skeleton-avatar"></div>
+            <div class="skeleton-text">
+                <div class="skeleton-name"></div>
+                <div class="skeleton-subtitle"></div>
+            </div>
+        </div>
+        <div class="skeleton-member">
+            <div class="skeleton-avatar"></div>
+            <div class="skeleton-text">
+                <div class="skeleton-name"></div>
+                <div class="skeleton-subtitle"></div>
+            </div>
+        </div>
+        <div class="skeleton-member">
+            <div class="skeleton-avatar"></div>
+            <div class="skeleton-text">
+                <div class="skeleton-name"></div>
+                <div class="skeleton-subtitle"></div>
+            </div>
+        </div>
+        <div class="skeleton-member">
+            <div class="skeleton-avatar"></div>
+            <div class="skeleton-text">
+                <div class="skeleton-name"></div>
+                <div class="skeleton-subtitle"></div>
+            </div>
+        </div>
+    `;
+    
+    await loadMembersList();
+    
     container.innerHTML = allMembers.map(m => {
         const initial = m.charAt(0);
         return `
@@ -1132,7 +1277,7 @@ async function login(member) {
         if (currentUser && (currentTab === 'summary' || currentTab === 'loans')) {
             loadAllData();
         }
-    }, 30000); // Refresh every 30 seconds instead of 15
+    }, 30000);
 }
 
 function logout() {
