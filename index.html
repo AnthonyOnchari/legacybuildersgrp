@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Legacy Builders Group - Savings & Loans Tracker</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2rem;
+            letter-spacing: -0.5px;
+        }
+        
+        .header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card:hover {
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            margin: 0 0 1.5rem 0;
+            color: #1e3c32;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2a5a4a;
+            box-shadow: 0 0 0 3px rgba(42,90,74,0.1);
+        }
+        
+        label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+            color: #333;
+            font-size: 0.9rem;
+        }
+        
+        button {
+            background: #2a5a4a;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        button:hover {
+            background: #1e3c32;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-bar input, .search-bar select {
+            flex: 1;
+            min-width: 180px;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            color: #495057;
+            position: sticky;
+            top: 0;
+        }
+        
+        th:hover {
+            background: #e9ecef;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 0;
+        }
+        
+        .stat {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 1.2rem;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s;
+        }
+        
+        .stat:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stat h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 0.85rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .stat .number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2a5a4a;
+        }
+        
+        .stat .trend {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            color: #6c757d;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2a5a4a;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 12px;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        
+        .toast.success { background: #2a5a4a; }
+        .toast.error { background: #dc3545; }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .badge-savings { background: #28a74520; color: #28a745; }
+        .badge-loan { background: #dc354520; color: #dc3545; }
+        .badge-repayment { background: #ffc10720; color: #856404; }
+        
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .header h1 { font-size: 1.5rem; }
+            .card { padding: 1rem; }
+            th, td { padding: 8px; font-size: 0.8rem; }
+            .stat .number { font-size: 1.3rem; }
+            button { padding: 10px 20px; font-size: 0.85rem; }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .info-banner {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 10px 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            border-left: 4px solid #17a2b8;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🏛️ Legacy Builders Group</h1>
+        <p>Savings, Loans & Repayments Tracker | Onchari & Kithinji Families</p>
+    </div>
+
+    <div class="card">
+        <h2>📝 Add New Transaction</h2>
+        <div class="info-banner">
+            💡 Tip: Fill in all fields and click "Add Record". Data saves instantly to Google Sheets.
+        </div>
+        <div class="form-grid">
+            <div>
+                <label>📅 Date</label>
+                <input type="date" id="date">
+            </div>
+            <div>
+                <label>👤 Member Name</label>
+                <select id="member"></select>
+            </div>
+            <div>
+                <label>💰 Transaction Type</label>
+                <select id="type">
+                    <option value="Savings">💵 Savings (Deposit)</option>
+                    <option value="Loan Taken">🏦 Loan Taken (Borrow)</option>
+                    <option value="Loan Repayment">💳 Loan Repayment (Pay Back)</option>
+                </select>
+            </div>
+            <div>
+                <label>💲 Amount (KES)</label>
+                <input type="number" id="amount" placeholder="0.00" step="0.01">
+            </div>
+            <div>
+                <label>📋 Description</label>
+                <input type="text" id="desc" placeholder="e.g., Monthly savings, School fees">
+            </div>
+            <div>
+                <label>📝 Meeting Notes (Optional)</label>
+                <textarea id="notes" rows="1" placeholder="Any notes from the meeting..."></textarea>
+            </div>
+        </div>
+        <button id="addBtn">➕ Add Record</button>
+        <button id="refreshBtn" class="btn-secondary">🔄 Refresh Data</button>
+        <button id="exportBtn" style="background: #0d6efd;">📥 Export to Excel</button>
+    </div>
+
+    <div class="card">
+        <h2>📊 Summary Dashboard</h2>
+        <div class="summary-stats">
+            <div class="stat">
+                <h3>Total Savings</h3>
+                <div class="number" id="totalSavings">0</div>
+                <div class="trend">💰 Available savings</div>
+            </div>
+            <div class="stat">
+                <h3>Total Loans Taken</h3>
+                <div class="number" id="totalLoans">0</div>
+                <div class="trend">🏦 Borrowed amount</div>
+            </div>
+            <div class="stat">
+                <h3>Total Repaid</h3>
+                <div class="number" id="totalRepaid">0</div>
+                <div class="trend">✅ Paid back</div>
+            </div>
+            <div class="stat">
+                <h3>Outstanding Loans</h3>
+                <div class="number" id="outstanding">0</div>
+                <div class="trend">⚠️ Remaining to pay</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🔍 Search & Filter</h2>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="🔎 Search by member, description or notes...">
+            <select id="filterMember">
+                <option value="">All Members</option>
+            </select>
+            <select id="filterType">
+                <option value="">All Transactions</option>
+                <option value="Savings">💵 Savings Only</option>
+                <option value="Loan Taken">🏦 Loans Taken Only</option>
+                <option value="Loan Repayment">💳 Repayments Only</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>📋 Transaction History</h2>
+        <div class="table-wrapper">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('date')">📅 Date ⬍</th>
+                        <th onclick="sortTable('member')">👤 Member ⬍</th>
+                        <th onclick="sortTable('type')">💰 Type ⬍</th>
+                        <th onclick="sortTable('amount')">💲 Amount (KES) ⬍</th>
+                        <th>📋 Description</th>
+                        <th>📝 Meeting Notes</th>
+                        <th onclick="sortTable('balanceAfter')">⚖️ Balance ⬍</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="7"><div class="loading"><div class="spinner"></div>Loading transactions...</div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==================== CONFIGURATION ====================
+const API_URL = "https://script.google.com/macros/s/AKfycbz7tA9mC39vi_XEDfHULcf5Mbd7pThz8o8WgK2EVarPgnYAsNoB9j7aYM6HXe8gr4_6uQ/exec";
+
+let allRecords = [];
+let sortColumn = 'date';
+let sortDirection = 'desc';
+let isLoading = false;
+
+// ==================== INITIALIZATION ====================
+document.addEventListener('DOMContentLoaded', () => {
+    // Set default date to today
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    
+    // Attach event listeners
+    document.getElementById('addBtn').onclick = addRecord;
+    document.getElementById('refreshBtn').onclick = () => loadAllData();
+    document.getElementById('exportBtn').onclick = exportToExcel;
+    document.getElementById('searchInput').onkeyup = () => applyFilters();
+    document.getElementById('filterMember').onchange = () => applyFilters();
+    document.getElementById('filterType').onchange = () => applyFilters();
+    
+    // Load all data
+    loadAllData();
+});
+
+// ==================== API CALLS ====================
+async function callAPI(action, data = {}) {
+    try {
+        const formData = new URLSearchParams();
+        formData.append('action', action);
+        for (let key in data) {
+            if (data[key] !== undefined && data[key] !== null) {
+                formData.append(key, data[key].toString());
+            }
+        }
+        
+        const response = await fetch(`${API_URL}?${formData.toString()}`, {
+            method: 'GET',
+            mode: 'cors'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        return result;
+    } catch(error) {
+        console.error('API Error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+async function loadAllData() {
+    if (isLoading) return;
+    isLoading = true;
+    
+    try {
+        await Promise.all([
+            loadRecords(),
+            loadMembers(),
+            loadSummary()
+        ]);
+    } catch(error) {
+        showToast('Error loading data: ' + error.message, 'error');
+    } finally {
+        isLoading = false;
+    }
+}
+
+async function loadRecords() {
+    const result = await callAPI('get');
+    if (result.success) {
+        allRecords = result.records || [];
+        applyFilters();
+    } else {
+        showToast('Error loading records: ' + (result.error || 'Unknown error'), 'error');
+        document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" class="empty-state">❌ Failed to load records. Please refresh.</td></tr>';
+    }
+}
+
+async function loadMembers() {
+    const result = await callAPI('getMembers');
+    if (result.success && result.members && result.members.length > 0) {
+        const memberSelect = document.getElementById('member');
+        const filterSelect = document.getElementById('filterMember');
+        
+        const memberOptions = result.members.map(m => `<option value="${m}">${m}</option>`).join('');
+        memberSelect.innerHTML = memberOptions;
+        filterSelect.innerHTML = '<option value="">📋 All Members</option>' + memberOptions;
+    } else {
+        // Fallback members
+        const defaultMembers = ["Mr. Onchari", "Mrs. Onchari", "Mr. Kithinji", "Mrs. Kithinji"];
+        const memberOptions = defaultMembers.map(m => `<option value="${m}">${m}</option>`).join('');
+        document.getElementById('member').innerHTML = memberOptions;
+        document.getElementById('filterMember').innerHTML = '<option value="">📋 All Members</option>' + memberOptions;
+    }
+}
+
+async function loadSummary() {
+    const result = await callAPI('getSummary');
+    if (result.success) {
+        document.getElementById('totalSavings').innerHTML = formatMoney(result.savings || 0);
+        document.getElementById('totalLoans').innerHTML = formatMoney(result.loansTaken || 0);
+        document.getElementById('totalRepaid').innerHTML = formatMoney(result.repaid || 0);
+        document.getElementById('outstanding').innerHTML = formatMoney(result.outstanding || 0);
+        
+        // Color coding for outstanding
+        const outstandingElem = document.getElementById('outstanding');
+        if (result.outstanding > 0) {
+            outstandingElem.style.color = '#dc3545';
+        } else {
+            outstandingElem.style.color = '#28a745';
+        }
+    } else {
+        console.error('Summary error:', result.error);
+    }
+}
+
+async function addRecord() {
+    const date = document.getElementById('date').value;
+    const member = document.getElementById('member').value;
+    const type = document.getElementById('type').value;
+    const amount = parseFloat(document.getElementById('amount').value);
+    const description = document.getElementById('desc').value;
+    const notes = document.getElementById('notes').value;
+    
+    // Validation
+    if (!date) {
+        showToast('Please select a date', 'error');
+        return;
+    }
+    if (!member) {
+        showToast('Please select a member', 'error');
+        return;
+    }
+    if (!type) {
+        showToast('Please select transaction type', 'error');
+        return;
+    }
+    if (!amount || amount <= 0) {
+        showToast('Please enter a valid amount greater than 0', 'error');
+        return;
+    }
+    
+    const btn = document.getElementById('addBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Adding...';
+    
+    const result = await callAPI('add', {
+        date: date,
+        member: member,
+        type: type,
+        amount: amount,
+        description: description,
+        notes: notes
+    });
+    
+    if (result.success) {
+        showToast(`✅ ${type} of ${formatMoney(amount)} added for ${member}!`, 'success');
+        // Clear form
+        document.getElementById('amount').value = '';
+        document.getElementById('desc').value = '';
+        document.getElementById('notes').value = '';
+        // Reload all data
+        await loadAllData();
+    } else {
+        showToast('Error: ' + (result.error || 'Failed to add record'), 'error');
+    }
+    
+    btn.disabled = false;
+    btn.textContent = '➕ Add Record';
+}
+
+// ==================== FILTERS AND DISPLAY ====================
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const filterMember = document.getElementById('filterMember').value;
+    const filterType = document.getElementById('filterType').value;
+    
+    let filtered = [...allRecords];
+    
+    if (filterMember) {
+        filtered = filtered.filter(r => r.member === filterMember);
+    }
+    if (filterType) {
+        filtered = filtered.filter(r => r.type === filterType);
+    }
+    if (searchTerm) {
+        filtered = filtered.filter(r => 
+            (r.member && r.member.toLowerCase().includes(searchTerm)) ||
+            (r.description && r.description.toLowerCase().includes(searchTerm)) ||
+            (r.notes && r.notes.toLowerCase().includes(searchTerm))
+        );
+    }
+    
+    // Sort
+    filtered.sort((a, b) => {
+        let aVal = a[sortColumn];
+        let bVal = b[sortColumn];
+        
+        if (sortColumn === 'amount' || sortColumn === 'balanceAfter') {
+            aVal = Number(aVal) || 0;
+            bVal = Number(bVal) || 0;
+        } else if (sortColumn === 'date') {
+            aVal = new Date(aVal);
+            bVal = new Date(bVal);
+        } else {
+            aVal = (aVal || '').toString().toLowerCase();
+            bVal = (bVal || '').toString().toLowerCase();
+        }
+        
+        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+    
+    renderTable(filtered);
+}
+
+function renderTable(records) {
+    const tbody = document.getElementById('tableBody');
+    
+    if (!records || records.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">📭 No transactions found. Add your first record above!</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = records.map(record => {
+        // Add badge based on transaction type
+        let badgeClass = '';
+        if (record.type === 'Savings') badgeClass = 'badge-savings';
+        else if (record.type === 'Loan Taken') badgeClass = 'badge-loan';
+        else if (record.type === 'Loan Repayment') badgeClass = 'badge-repayment';
+        
+        return `
+            <tr>
+                <td>${formatDate(record.date)}</td>
+                <td><strong>${escapeHtml(record.member || '-')}</strong></td>
+                <td><span class="badge ${badgeClass}">${escapeHtml(record.type || '-')}</span></td>
+                <td style="font-weight: 600; color: ${record.type === 'Savings' ? '#28a745' : (record.type === 'Loan Taken' ? '#dc3545' : '#856404')}">
+                    ${record.type === 'Loan Repayment' ? '-' : ''}${formatMoney(record.amount)}
+                </td>
+                <td>${escapeHtml(record.description || '-')}</td>
+                <td style="max-width: 200px; word-wrap: break-word;">${escapeHtml(record.notes || '-')}</td>
+                <td><strong>${formatMoney(record.balanceAfter)}</strong></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// ==================== UTILITIES ====================
+function sortTable(column) {
+    if (sortColumn === column) {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortColumn = column;
+        sortDirection = 'desc';
+    }
+    applyFilters();
+    
+    // Update header indicators (optional visual feedback)
+    const headers = document.querySelectorAll('th');
+    headers.forEach(th => {
+        th.style.opacity = '0.7';
+    });
+    event.target.style.opacity = '1';
+}
+
+function exportToExcel() {
+    if (!allRecords || allRecords.length === 0) {
+        showToast('No data to export', 'error');
+        return;
+    }
+    
+    // Prepare data for export
+    const exportData = allRecords.map(record => ({
+        'Date': record.date,
+        'Member Name': record.member,
+        'Transaction Type': record.type,
+        'Amount (KES)': record.amount,
+        'Description': record.description,
+        'Meeting Notes': record.notes,
+        'Balance After (KES)': record.balanceAfter
+    }));
+    
+    // Convert to CSV
+    const headers = Object.keys(exportData[0]);
+    const csvRows = [];
+    csvRows.push(headers.join(','));
+    
+    for (const row of exportData) {
+        const values = headers.map(header => {
+            const value = row[header] || '';
+            return `"${String(value).replace(/"/g, '""')}"`;
+        });
+        csvRows.push(values.join(','));
+    }
+    
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', `legacy_builders_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showToast('📥 Export complete! CSV file downloaded.', 'success');
+}
+
+function formatMoney(amount) {
+    if (amount === undefined || amount === null) return '0';
+    return 'KES ' + Number(amount).toLocaleString('en-KE', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    });
+}
+
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-KE');
+    } catch {
+        return dateString;
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'slideIn 0.3s reverse';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Auto-refresh every 30 seconds (optional)
+setInterval(() => {
+    if (!isLoading) {
+        loadSummary();
+        loadRecords();
+    }
+}, 30000);
+</script>
+</body>
+</html>
