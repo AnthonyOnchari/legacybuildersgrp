@@ -522,6 +522,18 @@
             border-radius: 10px;
             transition: width 0.3s ease;
         }
+        
+        .skeleton {
+            background: linear-gradient(90deg, #f0f2f5 25%, #e2e8f0 50%, #f0f2f5 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
     </style>
 </head>
 <body>
@@ -680,7 +692,7 @@
 // ============================================================
 // CONFIGURATION - USE YOUR WORKING APPS SCRIPT URL
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbw5-hzZdQQuCu3_TGgCaWlp-s3LDwbWmlfnPPImka7VPJzZzncjXYykjb-kMGPH-3v1/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzKGhxTcKMqqMQTzNgU_fCPvKaZJ_1N58w8Z3M2RbFuCW2Zp-wipfIU1BIPpkimnhQy4Q/exec";
 
 // ============================================================
 // GLOBAL STATE
@@ -697,7 +709,7 @@ let currentTab = localStorage.getItem('legacy_active_tab') || 'transactions';
 let hasShownGreeting = false;
 
 // ============================================================
-// API CALL
+// API CALL - Single function
 // ============================================================
 async function callAPI(action, data = {}) {
     try {
@@ -713,21 +725,23 @@ async function callAPI(action, data = {}) {
 }
 
 // ============================================================
-// LOAD ALL DATA
+// LOAD ALL DATA IN PARALLEL (FAST)
 // ============================================================
-async function loadAllData(showLoadingSpinner = false) {
+async function loadAllData(showToastMsg = false) {
     if (isLoading || !currentUser) return;
     isLoading = true;
     
-    if (showLoadingSpinner) {
-        showToast('Refreshing data...', 'info');
+    if (showToastMsg) {
+        showToast('Refreshing...', 'info');
     }
     
     try {
-        const [recordsRes, membersRes, summaryRes] = await Promise.all([
+        // Parallel API calls - much faster!
+        const [recordsRes, membersRes, summaryRes, loansRes] = await Promise.all([
             callAPI('get'),
             callAPI('getMembers'),
-            callAPI('getSummary')
+            callAPI('getSummary'),
+            callAPI('getPendingLoans')
         ]);
         
         if (recordsRes.success) {
@@ -744,11 +758,18 @@ async function loadAllData(showLoadingSpinner = false) {
             updateBalanceDisplays(summaryRes);
         }
         
-        await loadCompletedLoans();
+        if (loansRes.success) {
+            const totalMembers = allMembers.length;
+            const allLoans = loansRes.loans || [];
+            pendingLoans = allLoans.filter(l => l.approvals.length < (totalMembers - 1) && l.status !== 'completed' && l.status !== 'rejected');
+            completedLoans = allLoans.filter(l => l.approvals.length >= (totalMembers - 1) || l.status === 'completed');
+            renderPendingLoans();
+            renderCompletedLoans();
+        }
         
     } catch(e) {
         console.error(e);
-        showToast('Error loading data: ' + e.message, 'error');
+        showToast('Error loading data', 'error');
     } finally {
         isLoading = false;
     }
@@ -788,18 +809,6 @@ function updateBalanceDisplays(summary) {
     document.getElementById('memberSummary').innerHTML = summaryHtml || '<div class="empty-state">No transactions yet</div>';
 }
 
-async function loadCompletedLoans() {
-    const res = await callAPI('getPendingLoans');
-    if (res.success) {
-        const allLoans = res.loans || [];
-        const totalMembers = allMembers.length;
-        pendingLoans = allLoans.filter(l => l.approvals.length < (totalMembers - 1) && l.status !== 'completed' && l.status !== 'rejected');
-        completedLoans = allLoans.filter(l => l.approvals.length >= (totalMembers - 1) || l.status === 'completed');
-        renderPendingLoans();
-        renderCompletedLoans();
-    }
-}
-
 function renderPendingLoans() {
     const container = document.getElementById('pendingLoans');
     if (!pendingLoans.length) {
@@ -810,7 +819,7 @@ function renderPendingLoans() {
         const isRequester = (loan.member === currentUser);
         const alreadyApproved = loan.approvals.includes(currentUser);
         const showButtons = !isRequester && !alreadyApproved;
-        const statusText = isRequester ? ' (Your request - you cannot approve your own loan)' : (alreadyApproved ? ' (You approved)' : '');
+        const statusText = isRequester ? ' (Your request)' : (alreadyApproved ? ' (You approved)' : '');
         const totalNeeded = allMembers.length - 1;
         const progressPercent = (loan.approvals.length / totalNeeded) * 100;
         
@@ -872,11 +881,10 @@ async function approveLoan(loanId) {
     if (res.success) {
         const remainingNeeded = (allMembers.length - 1) - (res.approvals || 0);
         if (remainingNeeded > 0) {
-            showToast(`Approved! Need ${remainingNeeded} more member approval(s).`, 'success');
+            showToast(`Approved! Need ${remainingNeeded} more approval(s).`, 'success');
         } else {
-            showToast(`Loan fully approved by all members! Amount deducted from savings.`, 'success');
+            showToast(`Loan fully approved! Amount deducted from savings.`, 'success');
         }
-        await loadCompletedLoans();
         await loadAllData();
     } else {
         showToast('Error: ' + res.error, 'error');
@@ -889,7 +897,7 @@ async function rejectLoan(loanId) {
     const res = await callAPI('rejectLoan', { loanId });
     if (res.success) {
         showToast('Loan rejected', 'success');
-        await loadCompletedLoans();
+        await loadAllData();
     } else {
         showToast('Error: ' + res.error, 'error');
     }
@@ -920,7 +928,7 @@ async function addRecord() {
         const savingsRes = await callAPI('getSummary');
         const currentSavings = savingsRes.success ? (savingsRes.savings || 0) : 0;
         if (amount > currentSavings) {
-            showToast(`Cannot borrow KES ${amount.toLocaleString()}. Available savings: KES ${currentSavings.toLocaleString()}`, 'error');
+            showToast(`Cannot borrow KES ${amount.toLocaleString()}. Available: KES ${currentSavings.toLocaleString()}`, 'error');
             btn.disabled = false;
             btn.innerHTML = 'Submit Transaction';
             return;
@@ -928,10 +936,10 @@ async function addRecord() {
         const res = await callAPI('submitLoan', { date, member, amount, message, notes: '', requestedBy: currentUser });
         if (res.success) {
             const totalMembers = allMembers.length;
-            showToast(`Loan request submitted! Principal: KES ${res.principal?.toLocaleString()}, +10% interest = KES ${res.totalDue?.toLocaleString()} total due. Needs approval from all ${totalMembers - 1} other members.`, 'success');
+            showToast(`Loan request submitted! Needs approval from all ${totalMembers - 1} other members.`, 'success');
             document.getElementById('amount').value = '';
             document.getElementById('message').value = '';
-            await loadCompletedLoans();
+            await loadAllData();
         } else {
             showToast('Error: ' + res.error, 'error');
         }
@@ -1116,19 +1124,15 @@ async function login(member) {
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
     
     await loadAllData();
-    await loadCompletedLoans();
-    
     await showGreeting(member);
-    
     activateTab(currentTab);
     
     if (window.refreshInterval) clearInterval(window.refreshInterval);
     window.refreshInterval = setInterval(() => {
         if (currentUser && (currentTab === 'summary' || currentTab === 'loans')) {
             loadAllData();
-            loadCompletedLoans();
         }
-    }, 15000);
+    }, 30000); // Refresh every 30 seconds instead of 15
 }
 
 function logout() {
@@ -1178,17 +1182,14 @@ if (savedUser) {
             document.getElementById('date').value = new Date().toISOString().split('T')[0];
             
             await loadAllData();
-            await loadCompletedLoans();
-            
             activateTab(currentTab);
             
             if (window.refreshInterval) clearInterval(window.refreshInterval);
             window.refreshInterval = setInterval(() => {
                 if (currentUser && (currentTab === 'summary' || currentTab === 'loans')) {
                     loadAllData();
-                    loadCompletedLoans();
                 }
-            }, 15000);
+            }, 30000);
         } else {
             refreshLoginScreen();
         }
@@ -1199,7 +1200,7 @@ if (savedUser) {
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addBtn').onclick = addRecord;
-    document.getElementById('refreshBtn').onclick = () => { loadAllData(true); loadCompletedLoans(); };
+    document.getElementById('refreshBtn').onclick = () => { loadAllData(true); };
     document.getElementById('exportBtn').onclick = exportToCSV;
     document.getElementById('searchInput').oninput = () => applyFilters();
     document.getElementById('filterMember').onchange = () => applyFilters();
