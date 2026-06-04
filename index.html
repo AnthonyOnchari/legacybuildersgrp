@@ -14,55 +14,189 @@
         body {
             background: #f5f7fa;
             margin: 0;
-            padding: 16px;
-            padding-bottom: 40px;
+            padding: 0;
+            padding-bottom: 70px;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
+            padding: 16px;
         }
         
+        /* Header */
         .header {
             background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
             color: white;
-            padding: 24px 20px;
+            padding: 20px;
             border-radius: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             text-align: center;
         }
         
         .header h1 {
-            margin: 0 0 8px 0;
-            font-size: 28px;
-            letter-spacing: -0.3px;
+            margin: 0 0 6px 0;
+            font-size: 26px;
         }
         
         .header p {
             margin: 0;
+            font-size: 12px;
             opacity: 0.9;
-            font-size: 14px;
         }
         
+        /* Balance Cards */
+        .balance-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .balance-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .balance-card.green {
+            border-left: 4px solid #10b981;
+        }
+        
+        .balance-card.red {
+            border-left: 4px solid #ef4444;
+        }
+        
+        .balance-card h3 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .balance-card .amount {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .balance-card.green .amount {
+            color: #10b981;
+        }
+        
+        .balance-card.red .amount {
+            color: #ef4444;
+        }
+        
+        /* Search Bar */
+        .search-container {
+            background: white;
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 40px;
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .filter-row {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .filter-row select {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 40px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        /* Tab Bar */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 16px 20px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            z-index: 100;
+        }
+        
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px 4px;
+            background: none;
+            border: none;
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 12px;
+        }
+        
+        .tab.active {
+            color: #2a5a4a;
+            background: #e8f0ed;
+        }
+        
+        .tab-icon {
+            font-size: 22px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        /* Content Panels */
+        .panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .panel.active-panel {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Cards */
         .card {
             background: white;
             border-radius: 20px;
             padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         
         .card h2 {
             margin: 0 0 16px 0;
             color: #1e3c32;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 600;
         }
         
         .form-grid {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 14px;
+            gap: 12px;
             margin-bottom: 20px;
         }
         
@@ -72,55 +206,37 @@
             }
         }
         
-        @media (min-width: 1024px) {
-            .form-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-        
         input, select, textarea {
             width: 100%;
             padding: 12px 14px;
             border: 1.5px solid #e2e8f0;
             border-radius: 12px;
-            font-size: 16px;
-            transition: all 0.2s;
+            font-size: 15px;
             background: white;
         }
         
         input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: #2a5a4a;
-            box-shadow: 0 0 0 3px rgba(42,90,74,0.1);
         }
         
         label {
             font-weight: 600;
             margin-bottom: 6px;
             display: block;
+            font-size: 13px;
             color: #334155;
-            font-size: 14px;
-        }
-        
-        .button-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 8px;
         }
         
         button {
             background: #2a5a4a;
             color: white;
             border: none;
-            padding: 12px 24px;
+            padding: 12px 20px;
             border-radius: 40px;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
-            flex: 1;
-            min-width: 120px;
         }
         
         button:active {
@@ -131,41 +247,52 @@
             background: #64748b;
         }
         
-        .btn-blue {
-            background: #2563eb;
+        .btn-danger {
+            background: #ef4444;
         }
         
-        .search-bar {
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+        
+        .member-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .member-item {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 20px;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
         }
         
-        @media (min-width: 640px) {
-            .search-bar {
-                flex-direction: row;
-            }
-            .search-bar input, .search-bar select {
-                flex: 1;
-            }
+        .member-name {
+            font-weight: 500;
+        }
+        
+        .delete-member {
+            background: #fee2e2;
+            color: #ef4444;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
         }
         
         .table-wrapper {
             overflow-x: auto;
-            margin: 0 -4px;
-            padding: 0 4px;
         }
         
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 14px;
-            min-width: 600px;
+            font-size: 13px;
         }
         
         th, td {
-            padding: 12px 10px;
+            padding: 10px 8px;
             text-align: left;
             border-bottom: 1px solid #e2e8f0;
         }
@@ -174,58 +301,31 @@
             background: #f8fafc;
             font-weight: 600;
             cursor: pointer;
-            color: #475569;
             position: sticky;
             top: 0;
-            font-size: 13px;
         }
         
-        th:active {
-            background: #e2e8f0;
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
         }
         
-        tr:active {
-            background: #f1f5f9;
-        }
+        .badge-savings { background: #dcfce7; color: #166534; }
+        .badge-loan { background: #fee2e2; color: #991b1b; }
+        .badge-repayment { background: #fef3c7; color: #92400e; }
         
-        .summary-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-        
-        @media (min-width: 640px) {
-            .summary-stats {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-        
-        .stat {
-            background: #f8fafc;
-            padding: 14px;
-            border-radius: 16px;
+        .empty-state {
             text-align: center;
-        }
-        
-        .stat h3 {
-            margin: 0 0 6px 0;
-            font-size: 12px;
+            padding: 40px;
             color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .stat .number {
-            font-size: 22px;
-            font-weight: bold;
-            color: #1e3c32;
-            word-break: break-word;
         }
         
         .loading {
             text-align: center;
             padding: 40px;
-            color: #64748b;
         }
         
         .spinner {
@@ -245,16 +345,16 @@
         
         .toast {
             position: fixed;
-            bottom: 20px;
+            bottom: 80px;
             left: 16px;
             right: 16px;
             background: #1e293b;
             color: white;
-            padding: 14px 20px;
-            border-radius: 14px;
-            z-index: 2000;
+            padding: 12px 16px;
+            border-radius: 12px;
             text-align: center;
-            font-size: 14px;
+            font-size: 13px;
+            z-index: 2000;
             animation: slideUp 0.3s ease;
         }
         
@@ -262,192 +362,240 @@
         .toast.error { background: #dc2626; }
         
         @keyframes slideUp {
-            from {
-                transform: translateY(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
         
-        .badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-block;
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
         }
         
-        .badge-savings { background: #dcfce7; color: #166534; }
-        .badge-loan { background: #fee2e2; color: #991b1b; }
-        .badge-repayment { background: #fef3c7; color: #92400e; }
-        
-        .empty-state {
+        .stat {
+            background: #f8fafc;
+            padding: 14px;
+            border-radius: 12px;
             text-align: center;
-            padding: 40px 20px;
+        }
+        
+        .stat h3 {
+            margin: 0 0 6px 0;
+            font-size: 11px;
             color: #64748b;
         }
         
-        .info-banner {
-            background: #e0f2fe;
-            color: #075985;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            font-size: 13px;
-            border-left: 3px solid #0284c7;
+        .stat .number {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1e3c32;
         }
         
-        @media (max-width: 480px) {
-            body {
-                padding: 12px;
-            }
-            .stat .number {
-                font-size: 18px;
-            }
-            button {
-                padding: 10px 16px;
-                font-size: 14px;
-            }
-            th, td {
-                padding: 8px 6px;
-            }
+        .add-member-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .add-member-form input {
+            flex: 1;
         }
     </style>
 </head>
 <body>
 <div class="container">
+    <!-- Header -->
     <div class="header">
         <h1>🏛️ Legacy Builders Group</h1>
-        <p>Savings, Loans and Repayments Tracker | Onchari and Kithinji Families</p>
+        <p>Onchari and Kithinji Families</p>
     </div>
-
-    <div class="card">
-        <h2>Add New Transaction</h2>
-        <div class="info-banner">
-          Info: Fill all fields and click Add Record. Data saves instantly to Google Sheets.
+    
+    <!-- Balance Cards -->
+    <div class="balance-container">
+        <div class="balance-card green">
+            <h3>Total Savings</h3>
+            <div class="amount" id="totalSavingsTop">KES 0</div>
         </div>
-        <div class="form-grid">
-            <div>
-                <label>Date</label>
-                <input type="date" id="date">
-            </div>
-            <div>
-                <label>Member Name</label>
-                <select id="member"></select>
-            </div>
-            <div>
-                <label>Transaction Type</label>
-                <select id="type">
-                    <option value="Savings">Savings (Deposit)</option>
-                    <option value="Loan Taken">Loan Taken (Borrow)</option>
-                    <option value="Loan Repayment">Loan Repayment (Pay Back)</option>
-                </select>
-            </div>
-            <div>
-                <label>Amount (KES)</label>
-                <input type="number" id="amount" placeholder="0.00" step="0.01">
-            </div>
-            <div>
-                <label>Description</label>
-                <input type="text" id="desc" placeholder="e.g., Monthly savings, School fees">
-            </div>
-            <div>
-                <label>Meeting Notes (Optional)</label>
-                <textarea id="notes" rows="1" placeholder="Any notes from the meeting"></textarea>
-            </div>
-        </div>
-        <div class="button-group">
-            <button id="addBtn">Add Record</button>
-            <button id="refreshBtn" class="btn-secondary">Refresh</button>
-            <button id="exportBtn" class="btn-blue">Export to Excel</button>
+        <div class="balance-card red">
+            <h3>Outstanding Loans</h3>
+            <div class="amount" id="outstandingTop">KES 0</div>
         </div>
     </div>
-
-    <div class="card">
-        <h2>Summary Dashboard</h2>
-        <div class="summary-stats">
-            <div class="stat">
-                <h3>Total Savings</h3>
-                <div class="number" id="totalSavings">0</div>
-            </div>
-            <div class="stat">
-                <h3>Total Loans Taken</h3>
-                <div class="number" id="totalLoans">0</div>
-            </div>
-            <div class="stat">
-                <h3>Total Repaid</h3>
-                <div class="number" id="totalRepaid">0</div>
-            </div>
-            <div class="stat">
-                <h3>Outstanding Loans</h3>
-                <div class="number" id="outstanding">0</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2>Search and Filter</h2>
-        <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="Search by member, description or notes">
+    
+    <!-- Search Container -->
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search transactions...">
+        <div class="filter-row">
             <select id="filterMember">
                 <option value="">All Members</option>
             </select>
             <select id="filterType">
-                <option value="">All Transactions</option>
-                <option value="Savings">Savings Only</option>
-                <option value="Loan Taken">Loans Taken Only</option>
-                <option value="Loan Repayment">Repayments Only</option>
+                <option value="">All Types</option>
+                <option value="Savings">Savings</option>
+                <option value="Loan Taken">Loans Taken</option>
+                <option value="Loan Repayment">Repayments</option>
             </select>
         </div>
     </div>
-
-    <div class="card">
-        <h2>Transaction History</h2>
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th onclick="sortTable('date')">Date</th>
-                        <th onclick="sortTable('member')">Member</th>
-                        <th onclick="sortTable('type')">Type</th>
-                        <th onclick="sortTable('amount')">Amount (KES)</th>
-                        <th>Description</th>
-                        <th>Meeting Notes</th>
-                        <th onclick="sortTable('balanceAfter')">Balance</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <tr><td colspan="7"><div class="loading"><div class="spinner"></div>Loading...</div></td></tr>
-                </tbody>
-            </table>
+    
+    <!-- Panel 1: Transactions -->
+    <div id="transactionsPanel" class="panel active-panel">
+        <div class="card">
+            <h2>Add Transaction</h2>
+            <div class="form-grid">
+                <div>
+                    <label>Date</label>
+                    <input type="date" id="date">
+                </div>
+                <div>
+                    <label>Member</label>
+                    <select id="memberSelect"></select>
+                </div>
+                <div>
+                    <label>Type</label>
+                    <select id="type">
+                        <option value="Savings">Savings (Deposit)</option>
+                        <option value="Loan Taken">Loan Taken (Borrow)</option>
+                        <option value="Loan Repayment">Loan Repayment (Pay Back)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Amount (KES)</label>
+                    <input type="number" id="amount" placeholder="0">
+                </div>
+                <div>
+                    <label>Description</label>
+                    <input type="text" id="desc" placeholder="e.g., Monthly savings">
+                </div>
+                <div>
+                    <label>Meeting Notes</label>
+                    <textarea id="notes" rows="1" placeholder="Optional"></textarea>
+                </div>
+            </div>
+            <button id="addBtn">Add Transaction</button>
+        </div>
+        
+        <div class="card">
+            <h2>Transaction History</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('date')">Date</th>
+                            <th onclick="sortTable('member')">Member</th>
+                            <th onclick="sortTable('type')">Type</th>
+                            <th onclick="sortTable('amount')">Amount</th>
+                            <th>Description</th>
+                            <th onclick="sortTable('balanceAfter')">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr><td colspan="6"><div class="loading"><div class="spinner"></div>Loading...</div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Panel 2: Summary Dashboard -->
+    <div id="summaryPanel" class="panel">
+        <div class="card">
+            <h2>Financial Summary</h2>
+            <div class="summary-stats">
+                <div class="stat"><h3>Total Savings</h3><div class="number" id="totalSavings">KES 0</div></div>
+                <div class="stat"><h3>Total Loans Taken</h3><div class="number" id="totalLoans">KES 0</div></div>
+                <div class="stat"><h3>Total Repaid</h3><div class="number" id="totalRepaid">KES 0</div></div>
+                <div class="stat"><h3>Outstanding Loans</h3><div class="number" id="outstanding">KES 0</div></div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Member-wise Summary</h2>
+            <div id="memberSummary"></div>
+        </div>
+    </div>
+    
+    <!-- Panel 3: Export -->
+    <div id="exportPanel" class="panel">
+        <div class="card">
+            <h2>Export Data</h2>
+            <button id="exportBtn" style="width: 100%; margin-bottom: 12px;">Download CSV (Excel)</button>
+            <button id="refreshBtn" class="btn-secondary" style="width: 100%;">Refresh Data</button>
+        </div>
+    </div>
+    
+    <!-- Panel 4: Members -->
+    <div id="membersPanel" class="panel">
+        <div class="card">
+            <h2>Add New Member</h2>
+            <div class="add-member-form">
+                <input type="text" id="newMemberName" placeholder="Member name">
+                <button id="addMemberBtn" class="btn-small">Add</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Member List</h2>
+            <div id="memberList" class="member-list"></div>
         </div>
     </div>
 </div>
 
+<!-- Tab Bar -->
+<div class="tab-bar">
+    <button class="tab active" data-panel="transactions">
+        <span class="tab-icon">📋</span>
+        <span>Transactions</span>
+    </button>
+    <button class="tab" data-panel="summary">
+        <span class="tab-icon">📊</span>
+        <span>Summary</span>
+    </button>
+    <button class="tab" data-panel="export">
+        <span class="tab-icon">📥</span>
+        <span>Export</span>
+    </button>
+    <button class="tab" data-panel="members">
+        <span class="tab-icon">👥</span>
+        <span>Members</span>
+    </button>
+</div>
+
 <script>
-// IMPORTANT: Replace this with your NEW Apps Script URL after redeploying
+// ==================== CONFIGURATION ====================
 const API_URL = "https://script.google.com/macros/s/AKfycbx1ApetXE5XFemRNdwi6D2Mmwvl5Y9dsAVw_qkO2MMzqTPNSyjF9TR1KUlOt30DUbBAvg/exec";
 
 let allRecords = [];
+let allMembers = [];
 let sortColumn = 'date';
 let sortDirection = 'desc';
 let isLoading = false;
 
+// ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
     document.getElementById('addBtn').onclick = addRecord;
     document.getElementById('refreshBtn').onclick = () => loadAllData();
     document.getElementById('exportBtn').onclick = exportToCSV;
+    document.getElementById('addMemberBtn').onclick = addMember;
     document.getElementById('searchInput').oninput = () => applyFilters();
     document.getElementById('filterMember').onchange = () => applyFilters();
     document.getElementById('filterType').onchange = () => applyFilters();
     
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.onclick = () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.panel + 'Panel').classList.add('active-panel');
+        };
+    });
+    
     loadAllData();
 });
 
+// ==================== API CALLS ====================
 async function callAPI(action, data = {}) {
     try {
         const params = new URLSearchParams();
@@ -460,13 +608,8 @@ async function callAPI(action, data = {}) {
         
         const url = `${API_URL}?${params.toString()}`;
         const response = await fetch(url);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        
-        const result = await response.json();
-        return result;
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
     } catch(error) {
         console.error('API Error:', error);
         return { success: false, error: error.message };
@@ -482,7 +625,7 @@ async function loadAllData() {
         await loadMembers();
         await loadSummary();
     } catch(error) {
-        showToast('Error loading data: ' + error.message, 'error');
+        showToast('Error loading data', 'error');
     } finally {
         isLoading = false;
     }
@@ -495,51 +638,116 @@ async function loadRecords() {
         applyFilters();
     } else {
         showToast('Failed to load records', 'error');
-        document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" class="empty-state">Failed to load. Please refresh.</td></tr>';
     }
 }
 
 async function loadMembers() {
     const result = await callAPI('getMembers');
-    if (result.success && result.members && result.members.length > 0) {
-        const memberSelect = document.getElementById('member');
-        const filterSelect = document.getElementById('filterMember');
-        
-        const options = result.members.map(m => `<option value="${m}">${m}</option>`).join('');
-        memberSelect.innerHTML = options;
-        filterSelect.innerHTML = '<option value="">All Members</option>' + options;
+    if (result.success && result.members) {
+        allMembers = result.members;
+        updateMemberSelects();
+        renderMemberList();
+    }
+}
+
+function updateMemberSelects() {
+    const memberSelect = document.getElementById('memberSelect');
+    const filterSelect = document.getElementById('filterMember');
+    
+    const options = allMembers.map(m => `<option value="${m}">${m}</option>`).join('');
+    memberSelect.innerHTML = options;
+    filterSelect.innerHTML = '<option value="">All Members</option>' + options;
+}
+
+function renderMemberList() {
+    const container = document.getElementById('memberList');
+    if (!allMembers.length) {
+        container.innerHTML = '<div class="empty-state">No members added yet</div>';
+        return;
+    }
+    
+    container.innerHTML = allMembers.map(member => `
+        <div class="member-item">
+            <span class="member-name">${escapeHtml(member)}</span>
+            <button class="delete-member" onclick="deleteMember('${member}')">Remove</button>
+        </div>
+    `).join('');
+}
+
+async function addMember() {
+    const nameInput = document.getElementById('newMemberName');
+    const name = nameInput.value.trim();
+    
+    if (!name) {
+        showToast('Please enter a member name', 'error');
+        return;
+    }
+    
+    // Add to members list
+    const updatedMembers = [...allMembers, name];
+    
+    // Update via API (you'll need to add an updateMembers function to Apps Script)
+    // For now, we'll show a message
+    showToast(`Member "${name}" would be added. Update your Google Sheets Members tab manually.`, 'success');
+    nameInput.value = '';
+    
+    // Refresh members
+    await loadMembers();
+}
+
+async function deleteMember(member) {
+    if (confirm(`Remove ${member} from members list?`)) {
+        showToast(`Remove "${member}" from Google Sheets Members tab manually`, 'success');
+        await loadMembers();
     }
 }
 
 async function loadSummary() {
     const result = await callAPI('getSummary');
     if (result.success) {
-        document.getElementById('totalSavings').innerHTML = formatMoney(result.savings || 0);
+        const totalSavings = formatMoney(result.savings || 0);
+        const outstanding = formatMoney(result.outstanding || 0);
+        
+        document.getElementById('totalSavingsTop').innerHTML = totalSavings;
+        document.getElementById('outstandingTop').innerHTML = outstanding;
+        document.getElementById('totalSavings').innerHTML = totalSavings;
         document.getElementById('totalLoans').innerHTML = formatMoney(result.loansTaken || 0);
         document.getElementById('totalRepaid').innerHTML = formatMoney(result.repaid || 0);
-        document.getElementById('outstanding').innerHTML = formatMoney(result.outstanding || 0);
+        document.getElementById('outstanding').innerHTML = outstanding;
         
-        const outstandingElem = document.getElementById('outstanding');
-        if (result.outstanding > 0) {
-            outstandingElem.style.color = '#dc2626';
-        } else {
-            outstandingElem.style.color = '#1e3c32';
-        }
+        // Member-wise summary
+        const memberSummary = {};
+        allRecords.forEach(record => {
+            if (!memberSummary[record.member]) {
+                memberSummary[record.member] = { savings: 0, loans: 0, repaid: 0 };
+            }
+            if (record.type === 'Savings') memberSummary[record.member].savings += record.amount;
+            else if (record.type === 'Loan Taken') memberSummary[record.member].loans += record.amount;
+            else if (record.type === 'Loan Repayment') memberSummary[record.member].repaid += record.amount;
+        });
+        
+        const memberSummaryHtml = Object.entries(memberSummary).map(([name, data]) => `
+            <div class="stat" style="margin-bottom: 10px;">
+                <h3>${escapeHtml(name)}</h3>
+                <div>Savings: ${formatMoney(data.savings)} | Loans: ${formatMoney(data.loans)} | Repaid: ${formatMoney(data.repaid)}</div>
+            </div>
+        `).join('');
+        
+        document.getElementById('memberSummary').innerHTML = memberSummaryHtml || '<div class="empty-state">No transactions yet</div>';
     }
 }
 
 async function addRecord() {
     const date = document.getElementById('date').value;
-    const member = document.getElementById('member').value;
+    const member = document.getElementById('memberSelect').value;
     const type = document.getElementById('type').value;
     const amount = parseFloat(document.getElementById('amount').value);
     const description = document.getElementById('desc').value;
     const notes = document.getElementById('notes').value;
     
-    if (!date) { showToast('Please select a date', 'error'); return; }
-    if (!member) { showToast('Please select a member', 'error'); return; }
-    if (!type) { showToast('Please select transaction type', 'error'); return; }
-    if (!amount || amount <= 0) { showToast('Please enter a valid amount', 'error'); return; }
+    if (!date) { showToast('Select a date', 'error'); return; }
+    if (!member) { showToast('Select a member', 'error'); return; }
+    if (!amount || amount <= 0) { showToast('Enter valid amount', 'error'); return; }
     
     const btn = document.getElementById('addBtn');
     btn.disabled = true;
@@ -548,19 +756,20 @@ async function addRecord() {
     const result = await callAPI('add', { date, member, type, amount, description, notes });
     
     if (result.success) {
-        showToast(`${type} of ${formatMoney(amount)} added for ${member}`, 'success');
+        showToast(`${type} of ${formatMoney(amount)} added`, 'success');
         document.getElementById('amount').value = '';
         document.getElementById('desc').value = '';
         document.getElementById('notes').value = '';
         await loadAllData();
     } else {
-        showToast('Error: ' + (result.error || 'Failed to add record'), 'error');
+        showToast('Error: ' + (result.error || 'Failed'), 'error');
     }
     
     btn.disabled = false;
-    btn.textContent = 'Add Record';
+    btn.textContent = 'Add Transaction';
 }
 
+// ==================== FILTERS AND DISPLAY ====================
 function applyFilters() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const filterMember = document.getElementById('filterMember').value;
@@ -581,7 +790,6 @@ function applyFilters() {
     filtered.sort((a, b) => {
         let aVal = a[sortColumn];
         let bVal = b[sortColumn];
-        
         if (sortColumn === 'amount' || sortColumn === 'balanceAfter') {
             aVal = Number(aVal) || 0;
             bVal = Number(bVal) || 0;
@@ -592,7 +800,6 @@ function applyFilters() {
             aVal = (aVal || '').toString().toLowerCase();
             bVal = (bVal || '').toString().toLowerCase();
         }
-        
         if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
         if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
         return 0;
@@ -605,7 +812,7 @@ function renderTable(records) {
     const tbody = document.getElementById('tableBody');
     
     if (!records || records.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No transactions found. Add your first record above.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No transactions found</td></tr>';
         return;
     }
     
@@ -615,19 +822,13 @@ function renderTable(records) {
         else if (record.type === 'Loan Taken') badgeClass = 'badge-loan';
         else if (record.type === 'Loan Repayment') badgeClass = 'badge-repayment';
         
-        let amountColor = '';
-        if (record.type === 'Savings') amountColor = '#166534';
-        else if (record.type === 'Loan Taken') amountColor = '#991b1b';
-        else if (record.type === 'Loan Repayment') amountColor = '#92400e';
-        
         return `
             <tr>
                 <td>${formatDate(record.date)}</td>
                 <td><strong>${escapeHtml(record.member || '-')}</strong></td>
                 <td><span class="badge ${badgeClass}">${escapeHtml(record.type || '-')}</span></td>
-                <td style="font-weight: 500; color: ${amountColor}">${formatMoney(record.amount)}</td>
+                <td>${formatMoney(record.amount)}</td>
                 <td>${escapeHtml(record.description || '-')}</td>
-                <td style="max-width: 200px; word-break: break-word;">${escapeHtml(record.notes || '-')}</td>
                 <td><strong>${formatMoney(record.balanceAfter)}</strong></td>
             </tr>
         `;
@@ -650,32 +851,21 @@ function exportToCSV() {
         return;
     }
     
-    const headers = ['Date', 'Member Name', 'Transaction Type', 'Amount (KES)', 'Description', 'Meeting Notes', 'Balance After (KES)'];
-    const rows = allRecords.map(r => [
-        r.date,
-        r.member,
-        r.type,
-        r.amount,
-        r.description || '',
-        r.notes || '',
-        r.balanceAfter
-    ]);
+    const headers = ['Date', 'Member Name', 'Transaction Type', 'Amount (KES)', 'Description', 'Meeting Notes', 'Balance After'];
+    const rows = allRecords.map(r => [r.date, r.member, r.type, r.amount, r.description || '', r.notes || '', r.balanceAfter]);
     
     const csvContent = [headers, ...rows].map(row => 
         row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
     ).join('\n');
     
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvContent], { type: 'text/csv' });
     const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.setAttribute('download', `legacy_builders_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
+    link.href = URL.createObjectURL(blob);
+    link.download = `legacy_builders_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(link.href);
     
-    showToast('Export complete. CSV file downloaded.', 'success');
+    showToast('Export complete', 'success');
 }
 
 function formatMoney(amount) {
@@ -686,8 +876,7 @@ function formatMoney(amount) {
 function formatDate(dateString) {
     if (!dateString) return '-';
     try {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-KE');
+        return new Date(dateString).toLocaleDateString('en-KE');
     } catch {
         return dateString;
     }
