@@ -23,7 +23,6 @@
             padding: 16px;
         }
         
-        /* Login Overlay */
         .login-overlay {
             position: fixed;
             top: 0;
@@ -99,7 +98,6 @@
             color: #64748b;
         }
         
-        /* Header */
         .header {
             background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
             color: white;
@@ -141,7 +139,6 @@
             cursor: pointer;
         }
         
-        /* Balance Cards */
         .balance-wrapper {
             display: flex;
             gap: 12px;
@@ -179,7 +176,6 @@
             font-weight: 700;
         }
         
-        /* Tab Bar */
         .tab-bar {
             position: fixed;
             bottom: 0;
@@ -219,7 +215,6 @@
             margin-bottom: 4px;
         }
         
-        /* Panels */
         .panel {
             display: none;
             animation: fadeIn 0.2s ease;
@@ -312,16 +307,6 @@
         
         .btn-secondary {
             background: #64748b;
-        }
-        
-        .pending-badge {
-            background: #fef3c7;
-            color: #92400e;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            display: inline-block;
         }
         
         .approval-buttons {
@@ -471,17 +456,13 @@
             color: #1e3c32;
         }
         
-        .member-list {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        
-        .member-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #e2e8f0;
+        .pending-count {
+            background: #ef4444;
+            color: white;
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: 10px;
+            margin-left: 5px;
         }
     </style>
 </head>
@@ -505,7 +486,6 @@
         </div>
     </div>
     
-    <!-- Balance Cards -->
     <div class="balance-wrapper">
         <div class="balance-card">
             <h3>Total Savings</h3>
@@ -629,7 +609,6 @@
     </div>
 </div>
 
-<!-- Tab Bar -->
 <div class="tab-bar" id="tabBar" style="display: none;">
     <button class="tab active" data-panel="transactions">
         <span class="tab-icon">📋</span>
@@ -650,7 +629,8 @@
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbx1ApetXE5XFemRNdwi6D2Mmwvl5Y9dsAVw_qkO2MMzqTPNSyjF9TR1KUlOt30DUbBAvg/exec";
+// IMPORTANT: Replace with your NEW Apps Script URL after redeploying
+const API_URL = "https://script.google.com/macros/s/AKfycbxLTVtqgE4ywIudwRdqBTxGRWGMwZccppM3WX9MBALl4Si8l8HkwJLz8zIMYJq0zFUqaw/exec";
 
 let allRecords = [];
 let allMembers = ["Mr. Onchari", "Mrs. Onchari", "Mr. Kithinji", "Mrs. Kithinji"];
@@ -660,7 +640,6 @@ let sortColumn = 'date';
 let sortDirection = 'desc';
 let isLoading = false;
 
-// Login System
 function initLogin() {
     const container = document.getElementById('memberOptions');
     container.innerHTML = allMembers.map(member => {
@@ -677,7 +656,7 @@ function initLogin() {
     }).join('');
 }
 
-function login(member) {
+async function login(member) {
     currentUser = member;
     localStorage.setItem('legacy_current_user', member);
     document.getElementById('loginOverlay').style.display = 'none';
@@ -685,14 +664,13 @@ function login(member) {
     document.getElementById('tabBar').style.display = 'flex';
     document.getElementById('loggedInUser').innerText = member;
     
-    // Set default selected member in dropdown to current user
     const memberSelect = document.getElementById('memberSelect');
     if (memberSelect) {
         memberSelect.value = member;
     }
     
-    loadAllData();
-    loadPendingLoans();
+    await loadAllData();
+    await loadPendingLoans();
 }
 
 function logout() {
@@ -703,7 +681,6 @@ function logout() {
     document.getElementById('tabBar').style.display = 'none';
 }
 
-// Check for existing login
 const savedUser = localStorage.getItem('legacy_current_user');
 if (savedUser && allMembers.includes(savedUser)) {
     login(savedUser);
@@ -714,7 +691,7 @@ if (savedUser && allMembers.includes(savedUser)) {
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
     document.getElementById('addBtn').onclick = addRecord;
-    document.getElementById('refreshBtn').onclick = () => loadAllData();
+    document.getElementById('refreshBtn').onclick = () => { loadAllData(); loadPendingLoans(); };
     document.getElementById('exportBtn').onclick = exportToCSV;
     document.getElementById('searchInput').oninput = () => applyFilters();
     document.getElementById('filterMember').onchange = () => applyFilters();
@@ -788,16 +765,17 @@ async function loadMembersFromSheet() {
     memberSelect.innerHTML = options;
     filterSelect.innerHTML = '<option value="">All Members</option>' + options;
     
-    // Set current user as selected
     if (currentUser && memberSelect) {
         memberSelect.value = currentUser;
     }
 }
 
-function loadPendingLoans() {
-    const pending = JSON.parse(localStorage.getItem('legacy_pending_loans') || '[]');
-    pendingLoans = pending.filter(p => p.approvals.length < 2);
-    renderPendingLoans();
+async function loadPendingLoans() {
+    const result = await callAPI('getPendingLoans');
+    if (result.success) {
+        pendingLoans = result.loans || [];
+        renderPendingLoans();
+    }
 }
 
 function renderPendingLoans() {
@@ -829,48 +807,24 @@ function renderPendingLoans() {
     }).join('');
 }
 
-function approveLoan(loanId) {
-    const loan = pendingLoans.find(l => l.id === loanId);
-    if (!loan || loan.approvals.includes(currentUser) || loan.member === currentUser) return;
-    
-    loan.approvals.push(currentUser);
-    
-    if (loan.approvals.length >= 2) {
-        addApprovedLoan(loan);
-        const allPending = JSON.parse(localStorage.getItem('legacy_pending_loans') || '[]');
-        const updatedPending = allPending.filter(l => l.id !== loanId);
-        localStorage.setItem('legacy_pending_loans', JSON.stringify(updatedPending));
-        showToast('Loan approved by 2 members! Recorded successfully.', 'success');
-    } else {
-        const allPending = JSON.parse(localStorage.getItem('legacy_pending_loans') || '[]');
-        const updatedPending = allPending.map(l => l.id === loanId ? loan : l);
-        localStorage.setItem('legacy_pending_loans', JSON.stringify(updatedPending));
-        showToast(`Approved! Needs ${2 - loan.approvals.length} more approval(s)`, 'success');
-    }
-    
-    loadPendingLoans();
-}
-
-function rejectLoan(loanId) {
-    const allPending = JSON.parse(localStorage.getItem('legacy_pending_loans') || '[]');
-    const updatedPending = allPending.filter(l => l.id !== loanId);
-    localStorage.setItem('legacy_pending_loans', JSON.stringify(updatedPending));
-    loadPendingLoans();
-    showToast('Loan request rejected', 'warning');
-}
-
-async function addApprovedLoan(loan) {
-    const result = await callAPI('add', {
-        date: loan.date,
-        member: loan.member,
-        type: 'Loan Taken',
-        amount: loan.amount,
-        description: loan.description,
-        notes: `Approved by ${loan.approvals.join(', ')}`
-    });
-    
+async function approveLoan(loanId) {
+    const result = await callAPI('approveLoan', { loanId: loanId, approver: currentUser });
     if (result.success) {
+        showToast('Loan approved!', 'success');
+        await loadPendingLoans();
         await loadAllData();
+    } else {
+        showToast('Error: ' + result.error, 'error');
+    }
+}
+
+async function rejectLoan(loanId) {
+    const result = await callAPI('rejectLoan', { loanId: loanId });
+    if (result.success) {
+        showToast('Loan rejected', 'warning');
+        await loadPendingLoans();
+    } else {
+        showToast('Error: ' + result.error, 'error');
     }
 }
 
@@ -900,28 +854,24 @@ async function addRecord() {
             return;
         }
         
-        const loanRequest = {
-            id: Date.now().toString(),
+        const result = await callAPI('submitLoan', {
             date: date,
             member: member,
             amount: amount,
             description: description,
             notes: notes,
-            approvals: [],
-            requestedBy: currentUser,
-            createdAt: new Date().toISOString()
-        };
+            requestedBy: currentUser
+        });
         
-        const pending = JSON.parse(localStorage.getItem('legacy_pending_loans') || '[]');
-        pending.push(loanRequest);
-        localStorage.setItem('legacy_pending_loans', JSON.stringify(pending));
-        
-        showToast(`Loan request submitted! Waiting for 2 member approvals`, 'success');
-        loadPendingLoans();
-        
-        document.getElementById('amount').value = '';
-        document.getElementById('desc').value = '';
-        document.getElementById('notes').value = '';
+        if (result.success) {
+            showToast(`Loan request submitted! Waiting for 2 member approvals`, 'success');
+            document.getElementById('amount').value = '';
+            document.getElementById('desc').value = '';
+            document.getElementById('notes').value = '';
+            await loadPendingLoans();
+        } else {
+            showToast('Error: ' + result.error, 'error');
+        }
     } else {
         const btn = document.getElementById('addBtn');
         btn.disabled = true;
