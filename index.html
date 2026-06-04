@@ -421,7 +421,6 @@
             margin-bottom: 10px;
         }
         
-        /* Meeting Minutes Styles */
         .meeting-item {
             background: #f8fafc;
             border-radius: 14px;
@@ -653,6 +652,11 @@
             padding: 40px;
         }
         
+        .export-btn-inline {
+            background: #0d6efd;
+            margin-bottom: 12px;
+        }
+        
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
@@ -734,9 +738,37 @@
     </div>
     
     <div id="summaryPanel" class="panel">
-        <div class="card"><h2>Search & Filter</h2><div class="search-container" style="padding:0;"><input type="text" id="searchInput" class="search-input" placeholder="Search by member or message"><div class="filter-row"><select id="filterMember"><option value="">All Members</option></select><select id="filterType"><option value="">All Types</option><option value="Savings">Savings</option><option value="Loan Taken">Loans Taken</option><option value="Loan Repayment">Repayments</option></select></div></div></div>
-        <div class="card"><h2>Financial Summary</h2><div id="summarySkeleton" style="display: block;"><div class="loading-container"><div class="loading-spinner"></div><div class="loading-text">Loading summary...</div></div></div><div id="summaryContent" style="display: none;"><div class="summary-stats"><div class="stat"><h3>Total Savings</h3><div class="number" id="totalSavings">KES --</div></div><div class="stat"><h3>Loans Taken</h3><div class="number" id="totalLoans">KES --</div></div><div class="stat"><h3>Total Repaid</h3><div class="number" id="totalRepaid">KES --</div></div><div class="stat"><h3>Net Balance</h3><div class="number" id="netBalance">KES --</div></div></div></div></div>
-        <div class="card"><h2>Member Summary</h2><div id="memberSummary">Loading...</div></div>
+        <div class="card">
+            <h2>Search & Filter</h2>
+            <div class="search-container" style="padding:0;">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search by member or message">
+                <div class="filter-row">
+                    <select id="filterMember"><option value="">All Members</option></select>
+                    <select id="filterType"><option value="">All Types</option><option value="Savings">Savings</option><option value="Loan Taken">Loans Taken</option><option value="Loan Repayment">Repayments</option></select>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Financial Summary</h2>
+            <div id="summarySkeleton" style="display: block;"><div class="loading-container"><div class="loading-spinner"></div><div class="loading-text">Loading summary...</div></div></div>
+            <div id="summaryContent" style="display: none;">
+                <div class="summary-stats">
+                    <div class="stat"><h3>Total Savings</h3><div class="number" id="totalSavings">KES --</div></div>
+                    <div class="stat"><h3>Loans Taken</h3><div class="number" id="totalLoans">KES --</div></div>
+                    <div class="stat"><h3>Total Repaid</h3><div class="number" id="totalRepaid">KES --</div></div>
+                    <div class="stat"><h3>Net Balance</h3><div class="number" id="netBalance">KES --</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Member Summary</h2>
+            <div id="memberSummary">Loading...</div>
+        </div>
+        <div class="card">
+            <h2>Export Data</h2>
+            <button id="exportBtn" class="export-btn-inline">📥 Download CSV (Excel)</button>
+            <button id="refreshBtn" class="btn-secondary">🔄 Refresh Data</button>
+        </div>
     </div>
     
     <div id="loansPanel" class="panel">
@@ -744,7 +776,6 @@
         <div class="card"><h2>Completed Loans</h2><div id="completedLoans">Loading...</div></div>
     </div>
     
-    <!-- Meeting Minutes Panel -->
     <div id="meetingsPanel" class="panel">
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
@@ -754,8 +785,6 @@
             <div id="meetingMinutesList">Loading...</div>
         </div>
     </div>
-    
-    <div id="exportPanel" class="panel"><div class="card"><h2>Export Data</h2><button id="exportBtn" style="margin-bottom:12px;">Download CSV</button><button id="refreshBtn" class="btn-secondary">Refresh Data</button></div></div>
 </div>
 
 <div class="tab-bar" id="tabBar" style="display: none;">
@@ -763,17 +792,13 @@
     <button class="tab" data-panel="summary"><span class="tab-icon">📊</span><span>Summary</span></button>
     <button class="tab" data-panel="loans"><span class="tab-icon">💰</span><span>Loans</span></button>
     <button class="tab" data-panel="meetings"><span class="tab-icon">📝</span><span>Meetings</span></button>
-    <button class="tab" data-panel="export"><span class="tab-icon">📥</span><span>Export</span></button>
 </div>
 
 <script>
 // ============================================================
 // CONFIGURATION - REPLACE WITH YOUR APPS SCRIPT URL
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbyzDgH3MnSzDBAebJ0MXAX-NxzQsuwOS3RPslXwrzdD-Zay5AORQZhNxo0ZQ1rOu9a9lg/exec";
-
-// Meeting Minutes Storage (using localStorage - change to Apps Script for cross-device sync)
-let meetingMinutes = JSON.parse(localStorage.getItem('legacy_meetings') || '[]');
+const API_URL = "https://script.google.com/macros/s/AKfycbzYX7TlaH8tD7DUfq23bsv0yRSVF4_oo9MRGtcX-imnH--zKnF16KuQpOhRWuRHPGENVg/exec";
 
 let allRecords = [], allMembers = [], pendingLoans = [], completedLoans = [], currentUser = null;
 let sortColumn = 'date', sortDirection = 'desc', isLoading = false;
@@ -794,40 +819,48 @@ async function callAPI(action, data = {}) {
 }
 
 // ============================================================
-// MEETING MINUTES FUNCTIONS
+// MEETING MINUTES FUNCTIONS (Now stored in Google Sheets)
 // ============================================================
-function renderMeetingMinutes() {
+async function loadMeetingMinutes() {
     const container = document.getElementById('meetingMinutesList');
-    if (!meetingMinutes.length) {
-        container.innerHTML = '<div class="empty-state">No meeting minutes recorded yet. Click "Add Meeting" to get started.</div>';
-        return;
+    container.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div><div class="loading-text">Loading meetings...</div></div>';
+    
+    const res = await callAPI('getMeetingMinutes');
+    if (res.success && res.meetings) {
+        const meetings = res.meetings;
+        if (meetings.length === 0) {
+            container.innerHTML = '<div class="empty-state">No meeting minutes recorded yet. Click "Add Meeting" to get started.</div>';
+            return;
+        }
+        container.innerHTML = meetings.slice().reverse().map(meeting => `
+            <div class="meeting-item">
+                <div class="meeting-header">
+                    <span class="meeting-date">📅 ${meeting.date}</span>
+                    <span class="meeting-author">Recorded by: ${meeting.recordedBy}</span>
+                </div>
+                <div class="meeting-section">
+                    <div class="meeting-section-title">📋 Agenda:</div>
+                    <div class="meeting-section-content">${escapeHtml(meeting.agenda)}</div>
+                </div>
+                <div class="meeting-section">
+                    <div class="meeting-section-title">📝 Notes:</div>
+                    <div class="meeting-section-content">${escapeHtml(meeting.notes || 'No notes recorded')}</div>
+                </div>
+                <div class="meeting-section">
+                    <div class="meeting-section-title">✅ Decisions Made:</div>
+                    <div class="meeting-section-content">${escapeHtml(meeting.decisions || 'No decisions recorded')}</div>
+                </div>
+                ${meeting.nextMeeting ? `
+                <div class="meeting-section">
+                    <div class="meeting-section-title">📅 Next Meeting:</div>
+                    <div class="meeting-section-content">${escapeHtml(meeting.nextMeeting)}</div>
+                </div>
+                ` : ''}
+            </div>
+        `).join('');
+    } else {
+        container.innerHTML = '<div class="empty-state">Error loading meetings. Please refresh.</div>';
     }
-    container.innerHTML = meetingMinutes.slice().reverse().map(meeting => `
-        <div class="meeting-item">
-            <div class="meeting-header">
-                <span class="meeting-date">📅 ${meeting.date}</span>
-                <span class="meeting-author">Recorded by: ${meeting.recordedBy}</span>
-            </div>
-            <div class="meeting-section">
-                <div class="meeting-section-title">📋 Agenda:</div>
-                <div class="meeting-section-content">${meeting.agenda}</div>
-            </div>
-            <div class="meeting-section">
-                <div class="meeting-section-title">📝 Notes:</div>
-                <div class="meeting-section-content">${meeting.notes || 'No notes recorded'}</div>
-            </div>
-            <div class="meeting-section">
-                <div class="meeting-section-title">✅ Decisions Made:</div>
-                <div class="meeting-section-content">${meeting.decisions || 'No decisions recorded'}</div>
-            </div>
-            ${meeting.nextMeeting ? `
-            <div class="meeting-section">
-                <div class="meeting-section-title">📅 Next Meeting:</div>
-                <div class="meeting-section-content">${meeting.nextMeeting}</div>
-            </div>
-            ` : ''}
-        </div>
-    `).join('');
 }
 
 function openAddMeetingModal() {
@@ -840,10 +873,10 @@ function openAddMeetingModal() {
             <div class="form-grid" style="margin-bottom:16px;">
                 <div><label>Meeting Date</label><input type="date" id="meetingDate" value="${today}"></div>
                 <div><label>Recorded By</label><input type="text" id="meetingRecordedBy" value="${currentUser}" readonly style="background:#f1f5f9;"></div>
-                <div style="grid-column: span 2;"><label>Agenda</label><textarea id="meetingAgenda" rows="2" placeholder="What was discussed?"></textarea></div>
+                <div style="grid-column: span 2;"><label>Agenda *</label><textarea id="meetingAgenda" rows="2" placeholder="What was discussed?"></textarea></div>
                 <div style="grid-column: span 2;"><label>Notes</label><textarea id="meetingNotes" rows="3" placeholder="Detailed notes..."></textarea></div>
                 <div style="grid-column: span 2;"><label>Decisions Made</label><textarea id="meetingDecisions" rows="2" placeholder="What was decided?"></textarea></div>
-                <div><label>Next Meeting Date</label><input type="date" id="meetingNext" placeholder="Optional"></div>
+                <div><label>Next Meeting Date</label><input type="date" id="meetingNext"></div>
             </div>
             <div class="modal-buttons">
                 <button onclick="saveMeetingMinutes()">Save Meeting</button>
@@ -854,7 +887,7 @@ function openAddMeetingModal() {
     document.body.appendChild(modal);
 }
 
-function saveMeetingMinutes() {
+async function saveMeetingMinutes() {
     const date = document.getElementById('meetingDate').value;
     const agenda = document.getElementById('meetingAgenda').value.trim();
     const notes = document.getElementById('meetingNotes').value.trim();
@@ -863,20 +896,29 @@ function saveMeetingMinutes() {
     
     if (!date || !agenda) { showToast('Please fill required fields', 'error'); return; }
     
-    meetingMinutes.push({
-        id: Date.now().toString(),
+    const res = await callAPI('saveMeetingMinutes', {
         date: date,
         recordedBy: currentUser,
         agenda: agenda,
-        notes: notes || 'No notes recorded',
-        decisions: decisions || 'No decisions recorded',
-        nextMeeting: nextMeeting || '',
-        createdAt: new Date().toISOString()
+        notes: notes || '',
+        decisions: decisions || '',
+        nextMeeting: nextMeeting || ''
     });
-    localStorage.setItem('legacy_meetings', JSON.stringify(meetingMinutes));
-    renderMeetingMinutes();
-    document.querySelector('.modal').remove();
-    showToast('Meeting minutes saved!', 'success');
+    
+    if (res.success) {
+        showToast('Meeting minutes saved!', 'success');
+        document.querySelector('.modal').remove();
+        await loadMeetingMinutes();
+    } else {
+        showToast('Error: ' + res.error, 'error');
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // ============================================================
@@ -892,8 +934,8 @@ async function checkPersistentLogin() {
         document.getElementById('loggedInUser').innerText = currentUser;
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
         await loadAllData();
+        await loadMeetingMinutes();
         activateTab(currentTab);
-        renderMeetingMinutes();
         
         if (window.refreshInterval) clearInterval(window.refreshInterval);
         window.refreshInterval = setInterval(() => {
@@ -1048,14 +1090,8 @@ function applyFilters() {
 
 function renderTable(records) {
     const tbody = document.getElementById('tableBody');
-    if (!records.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No transactions found</td></tr>'; return; }
-    tbody.innerHTML = records.map(r => { let cls = r.type === 'Savings' ? 'badge-savings' : (r.type === 'Loan Taken' ? 'badge-loan' : 'badge-repayment'); let sign = r.type === 'Loan Repayment' ? '+' : (r.type === 'Savings' ? '+' : '-'); return `<tr>
-        <td>${new Date(r.date).toLocaleDateString('en-KE')}</td>
-        <td><strong>${r.member}</strong></td>
-        <td><span class="badge ${cls}">${r.type}</span></td>
-        <td>${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td>
-        <td>${r.message || '-'}</td>
-    </tr>`; }).join('');
+    if (!records.length) { tbody.innerHTML = '<td><td colspan="5" class="empty-state">No transactions found</td></tr>'; return; }
+    tbody.innerHTML = records.map(r => { let cls = r.type === 'Savings' ? 'badge-savings' : (r.type === 'Loan Taken' ? 'badge-loan' : 'badge-repayment'); let sign = r.type === 'Loan Repayment' ? '+' : (r.type === 'Savings' ? '+' : '-'); return `<tr><td>${new Date(r.date).toLocaleDateString('en-KE')}</td><td><strong>${r.member}</strong></td><td><span class="badge ${cls}">${r.type}</span></td><td>${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td><td>${r.message || '-'}</td></tr>`; }).join('');
 }
 
 function sortTable(column) { if (sortColumn === column) sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'; else { sortColumn = column; sortDirection = 'desc'; } applyFilters(); }
@@ -1106,8 +1142,8 @@ async function verifyLogin() {
         document.getElementById('loggedInUser').innerText = member;
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
         await loadAllData();
+        await loadMeetingMinutes();
         activateTab(currentTab);
-        renderMeetingMinutes();
         showToast(`Welcome ${member}!`, 'success');
         if (window.refreshInterval) clearInterval(window.refreshInterval);
         window.refreshInterval = setInterval(() => { if (currentUser && (currentTab === 'summary' || currentTab === 'loans')) loadAllData(); }, 30000);
@@ -1140,7 +1176,7 @@ checkPersistentLogin();
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addBtn').onclick = addRecord;
-    document.getElementById('refreshBtn').onclick = () => { loadAllData(); };
+    document.getElementById('refreshBtn').onclick = () => { loadAllData(); loadMeetingMinutes(); };
     document.getElementById('exportBtn').onclick = exportToCSV;
     document.getElementById('addMeetingBtn').onclick = openAddMeetingModal;
     document.getElementById('searchInput').oninput = () => applyFilters();
