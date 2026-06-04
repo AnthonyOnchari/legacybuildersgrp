@@ -12,7 +12,7 @@
         }
         
         body {
-            background: #f5f7fa;
+            background: #f0f2f5;
             margin: 0;
             padding: 0;
             padding-bottom: 70px;
@@ -28,65 +28,59 @@
         .header {
             background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
             color: white;
-            padding: 24px 20px;
+            padding: 20px;
             border-radius: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             text-align: center;
         }
         
         .header h1 {
-            margin: 0 0 8px 0;
-            font-size: 26px;
+            margin: 0 0 6px 0;
+            font-size: 24px;
         }
         
         .header p {
             margin: 0;
             opacity: 0.9;
-            font-size: 13px;
+            font-size: 12px;
         }
         
-        /* Balance Cards - Clean & Simple */
-        .balance-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+        /* Balance Cards - Unique Design */
+        .balance-wrapper {
+            display: flex;
             gap: 12px;
             margin-bottom: 16px;
         }
         
         .balance-card {
+            flex: 1;
             background: white;
-            border-radius: 16px;
-            padding: 14px;
+            border-radius: 20px;
+            padding: 16px;
             text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
         
-        .balance-card.green {
-            border-top: 3px solid #10b981;
+        .balance-card:first-child {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
         }
         
-        .balance-card.red {
-            border-top: 3px solid #ef4444;
+        .balance-card:last-child {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
         }
         
         .balance-card h3 {
-            margin: 0 0 6px 0;
-            font-size: 12px;
-            color: #64748b;
+            margin: 0 0 8px 0;
+            font-size: 13px;
             font-weight: 500;
+            opacity: 0.9;
         }
         
         .balance-card .amount {
-            font-size: 18px;
-            font-weight: 600;
-        }
-        
-        .balance-card.green .amount {
-            color: #10b981;
-        }
-        
-        .balance-card.red .amount {
-            color: #ef4444;
+            font-size: 22px;
+            font-weight: 700;
         }
         
         /* Search Bar */
@@ -100,9 +94,9 @@
         
         .search-input {
             width: 100%;
-            padding: 10px 14px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 40px;
+            padding: 12px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
             font-size: 14px;
             margin-bottom: 10px;
         }
@@ -114,9 +108,9 @@
         
         .filter-row select {
             flex: 1;
-            padding: 8px 12px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 40px;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
             font-size: 13px;
             background: white;
         }
@@ -130,7 +124,7 @@
             background: white;
             display: flex;
             justify-content: space-around;
-            padding: 8px 16px 18px;
+            padding: 8px 16px 20px;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
             border-top-left-radius: 20px;
             border-top-right-radius: 20px;
@@ -140,14 +134,13 @@
         .tab {
             flex: 1;
             text-align: center;
-            padding: 6px 4px;
+            padding: 8px 4px;
             background: none;
             border: none;
             font-size: 11px;
             font-weight: 500;
             color: #94a3b8;
             cursor: pointer;
-            transition: all 0.2s;
             border-radius: 12px;
         }
         
@@ -159,13 +152,13 @@
         .tab-icon {
             font-size: 20px;
             display: block;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
         }
         
-        /* Content Panels */
+        /* Panels */
         .panel {
             display: none;
-            animation: fadeIn 0.3s ease;
+            animation: fadeIn 0.2s ease;
         }
         
         .panel.active-panel {
@@ -173,11 +166,10 @@
         }
         
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
         }
         
-        /* Cards */
         .card {
             background: white;
             border-radius: 20px;
@@ -207,11 +199,20 @@
         
         input, select, textarea {
             width: 100%;
-            padding: 10px 12px;
-            border: 1.5px solid #e2e8f0;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
             border-radius: 12px;
             font-size: 14px;
             background: white;
+        }
+        
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
         }
         
         input:focus, select:focus, textarea:focus {
@@ -231,52 +232,69 @@
             background: #2a5a4a;
             color: white;
             border: none;
-            padding: 10px 18px;
+            padding: 12px 20px;
             border-radius: 40px;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
+            transition: opacity 0.2s;
         }
         
         button:active {
-            transform: scale(0.97);
+            opacity: 0.8;
         }
         
         .btn-secondary {
             background: #64748b;
         }
         
-        .btn-small {
-            padding: 7px 14px;
+        .btn-warning {
+            background: #f59e0b;
+        }
+        
+        .pending-badge {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .approved-badge {
+            background: #dcfce7;
+            color: #166534;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .approval-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .approve-btn {
+            background: #10b981;
+            padding: 6px 12px;
             font-size: 12px;
         }
         
-        .member-list {
-            max-height: 300px;
-            overflow-y: auto;
+        .reject-btn {
+            background: #ef4444;
+            padding: 6px 12px;
+            font-size: 12px;
         }
         
-        .member-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .member-name {
-            font-weight: 500;
-            font-size: 14px;
-        }
-        
-        .delete-member {
-            background: #fee2e2;
-            color: #ef4444;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            border: none;
-            cursor: pointer;
+        .loan-item {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
         }
         
         .table-wrapper {
@@ -299,8 +317,6 @@
             background: #f8fafc;
             font-weight: 600;
             cursor: pointer;
-            position: sticky;
-            top: 0;
             font-size: 11px;
         }
         
@@ -323,26 +339,6 @@
             font-size: 13px;
         }
         
-        .loading {
-            text-align: center;
-            padding: 30px;
-        }
-        
-        .spinner {
-            border: 3px solid #e2e8f0;
-            border-top: 3px solid #2a5a4a;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 10px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
         .toast {
             position: fixed;
             bottom: 80px;
@@ -350,16 +346,17 @@
             right: 16px;
             background: #1e293b;
             color: white;
-            padding: 10px 14px;
+            padding: 12px 16px;
             border-radius: 12px;
             text-align: center;
-            font-size: 12px;
+            font-size: 13px;
             z-index: 2000;
             animation: slideUp 0.3s ease;
         }
         
         .toast.success { background: #2a5a4a; }
         .toast.error { background: #dc2626; }
+        .toast.warning { background: #f59e0b; }
         
         @keyframes slideUp {
             from { transform: translateY(100%); opacity: 0; }
@@ -391,38 +388,45 @@
             color: #1e3c32;
         }
         
-        .add-member-form {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+        .member-list {
+            max-height: 300px;
+            overflow-y: auto;
         }
         
-        .add-member-form input {
-            flex: 1;
+        .member-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <!-- Header -->
     <div class="header">
         <h1>🏛️ Legacy Builders Group</h1>
         <p>Savings, Loans and Repayments Tracker | Onchari and Kithinji Families</p>
     </div>
     
-    <!-- Balance Cards - Clean with smaller font -->
-    <div class="balance-container">
-        <div class="balance-card green">
-            <h3>Total Savings</h3>
+    <!-- Balance Cards - Unique Design -->
+    <div class="balance-wrapper">
+        <div class="balance-card">
+            <h3>💰 Total Savings</h3>
             <div class="amount" id="totalSavingsTop">KES 0</div>
         </div>
-        <div class="balance-card red">
-            <h3>Outstanding Loans</h3>
+        <div class="balance-card">
+            <h3>📊 Outstanding Loans</h3>
             <div class="amount" id="outstandingTop">KES 0</div>
         </div>
     </div>
     
-    <!-- Search Container -->
+    <!-- Search -->
     <div class="search-container">
         <input type="text" id="searchInput" class="search-input" placeholder="Search transactions...">
         <div class="filter-row">
@@ -453,10 +457,10 @@
                 </div>
                 <div>
                     <label>Type</label>
-                    <select id="type">
+                    <select id="type" onchange="toggleApprovalNotice()">
                         <option value="Savings">Savings (Deposit)</option>
-                        <option value="Loan Taken">Loan Taken (Borrow)</option>
-                        <option value="Loan Repayment">Loan Repayment (Pay Back)</option>
+                        <option value="Loan Taken">Loan Taken (Requires 2 Approvals)</option>
+                        <option value="Loan Repayment">Loan Repayment</option>
                     </select>
                 </div>
                 <div>
@@ -472,7 +476,15 @@
                     <textarea id="notes" rows="1" placeholder="Optional"></textarea>
                 </div>
             </div>
-            <button id="addBtn">Add Transaction</button>
+            <div id="approvalNotice" style="background: #fef3c7; padding: 10px; border-radius: 12px; margin-bottom: 15px; font-size: 12px; display: none;">
+                ⚠️ Loan requests need approval from 2 members before being recorded
+            </div>
+            <button id="addBtn">Submit Transaction</button>
+        </div>
+        
+        <div class="card">
+            <h2>Pending Loan Approvals</h2>
+            <div id="pendingLoans"></div>
         </div>
         
         <div class="card">
@@ -486,31 +498,30 @@
                             <th onclick="sortTable('type')">Type</th>
                             <th onclick="sortTable('amount')">Amount</th>
                             <th>Description</th>
-                            <th onclick="sortTable('balanceAfter')">Balance</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        <tr><td colspan="6"><div class="loading"><div class="spinner"></div>Loading...</div></td></tr>
+                        <tr><td colspan="5"><div style="text-align:center;padding:20px;">Loading...</div></td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
     
-    <!-- Panel 2: Summary Dashboard -->
+    <!-- Panel 2: Summary -->
     <div id="summaryPanel" class="panel">
         <div class="card">
             <h2>Financial Summary</h2>
             <div class="summary-stats">
                 <div class="stat"><h3>Total Savings</h3><div class="number" id="totalSavings">KES 0</div></div>
-                <div class="stat"><h3>Total Loans Taken</h3><div class="number" id="totalLoans">KES 0</div></div>
+                <div class="stat"><h3>Loans Taken</h3><div class="number" id="totalLoans">KES 0</div></div>
                 <div class="stat"><h3>Total Repaid</h3><div class="number" id="totalRepaid">KES 0</div></div>
-                <div class="stat"><h3>Outstanding Loans</h3><div class="number" id="outstanding">KES 0</div></div>
+                <div class="stat"><h3>Net Balance</h3><div class="number" id="netBalance">KES 0</div></div>
             </div>
         </div>
         
         <div class="card">
-            <h2>Member-wise Summary</h2>
+            <h2>Member Summary</h2>
             <div id="memberSummary"></div>
         </div>
     </div>
@@ -519,21 +530,13 @@
     <div id="exportPanel" class="panel">
         <div class="card">
             <h2>Export Data</h2>
-            <button id="exportBtn" style="width: 100%; margin-bottom: 12px;">Download CSV (Excel)</button>
+            <button id="exportBtn" style="width: 100%; margin-bottom: 12px;">Download CSV</button>
             <button id="refreshBtn" class="btn-secondary" style="width: 100%;">Refresh Data</button>
         </div>
     </div>
     
     <!-- Panel 4: Members -->
     <div id="membersPanel" class="panel">
-        <div class="card">
-            <h2>Add New Member</h2>
-            <div class="add-member-form">
-                <input type="text" id="newMemberName" placeholder="Member name">
-                <button id="addMemberBtn" class="btn-small">Add</button>
-            </div>
-        </div>
-        
         <div class="card">
             <h2>Member List</h2>
             <div id="memberList" class="member-list"></div>
@@ -562,27 +565,27 @@
 </div>
 
 <script>
-// ==================== CONFIGURATION ====================
 const API_URL = "https://script.google.com/macros/s/AKfycbx1ApetXE5XFemRNdwi6D2Mmwvl5Y9dsAVw_qkO2MMzqTPNSyjF9TR1KUlOt30DUbBAvg/exec";
 
 let allRecords = [];
 let allMembers = [];
+let pendingLoans = [];
+let currentUser = localStorage.getItem('currentUser') || prompt("Enter your name (Mr. Onchari, Mrs. Onchari, Mr. Kithinji, Mrs. Kithinji)") || "Member";
+localStorage.setItem('currentUser', currentUser);
+
 let sortColumn = 'date';
 let sortDirection = 'desc';
 let isLoading = false;
 
-// ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
     document.getElementById('addBtn').onclick = addRecord;
     document.getElementById('refreshBtn').onclick = () => loadAllData();
     document.getElementById('exportBtn').onclick = exportToCSV;
-    document.getElementById('addMemberBtn').onclick = addMember;
     document.getElementById('searchInput').oninput = () => applyFilters();
     document.getElementById('filterMember').onchange = () => applyFilters();
     document.getElementById('filterType').onchange = () => applyFilters();
     
-    // Tab switching
     document.querySelectorAll('.tab').forEach(tab => {
         tab.onclick = () => {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -593,9 +596,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     loadAllData();
+    loadPendingLoans();
 });
 
-// ==================== API CALLS ====================
+function toggleApprovalNotice() {
+    const type = document.getElementById('type').value;
+    const notice = document.getElementById('approvalNotice');
+    notice.style.display = type === 'Loan Taken' ? 'block' : 'none';
+}
+
 async function callAPI(action, data = {}) {
     try {
         const params = new URLSearchParams();
@@ -605,13 +614,11 @@ async function callAPI(action, data = {}) {
                 params.append(key, data[key].toString());
             }
         }
-        
         const url = `${API_URL}?${params.toString()}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return await response.json();
     } catch(error) {
-        console.error('API Error:', error);
         return { success: false, error: error.message };
     }
 }
@@ -619,7 +626,6 @@ async function callAPI(action, data = {}) {
 async function loadAllData() {
     if (isLoading) return;
     isLoading = true;
-    
     try {
         await loadRecords();
         await loadMembers();
@@ -636,8 +642,6 @@ async function loadRecords() {
     if (result.success) {
         allRecords = result.records || [];
         applyFilters();
-    } else {
-        showToast('Failed to load records', 'error');
     }
 }
 
@@ -645,88 +649,83 @@ async function loadMembers() {
     const result = await callAPI('getMembers');
     if (result.success && result.members) {
         allMembers = result.members;
-        updateMemberSelects();
-        renderMemberList();
+        const memberSelect = document.getElementById('memberSelect');
+        const filterSelect = document.getElementById('filterMember');
+        const options = allMembers.map(m => `<option value="${m}">${m}</option>`).join('');
+        memberSelect.innerHTML = options;
+        filterSelect.innerHTML = '<option value="">All Members</option>' + options;
+        
+        const memberList = document.getElementById('memberList');
+        memberList.innerHTML = allMembers.map(m => `<div class="member-item"><span>${m}</span></div>`).join('');
     }
 }
 
-function updateMemberSelects() {
-    const memberSelect = document.getElementById('memberSelect');
-    const filterSelect = document.getElementById('filterMember');
-    
-    const options = allMembers.map(m => `<option value="${m}">${m}</option>`).join('');
-    memberSelect.innerHTML = options;
-    filterSelect.innerHTML = '<option value="">All Members</option>' + options;
+function loadPendingLoans() {
+    const pending = JSON.parse(localStorage.getItem('pendingLoans') || '[]');
+    pendingLoans = pending.filter(p => p.approvals.length < 2);
+    renderPendingLoans();
 }
 
-function renderMemberList() {
-    const container = document.getElementById('memberList');
-    if (!allMembers.length) {
-        container.innerHTML = '<div class="empty-state">No members added yet</div>';
+function renderPendingLoans() {
+    const container = document.getElementById('pendingLoans');
+    if (pendingLoans.length === 0) {
+        container.innerHTML = '<div class="empty-state">No pending loan approvals</div>';
         return;
     }
     
-    container.innerHTML = allMembers.map(member => `
-        <div class="member-item">
-            <span class="member-name">${escapeHtml(member)}</span>
-            <button class="delete-member" onclick="deleteMember('${member}')">Remove</button>
+    container.innerHTML = pendingLoans.map(loan => `
+        <div class="loan-item">
+            <div><strong>${loan.member}</strong> requested KES ${loan.amount.toLocaleString('en-KE')}</div>
+            <div style="font-size: 12px; color: #666; margin-top: 5px;">${loan.description}</div>
+            <div style="font-size: 11px; margin-top: 5px;">Approvals: ${loan.approvals.length}/2</div>
+            ${!loan.approvals.includes(currentUser) ? `
+                <div class="approval-buttons">
+                    <button class="approve-btn" onclick="approveLoan('${loan.id}')">✅ Approve</button>
+                    <button class="reject-btn" onclick="rejectLoan('${loan.id}')">❌ Reject</button>
+                </div>
+            ` : '<div style="font-size: 11px; color: #10b981; margin-top: 5px;">✓ You already approved this</div>'}
         </div>
     `).join('');
 }
 
-async function addMember() {
-    const nameInput = document.getElementById('newMemberName');
-    const name = nameInput.value.trim();
+function approveLoan(loanId) {
+    const loan = pendingLoans.find(l => l.id === loanId);
+    if (!loan || loan.approvals.includes(currentUser)) return;
     
-    if (!name) {
-        showToast('Please enter a member name', 'error');
-        return;
+    loan.approvals.push(currentUser);
+    
+    if (loan.approvals.length >= 2) {
+        // Loan approved - add to actual records
+        addApprovedLoan(loan);
+        pendingLoans = pendingLoans.filter(l => l.id !== loanId);
+        showToast('Loan approved and recorded!', 'success');
+    } else {
+        showToast(`Approved! Needs ${2 - loan.approvals.length} more approval(s)`, 'success');
     }
     
-    showToast(`Member "${name}" added. Please add to Google Sheets Members tab.`, 'success');
-    nameInput.value = '';
-    await loadMembers();
+    localStorage.setItem('pendingLoans', JSON.stringify(pendingLoans));
+    renderPendingLoans();
 }
 
-async function deleteMember(member) {
-    if (confirm(`Remove ${member} from members list?`)) {
-        showToast(`Remove "${member}" from Google Sheets Members tab manually`, 'success');
-        await loadMembers();
-    }
+function rejectLoan(loanId) {
+    pendingLoans = pendingLoans.filter(l => l.id !== loanId);
+    localStorage.setItem('pendingLoans', JSON.stringify(pendingLoans));
+    renderPendingLoans();
+    showToast('Loan request rejected', 'warning');
 }
 
-async function loadSummary() {
-    const result = await callAPI('getSummary');
+async function addApprovedLoan(loan) {
+    const result = await callAPI('add', {
+        date: loan.date,
+        member: loan.member,
+        type: 'Loan Taken',
+        amount: loan.amount,
+        description: loan.description,
+        notes: `Approved by ${loan.approvals.join(', ')}`
+    });
+    
     if (result.success) {
-        const savings = result.savings || 0;
-        const outstanding = result.outstanding || 0;
-        
-        document.getElementById('totalSavingsTop').innerHTML = `KES ${savings.toLocaleString('en-KE')}`;
-        document.getElementById('outstandingTop').innerHTML = `KES ${outstanding.toLocaleString('en-KE')}`;
-        document.getElementById('totalSavings').innerHTML = `KES ${savings.toLocaleString('en-KE')}`;
-        document.getElementById('totalLoans').innerHTML = `KES ${(result.loansTaken || 0).toLocaleString('en-KE')}`;
-        document.getElementById('totalRepaid').innerHTML = `KES ${(result.repaid || 0).toLocaleString('en-KE')}`;
-        document.getElementById('outstanding').innerHTML = `KES ${outstanding.toLocaleString('en-KE')}`;
-        
-        // Member-wise summary
-        const memberSummary = {};
-        allRecords.forEach(record => {
-            if (!memberSummary[record.member]) {
-                memberSummary[record.member] = { savings: 0, loans: 0, repaid: 0 };
-            }
-            if (record.type === 'Savings') memberSummary[record.member].savings += record.amount;
-            else if (record.type === 'Loan Taken') memberSummary[record.member].loans += record.amount;
-            else if (record.type === 'Loan Repayment') memberSummary[record.member].repaid += record.amount;
-        });
-        
-        const memberSummaryHtml = Object.entries(memberSummary).map(([name, data]) => `
-            <div class="stat" style="margin-bottom: 10px;">
-                <h3>${escapeHtml(name)}</h3>
-                <div style="font-size: 12px;">Savings: KES ${data.savings.toLocaleString('en-KE')} | Loans: KES ${data.loans.toLocaleString('en-KE')} | Repaid: KES ${data.repaid.toLocaleString('en-KE')}</div>
-            </div>
-        `).join('');
-        
-        document.getElementById('memberSummary').innerHTML = memberSummaryHtml || '<div class="empty-state">No transactions yet</div>';
+        await loadAllData();
     }
 }
 
@@ -738,64 +737,123 @@ async function addRecord() {
     const description = document.getElementById('desc').value;
     const notes = document.getElementById('notes').value;
     
-    if (!date) { showToast('Select a date', 'error'); return; }
-    if (!member) { showToast('Select a member', 'error'); return; }
+    if (!date) { showToast('Select date', 'error'); return; }
+    if (!member) { showToast('Select member', 'error'); return; }
     if (!amount || amount <= 0) { showToast('Enter valid amount', 'error'); return; }
     
-    const btn = document.getElementById('addBtn');
-    btn.disabled = true;
-    btn.textContent = 'Adding...';
-    
-    const result = await callAPI('add', { date, member, type, amount, description, notes });
-    
-    if (result.success) {
-        showToast(`${type} of KES ${amount.toLocaleString('en-KE')} added`, 'success');
+    if (type === 'Loan Taken') {
+        // Check if enough savings available
+        const savingsResult = await callAPI('getSummary');
+        const currentSavings = savingsResult.success ? (savingsResult.savings || 0) : 0;
+        
+        if (amount > currentSavings) {
+            showToast(`Cannot borrow KES ${amount.toLocaleString('en-KE')}. Available savings: KES ${currentSavings.toLocaleString('en-KE')}`, 'error');
+            return;
+        }
+        
+        // Create pending loan request
+        const loanRequest = {
+            id: Date.now().toString(),
+            date: date,
+            member: member,
+            amount: amount,
+            description: description,
+            notes: notes,
+            approvals: [currentUser],
+            createdAt: new Date().toISOString()
+        };
+        
+        const pending = JSON.parse(localStorage.getItem('pendingLoans') || '[]');
+        pending.push(loanRequest);
+        localStorage.setItem('pendingLoans', JSON.stringify(pending));
+        
+        showToast(`Loan request submitted! Needs 2 approvals (${currentUser} approved)`, 'success');
+        loadPendingLoans();
+        
+        // Clear form
         document.getElementById('amount').value = '';
         document.getElementById('desc').value = '';
         document.getElementById('notes').value = '';
-        await loadAllData();
     } else {
-        showToast('Error: ' + (result.error || 'Failed'), 'error');
+        // Savings or Repayment - add directly
+        const btn = document.getElementById('addBtn');
+        btn.disabled = true;
+        btn.textContent = 'Processing...';
+        
+        const result = await callAPI('add', { date, member, type, amount, description, notes });
+        
+        if (result.success) {
+            showToast(`${type} of KES ${amount.toLocaleString('en-KE')} added`, 'success');
+            document.getElementById('amount').value = '';
+            document.getElementById('desc').value = '';
+            document.getElementById('notes').value = '';
+            await loadAllData();
+        } else {
+            showToast('Error: ' + (result.error || 'Failed'), 'error');
+        }
+        
+        btn.disabled = false;
+        btn.textContent = 'Submit Transaction';
     }
-    
-    btn.disabled = false;
-    btn.textContent = 'Add Transaction';
 }
 
-// ==================== FILTERS AND DISPLAY ====================
+async function loadSummary() {
+    const result = await callAPI('getSummary');
+    if (result.success) {
+        const savings = result.savings || 0;
+        const loans = result.loansTaken || 0;
+        const repaid = result.repaid || 0;
+        const outstanding = loans - repaid;
+        const netBalance = savings - outstanding;
+        
+        document.getElementById('totalSavingsTop').innerHTML = `KES ${savings.toLocaleString('en-KE')}`;
+        document.getElementById('outstandingTop').innerHTML = `KES ${outstanding.toLocaleString('en-KE')}`;
+        document.getElementById('totalSavings').innerHTML = `KES ${savings.toLocaleString('en-KE')}`;
+        document.getElementById('totalLoans').innerHTML = `KES ${loans.toLocaleString('en-KE')}`;
+        document.getElementById('totalRepaid').innerHTML = `KES ${repaid.toLocaleString('en-KE')}`;
+        document.getElementById('netBalance').innerHTML = `KES ${netBalance.toLocaleString('en-KE')}`;
+        
+        // Member summary
+        const memberData = {};
+        allRecords.forEach(r => {
+            if (!memberData[r.member]) memberData[r.member] = { savings: 0, loans: 0, repaid: 0 };
+            if (r.type === 'Savings') memberData[r.member].savings += r.amount;
+            else if (r.type === 'Loan Taken') memberData[r.member].loans += r.amount;
+            else if (r.type === 'Loan Repayment') memberData[r.member].repaid += r.amount;
+        });
+        
+        const summaryHtml = Object.entries(memberData).map(([name, d]) => `
+            <div class="stat" style="margin-bottom: 10px;">
+                <h3>${name}</h3>
+                <div style="font-size: 12px;">Savings: KES ${d.savings.toLocaleString('en-KE')} | Loans: KES ${d.loans.toLocaleString('en-KE')} | Repaid: KES ${d.repaid.toLocaleString('en-KE')}</div>
+            </div>
+        `).join('');
+        
+        document.getElementById('memberSummary').innerHTML = summaryHtml || '<div class="empty-state">No transactions yet</div>';
+    }
+}
+
 function applyFilters() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const filterMember = document.getElementById('filterMember').value;
     const filterType = document.getElementById('filterType').value;
     
     let filtered = [...allRecords];
-    
     if (filterMember) filtered = filtered.filter(r => r.member === filterMember);
     if (filterType) filtered = filtered.filter(r => r.type === filterType);
     if (searchTerm) {
         filtered = filtered.filter(r => 
             (r.member && r.member.toLowerCase().includes(searchTerm)) ||
-            (r.description && r.description.toLowerCase().includes(searchTerm)) ||
-            (r.notes && r.notes.toLowerCase().includes(searchTerm))
+            (r.description && r.description.toLowerCase().includes(searchTerm))
         );
     }
     
     filtered.sort((a, b) => {
-        let aVal = a[sortColumn];
-        let bVal = b[sortColumn];
-        if (sortColumn === 'amount' || sortColumn === 'balanceAfter') {
-            aVal = Number(aVal) || 0;
-            bVal = Number(bVal) || 0;
-        } else if (sortColumn === 'date') {
-            aVal = new Date(aVal);
-            bVal = new Date(bVal);
-        } else {
-            aVal = (aVal || '').toString().toLowerCase();
-            bVal = (bVal || '').toString().toLowerCase();
-        }
-        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
-        return 0;
+        let aVal = a[sortColumn], bVal = b[sortColumn];
+        if (sortColumn === 'amount') { aVal = Number(aVal); bVal = Number(bVal); }
+        else if (sortColumn === 'date') { aVal = new Date(aVal); bVal = new Date(bVal); }
+        else { aVal = (aVal || '').toString().toLowerCase(); bVal = (bVal || '').toString().toLowerCase(); }
+        return aVal < bVal ? (sortDirection === 'asc' ? -1 : 1) : aVal > bVal ? (sortDirection === 'asc' ? 1 : -1) : 0;
     });
     
     renderTable(filtered);
@@ -803,78 +861,41 @@ function applyFilters() {
 
 function renderTable(records) {
     const tbody = document.getElementById('tableBody');
-    
     if (!records || records.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No transactions found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No transactions found</td></tr>';
         return;
     }
     
-    tbody.innerHTML = records.map(record => {
-        let badgeClass = '';
-        if (record.type === 'Savings') badgeClass = 'badge-savings';
-        else if (record.type === 'Loan Taken') badgeClass = 'badge-loan';
-        else if (record.type === 'Loan Repayment') badgeClass = 'badge-repayment';
-        
-        return `
-            <tr>
-                <td>${formatDate(record.date)}</td>
-                <td><strong>${escapeHtml(record.member || '-')}</strong></td>
-                <td><span class="badge ${badgeClass}">${escapeHtml(record.type || '-')}</span></td>
-                <td>KES ${(record.amount || 0).toLocaleString('en-KE')}</td>
-                <td>${escapeHtml(record.description || '-')}</td>
-                <td><strong>KES ${(record.balanceAfter || 0).toLocaleString('en-KE')}</strong></td>
-            </tr>
-        `;
+    tbody.innerHTML = records.map(r => {
+        let badgeClass = r.type === 'Savings' ? 'badge-savings' : (r.type === 'Loan Taken' ? 'badge-loan' : 'badge-repayment');
+        return `<tr>
+            <td>${new Date(r.date).toLocaleDateString('en-KE')}</td>
+            <td><strong>${r.member}</strong></td>
+            <td><span class="badge ${badgeClass}">${r.type}</span></td>
+            <td>KES ${(r.amount || 0).toLocaleString('en-KE')}</td>
+            <td>${r.description || '-'}</td>
+        </tr>`;
     }).join('');
 }
 
 function sortTable(column) {
-    if (sortColumn === column) {
-        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-        sortColumn = column;
-        sortDirection = 'desc';
-    }
+    if (sortColumn === column) sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    else { sortColumn = column; sortDirection = 'desc'; }
     applyFilters();
 }
 
 function exportToCSV() {
-    if (!allRecords || allRecords.length === 0) {
-        showToast('No data to export', 'error');
-        return;
-    }
-    
-    const headers = ['Date', 'Member Name', 'Transaction Type', 'Amount (KES)', 'Description', 'Meeting Notes', 'Balance After'];
+    if (!allRecords.length) { showToast('No data to export', 'error'); return; }
+    const headers = ['Date', 'Member', 'Type', 'Amount (KES)', 'Description', 'Notes', 'Balance'];
     const rows = allRecords.map(r => [r.date, r.member, r.type, r.amount, r.description || '', r.notes || '', r.balanceAfter]);
-    
-    const csvContent = [headers, ...rows].map(row => 
-        row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
-    ).join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `legacy_builders_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
-    
     showToast('Export complete', 'success');
-}
-
-function formatDate(dateString) {
-    if (!dateString) return '-';
-    try {
-        return new Date(dateString).toLocaleDateString('en-KE');
-    } catch {
-        return dateString;
-    }
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
 }
 
 function showToast(message, type) {
@@ -882,10 +903,7 @@ function showToast(message, type) {
     toast.className = `toast ${type}`;
     toast.textContent = message;
     document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.style.animation = 'slideUp 0.3s reverse';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    setTimeout(() => toast.remove(), 3000);
 }
 </script>
 </body>
