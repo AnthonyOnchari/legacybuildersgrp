@@ -2,443 +2,1189 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Legacy Builders Group</title>
     <style>
         * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
-
+        
         body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             background: #f0f2f5;
+            min-height: 100vh;
+        }
+        
+        /* Login Overlay */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
         }
-
-        /* Main Container */
+        
+        .login-box {
+            background: white;
+            border-radius: 32px;
+            padding: 32px 24px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+        
+        .login-box h1 {
+            color: #1e3c32;
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+        
+        .login-box .subtitle {
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+        
+        .member-list-container {
+            min-height: 200px;
+            margin-bottom: 16px;
+        }
+        
+        .skeleton-member {
+            display: flex;
+            align-items: center;
+            padding: 12px 14px;
+            margin: 8px 0;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+        }
+        
+        .skeleton-member-avatar {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 22px;
+            margin-right: 14px;
+        }
+        
+        .skeleton-member-info {
+            flex: 1;
+            text-align: left;
+        }
+        
+        .skeleton-member-name {
+            width: 120px;
+            height: 16px;
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .skeleton-member-role {
+            width: 80px;
+            height: 12px;
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 6px;
+        }
+        
+        .member-option {
+            display: flex;
+            align-items: center;
+            padding: 12px 14px;
+            margin: 8px 0;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .member-option:hover {
+            background: white;
+            border-color: #2a5a4a;
+            transform: translateX(4px);
+        }
+        
+        .member-avatar {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #2a5a4a, #1e3c32);
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 14px;
+        }
+        
+        .member-info {
+            text-align: left;
+        }
+        
+        .member-info h3 {
+            font-size: 16px;
+            color: #1e293b;
+        }
+        
+        .member-info p {
+            font-size: 11px;
+            color: #64748b;
+        }
+        
+        .pin-input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 16px;
+            text-align: center;
+            letter-spacing: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .login-btn {
+            background: #2a5a4a;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .error-message {
+            color: #dc2626;
+            font-size: 13px;
+            margin-top: 12px;
+            display: none;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
         .app-container {
-            max-width: 600px;
+            max-width: 1200px;
             margin: 0 auto;
+            padding: 12px 12px 70px;
+            display: none;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 24px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+        
+        .header-content {
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+        
+        .header p {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+        
+        .user-badge {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 40px;
+            padding: 5px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+        }
+        
+        .logout-btn {
+            background: rgba(255,255,255,0.25);
+            border: none;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        
+        .balance-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        
+        .balance-card {
+            border-radius: 18px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .balance-card:first-child {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        
+        .balance-card:last-child {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+        
+        .balance-card h3 {
+            font-size: 11px;
+            font-weight: 500;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+        
+        .balance-card .amount {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 6px 12px 18px;
+            box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            z-index: 100;
+        }
+        
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px 4px;
+            background: none;
+            border: none;
+            font-size: 11px;
+            font-weight: 500;
+            color: #94a3b8;
+            cursor: pointer;
+            border-radius: 24px;
+        }
+        
+        .tab.active {
+            color: #2a5a4a;
+            background: #e8f0ed;
+        }
+        
+        .tab-icon {
+            font-size: 20px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        
+        .panel {
+            display: none;
+        }
+        
+        .panel.active-panel {
+            display: block;
+        }
+        
+        .card {
             background: white;
             border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-
-        /* Header */
-        .header {
-            background: #1a3c34;
+        
+        .card h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e3c32;
+            border-left: 3px solid #2a5a4a;
+            padding-left: 10px;
+            margin-bottom: 14px;
+        }
+        
+        .form-grid {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        
+        @media (min-width: 640px) {
+            .form-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            font-size: 13px;
+            background: white;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2a5a4a;
+        }
+        
+        label {
+            font-weight: 500;
+            margin-bottom: 4px;
+            display: block;
+            font-size: 11px;
+            color: #334155;
+        }
+        
+        button {
+            background: #2a5a4a;
             color: white;
-            padding: 20px;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .btn-secondary {
+            background: #64748b;
+        }
+        
+        .approve-btn, .reject-btn {
+            width: auto;
+            padding: 6px 14px;
+            font-size: 12px;
+            margin: 4px;
+        }
+        
+        .approve-btn { background: #10b981; }
+        .reject-btn { background: #ef4444; }
+        
+        .loan-item {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid #f59e0b;
+        }
+        
+        .loan-item.own-loan {
+            background: #fef3c7;
+            border-left-color: #d97706;
+        }
+        
+        .completed-loan-item {
+            background: #e8f0ed;
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .meeting-item {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .meeting-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
         }
-
-        .header h1 {
-            font-size: 1.2rem;
+        
+        .meeting-date {
+            font-weight: 600;
+            color: #1e3c32;
+            font-size: 13px;
         }
-
-        .logout-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 8px;
+        
+        .meeting-author {
+            font-size: 11px;
+            color: #64748b;
+        }
+        
+        .meeting-section {
+            margin-top: 8px;
+        }
+        
+        .meeting-section-title {
+            font-weight: 600;
+            font-size: 11px;
+            color: #334155;
+            margin-bottom: 4px;
+        }
+        
+        .meeting-section-content {
+            font-size: 12px;
+            color: #1e293b;
+        }
+        
+        .search-container {
+            background: white;
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 14px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 30px;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+        
+        .filter-row {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .filter-row select {
+            flex: 1;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        
+        th, td {
+            padding: 8px 6px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        th {
+            background: #f8fafc;
+            font-weight: 600;
             cursor: pointer;
         }
-
-        /* Main Page (now History page) */
-        .main-page, .history-page {
+        
+        .badge {
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .badge-savings { background: #dcfce7; color: #166534; }
+        .badge-loan { background: #fee2e2; color: #991b1b; }
+        .badge-repayment { background: #fef3c7; color: #92400e; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+            font-size: 13px;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 16px;
+            right: 16px;
+            background: #1e293b;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 13px;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+        }
+        
+        .toast.success { background: #2a5a4a; }
+        .toast.error { background: #dc2626; }
+        .toast.info { background: #3b82f6; }
+        
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .stat {
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 14px;
+            text-align: center;
+        }
+        
+        .stat h3 {
+            font-size: 10px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+        
+        .stat .number {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1e3c32;
+        }
+        
+        .progress-bar {
+            background: #e2e8f0;
+            border-radius: 10px;
+            height: 6px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: #10b981;
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
         }
-
-        /* Hide/Show pages */
-        .hidden {
-            display: none;
-        }
-
-        /* Form Card */
-        .form-card {
-            background: #f9fafb;
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 12px;
-        }
-
-        label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 500;
-            margin-bottom: 4px;
-            color: #374151;
-        }
-
-        select, input, textarea {
+        
+        .modal-content {
+            background: white;
+            border-radius: 28px;
+            padding: 24px;
+            max-width: 500px;
             width: 100%;
-            padding: 10px;
-            border: 1px solid #d1d5db;
-            border-radius: 10px;
-            font-size: 0.9rem;
-        }
-
-        button {
-            background: #1a3c34;
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        button.primary {
-            width: 100%;
-            background: #2d6a4f;
-        }
-
-        /* Menu Buttons */
-        .menu-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
-        .menu-btn {
-            background: #f3f4f6;
-            color: #1f2937;
-            padding: 16px;
-            text-align: left;
-            font-size: 1rem;
-            border-radius: 12px;
-        }
-
-        /* History Page (main page) */
-        .history-list-main {
-            margin-top: 20px;
-            max-height: 500px;
+            max-height: 80vh;
             overflow-y: auto;
         }
-
-        .transaction-item {
-            background: #f9fafb;
-            padding: 12px;
-            margin-bottom: 8px;
-            border-radius: 10px;
-            border-left: 4px solid #2d6a4f;
-        }
-
-        /* Summary Page (inside History as popup/modal style) */
-        .summary-page {
-            padding: 20px;
-        }
-
-        .summary-stats {
-            background: #e8f5e9;
-            padding: 16px;
-            border-radius: 12px;
-            margin: 16px 0;
-        }
-
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #c8e6c9;
-        }
-
-        .stat-label {
-            font-weight: 500;
-        }
-
-        .stat-value {
-            font-weight: 700;
-            color: #2d6a4f;
-        }
-
-        .back-btn {
-            background: #6b7280;
+        
+        .modal-content h3 {
             margin-bottom: 16px;
+            color: #1e3c32;
         }
-
-        /* Loans & Meetings Placeholders */
-        .info-card {
-            background: #fef3c7;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            color: #92400e;
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
         }
-
-        hr {
-            margin: 16px 0;
+        
+        .modal-buttons button {
+            flex: 1;
         }
-
-        .summary-btn {
-            background: #2d6a4f;
-            width: 100%;
-            margin-top: 10px;
+        
+        .close-modal {
+            background: #64748b;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #2a5a4a;
+            border-right-color: #2a5a4a;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+        
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        
+        .export-btn-inline {
+            background: #0d6efd;
+            margin-bottom: 12px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @media (max-width: 480px) {
+            .user-badge {
+                position: static;
+                justify-content: center;
+                margin-top: 10px;
+            }
+            .header {
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
-<div class="app-container">
-    <!-- Header -->
+
+<div id="loginOverlay" class="login-overlay">
+    <div class="login-box">
+        <h1>🏛️ Legacy Builders Group</h1>
+        <div class="subtitle">Enter your PIN to access</div>
+        
+        <div id="memberListContainer" class="member-list-container">
+            <div class="skeleton-member"><div class="skeleton-member-avatar"></div><div class="skeleton-member-info"><div class="skeleton-member-name"></div><div class="skeleton-member-role"></div></div></div>
+            <div class="skeleton-member"><div class="skeleton-member-avatar"></div><div class="skeleton-member-info"><div class="skeleton-member-name"></div><div class="skeleton-member-role"></div></div></div>
+            <div class="skeleton-member"><div class="skeleton-member-avatar"></div><div class="skeleton-member-info"><div class="skeleton-member-name"></div><div class="skeleton-member-role"></div></div></div>
+            <div class="skeleton-member"><div class="skeleton-member-avatar"></div><div class="skeleton-member-info"><div class="skeleton-member-name"></div><div class="skeleton-member-role"></div></div></div>
+        </div>
+        
+        <input type="password" id="pinInput" class="pin-input" placeholder="Enter PIN" maxlength="4" inputmode="numeric" disabled>
+        <button class="login-btn" onclick="verifyLogin()" disabled>Login</button>
+        <div id="loginError" class="error-message">Invalid PIN. Please try again.</div>
+    </div>
+</div>
+
+<div class="app-container" id="appContainer">
     <div class="header">
-        <h1>Legacy Builders Group</h1>
-        <button class="logout-btn" onclick="logout()">Logout</button>
-    </div>
-
-    <!-- MAIN PAGE = HISTORY PAGE (shows transaction list directly) -->
-    <div id="mainPage" class="main-page">
-        <p>Welcome, <strong>Mr. Onchari</strong></p>
-        <p style="font-size: 0.85rem; color: #6b7280;">Onchari & Kithinj Families</p>
-
-        <!-- Add Transaction Form -->
-        <div class="form-card">
-            <h3 style="margin-bottom: 12px;">Add Transaction</h3>
-            <div class="form-group">
-                <label>Date</label>
-                <input type="date" id="txnDate" value="2026-06-05">
-            </div>
-            <div class="form-group">
-                <label>Select Member</label>
-                <select id="txnMember">
-                    <option>Mr. Onchari</option>
-                    <option>Mrs. Kithinji</option>
-                    <option>James Kithinj</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Transaction Type</label>
-                <select id="txnType" onchange="toggleLoanNote()">
-                    <option value="Savings (Deposit)">Savings (Deposit)</option>
-                    <option value="Loan (Principal)">Loan (Principal - 10% interest added)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Amount (KES)</label>
-                <input type="number" id="txnAmount" placeholder="Enter amount">
-            </div>
-            <div class="form-group">
-                <label>Transaction Message</label>
-                <textarea id="txnMessage" rows="2" placeholder="e.g., Monthly savings"></textarea>
-            </div>
-            <button class="primary" onclick="addTransaction()">+ Add Transaction</button>
+        <div class="header-content">
+            <h1>🏛️ Legacy Builders Group</h1>
+            <p>Onchari and Kithinji Families</p>
         </div>
-
-        <!-- Button to show Summary (inside History page) -->
-        <button class="summary-btn" onclick="showSummaryPage()">📊 View Summary & Stats →</button>
-
-        <!-- Transaction History directly on main page -->
-        <h3>📜 Transaction History</h3>
-        <div id="historyListMain" class="history-list-main">
-            <!-- Transactions will appear here -->
-        </div>
-
-        <!-- Menu Buttons for Loans & Meetings -->
-        <div class="menu-buttons">
-            <button class="menu-btn" onclick="showLoans()">💰 Loans</button>
-            <button class="menu-btn" onclick="showMeetings()">📅 Meetings</button>
+        <div class="user-badge">
+            <span><strong id="loggedInUser"></strong></span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
     </div>
-
-    <!-- Summary Page (separate view with stats, no history inside) -->
-    <div id="summaryPage" class="summary-page hidden">
-        <button class="back-btn" onclick="showMainPage()">← Back to History</button>
-        <h2>📊 Financial Summary</h2>
-
-        <!-- Summary Stats only -->
-        <div class="summary-stats" id="summaryStats">
-            <div class="stat-item">
-                <span class="stat-label">Total Savings:</span>
-                <span class="stat-value" id="totalSavings">KES 0</span>
+    
+    <div class="balance-wrapper">
+        <div class="balance-card"><h3>Total Savings</h3><div class="amount" id="totalSavingsTop">KES --</div></div>
+        <div class="balance-card"><h3>Outstanding Loans</h3><div class="amount" id="outstandingTop">KES --</div></div>
+    </div>
+    
+    <div id="transactionsPanel" class="panel active-panel">
+        <div class="card">
+            <h2>Add Transaction</h2>
+            <div class="form-grid">
+                <div><label>Date</label><input type="date" id="date"></div>
+                <div><label>Select Member</label><select id="memberSelect"></select></div>
+                <div><label>Transaction Type</label><select id="type" onchange="toggleApprovalNotice()"><option value="Savings">Savings (Deposit)</option><option value="Loan Taken">Loan Request (Needs ALL Members to Approve)</option><option value="Loan Repayment">Loan Repayment</option></select></div>
+                <div><label>Amount (KES)</label><input type="number" id="amount" placeholder="0"><small style="font-size:10px; color:#64748b;">For loans: Enter PRINCIPAL amount (10% interest will be added)</small></div>
+                <div><label>Transaction Message</label><input type="text" id="message" placeholder="e.g., Monthly savings"></div>
             </div>
-            <div class="stat-item">
-                <span class="stat-label">Total Loans (Principal):</span>
-                <span class="stat-value" id="totalLoansPrincipal">KES 0</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Total Interest (10%):</span>
-                <span class="stat-value" id="totalInterest">KES 0</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Total to Repay:</span>
-                <span class="stat-value" id="totalRepay">KES 0</span>
+            <div id="approvalNotice" style="background:#fef3c7; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">Loan requests need approval from ALL other members. 10% interest will be added to the loan.</div>
+            <button id="addBtn">Submit Transaction</button>
+        </div>
+        <div class="card">
+            <h2>Transaction History</h2>
+            <div class="table-wrapper">
+                <div id="transactionSkeleton" style="display: block;"><div class="skeleton-transaction"><div class="skeleton-line skeleton-date"></div><div class="skeleton-line skeleton-member"></div><div class="skeleton-line skeleton-type"></div><div class="skeleton-line skeleton-amount"></div><div class="skeleton-line skeleton-message"></div></div></div>
+                <div id="transactionTable" style="display: none;"><table><thead><tr><th onclick="sortTable('date')">Date</th><th onclick="sortTable('member')">Member</th><th onclick="sortTable('type')">Type</th><th onclick="sortTable('amount')">Amount</th><th>Message</th></tr></thead><tbody id="tableBody"></tbody></table></div>
             </div>
         </div>
     </div>
-
-    <!-- Loans Placeholder Page -->
-    <div id="loansPage" class="summary-page hidden">
-        <button class="back-btn" onclick="showMainPage()">← Back to History</button>
-        <div class="info-card">
-            <h3>💰 Loans Section</h3>
-            <p>Loan management coming soon.</p>
+    
+    <div id="summaryPanel" class="panel">
+        <div class="card">
+            <h2>Search & Filter</h2>
+            <div class="search-container" style="padding:0;">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search by member or message">
+                <div class="filter-row">
+                    <select id="filterMember"><option value="">All Members</option></select>
+                    <select id="filterType"><option value="">All Types</option><option value="Savings">Savings</option><option value="Loan Taken">Loans Taken</option><option value="Loan Repayment">Repayments</option></select>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Financial Summary</h2>
+            <div id="summarySkeleton" style="display: block;"><div class="loading-container"><div class="loading-spinner"></div><div class="loading-text">Loading summary...</div></div></div>
+            <div id="summaryContent" style="display: none;">
+                <div class="summary-stats">
+                    <div class="stat"><h3>Total Savings</h3><div class="number" id="totalSavings">KES --</div></div>
+                    <div class="stat"><h3>Loans Taken</h3><div class="number" id="totalLoans">KES --</div></div>
+                    <div class="stat"><h3>Total Repaid</h3><div class="number" id="totalRepaid">KES --</div></div>
+                    <div class="stat"><h3>Net Balance</h3><div class="number" id="netBalance">KES --</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Member Summary</h2>
+            <div id="memberSummary">Loading...</div>
+        </div>
+        <div class="card">
+            <h2>Export Data</h2>
+            <button id="exportBtn" class="export-btn-inline">📥 Download CSV (Excel)</button>
+            <button id="refreshBtn" class="btn-secondary">🔄 Refresh Data</button>
         </div>
     </div>
-
-    <!-- Meetings Placeholder Page -->
-    <div id="meetingsPage" class="summary-page hidden">
-        <button class="back-btn" onclick="showMainPage()">← Back to History</button>
-        <div class="info-card">
-            <h3>📅 Meetings</h3>
-            <p>Meeting schedules & minutes coming soon.</p>
+    
+    <div id="loansPanel" class="panel">
+        <div class="card"><h2>Pending Loan Approvals</h2><div id="pendingLoans">Loading...</div></div>
+        <div class="card"><h2>Completed Loans</h2><div id="completedLoans">Loading...</div></div>
+    </div>
+    
+    <div id="meetingsPanel" class="panel">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h2 style="margin:0; border-left: none; padding-left:0;">📝 Meeting Minutes</h2>
+                <button id="addMeetingBtn" style="width: auto; padding: 8px 16px; font-size: 12px;">+ Add Meeting</button>
+            </div>
+            <div id="meetingMinutesList">Loading...</div>
         </div>
     </div>
 </div>
 
-<script>
-    // Sample initial transactions
-    let transactions = [
-        { date: "2026-05-20", member: "Mr. Onchari", type: "Savings (Deposit)", amount: 5000, message: "Monthly savings" },
-        { date: "2026-05-25", member: "Mrs. Kithinji", type: "Loan (Principal)", amount: 10000, message: "Business loan" }
-    ];
+<div class="tab-bar" id="tabBar" style="display: none;">
+    <button class="tab" data-panel="transactions"><span class="tab-icon">📋</span><span>Transactions</span></button>
+    <button class="tab" data-panel="summary"><span class="tab-icon">📊</span><span>Summary</span></button>
+    <button class="tab" data-panel="loans"><span class="tab-icon">💰</span><span>Loans</span></button>
+    <button class="tab" data-panel="meetings"><span class="tab-icon">📝</span><span>Meetings</span></button>
+</div>
 
-    // Update history on main page AND update summary stats
-    function updateAll() {
-        // Calculate totals for summary
-        let totalSavings = 0;
-        let totalLoanPrincipal = 0;
-        
-        transactions.forEach(t => {
-            if (t.type === "Savings (Deposit)") {
-                totalSavings += t.amount;
-            } else if (t.type === "Loan (Principal)") {
-                totalLoanPrincipal += t.amount;
-            }
-        });
-        
-        let totalInterest = totalLoanPrincipal * 0.10;
-        let totalRepay = totalLoanPrincipal + totalInterest;
-        
-        // Update summary page stats
-        document.getElementById("totalSavings").innerText = `KES ${totalSavings.toLocaleString()}`;
-        document.getElementById("totalLoansPrincipal").innerText = `KES ${totalLoanPrincipal.toLocaleString()}`;
-        document.getElementById("totalInterest").innerText = `KES ${totalInterest.toLocaleString()}`;
-        document.getElementById("totalRepay").innerText = `KES ${totalRepay.toLocaleString()}`;
-        
-        // Render history on MAIN page
-        const historyContainer = document.getElementById("historyListMain");
-        if (historyContainer) {
-            if (transactions.length === 0) {
-                historyContainer.innerHTML = '<p style="color: #6b7280; text-align: center;">No transactions yet.</p>';
-                return;
-            }
-            
-            let html = '';
-            for (let i = transactions.length - 1; i >= 0; i--) {
-                const t = transactions[i];
-                let displayAmount = t.amount;
-                let note = "";
-                if (t.type === "Loan (Principal)") {
-                    let interest = t.amount * 0.10;
-                    note = ` (+${interest.toLocaleString()} interest = ${(t.amount + interest).toLocaleString()} total)`;
-                }
-                html += `
-                    <div class="transaction-item">
-                        <div><strong>${t.date}</strong> | ${t.member}</div>
-                        <div>${t.type}: KES ${displayAmount.toLocaleString()}${note}</div>
-                        <div style="font-size: 0.8rem; color: #6b7280;">${t.message}</div>
-                    </div>
-                `;
-            }
-            historyContainer.innerHTML = html;
-        }
-    }
+<script>
+// ============================================================
+// CONFIGURATION - REPLACE WITH YOUR APPS SCRIPT URL
+// ============================================================
+const API_URL = "https://script.google.com/macros/s/AKfycbzYX7TlaH8tD7DUfq23bsv0yRSVF4_oo9MRGtcX-imnH--zKnF16KuQpOhRWuRHPGENVg/exec";
+
+let allRecords = [], allMembers = [], pendingLoans = [], completedLoans = [], currentUser = null;
+let sortColumn = 'date', sortDirection = 'desc', isLoading = false;
+let currentTab = localStorage.getItem('legacy_active_tab') || 'transactions';
+let selectedMemberForLogin = null;
+
+// ============================================================
+// API CALL
+// ============================================================
+async function callAPI(action, data = {}) {
+    try {
+        const params = new URLSearchParams({action, ...data});
+        const url = `${API_URL}?${params.toString()}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+    } catch(e) { return { success: false, error: e.message }; }
+}
+
+// ============================================================
+// MEETING MINUTES FUNCTIONS (Now stored in Google Sheets)
+// ============================================================
+async function loadMeetingMinutes() {
+    const container = document.getElementById('meetingMinutesList');
+    container.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div><div class="loading-text">Loading meetings...</div></div>';
     
-    // Add new transaction
-    function addTransaction() {
-        const date = document.getElementById("txnDate").value;
-        const member = document.getElementById("txnMember").value;
-        const type = document.getElementById("txnType").value;
-        let amount = parseFloat(document.getElementById("txnAmount").value);
-        const message = document.getElementById("txnMessage").value || "No message";
-        
-        if (!date || !member || !amount || amount <= 0) {
-            alert("Please fill all fields with valid amount.");
+    const res = await callAPI('getMeetingMinutes');
+    if (res.success && res.meetings) {
+        const meetings = res.meetings;
+        if (meetings.length === 0) {
+            container.innerHTML = '<div class="empty-state">No meeting minutes recorded yet. Click "Add Meeting" to get started.</div>';
             return;
         }
+        container.innerHTML = meetings.slice().reverse().map(meeting => `
+            <div class="meeting-item">
+                <div class="meeting-header">
+                    <span class="meeting-date">📅 ${meeting.date}</span>
+                    <span class="meeting-author">Recorded by: ${meeting.recordedBy}</span>
+                </div>
+                <div class="meeting-section">
+                    <div class="meeting-section-title">📋 Agenda:</div>
+                    <div class="meeting-section-content">${escapeHtml(meeting.agenda)}</div>
+                </div>
+                <div class="meeting-section">
+                    <div class="meeting-section-title">📝 Notes:</div>
+                    <div class="meeting-section-content">${escapeHtml(meeting.notes || 'No notes recorded')}</div>
+                </div>
+                <div class="meeting-section">
+                    <div class="meeting-section-title">✅ Decisions Made:</div>
+                    <div class="meeting-section-content">${escapeHtml(meeting.decisions || 'No decisions recorded')}</div>
+                </div>
+                ${meeting.nextMeeting ? `
+                <div class="meeting-section">
+                    <div class="meeting-section-title">📅 Next Meeting:</div>
+                    <div class="meeting-section-content">${escapeHtml(meeting.nextMeeting)}</div>
+                </div>
+                ` : ''}
+            </div>
+        `).join('');
+    } else {
+        container.innerHTML = '<div class="empty-state">Error loading meetings. Please refresh.</div>';
+    }
+}
+
+function openAddMeetingModal() {
+    const today = new Date().toISOString().split('T')[0];
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>📝 Add Meeting Minutes</h3>
+            <div class="form-grid" style="margin-bottom:16px;">
+                <div><label>Meeting Date</label><input type="date" id="meetingDate" value="${today}"></div>
+                <div><label>Recorded By</label><input type="text" id="meetingRecordedBy" value="${currentUser}" readonly style="background:#f1f5f9;"></div>
+                <div style="grid-column: span 2;"><label>Agenda *</label><textarea id="meetingAgenda" rows="2" placeholder="What was discussed?"></textarea></div>
+                <div style="grid-column: span 2;"><label>Notes</label><textarea id="meetingNotes" rows="3" placeholder="Detailed notes..."></textarea></div>
+                <div style="grid-column: span 2;"><label>Decisions Made</label><textarea id="meetingDecisions" rows="2" placeholder="What was decided?"></textarea></div>
+                <div><label>Next Meeting Date</label><input type="date" id="meetingNext"></div>
+            </div>
+            <div class="modal-buttons">
+                <button onclick="saveMeetingMinutes()">Save Meeting</button>
+                <button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+async function saveMeetingMinutes() {
+    const date = document.getElementById('meetingDate').value;
+    const agenda = document.getElementById('meetingAgenda').value.trim();
+    const notes = document.getElementById('meetingNotes').value.trim();
+    const decisions = document.getElementById('meetingDecisions').value.trim();
+    const nextMeeting = document.getElementById('meetingNext').value;
+    
+    if (!date || !agenda) { showToast('Please fill required fields', 'error'); return; }
+    
+    const res = await callAPI('saveMeetingMinutes', {
+        date: date,
+        recordedBy: currentUser,
+        agenda: agenda,
+        notes: notes || '',
+        decisions: decisions || '',
+        nextMeeting: nextMeeting || ''
+    });
+    
+    if (res.success) {
+        showToast('Meeting minutes saved!', 'success');
+        document.querySelector('.modal').remove();
+        await loadMeetingMinutes();
+    } else {
+        showToast('Error: ' + res.error, 'error');
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ============================================================
+// PERSISTENT LOGIN
+// ============================================================
+async function checkPersistentLogin() {
+    const savedUser = localStorage.getItem('legacy_current_user');
+    if (savedUser) {
+        currentUser = savedUser;
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'block';
+        document.getElementById('tabBar').style.display = 'flex';
+        document.getElementById('loggedInUser').innerText = currentUser;
+        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        await loadAllData();
+        await loadMeetingMinutes();
+        activateTab(currentTab);
         
-        if (type === "Loan (Principal)") {
-            let interest = amount * 0.10;
-            if (confirm(`Loan of KES ${amount} will incur 10% interest (KES ${interest}). Total repayable: KES ${amount + interest}. Continue?`)) {
-                transactions.push({ date, member, type, amount, message });
-                alert("Loan added successfully!");
-            } else {
-                return;
+        if (window.refreshInterval) clearInterval(window.refreshInterval);
+        window.refreshInterval = setInterval(() => {
+            if (currentUser && (currentTab === 'summary' || currentTab === 'loans')) {
+                loadAllData();
             }
-        } else {
-            transactions.push({ date, member, type, amount, message });
-            alert("Savings added!");
+        }, 30000);
+    }
+}
+
+// ============================================================
+// LOAD ALL DATA
+// ============================================================
+async function loadAllData() {
+    if (isLoading || !currentUser) return;
+    isLoading = true;
+    
+    try {
+        const [recordsRes, membersRes, summaryRes, loansRes] = await Promise.all([
+            callAPI('get'), callAPI('getMembers'), callAPI('getSummary'), callAPI('getPendingLoans')
+        ]);
+        
+        if (recordsRes.success) { allRecords = recordsRes.records || []; applyFilters(); }
+        if (membersRes.success && membersRes.members?.length) { allMembers = membersRes.members; updateMemberDropdowns(); }
+        if (summaryRes.success) updateBalanceDisplays(summaryRes);
+        if (loansRes.success) {
+            const totalMembers = allMembers.length;
+            const allLoans = loansRes.loans || [];
+            pendingLoans = allLoans.filter(l => l.approvals.length < (totalMembers - 1) && l.status !== 'completed' && l.status !== 'rejected');
+            completedLoans = allLoans.filter(l => l.approvals.length >= (totalMembers - 1) || l.status === 'completed');
+            renderPendingLoans();
+            renderCompletedLoans();
         }
         
-        // Clear fields
-        document.getElementById("txnAmount").value = "";
-        document.getElementById("txnMessage").value = "";
+        document.getElementById('transactionSkeleton').style.display = 'none';
+        document.getElementById('transactionTable').style.display = 'block';
+        document.getElementById('summarySkeleton').style.display = 'none';
+        document.getElementById('summaryContent').style.display = 'block';
         
-        // Update everything
-        updateAll();
-    }
+    } catch(e) { showToast('Error loading data', 'error'); } finally { isLoading = false; }
+}
+
+function updateBalanceDisplays(summary) {
+    if (!summary) return;
+    const savings = summary.savings || 0;
+    const outstanding = summary.outstanding || 0;
+    document.getElementById('totalSavingsTop').innerHTML = `KES ${savings.toLocaleString('en-KE')}`;
+    document.getElementById('outstandingTop').innerHTML = `KES ${outstanding.toLocaleString('en-KE')}`;
+    document.getElementById('totalSavings').innerHTML = `KES ${savings.toLocaleString('en-KE')}`;
+    document.getElementById('totalLoans').innerHTML = `KES ${(summary.loansTaken || 0).toLocaleString('en-KE')}`;
+    document.getElementById('totalRepaid').innerHTML = `KES ${(summary.repaid || 0).toLocaleString('en-KE')}`;
+    document.getElementById('netBalance').innerHTML = `KES ${(savings - outstanding).toLocaleString('en-KE')}`;
     
-    function toggleLoanNote() {
-        const type = document.getElementById("txnType").value;
-        const msgField = document.getElementById("txnMessage");
-        if (type === "Loan (Principal)") {
-            if (!msgField.value.includes("PRINCIPAL")) {
-                msgField.placeholder = "For loans: Enter PRINCIPAL amount (10% interest will be added)";
-            }
-        } else {
-            msgField.placeholder = "e.g., Monthly savings";
-        }
+    const memberData = {};
+    allRecords.forEach(r => {
+        if (!memberData[r.member]) memberData[r.member] = { savings: 0, loans: 0, repaid: 0 };
+        if (r.type === 'Savings') memberData[r.member].savings += r.amount;
+        else if (r.type === 'Loan Taken') memberData[r.member].loans += r.amount;
+        else if (r.type === 'Loan Repayment') memberData[r.member].repaid += r.amount;
+    });
+    const summaryHtml = Object.entries(memberData).map(([name, data]) => `<div class="stat"><h3>${name}</h3><div style="font-size:11px;">Savings: KES ${data.savings.toLocaleString()}</div><div style="font-size:11px;">Loans: KES ${data.loans.toLocaleString()}</div><div style="font-size:11px;">Repaid: KES ${data.repaid.toLocaleString()}</div></div>`).join('');
+    document.getElementById('memberSummary').innerHTML = summaryHtml || '<div class="empty-state">No transactions yet</div>';
+}
+
+function renderPendingLoans() {
+    const container = document.getElementById('pendingLoans');
+    if (!pendingLoans.length) { container.innerHTML = '<div class="empty-state">No pending loan approvals</div>'; return; }
+    container.innerHTML = pendingLoans.map(loan => {
+        const isRequester = (loan.member === currentUser);
+        const alreadyApproved = loan.approvals.includes(currentUser);
+        const showButtons = !isRequester && !alreadyApproved;
+        const totalNeeded = allMembers.length - 1;
+        const progressPercent = (loan.approvals.length / totalNeeded) * 100;
+        return `<div class="loan-item ${isRequester ? 'own-loan' : ''}"><div><strong>${loan.member}</strong> requested <strong>KES ${loan.principal?.toLocaleString('en-KE') || 0}</strong> + 10% interest = <strong>KES ${loan.totalDue?.toLocaleString('en-KE') || 0}</strong>${isRequester ? ' (Your request)' : (alreadyApproved ? ' (You approved)' : '')}</div><div style="font-size:12px; color:#666; margin-top:5px;">${loan.message || ''}</div><div style="font-size:11px; margin-top:5px;">Approvals: ${loan.approvals.length}/${totalNeeded} members</div><div class="progress-bar"><div class="progress-fill" style="width: ${progressPercent}%;"></div></div>${showButtons ? `<div style="margin-top:8px; display:flex; gap:8px;"><button class="approve-btn" onclick="approveLoan('${loan.id}')">Approve</button><button class="reject-btn" onclick="rejectLoan('${loan.id}')">Reject</button></div>` : ''}</div>`;
+    }).join('');
+}
+
+function renderCompletedLoans() {
+    const container = document.getElementById('completedLoans');
+    if (!completedLoans.length) { container.innerHTML = '<div class="empty-state">No completed loans yet</div>'; return; }
+    container.innerHTML = completedLoans.map(loan => `<div class="completed-loan-item"><div><strong>${loan.member}</strong> borrowed <strong>KES ${loan.principal?.toLocaleString('en-KE') || 0}</strong></div><div style="font-size:11px; margin-top:4px;">Interest (10%): KES ${loan.interest?.toLocaleString('en-KE') || 0}</div><div style="font-size:12px; font-weight:600; margin-top:4px;">Total Owing: KES ${loan.totalDue?.toLocaleString('en-KE') || 0}</div><div style="font-size:10px; color:#64748b; margin-top:4px;">Approved by: ${loan.approvals.join(', ')}</div><div style="font-size:11px; margin-top:4px;">${loan.message || ''}</div></div>`).join('');
+}
+
+function updateMemberDropdowns() {
+    const opts = allMembers.map(m => `<option value="${m}">${m}</option>`).join('');
+    document.getElementById('memberSelect').innerHTML = opts;
+    document.getElementById('filterMember').innerHTML = '<option value="">All Members</option>' + opts;
+    if (currentUser) document.getElementById('memberSelect').value = currentUser;
+}
+
+// ============================================================
+// APPROVAL ACTIONS
+// ============================================================
+async function approveLoan(loanId) {
+    const btn = event.target;
+    btn.disabled = true; btn.textContent = '...';
+    const res = await callAPI('approveLoan', { loanId, approver: currentUser });
+    if (res.success) {
+        const remainingNeeded = (allMembers.length - 1) - (res.approvals || 0);
+        showToast(remainingNeeded > 0 ? `Approved! Need ${remainingNeeded} more approval(s).` : `Loan fully approved!`, 'success');
+        await loadAllData();
+    } else { showToast('Error: ' + res.error, 'error'); btn.disabled = false; btn.textContent = 'Approve'; }
+}
+
+async function rejectLoan(loanId) {
+    const res = await callAPI('rejectLoan', { loanId });
+    if (res.success) { showToast('Loan rejected', 'success'); await loadAllData(); }
+    else showToast('Error: ' + res.error, 'error');
+}
+
+// ============================================================
+// ADD TRANSACTION
+// ============================================================
+async function addRecord() {
+    if (!currentUser) { showToast('Please login first', 'error'); return; }
+    const date = document.getElementById('date').value;
+    const member = document.getElementById('memberSelect').value;
+    const type = document.getElementById('type').value;
+    const amount = parseFloat(document.getElementById('amount').value);
+    const message = document.getElementById('message').value;
+    if (!date || !member || !amount || amount <= 0) { showToast('Please fill all required fields', 'error'); return; }
+    const btn = document.getElementById('addBtn');
+    btn.disabled = true; btn.innerHTML = 'Processing...';
+    if (type === 'Loan Taken') {
+        const savingsRes = await callAPI('getSummary');
+        const currentSavings = savingsRes.success ? (savingsRes.savings || 0) : 0;
+        if (amount > currentSavings) { showToast(`Cannot borrow KES ${amount.toLocaleString()}. Available: KES ${currentSavings.toLocaleString()}`, 'error'); btn.disabled = false; btn.innerHTML = 'Submit Transaction'; return; }
+        const res = await callAPI('submitLoan', { date, member, amount, message, notes: '', requestedBy: currentUser });
+        if (res.success) { showToast(`Loan request submitted! Needs approval from all ${allMembers.length - 1} other members.`, 'success'); document.getElementById('amount').value = ''; document.getElementById('message').value = ''; await loadAllData(); }
+        else showToast('Error: ' + res.error, 'error');
+    } else {
+        const res = await callAPI('add', { date, member, type, amount, message });
+        if (res.success) { showToast(`${type} of KES ${amount.toLocaleString()} added`, 'success'); document.getElementById('amount').value = ''; document.getElementById('message').value = ''; await loadAllData(); }
+        else showToast('Error: ' + (res.error || 'Failed'), 'error');
     }
-    
-    // Navigation
-    function showSummaryPage() {
-        document.getElementById("mainPage").classList.add("hidden");
-        document.getElementById("summaryPage").classList.remove("hidden");
-        document.getElementById("loansPage").classList.add("hidden");
-        document.getElementById("meetingsPage").classList.add("hidden");
-        updateAll(); // refresh stats
+    btn.disabled = false; btn.innerHTML = 'Submit Transaction';
+}
+
+function toggleApprovalNotice() { document.getElementById('approvalNotice').style.display = document.getElementById('type').value === 'Loan Taken' ? 'block' : 'none'; }
+
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+    const filterMember = document.getElementById('filterMember')?.value || '';
+    const filterType = document.getElementById('filterType')?.value || '';
+    let filtered = [...allRecords];
+    if (filterMember) filtered = filtered.filter(r => r.member === filterMember);
+    if (filterType) filtered = filtered.filter(r => r.type === filterType);
+    if (searchTerm) filtered = filtered.filter(r => r.member.toLowerCase().includes(searchTerm) || (r.message || '').toLowerCase().includes(searchTerm));
+    filtered.sort((a, b) => { let av = a[sortColumn], bv = b[sortColumn]; if (sortColumn === 'amount') { av = Number(av); bv = Number(bv); } else if (sortColumn === 'date') { av = new Date(av); bv = new Date(bv); } else { av = (av || '').toString().toLowerCase(); bv = (bv || '').toString().toLowerCase(); } return av < bv ? (sortDirection === 'asc' ? -1 : 1) : av > bv ? (sortDirection === 'asc' ? 1 : -1) : 0; });
+    renderTable(filtered);
+}
+
+function renderTable(records) {
+    const tbody = document.getElementById('tableBody');
+    if (!records.length) { tbody.innerHTML = '<td><td colspan="5" class="empty-state">No transactions found</td></tr>'; return; }
+    tbody.innerHTML = records.map(r => { let cls = r.type === 'Savings' ? 'badge-savings' : (r.type === 'Loan Taken' ? 'badge-loan' : 'badge-repayment'); let sign = r.type === 'Loan Repayment' ? '+' : (r.type === 'Savings' ? '+' : '-'); return `<tr><td>${new Date(r.date).toLocaleDateString('en-KE')}</td><td><strong>${r.member}</strong></td><td><span class="badge ${cls}">${r.type}</span></td><td>${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td><td>${r.message || '-'}</td></tr>`; }).join('');
+}
+
+function sortTable(column) { if (sortColumn === column) sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'; else { sortColumn = column; sortDirection = 'desc'; } applyFilters(); }
+function exportToCSV() { if (!allRecords.length) { showToast('No data to export', 'error'); return; } const headers = ['Date', 'Member', 'Type', 'Amount (KES)', 'Message', 'Balance']; const rows = allRecords.map(r => [r.date, r.member, r.type, r.amount, r.message || '', r.balanceAfter]); const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n'); const blob = new Blob([csv], { type: 'text/csv' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `legacy_builders_${new Date().toISOString().split('T')[0]}.csv`; link.click(); URL.revokeObjectURL(link.href); showToast('Export complete', 'success'); }
+function showToast(message, type) { const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.textContent = message; document.body.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
+function activateTab(tabId) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel')); const tabBtn = document.querySelector(`.tab[data-panel="${tabId}"]`); if (tabBtn) tabBtn.classList.add('active'); const panel = document.getElementById(tabId + 'Panel'); if (panel) panel.classList.add('active-panel'); localStorage.setItem('legacy_active_tab', tabId); currentTab = tabId; }
+
+// ============================================================
+// LOGIN SYSTEM
+// ============================================================
+async function loadMembersForLogin() {
+    const container = document.getElementById('memberListContainer');
+    const pinInput = document.getElementById('pinInput');
+    const loginBtn = document.querySelector('.login-btn');
+    pinInput.disabled = true;
+    loginBtn.disabled = true;
+    const res = await callAPI('getMembers');
+    if (res.success && res.members) {
+        allMembers = res.members;
+        container.innerHTML = allMembers.map(member => `<div class="member-option" onclick="selectMember('${member}')"><div class="member-avatar">${member.charAt(0)}</div><div class="member-info"><h3>${member}</h3><p>Click to select</p></div></div>`).join('');
+        pinInput.disabled = false;
+        loginBtn.disabled = false;
+    } else {
+        container.innerHTML = '<div class="empty-state">Failed to load members. Please refresh.</div>';
     }
-    
-    function showMainPage() {
-        document.getElementById("mainPage").classList.remove("hidden");
-        document.getElementById("summaryPage").classList.add("hidden");
-        document.getElementById("loansPage").classList.add("hidden");
-        document.getElementById("meetingsPage").classList.add("hidden");
-        updateAll(); // refresh history
+}
+
+function selectMember(member) {
+    selectedMemberForLogin = member;
+    document.querySelectorAll('.member-option').forEach(opt => { opt.style.background = '#f8fafc'; opt.style.borderColor = '#e2e8f0'; });
+    event.target.closest('.member-option').style.background = '#e8f0ed';
+    event.target.closest('.member-option').style.borderColor = '#2a5a4a';
+    document.getElementById('pinInput').focus();
+}
+
+async function verifyLogin() {
+    const member = selectedMemberForLogin;
+    const pin = document.getElementById('pinInput').value;
+    if (!member) { document.getElementById('loginError').style.display = 'block'; document.getElementById('loginError').textContent = 'Please select a member'; return; }
+    if (!pin || pin.length !== 4) { document.getElementById('loginError').style.display = 'block'; document.getElementById('loginError').textContent = 'Please enter a 4-digit PIN'; return; }
+    const res = await callAPI('verifyLogin', { name: member, pin: pin });
+    if (res.success) {
+        currentUser = member;
+        localStorage.setItem('legacy_current_user', member);
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'block';
+        document.getElementById('tabBar').style.display = 'flex';
+        document.getElementById('loggedInUser').innerText = member;
+        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        await loadAllData();
+        await loadMeetingMinutes();
+        activateTab(currentTab);
+        showToast(`Welcome ${member}!`, 'success');
+        if (window.refreshInterval) clearInterval(window.refreshInterval);
+        window.refreshInterval = setInterval(() => { if (currentUser && (currentTab === 'summary' || currentTab === 'loans')) loadAllData(); }, 30000);
+    } else {
+        document.getElementById('loginError').style.display = 'block';
+        document.getElementById('loginError').textContent = 'Invalid PIN. Please try again.';
+        document.getElementById('pinInput').value = '';
     }
-    
-    function showLoans() {
-        document.getElementById("mainPage").classList.add("hidden");
-        document.getElementById("summaryPage").classList.add("hidden");
-        document.getElementById("loansPage").classList.remove("hidden");
-        document.getElementById("meetingsPage").classList.add("hidden");
-    }
-    
-    function showMeetings() {
-        document.getElementById("mainPage").classList.add("hidden");
-        document.getElementById("summaryPage").classList.add("hidden");
-        document.getElementById("loansPage").classList.add("hidden");
-        document.getElementById("meetingsPage").classList.remove("hidden");
-    }
-    
-    function logout() {
-        if (confirm("Logout?")) {
-            alert("Logged out (demo).");
-        }
-    }
-    
-    // Initial load
-    updateAll();
+}
+
+function logout() {
+    localStorage.removeItem('legacy_current_user');
+    localStorage.removeItem('legacy_active_tab');
+    if (window.refreshInterval) clearInterval(window.refreshInterval);
+    currentUser = null;
+    selectedMemberForLogin = null;
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('appContainer').style.display = 'none';
+    document.getElementById('tabBar').style.display = 'none';
+    document.getElementById('pinInput').value = '';
+    document.getElementById('loginError').style.display = 'none';
+    loadMembersForLogin();
+}
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+loadMembersForLogin();
+checkPersistentLogin();
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('addBtn').onclick = addRecord;
+    document.getElementById('refreshBtn').onclick = () => { loadAllData(); loadMeetingMinutes(); };
+    document.getElementById('exportBtn').onclick = exportToCSV;
+    document.getElementById('addMeetingBtn').onclick = openAddMeetingModal;
+    document.getElementById('searchInput').oninput = () => applyFilters();
+    document.getElementById('filterMember').onchange = () => applyFilters();
+    document.getElementById('filterType').onchange = () => applyFilters();
+    document.querySelectorAll('.tab').forEach(tab => { tab.onclick = () => activateTab(tab.dataset.panel); });
+    document.getElementById('pinInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') verifyLogin(); });
+});
 </script>
 </body>
 </html>
