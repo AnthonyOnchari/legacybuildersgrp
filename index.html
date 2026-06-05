@@ -1057,7 +1057,7 @@
             <span class="user-name-badge"><strong id="loggedInUser"></strong></span>
             <div class="action-buttons">
                 <button class="change-pwd-btn" onclick="openChangePasswordModal()">🔐 Change PIN</button>
-                <button class="logout-btn" onclick="logout()">Logout</button>
+                <button class="logout-btn" onclick="logout(event)">Logout</button>
             </div>
         </div>
     </div>
@@ -1157,7 +1157,7 @@
 // ============================================================
 // CONFIGURATION - REPLACE WITH YOUR APPS SCRIPT URL
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbzdyZH0Rgi0-Z413HH9in-UR8Sb00W_ezXIjF7oBPlu8C4RTTep__YM0yob00JPjzDk-g/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzYX7TlaH8tD7DUfq23bsv0yRSVF4_oo9MRGtcX-imnH--zKnF16KuQpOhRWuRHPGENVg/exec";
 
 let allRecords = [], allMembers = [], pendingLoans = [], completedLoans = [], currentUser = null;
 let sortColumn = 'date', sortDirection = 'desc', isLoading = false;
@@ -1774,6 +1774,81 @@ function activateTab(tabId) {
 }
 
 // ============================================================
+// FIXED LOGOUT FUNCTION - NO MORE "VERIFYING" ERROR
+// ============================================================
+function logout(event) {
+    // Prevent any event bubbling
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    
+    // Clear all stored data
+    localStorage.removeItem('legacy_current_user');
+    localStorage.removeItem('legacy_active_tab');
+    
+    // Stop auto-refresh interval
+    if (window.refreshInterval) {
+        clearInterval(window.refreshInterval);
+        window.refreshInterval = null;
+    }
+    
+    // Reset global variables
+    currentUser = null;
+    selectedMemberForLogin = null;
+    allRecords = [];
+    allMembers = [];
+    pendingLoans = [];
+    completedLoans = [];
+    isLoading = false;
+    
+    // Hide app container and show login overlay
+    const appContainer = document.getElementById('appContainer');
+    const loginOverlay = document.getElementById('loginOverlay');
+    const tabBar = document.getElementById('tabBar');
+    
+    if (appContainer) appContainer.style.display = 'none';
+    if (tabBar) tabBar.style.display = 'none';
+    if (loginOverlay) loginOverlay.style.display = 'flex';
+    
+    // Clear PIN input and error
+    const pinInput = document.getElementById('pinInput');
+    const loginError = document.getElementById('loginError');
+    const loginBtn = document.getElementById('loginBtn');
+    
+    if (pinInput) {
+        pinInput.value = '';
+        pinInput.disabled = false;
+        pinInput.placeholder = 'Enter PIN';
+    }
+    if (loginError) loginError.style.display = 'none';
+    if (loginBtn) {
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = 'Login';
+    }
+    
+    // Remove any loading states from member options
+    document.querySelectorAll('.member-option').forEach(el => {
+        el.classList.remove('member-loading');
+        el.style.background = '#f8fafc';
+        el.style.borderColor = '#e2e8f0';
+        el.style.pointerEvents = 'auto';
+    });
+    
+    // Remove login loading state if any
+    const loginLoadingSpinner = document.querySelector('.login-loading');
+    if (loginLoadingSpinner) {
+        loginLoadingSpinner.remove();
+    }
+    
+    // Reload members list
+    loadMembersForLogin();
+    
+    // Show logout toast
+    showToast('Logged out successfully', 'success');
+}
+
+// ============================================================
 // LOGIN SYSTEM
 // ============================================================
 async function loadMembersForLogin() {
@@ -1852,20 +1927,6 @@ async function verifyLogin() {
     }
 }
 
-function logout() {
-    localStorage.removeItem('legacy_current_user');
-    localStorage.removeItem('legacy_active_tab');
-    if (window.refreshInterval) clearInterval(window.refreshInterval);
-    currentUser = null;
-    selectedMemberForLogin = null;
-    document.getElementById('loginOverlay').style.display = 'flex';
-    document.getElementById('appContainer').style.display = 'none';
-    document.getElementById('tabBar').style.display = 'none';
-    document.getElementById('pinInput').value = '';
-    document.getElementById('loginError').style.display = 'none';
-    loadMembersForLogin();
-}
-
 // ============================================================
 // INITIALIZATION
 // ============================================================
@@ -1898,6 +1959,7 @@ document.addEventListener('DOMContentLoaded', () => {
 window.toggleReadMore = toggleReadMore;
 window.openChangePasswordModal = openChangePasswordModal;
 window.changePassword = changePassword;
+window.logout = logout;
 </script>
 </body>
 </html>
