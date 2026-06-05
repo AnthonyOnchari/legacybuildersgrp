@@ -123,7 +123,6 @@
             transform: translateX(4px);
         }
         
-        /* Member loading animation */
         .member-loading {
             position: relative;
             pointer-events: none;
@@ -220,7 +219,6 @@
             display: none;
         }
         
-        /* Login Loading Spinner */
         .login-loading {
             display: inline-block;
             width: 20px;
@@ -295,7 +293,6 @@
             font-size: 11px;
         }
         
-        /* Balance Section with History Button */
         .top-section {
             display: flex;
             gap: 10px;
@@ -340,7 +337,6 @@
             font-weight: 700;
         }
         
-        /* History Button beside balance */
         .history-side-btn {
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: white;
@@ -375,7 +371,6 @@
             font-weight: 500;
         }
         
-        /* Shimmer loading for balance cards */
         .balance-skeleton {
             position: absolute;
             top: 0;
@@ -760,7 +755,9 @@
             margin-bottom: 12px;
         }
         
-        /* History Modal Styles */
+        /* ============================================ */
+        /* FIXED HISTORY MODAL STYLES - LONG MESSAGES */
+        /* ============================================ */
         .history-modal {
             position: fixed;
             top: 0;
@@ -779,7 +776,7 @@
             background: white;
             border-radius: 28px;
             width: 95%;
-            max-width: 1000px;
+            max-width: 1200px;
             max-height: 85vh;
             overflow: hidden;
             display: flex;
@@ -792,6 +789,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         
         .history-modal-header h3 {
@@ -823,9 +822,10 @@
         }
         
         .history-table th, .history-table td {
-            padding: 10px 8px;
+            padding: 12px 8px;
             text-align: left;
             border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
         }
         
         .history-table th {
@@ -838,6 +838,56 @@
         
         .history-table th:hover {
             background: #e2e8f0;
+        }
+        
+        /* CRITICAL FIX: Long message wrapping with Read More */
+        .message-cell {
+            max-width: 350px;
+            word-break: break-word;
+            white-space: normal;
+            overflow-wrap: break-word;
+            line-height: 1.4;
+        }
+        
+        .message-text {
+            display: inline;
+        }
+        
+        .message-text.truncated {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .read-more-btn {
+            background: none;
+            border: none;
+            color: #3b82f6;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 2px 4px;
+            margin-left: 4px;
+            width: auto;
+            display: inline;
+            text-decoration: underline;
+        }
+        
+        .read-more-btn:hover {
+            color: #1d4ed8;
+            background: none;
+        }
+        
+        @media (max-width: 768px) {
+            .message-cell {
+                max-width: 180px;
+            }
+            .history-table th, .history-table td {
+                padding: 8px 6px;
+                font-size: 11px;
+            }
         }
         
         .history-search {
@@ -916,7 +966,6 @@
         </div>
     </div>
     
-    <!-- Top Section: Balance Cards + History Button -->
     <div class="top-section">
         <div class="balance-wrapper">
             <div class="balance-card" id="savingsCard">
@@ -1020,6 +1069,45 @@ let currentTab = localStorage.getItem('legacy_active_tab') || 'transactions';
 let selectedMemberForLogin = null;
 
 // ============================================================
+// HELPER: Escape HTML
+// ============================================================
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ============================================================
+// READ MORE FUNCTIONALITY FOR MESSAGES
+// ============================================================
+function createMessageWithReadMore(message, maxLength = 60) {
+    if (!message) return '-';
+    if (message.length <= maxLength) return escapeHtml(message);
+    
+    const truncated = escapeHtml(message.substring(0, maxLength)) + '...';
+    const full = escapeHtml(message);
+    const uniqueId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    
+    return `<span id="${uniqueId}" class="message-text truncated">${truncated}</span>
+            <button class="read-more-btn" onclick="toggleReadMore('${uniqueId}', '${full.replace(/'/g, "\\'")}', '${truncated.replace(/'/g, "\\'")}')">Read more</button>`;
+}
+
+function toggleReadMore(elementId, fullText, truncatedText) {
+    const element = document.getElementById(elementId);
+    const btn = element.nextElementSibling;
+    if (element.classList.contains('truncated')) {
+        element.classList.remove('truncated');
+        element.innerHTML = fullText;
+        btn.innerHTML = 'Read less';
+    } else {
+        element.classList.add('truncated');
+        element.innerHTML = truncatedText;
+        btn.innerHTML = 'Read more';
+    }
+}
+
+// ============================================================
 // BALANCE LOADING ANIMATION
 // ============================================================
 function showBalanceLoading(show) {
@@ -1070,7 +1158,7 @@ function showMemberLoading(memberElement, show) {
 }
 
 // ============================================================
-// HISTORY MODAL
+// HISTORY MODAL WITH READ MORE
 // ============================================================
 let currentHistoryRecords = [];
 let historySortColumn = 'date';
@@ -1087,7 +1175,7 @@ function openHistoryModal() {
             </div>
             <div class="history-modal-body">
                 <div class="history-search">
-                    <input type="text" id="historySearch" placeholder="Search...">
+                    <input type="text" id="historySearch" placeholder="Search by member or message...">
                     <select id="historyFilterMember">
                         <option value="">All Members</option>
                         ${allMembers.map(m => `<option value="${m}">${m}</option>`).join('')}
@@ -1178,14 +1266,20 @@ function renderHistoryTable() {
     tbody.innerHTML = currentHistoryRecords.map(r => {
         let cls = r.type === 'Savings' ? 'badge-savings' : (r.type === 'Loan Taken' ? 'badge-loan' : 'badge-repayment');
         let sign = r.type === 'Loan Repayment' ? '+' : (r.type === 'Savings' ? '+' : '-');
+        let messageHtml = createMessageWithReadMore(r.message || '-', 50);
         return `<tr>
-            <td>${new Date(r.date).toLocaleDateString('en-KE')}</td>
-            <td><strong>${r.member}</strong></td>
+            <td style="white-space: nowrap;">${new Date(r.date).toLocaleDateString('en-KE')}</td>
+            <td><strong>${escapeHtml(r.member)}</strong></td>
             <td><span class="badge ${cls}">${r.type}</span></td>
-            <td>${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td>
-            <td>${r.message || '-'}</td>
+            <td style="white-space: nowrap;">${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td>
+            <td class="message-cell">${messageHtml}</td>
         </tr>`;
     }).join('');
+    
+    // Re-attach event listeners for all read-more buttons
+    document.querySelectorAll('.read-more-btn').forEach(btn => {
+        // The onclick is already set via the HTML attribute
+    });
 }
 
 // ============================================================
@@ -1218,8 +1312,8 @@ async function loadMeetingMinutes() {
         container.innerHTML = meetings.slice().reverse().map(meeting => `
             <div class="meeting-item">
                 <div class="meeting-header">
-                    <span class="meeting-date">📅 ${meeting.date}</span>
-                    <span class="meeting-author">Recorded by: ${meeting.recordedBy}</span>
+                    <span class="meeting-date">📅 ${escapeHtml(meeting.date)}</span>
+                    <span class="meeting-author">Recorded by: ${escapeHtml(meeting.recordedBy)}</span>
                 </div>
                 <div class="meeting-section">
                     <div class="meeting-section-title">📋 Agenda:</div>
@@ -1297,13 +1391,6 @@ async function saveMeetingMinutes() {
     }
 }
 
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 // ============================================================
 // PERSISTENT LOGIN
 // ============================================================
@@ -1379,7 +1466,7 @@ function updateBalanceDisplays(summary) {
         else if (r.type === 'Loan Taken') memberData[r.member].loans += r.amount;
         else if (r.type === 'Loan Repayment') memberData[r.member].repaid += r.amount;
     });
-    const summaryHtml = Object.entries(memberData).map(([name, data]) => `<div class="stat"><h3>${name}</h3><div style="font-size:11px;">Savings: KES ${data.savings.toLocaleString()}</div><div style="font-size:11px;">Loans: KES ${data.loans.toLocaleString()}</div><div style="font-size:11px;">Repaid: KES ${data.repaid.toLocaleString()}</div></div>`).join('');
+    const summaryHtml = Object.entries(memberData).map(([name, data]) => `<div class="stat"><h3>${escapeHtml(name)}</h3><div style="font-size:11px;">Savings: KES ${data.savings.toLocaleString()}</div><div style="font-size:11px;">Loans: KES ${data.loans.toLocaleString()}</div><div style="font-size:11px;">Repaid: KES ${data.repaid.toLocaleString()}</div></div>`).join('');
     document.getElementById('memberSummary').innerHTML = summaryHtml || '<div class="empty-state">No transactions yet</div>';
 }
 
@@ -1391,19 +1478,19 @@ function renderPendingLoans() {
         const alreadyApproved = loan.approvals.includes(currentUser);
         const showButtons = !isRequester && !alreadyApproved;
         const totalNeeded = allMembers.length - 1;
-        const progressPercent = (loan.approvals.length / totalNeeded) * 100;
-        return `<div class="loan-item ${isRequester ? 'own-loan' : ''}"><div><strong>${loan.member}</strong> requested <strong>KES ${loan.principal?.toLocaleString('en-KE') || 0}</strong> + 10% interest = <strong>KES ${loan.totalDue?.toLocaleString('en-KE') || 0}</strong>${isRequester ? ' (Your request)' : (alreadyApproved ? ' (You approved)' : '')}</div><div style="font-size:12px; color:#666; margin-top:5px;">${loan.message || ''}</div><div style="font-size:11px; margin-top:5px;">Approvals: ${loan.approvals.length}/${totalNeeded} members</div><div class="progress-bar"><div class="progress-fill" style="width: ${progressPercent}%;"></div></div>${showButtons ? `<div style="margin-top:8px; display:flex; gap:8px;"><button class="approve-btn" onclick="approveLoan('${loan.id}')">Approve</button><button class="reject-btn" onclick="rejectLoan('${loan.id}')">Reject</button></div>` : ''}</div>`;
+        const progressPercent = totalNeeded > 0 ? (loan.approvals.length / totalNeeded) * 100 : 100;
+        return `<div class="loan-item ${isRequester ? 'own-loan' : ''}"><div><strong>${escapeHtml(loan.member)}</strong> requested <strong>KES ${(loan.principal || 0).toLocaleString('en-KE')}</strong> + 10% interest = <strong>KES ${(loan.totalDue || 0).toLocaleString('en-KE')}</strong>${isRequester ? ' (Your request)' : (alreadyApproved ? ' (You approved)' : '')}</div><div style="font-size:12px; color:#666; margin-top:5px;">${escapeHtml(loan.message || '')}</div><div style="font-size:11px; margin-top:5px;">Approvals: ${loan.approvals.length}/${totalNeeded} members</div><div class="progress-bar"><div class="progress-fill" style="width: ${progressPercent}%;"></div></div>${showButtons ? `<div style="margin-top:8px; display:flex; gap:8px;"><button class="approve-btn" onclick="approveLoan('${loan.id}')">Approve</button><button class="reject-btn" onclick="rejectLoan('${loan.id}')">Reject</button></div>` : ''}</div>`;
     }).join('');
 }
 
 function renderCompletedLoans() {
     const container = document.getElementById('completedLoans');
     if (!completedLoans.length) { container.innerHTML = '<div class="empty-state">No completed loans yet</div>'; return; }
-    container.innerHTML = completedLoans.map(loan => `<div class="completed-loan-item"><div><strong>${loan.member}</strong> borrowed <strong>KES ${loan.principal?.toLocaleString('en-KE') || 0}</strong></div><div style="font-size:11px; margin-top:4px;">Interest (10%): KES ${loan.interest?.toLocaleString('en-KE') || 0}</div><div style="font-size:12px; font-weight:600; margin-top:4px;">Total Owing: KES ${loan.totalDue?.toLocaleString('en-KE') || 0}</div><div style="font-size:10px; color:#64748b; margin-top:4px;">Approved by: ${loan.approvals.join(', ')}</div><div style="font-size:11px; margin-top:4px;">${loan.message || ''}</div></div>`).join('');
+    container.innerHTML = completedLoans.map(loan => `<div class="completed-loan-item"><div><strong>${escapeHtml(loan.member)}</strong> borrowed <strong>KES ${(loan.principal || 0).toLocaleString('en-KE')}</strong></div><div style="font-size:11px; margin-top:4px;">Interest (10%): KES ${(loan.interest || 0).toLocaleString('en-KE')}</div><div style="font-size:12px; font-weight:600; margin-top:4px;">Total Owing: KES ${(loan.totalDue || 0).toLocaleString('en-KE')}</div><div style="font-size:10px; color:#64748b; margin-top:4px;">Approved by: ${escapeHtml(loan.approvals.join(', '))}</div><div style="font-size:11px; margin-top:4px;">${escapeHtml(loan.message || '')}</div></div>`).join('');
 }
 
 function updateMemberDropdowns() {
-    const opts = allMembers.map(m => `<option value="${m}">${m}</option>`).join('');
+    const opts = allMembers.map(m => `<option value="${m}">${escapeHtml(m)}</option>`).join('');
     document.getElementById('memberSelect').innerHTML = opts;
     document.getElementById('filterMember').innerHTML = '<option value="">All Members</option>' + opts;
     if (currentUser) document.getElementById('memberSelect').value = currentUser;
@@ -1489,7 +1576,7 @@ async function loadMembersForLogin() {
     const res = await callAPI('getMembers');
     if (res.success && res.members) {
         allMembers = res.members;
-        container.innerHTML = allMembers.map(member => `<div class="member-option" onclick="selectMember('${member}', this)"><div class="member-avatar">${member.charAt(0)}</div><div class="member-info"><h3>${member}</h3><p>Click to select</p></div></div>`).join('');
+        container.innerHTML = allMembers.map(member => `<div class="member-option" onclick="selectMember('${member}', this)"><div class="member-avatar">${member.charAt(0)}</div><div class="member-info"><h3>${escapeHtml(member)}</h3><p>Click to select</p></div></div>`).join('');
         pinInput.disabled = false;
         loginBtn.disabled = false;
     } else {
@@ -1499,13 +1586,11 @@ async function loadMembersForLogin() {
 
 function selectMember(member, element) {
     selectedMemberForLogin = member;
-    // Remove loading from all members
     document.querySelectorAll('.member-option').forEach(opt => {
         opt.classList.remove('member-loading');
         opt.style.background = '#f8fafc';
         opt.style.borderColor = '#e2e8f0';
     });
-    // Add loading animation to selected member
     element.classList.add('member-loading');
     element.style.background = '#e8f0ed';
     element.style.borderColor = '#2a5a4a';
@@ -1527,7 +1612,6 @@ async function verifyLogin() {
         return; 
     }
     
-    // Show loading on login button
     showLoginLoading(true);
     document.getElementById('loginError').style.display = 'none';
     
@@ -1588,6 +1672,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.tab').forEach(tab => { tab.onclick = () => activateTab(tab.dataset.panel); });
     document.getElementById('pinInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') verifyLogin(); });
 });
+
+// Make toggleReadMore globally available
+window.toggleReadMore = toggleReadMore;
 </script>
 </body>
 </html>
