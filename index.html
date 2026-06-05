@@ -113,12 +113,37 @@
             border-radius: 16px;
             cursor: pointer;
             transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
         }
         
         .member-option:hover {
             background: white;
             border-color: #2a5a4a;
             transform: translateX(4px);
+        }
+        
+        /* Member loading animation */
+        .member-loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        
+        .member-loading::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: memberShimmer 1s infinite;
+        }
+        
+        @keyframes memberShimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
         }
         
         .member-avatar {
@@ -158,6 +183,12 @@
             text-align: center;
             letter-spacing: 4px;
             margin-bottom: 20px;
+            transition: all 0.2s;
+        }
+        
+        .pin-input:focus {
+            outline: none;
+            border-color: #2a5a4a;
         }
         
         .login-btn {
@@ -170,6 +201,16 @@
             font-weight: 600;
             cursor: pointer;
             width: 100%;
+            transition: all 0.2s;
+        }
+        
+        .login-btn:active {
+            transform: scale(0.97);
+        }
+        
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
         
         .error-message {
@@ -179,9 +220,26 @@
             display: none;
         }
         
+        /* Login Loading Spinner */
+        .login-loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
         @keyframes shimmer {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
         
         .app-container {
@@ -237,12 +295,19 @@
             font-size: 11px;
         }
         
-        /* Balance Cards with Loading Animation */
+        /* Balance Section with History Button */
+        .top-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            align-items: stretch;
+        }
+        
         .balance-wrapper {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
-            margin-bottom: 16px;
+            flex: 1;
         }
         
         .balance-card {
@@ -275,6 +340,41 @@
             font-weight: 700;
         }
         
+        /* History Button beside balance */
+        .history-side-btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            border-radius: 18px;
+            padding: 12px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 80px;
+        }
+        
+        .history-side-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .history-side-btn:active {
+            transform: translateY(0);
+        }
+        
+        .history-side-btn span:first-child {
+            font-size: 24px;
+        }
+        
+        .history-side-btn span:last-child {
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
         /* Shimmer loading for balance cards */
         .balance-skeleton {
             position: absolute;
@@ -295,115 +395,6 @@
         
         .balance-loading {
             opacity: 0.7;
-        }
-        
-        /* View History Button */
-        .view-history-btn {
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 40px;
-            font-size: 12px;
-            cursor: pointer;
-            margin-top: 10px;
-            width: auto;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .view-history-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        
-        /* History Modal */
-        .history-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .history-modal-content {
-            background: white;
-            border-radius: 28px;
-            width: 95%;
-            max-width: 1000px;
-            max-height: 85vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .history-modal-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .history-modal-header h3 {
-            color: #1e3c32;
-            font-size: 18px;
-        }
-        
-        .close-history-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #64748b;
-            width: auto;
-            padding: 0 8px;
-        }
-        
-        .history-modal-body {
-            padding: 16px 20px;
-            overflow-y: auto;
-            flex: 1;
-        }
-        
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-        
-        .history-table th, .history-table td {
-            padding: 10px 8px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .history-table th {
-            background: #f8fafc;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-        }
-        
-        .history-search {
-            margin-bottom: 16px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .history-search input, .history-search select {
-            padding: 8px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 30px;
-            font-size: 13px;
-            flex: 1;
         }
         
         .tab-bar {
@@ -769,13 +760,116 @@
             margin-bottom: 12px;
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        /* History Modal Styles */
+        .history-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .history-modal-content {
+            background: white;
+            border-radius: 28px;
+            width: 95%;
+            max-width: 1000px;
+            max-height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .history-modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-modal-header h3 {
+            color: #1e3c32;
+            font-size: 18px;
+            margin: 0;
+        }
+        
+        .close-history-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+            width: auto;
+            padding: 0 8px;
+        }
+        
+        .history-modal-body {
+            padding: 16px 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        .history-table th, .history-table td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .history-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            cursor: pointer;
+        }
+        
+        .history-table th:hover {
+            background: #e2e8f0;
+        }
+        
+        .history-search {
+            margin-bottom: 16px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .history-search input, .history-search select {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 30px;
+            font-size: 13px;
+            flex: 1;
         }
         
         @keyframes slideUp {
             from { transform: translateY(100%); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @media (max-width: 640px) {
+            .top-section {
+                flex-direction: column;
+            }
+            .history-side-btn {
+                flex-direction: row;
+                justify-content: center;
+                gap: 10px;
+                padding: 10px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -805,7 +899,7 @@
         </div>
         
         <input type="password" id="pinInput" class="pin-input" placeholder="Enter PIN" maxlength="4" inputmode="numeric" disabled>
-        <button class="login-btn" onclick="verifyLogin()" disabled>Login</button>
+        <button class="login-btn" id="loginBtn" onclick="verifyLogin()" disabled>Login</button>
         <div id="loginError" class="error-message">Invalid PIN. Please try again.</div>
     </div>
 </div>
@@ -822,17 +916,24 @@
         </div>
     </div>
     
-    <div class="balance-wrapper">
-        <div class="balance-card" id="savingsCard">
-            <h3>Total Savings</h3>
-            <div class="amount" id="totalSavingsTop">KES --</div>
-            <div class="balance-skeleton" id="savingsSkeleton" style="display: none;"></div>
+    <!-- Top Section: Balance Cards + History Button -->
+    <div class="top-section">
+        <div class="balance-wrapper">
+            <div class="balance-card" id="savingsCard">
+                <h3>Total Savings</h3>
+                <div class="amount" id="totalSavingsTop">KES --</div>
+                <div class="balance-skeleton" id="savingsSkeleton" style="display: none;"></div>
+            </div>
+            <div class="balance-card" id="loansCard">
+                <h3>Outstanding Loans</h3>
+                <div class="amount" id="outstandingTop">KES --</div>
+                <div class="balance-skeleton" id="loansSkeleton" style="display: none;"></div>
+            </div>
         </div>
-        <div class="balance-card" id="loansCard">
-            <h3>Outstanding Loans</h3>
-            <div class="amount" id="outstandingTop">KES --</div>
-            <div class="balance-skeleton" id="loansSkeleton" style="display: none;"></div>
-        </div>
+        <button class="history-side-btn" onclick="openHistoryModal()">
+            <span>📜</span>
+            <span>History</span>
+        </button>
     </div>
     
     <div id="transactionsPanel" class="panel active-panel">
@@ -847,7 +948,6 @@
             </div>
             <div id="approvalNotice" style="background:#fef3c7; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">Loan requests need approval from ALL other members. 10% interest will be added to the loan.</div>
             <button id="addBtn">Submit Transaction</button>
-            <button class="view-history-btn" onclick="openHistoryModal()" style="margin-top: 12px; background: rgba(0,0,0,0.1);">📜 View Transaction History</button>
         </div>
     </div>
     
@@ -942,6 +1042,34 @@ function showBalanceLoading(show) {
 }
 
 // ============================================================
+// LOGIN LOADING ANIMATION
+// ============================================================
+function showLoginLoading(show) {
+    const loginBtn = document.getElementById('loginBtn');
+    const pinInput = document.getElementById('pinInput');
+    
+    if (show) {
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<span class="login-loading"></span> Verifying...';
+        pinInput.disabled = true;
+    } else {
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = 'Login';
+        pinInput.disabled = false;
+    }
+}
+
+function showMemberLoading(memberElement, show) {
+    if (show) {
+        memberElement.classList.add('member-loading');
+        memberElement.style.pointerEvents = 'none';
+    } else {
+        memberElement.classList.remove('member-loading');
+        memberElement.style.pointerEvents = 'auto';
+    }
+}
+
+// ============================================================
 // HISTORY MODAL
 // ============================================================
 let currentHistoryRecords = [];
@@ -949,7 +1077,6 @@ let historySortColumn = 'date';
 let historySortDirection = 'desc';
 
 function openHistoryModal() {
-    // Create modal
     const modal = document.createElement('div');
     modal.className = 'history-modal';
     modal.innerHTML = `
@@ -991,11 +1118,9 @@ function openHistoryModal() {
     `;
     document.body.appendChild(modal);
     
-    // Set current history records
     currentHistoryRecords = [...allRecords];
     renderHistoryTable();
     
-    // Add event listeners
     document.getElementById('historySearch').addEventListener('input', () => filterHistory());
     document.getElementById('historyFilterMember').addEventListener('change', () => filterHistory());
     document.getElementById('historyFilterType').addEventListener('change', () => filterHistory());
@@ -1343,30 +1468,28 @@ function applyFilters() {
     if (filterType) filtered = filtered.filter(r => r.type === filterType);
     if (searchTerm) filtered = filtered.filter(r => r.member.toLowerCase().includes(searchTerm) || (r.message || '').toLowerCase().includes(searchTerm));
     filtered.sort((a, b) => { let av = a[sortColumn], bv = b[sortColumn]; if (sortColumn === 'amount') { av = Number(av); bv = Number(bv); } else if (sortColumn === 'date') { av = new Date(av); bv = new Date(bv); } else { av = (av || '').toString().toLowerCase(); bv = (bv || '').toString().toLowerCase(); } return av < bv ? (sortDirection === 'asc' ? -1 : 1) : av > bv ? (sortDirection === 'asc' ? 1 : -1) : 0; });
-    // Don't render history here, just update if modal is open
     if (document.querySelector('.history-modal')) {
         filterHistory();
     }
 }
 
-function sortTable(column) { if (sortColumn === column) sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'; else { sortColumn = column; sortDirection = 'desc'; } applyFilters(); }
 function exportToCSV() { if (!allRecords.length) { showToast('No data to export', 'error'); return; } const headers = ['Date', 'Member', 'Type', 'Amount (KES)', 'Message', 'Balance']; const rows = allRecords.map(r => [r.date, r.member, r.type, r.amount, r.message || '', r.balanceAfter]); const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n'); const blob = new Blob([csv], { type: 'text/csv' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `legacy_builders_${new Date().toISOString().split('T')[0]}.csv`; link.click(); URL.revokeObjectURL(link.href); showToast('Export complete', 'success'); }
 function showToast(message, type) { const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.textContent = message; document.body.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
 function activateTab(tabId) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel')); const tabBtn = document.querySelector(`.tab[data-panel="${tabId}"]`); if (tabBtn) tabBtn.classList.add('active'); const panel = document.getElementById(tabId + 'Panel'); if (panel) panel.classList.add('active-panel'); localStorage.setItem('legacy_active_tab', tabId); currentTab = tabId; }
 
 // ============================================================
-// LOGIN SYSTEM
+// LOGIN SYSTEM WITH LOADING ANIMATION
 // ============================================================
 async function loadMembersForLogin() {
     const container = document.getElementById('memberListContainer');
     const pinInput = document.getElementById('pinInput');
-    const loginBtn = document.querySelector('.login-btn');
+    const loginBtn = document.getElementById('loginBtn');
     pinInput.disabled = true;
     loginBtn.disabled = true;
     const res = await callAPI('getMembers');
     if (res.success && res.members) {
         allMembers = res.members;
-        container.innerHTML = allMembers.map(member => `<div class="member-option" onclick="selectMember('${member}')"><div class="member-avatar">${member.charAt(0)}</div><div class="member-info"><h3>${member}</h3><p>Click to select</p></div></div>`).join('');
+        container.innerHTML = allMembers.map(member => `<div class="member-option" onclick="selectMember('${member}', this)"><div class="member-avatar">${member.charAt(0)}</div><div class="member-info"><h3>${member}</h3><p>Click to select</p></div></div>`).join('');
         pinInput.disabled = false;
         loginBtn.disabled = false;
     } else {
@@ -1374,20 +1497,42 @@ async function loadMembersForLogin() {
     }
 }
 
-function selectMember(member) {
+function selectMember(member, element) {
     selectedMemberForLogin = member;
-    document.querySelectorAll('.member-option').forEach(opt => { opt.style.background = '#f8fafc'; opt.style.borderColor = '#e2e8f0'; });
-    event.target.closest('.member-option').style.background = '#e8f0ed';
-    event.target.closest('.member-option').style.borderColor = '#2a5a4a';
+    // Remove loading from all members
+    document.querySelectorAll('.member-option').forEach(opt => {
+        opt.classList.remove('member-loading');
+        opt.style.background = '#f8fafc';
+        opt.style.borderColor = '#e2e8f0';
+    });
+    // Add loading animation to selected member
+    element.classList.add('member-loading');
+    element.style.background = '#e8f0ed';
+    element.style.borderColor = '#2a5a4a';
     document.getElementById('pinInput').focus();
 }
 
 async function verifyLogin() {
     const member = selectedMemberForLogin;
     const pin = document.getElementById('pinInput').value;
-    if (!member) { document.getElementById('loginError').style.display = 'block'; document.getElementById('loginError').textContent = 'Please select a member'; return; }
-    if (!pin || pin.length !== 4) { document.getElementById('loginError').style.display = 'block'; document.getElementById('loginError').textContent = 'Please enter a 4-digit PIN'; return; }
+    
+    if (!member) { 
+        document.getElementById('loginError').style.display = 'block'; 
+        document.getElementById('loginError').textContent = 'Please select a member'; 
+        return; 
+    }
+    if (!pin || pin.length !== 4) { 
+        document.getElementById('loginError').style.display = 'block'; 
+        document.getElementById('loginError').textContent = 'Please enter a 4-digit PIN'; 
+        return; 
+    }
+    
+    // Show loading on login button
+    showLoginLoading(true);
+    document.getElementById('loginError').style.display = 'none';
+    
     const res = await callAPI('verifyLogin', { name: member, pin: pin });
+    
     if (res.success) {
         currentUser = member;
         localStorage.setItem('legacy_current_user', member);
@@ -1408,6 +1553,7 @@ async function verifyLogin() {
         document.getElementById('loginError').style.display = 'block';
         document.getElementById('loginError').textContent = 'Invalid PIN. Please try again.';
         document.getElementById('pinInput').value = '';
+        showLoginLoading(false);
     }
 }
 
