@@ -248,83 +248,116 @@
         }
         
         /* ============================================ */
-        /* COMPACT HEADER - ALL ON SAME ROW */
+        /* HEADER - NEW MOBILE LAYOUT */
         /* ============================================ */
         .header {
             background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
             color: white;
-            padding: 12px 16px;
             border-radius: 24px;
             margin-bottom: 16px;
+            overflow: hidden;
         }
         
-        .header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
+        /* Row 1 - Title */
+        .header-row-1 {
+            padding: 16px 16px 4px 16px;
+            text-align: center;
         }
         
-        .header-title h1 {
-            font-size: 18px;
+        .header-row-1 h1 {
+            font-size: 22px;
+            font-weight: 600;
             margin: 0;
         }
         
-        .header-title p {
-            font-size: 9px;
-            opacity: 0.8;
-            margin-top: 2px;
+        /* Row 2 - Subtitle */
+        .header-row-2 {
+            padding: 0 16px 8px 16px;
+            text-align: center;
         }
         
-        .profile-buttons {
+        .header-row-2 p {
+            font-size: 11px;
+            opacity: 0.85;
+            margin: 0;
+        }
+        
+        /* Row 3 - User Info + Buttons (all on same row) */
+        .header-row-3 {
+            background: rgba(0, 0, 0, 0.15);
+            padding: 10px 16px;
             display: flex;
             align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
+            justify-content: space-between;
+            flex-wrap: nowrap;
+            gap: 8px;
         }
         
-        .user-name {
-            background: rgba(255,255,255,0.2);
-            padding: 4px 8px;
-            border-radius: 20px;
-            font-size: 11px;
+        .user-name-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 12px;
+            border-radius: 30px;
+            font-size: 12px;
             font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
         }
         
         .change-pwd-btn, .logout-btn {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             border: none;
             color: white;
-            padding: 4px 10px;
-            border-radius: 20px;
+            padding: 5px 12px;
+            border-radius: 30px;
             cursor: pointer;
-            font-size: 10px;
+            font-size: 11px;
+            font-weight: 500;
             transition: background 0.2s;
             white-space: nowrap;
         }
         
         .change-pwd-btn:hover, .logout-btn:hover {
-            background: rgba(255,255,255,0.35);
+            background: rgba(255, 255, 255, 0.35);
         }
         
-        /* Mobile - keep everything in one row */
-        @media (max-width: 550px) {
-            .header {
-                padding: 10px 12px;
+        /* Mobile adjustments */
+        @media (max-width: 480px) {
+            .header-row-1 h1 {
+                font-size: 18px;
             }
             
-            .header-title h1 {
-                font-size: 14px;
-            }
-            
-            .header-title p {
-                font-size: 8px;
-            }
-            
-            .user-name {
+            .header-row-2 p {
                 font-size: 9px;
-                padding: 3px 6px;
+            }
+            
+            .user-name-badge {
+                font-size: 11px;
+                padding: 4px 10px;
+            }
+            
+            .change-pwd-btn, .logout-btn {
+                font-size: 10px;
+                padding: 4px 10px;
+            }
+            
+            .header-row-3 {
+                padding: 8px 12px;
+                gap: 6px;
+            }
+            
+            .action-buttons {
+                gap: 6px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .user-name-badge {
+                font-size: 10px;
+                padding: 3px 8px;
             }
             
             .change-pwd-btn, .logout-btn {
@@ -332,19 +365,8 @@
                 padding: 3px 8px;
             }
             
-            .profile-buttons {
+            .action-buttons {
                 gap: 4px;
-            }
-        }
-        
-        @media (max-width: 450px) {
-            .header-row {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .profile-buttons {
-                justify-content: center;
             }
         }
         
@@ -1020,15 +1042,20 @@
 </div>
 
 <div class="app-container" id="appContainer">
-    <!-- COMPACT HEADER - ALL ON ONE ROW -->
+    <!-- NEW HEADER LAYOUT: 3 ROWS -->
     <div class="header">
-        <div class="header-row">
-            <div class="header-title">
-                <h1>🏛️ Legacy Builders Group</h1>
-                <p>Onchari & Kithinji Families</p>
-            </div>
-            <div class="profile-buttons">
-                <span class="user-name"><strong id="loggedInUser"></strong></span>
+        <!-- Row 1: Title -->
+        <div class="header-row-1">
+            <h1>🏛️ Legacy Builders Group</h1>
+        </div>
+        <!-- Row 2: Subtitle -->
+        <div class="header-row-2">
+            <p>Onchari and Kithinji Families</p>
+        </div>
+        <!-- Row 3: User Name + Change PIN + Logout (all on same row) -->
+        <div class="header-row-3">
+            <span class="user-name-badge"><strong id="loggedInUser"></strong></span>
+            <div class="action-buttons">
                 <button class="change-pwd-btn" onclick="openChangePasswordModal()">🔐 Change PIN</button>
                 <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
@@ -1412,7 +1439,7 @@ function renderHistoryTable() {
     if (!tbody) return;
     
     if (!currentHistoryRecords.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No transactions found</td><tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No transactions found</td></tr>';
         return;
     }
     
