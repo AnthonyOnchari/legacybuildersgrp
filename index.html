@@ -293,6 +293,22 @@
             font-size: 11px;
         }
         
+        /* Change Password Button */
+        .change-pwd-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: background 0.2s;
+        }
+        
+        .change-pwd-btn:hover {
+            background: rgba(255,255,255,0.35);
+        }
+        
         .top-section {
             display: flex;
             gap: 10px;
@@ -337,9 +353,6 @@
             font-weight: 700;
         }
         
-        /* ============================================ */
-        /* HISTORY BUTTON - MADE SMALLER */
-        /* ============================================ */
         .history-side-btn {
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: white;
@@ -759,9 +772,24 @@
             margin-bottom: 12px;
         }
         
-        /* ============================================ */
-        /* FIXED HISTORY MODAL STYLES - LONG MESSAGES */
-        /* ============================================ */
+        /* Password Modal Styles */
+        .pin-input-field {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 20px;
+            text-align: center;
+            letter-spacing: 8px;
+            font-weight: 600;
+        }
+        
+        .pin-input-field:focus {
+            outline: none;
+            border-color: #2a5a4a;
+        }
+        
+        /* History Modal Styles */
         .history-modal {
             position: fixed;
             top: 0;
@@ -844,7 +872,6 @@
             background: #e2e8f0;
         }
         
-        /* CRITICAL FIX: Long message wrapping with Read More */
         .message-cell {
             max-width: 350px;
             word-break: break-word;
@@ -937,6 +964,7 @@
                 position: static;
                 justify-content: center;
                 margin-top: 10px;
+                flex-wrap: wrap;
             }
             .header {
                 text-align: center;
@@ -972,6 +1000,7 @@
         </div>
         <div class="user-badge">
             <span><strong id="loggedInUser"></strong></span>
+            <button class="change-pwd-btn" onclick="openChangePasswordModal()">🔐 Change PIN</button>
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
     </div>
@@ -1071,7 +1100,7 @@
 // ============================================================
 // CONFIGURATION - REPLACE WITH YOUR APPS SCRIPT URL
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbzYX7TlaH8tD7DUfq23bsv0yRSVF4_oo9MRGtcX-imnH--zKnF16KuQpOhRWuRHPGENVg/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwovEFoaXHtgBBkC-IDNYxhj4X-Ovm4GS897YQ0UfPoUaJhl9G4ue6myn6fd2fcbphumg/exec";
 
 let allRecords = [], allMembers = [], pendingLoans = [], completedLoans = [], currentUser = null;
 let sortColumn = 'date', sortDirection = 'desc', isLoading = false;
@@ -1086,6 +1115,104 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// ============================================================
+// CHANGE PASSWORD FUNCTIONALITY
+// ============================================================
+function openChangePasswordModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>🔐 Change PIN</h3>
+            <div style="margin-bottom: 16px;">
+                <label>Current PIN (4 digits)</label>
+                <input type="password" id="currentPin" class="pin-input-field" maxlength="4" inputmode="numeric" placeholder="••••">
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label>New PIN (4 digits)</label>
+                <input type="password" id="newPin" class="pin-input-field" maxlength="4" inputmode="numeric" placeholder="••••">
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label>Confirm New PIN</label>
+                <input type="password" id="confirmPin" class="pin-input-field" maxlength="4" inputmode="numeric" placeholder="••••">
+            </div>
+            <div class="modal-buttons">
+                <button onclick="changePassword()">Change PIN</button>
+                <button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Auto-focus and handle enter key
+    setTimeout(() => {
+        const currentInput = document.getElementById('currentPin');
+        if(currentInput) currentInput.focus();
+    }, 100);
+}
+
+async function changePassword() {
+    const currentPin = document.getElementById('currentPin').value;
+    const newPin = document.getElementById('newPin').value;
+    const confirmPin = document.getElementById('confirmPin').value;
+    
+    // Validation
+    if (!currentPin || !newPin || !confirmPin) {
+        showToast('Please fill all fields', 'error');
+        return;
+    }
+    
+    if (currentPin.length !== 4 || isNaN(currentPin)) {
+        showToast('Current PIN must be 4 digits', 'error');
+        return;
+    }
+    
+    if (newPin.length !== 4 || isNaN(newPin)) {
+        showToast('New PIN must be 4 digits', 'error');
+        return;
+    }
+    
+    if (newPin !== confirmPin) {
+        showToast('New PINs do not match', 'error');
+        return;
+    }
+    
+    if (currentPin === newPin) {
+        showToast('New PIN must be different from current PIN', 'error');
+        return;
+    }
+    
+    // Show loading state
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = 'Processing...';
+    
+    try {
+        const response = await callAPI('changePassword', {
+            member: currentUser,
+            oldPin: currentPin,
+            newPin: newPin
+        });
+        
+        if (response.success) {
+            showToast('PIN changed successfully! Please login again.', 'success');
+            document.querySelector('.modal').remove();
+            // Log out after 2 seconds
+            setTimeout(() => {
+                logout();
+            }, 2000);
+        } else {
+            showToast(response.error || 'Failed to change PIN', 'error');
+        }
+    } catch (error) {
+        showToast('Error changing PIN', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
 }
 
 // ============================================================
@@ -1127,13 +1254,13 @@ function showBalanceLoading(show) {
     const loansCard = document.getElementById('loansCard');
     
     if (show) {
-        savingsSkeleton.style.display = 'block';
-        loansSkeleton.style.display = 'block';
+        if(savingsSkeleton) savingsSkeleton.style.display = 'block';
+        if(loansSkeleton) loansSkeleton.style.display = 'block';
         savingsCard.classList.add('balance-loading');
         loansCard.classList.add('balance-loading');
     } else {
-        savingsSkeleton.style.display = 'none';
-        loansSkeleton.style.display = 'none';
+        if(savingsSkeleton) savingsSkeleton.style.display = 'none';
+        if(loansSkeleton) loansSkeleton.style.display = 'none';
         savingsCard.classList.remove('balance-loading');
         loansCard.classList.remove('balance-loading');
     }
@@ -1154,16 +1281,6 @@ function showLoginLoading(show) {
         loginBtn.disabled = false;
         loginBtn.innerHTML = 'Login';
         pinInput.disabled = false;
-    }
-}
-
-function showMemberLoading(memberElement, show) {
-    if (show) {
-        memberElement.classList.add('member-loading');
-        memberElement.style.pointerEvents = 'none';
-    } else {
-        memberElement.classList.remove('member-loading');
-        memberElement.style.pointerEvents = 'auto';
     }
 }
 
@@ -1285,11 +1402,6 @@ function renderHistoryTable() {
             <td class="message-cell">${messageHtml}</td>
         </tr>`;
     }).join('');
-    
-    // Re-attach event listeners for all read-more buttons
-    document.querySelectorAll('.read-more-btn').forEach(btn => {
-        // The onclick is already set via the HTML attribute
-    });
 }
 
 // ============================================================
@@ -1310,6 +1422,7 @@ async function callAPI(action, data = {}) {
 // ============================================================
 async function loadMeetingMinutes() {
     const container = document.getElementById('meetingMinutesList');
+    if(!container) return;
     container.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div><div class="loading-text">Loading meetings...</div></div>';
     
     const res = await callAPI('getMeetingMinutes');
@@ -1452,8 +1565,10 @@ async function loadAllData() {
             renderCompletedLoans();
         }
         
-        document.getElementById('summarySkeleton').style.display = 'none';
-        document.getElementById('summaryContent').style.display = 'block';
+        const summarySkel = document.getElementById('summarySkeleton');
+        const summaryContent = document.getElementById('summaryContent');
+        if(summarySkel) summarySkel.style.display = 'none';
+        if(summaryContent) summaryContent.style.display = 'block';
         
     } catch(e) { showToast('Error loading data', 'error'); } finally { isLoading = false; }
 }
@@ -1462,12 +1577,19 @@ function updateBalanceDisplays(summary) {
     if (!summary) return;
     const savings = summary.savings || 0;
     const outstanding = summary.outstanding || 0;
-    document.getElementById('totalSavingsTop').innerHTML = `KES ${savings.toLocaleString('en-KE')}`;
-    document.getElementById('outstandingTop').innerHTML = `KES ${outstanding.toLocaleString('en-KE')}`;
-    document.getElementById('totalSavings').innerHTML = `KES ${savings.toLocaleString('en-KE')}`;
-    document.getElementById('totalLoans').innerHTML = `KES ${(summary.loansTaken || 0).toLocaleString('en-KE')}`;
-    document.getElementById('totalRepaid').innerHTML = `KES ${(summary.repaid || 0).toLocaleString('en-KE')}`;
-    document.getElementById('netBalance').innerHTML = `KES ${(savings - outstanding).toLocaleString('en-KE')}`;
+    const totalSavingsTop = document.getElementById('totalSavingsTop');
+    const outstandingTop = document.getElementById('outstandingTop');
+    const totalSavings = document.getElementById('totalSavings');
+    const totalLoans = document.getElementById('totalLoans');
+    const totalRepaid = document.getElementById('totalRepaid');
+    const netBalance = document.getElementById('netBalance');
+    
+    if(totalSavingsTop) totalSavingsTop.innerHTML = `KES ${savings.toLocaleString('en-KE')}`;
+    if(outstandingTop) outstandingTop.innerHTML = `KES ${outstanding.toLocaleString('en-KE')}`;
+    if(totalSavings) totalSavings.innerHTML = `KES ${savings.toLocaleString('en-KE')}`;
+    if(totalLoans) totalLoans.innerHTML = `KES ${(summary.loansTaken || 0).toLocaleString('en-KE')}`;
+    if(totalRepaid) totalRepaid.innerHTML = `KES ${(summary.repaid || 0).toLocaleString('en-KE')}`;
+    if(netBalance) netBalance.innerHTML = `KES ${(savings - outstanding).toLocaleString('en-KE')}`;
     
     const memberData = {};
     allRecords.forEach(r => {
@@ -1477,11 +1599,13 @@ function updateBalanceDisplays(summary) {
         else if (r.type === 'Loan Repayment') memberData[r.member].repaid += r.amount;
     });
     const summaryHtml = Object.entries(memberData).map(([name, data]) => `<div class="stat"><h3>${escapeHtml(name)}</h3><div style="font-size:11px;">Savings: KES ${data.savings.toLocaleString()}</div><div style="font-size:11px;">Loans: KES ${data.loans.toLocaleString()}</div><div style="font-size:11px;">Repaid: KES ${data.repaid.toLocaleString()}</div></div>`).join('');
-    document.getElementById('memberSummary').innerHTML = summaryHtml || '<div class="empty-state">No transactions yet</div>';
+    const memberSummary = document.getElementById('memberSummary');
+    if(memberSummary) memberSummary.innerHTML = summaryHtml || '<div class="empty-state">No transactions yet</div>';
 }
 
 function renderPendingLoans() {
     const container = document.getElementById('pendingLoans');
+    if(!container) return;
     if (!pendingLoans.length) { container.innerHTML = '<div class="empty-state">No pending loan approvals</div>'; return; }
     container.innerHTML = pendingLoans.map(loan => {
         const isRequester = (loan.member === currentUser);
@@ -1495,15 +1619,23 @@ function renderPendingLoans() {
 
 function renderCompletedLoans() {
     const container = document.getElementById('completedLoans');
+    if(!container) return;
     if (!completedLoans.length) { container.innerHTML = '<div class="empty-state">No completed loans yet</div>'; return; }
     container.innerHTML = completedLoans.map(loan => `<div class="completed-loan-item"><div><strong>${escapeHtml(loan.member)}</strong> borrowed <strong>KES ${(loan.principal || 0).toLocaleString('en-KE')}</strong></div><div style="font-size:11px; margin-top:4px;">Interest (10%): KES ${(loan.interest || 0).toLocaleString('en-KE')}</div><div style="font-size:12px; font-weight:600; margin-top:4px;">Total Owing: KES ${(loan.totalDue || 0).toLocaleString('en-KE')}</div><div style="font-size:10px; color:#64748b; margin-top:4px;">Approved by: ${escapeHtml(loan.approvals.join(', '))}</div><div style="font-size:11px; margin-top:4px;">${escapeHtml(loan.message || '')}</div></div>`).join('');
 }
 
 function updateMemberDropdowns() {
-    const opts = allMembers.map(m => `<option value="${m}">${escapeHtml(m)}</option>`).join('');
-    document.getElementById('memberSelect').innerHTML = opts;
-    document.getElementById('filterMember').innerHTML = '<option value="">All Members</option>' + opts;
-    if (currentUser) document.getElementById('memberSelect').value = currentUser;
+    const memberSelect = document.getElementById('memberSelect');
+    const filterMember = document.getElementById('filterMember');
+    if(memberSelect) {
+        const opts = allMembers.map(m => `<option value="${m}">${escapeHtml(m)}</option>`).join('');
+        memberSelect.innerHTML = opts;
+        if (currentUser) memberSelect.value = currentUser;
+    }
+    if(filterMember) {
+        const opts = allMembers.map(m => `<option value="${m}">${escapeHtml(m)}</option>`).join('');
+        filterMember.innerHTML = '<option value="">All Members</option>' + opts;
+    }
 }
 
 // ============================================================
@@ -1554,7 +1686,10 @@ async function addRecord() {
     btn.disabled = false; btn.innerHTML = 'Submit Transaction';
 }
 
-function toggleApprovalNotice() { document.getElementById('approvalNotice').style.display = document.getElementById('type').value === 'Loan Taken' ? 'block' : 'none'; }
+function toggleApprovalNotice() { 
+    const notice = document.getElementById('approvalNotice');
+    if(notice) notice.style.display = document.getElementById('type').value === 'Loan Taken' ? 'block' : 'none'; 
+}
 
 function applyFilters() {
     const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
@@ -1571,8 +1706,19 @@ function applyFilters() {
 }
 
 function exportToCSV() { if (!allRecords.length) { showToast('No data to export', 'error'); return; } const headers = ['Date', 'Member', 'Type', 'Amount (KES)', 'Message', 'Balance']; const rows = allRecords.map(r => [r.date, r.member, r.type, r.amount, r.message || '', r.balanceAfter]); const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n'); const blob = new Blob([csv], { type: 'text/csv' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `legacy_builders_${new Date().toISOString().split('T')[0]}.csv`; link.click(); URL.revokeObjectURL(link.href); showToast('Export complete', 'success'); }
+
 function showToast(message, type) { const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.textContent = message; document.body.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
-function activateTab(tabId) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel')); const tabBtn = document.querySelector(`.tab[data-panel="${tabId}"]`); if (tabBtn) tabBtn.classList.add('active'); const panel = document.getElementById(tabId + 'Panel'); if (panel) panel.classList.add('active-panel'); localStorage.setItem('legacy_active_tab', tabId); currentTab = tabId; }
+
+function activateTab(tabId) { 
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); 
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel')); 
+    const tabBtn = document.querySelector(`.tab[data-panel="${tabId}"]`); 
+    if (tabBtn) tabBtn.classList.add('active'); 
+    const panel = document.getElementById(tabId + 'Panel'); 
+    if (panel) panel.classList.add('active-panel'); 
+    localStorage.setItem('legacy_active_tab', tabId); 
+    currentTab = tabId; 
+}
 
 // ============================================================
 // LOGIN SYSTEM WITH LOADING ANIMATION
@@ -1581,16 +1727,18 @@ async function loadMembersForLogin() {
     const container = document.getElementById('memberListContainer');
     const pinInput = document.getElementById('pinInput');
     const loginBtn = document.getElementById('loginBtn');
-    pinInput.disabled = true;
-    loginBtn.disabled = true;
+    if(pinInput) pinInput.disabled = true;
+    if(loginBtn) loginBtn.disabled = true;
     const res = await callAPI('getMembers');
     if (res.success && res.members) {
         allMembers = res.members;
-        container.innerHTML = allMembers.map(member => `<div class="member-option" onclick="selectMember('${member}', this)"><div class="member-avatar">${member.charAt(0)}</div><div class="member-info"><h3>${escapeHtml(member)}</h3><p>Click to select</p></div></div>`).join('');
-        pinInput.disabled = false;
-        loginBtn.disabled = false;
+        if(container) {
+            container.innerHTML = allMembers.map(member => `<div class="member-option" onclick="selectMember('${member}', this)"><div class="member-avatar">${member.charAt(0)}</div><div class="member-info"><h3>${escapeHtml(member)}</h3><p>Click to select</p></div></div>`).join('');
+        }
+        if(pinInput) pinInput.disabled = false;
+        if(loginBtn) loginBtn.disabled = false;
     } else {
-        container.innerHTML = '<div class="empty-state">Failed to load members. Please refresh.</div>';
+        if(container) container.innerHTML = '<div class="empty-state">Failed to load members. Please refresh.</div>';
     }
 }
 
@@ -1672,19 +1820,31 @@ loadMembersForLogin();
 checkPersistentLogin();
 
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('addBtn').onclick = addRecord;
-    document.getElementById('refreshBtn').onclick = () => { loadAllData(); loadMeetingMinutes(); };
-    document.getElementById('exportBtn').onclick = exportToCSV;
-    document.getElementById('addMeetingBtn').onclick = openAddMeetingModal;
-    document.getElementById('searchInput').oninput = () => applyFilters();
-    document.getElementById('filterMember').onchange = () => applyFilters();
-    document.getElementById('filterType').onchange = () => applyFilters();
+    const addBtn = document.getElementById('addBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const addMeetingBtn = document.getElementById('addMeetingBtn');
+    const searchInput = document.getElementById('searchInput');
+    const filterMember = document.getElementById('filterMember');
+    const filterType = document.getElementById('filterType');
+    const pinInput = document.getElementById('pinInput');
+    
+    if(addBtn) addBtn.onclick = addRecord;
+    if(refreshBtn) refreshBtn.onclick = () => { loadAllData(); loadMeetingMinutes(); };
+    if(exportBtn) exportBtn.onclick = exportToCSV;
+    if(addMeetingBtn) addMeetingBtn.onclick = openAddMeetingModal;
+    if(searchInput) searchInput.oninput = () => applyFilters();
+    if(filterMember) filterMember.onchange = () => applyFilters();
+    if(filterType) filterType.onchange = () => applyFilters();
+    if(pinInput) pinInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') verifyLogin(); });
+    
     document.querySelectorAll('.tab').forEach(tab => { tab.onclick = () => activateTab(tab.dataset.panel); });
-    document.getElementById('pinInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') verifyLogin(); });
 });
 
-// Make toggleReadMore globally available
+// Make functions globally available
 window.toggleReadMore = toggleReadMore;
+window.openChangePasswordModal = openChangePasswordModal;
+window.changePassword = changePassword;
 </script>
 </body>
 </html>
