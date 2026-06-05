@@ -247,66 +247,107 @@
             display: none;
         }
         
+        /* ============================================ */
+        /* IMPROVED HEADER WITH MOBILE PROFILE LAYOUT */
+        /* ============================================ */
         .header {
             background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
             color: white;
             padding: 16px 20px;
             border-radius: 24px;
             margin-bottom: 16px;
-            position: relative;
         }
         
-        .header-content {
-            text-align: center;
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 8px;
         }
         
-        .header h1 {
-            font-size: 22px;
-            margin-bottom: 4px;
+        .header-title h1 {
+            font-size: 20px;
+            margin: 0;
         }
         
-        .header p {
+        .header-title p {
             font-size: 11px;
             opacity: 0.9;
+            margin-top: 4px;
         }
         
-        .user-badge {
-            position: absolute;
-            top: 16px;
-            right: 20px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 40px;
-            padding: 5px 12px;
+        .user-actions {
             display: flex;
+            gap: 8px;
             align-items: center;
-            gap: 10px;
-            font-size: 12px;
+            flex-wrap: wrap;
         }
         
-        .logout-btn {
-            background: rgba(255,255,255,0.25);
-            border: none;
-            color: white;
-            padding: 4px 10px;
+        .user-name {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
             border-radius: 30px;
-            cursor: pointer;
-            font-size: 11px;
+            font-size: 12px;
+            font-weight: 500;
         }
         
-        /* Change Password Button */
-        .change-pwd-btn {
+        .logout-btn, .change-pwd-btn {
             background: rgba(255,255,255,0.2);
             border: none;
             color: white;
-            padding: 4px 10px;
+            padding: 5px 12px;
             border-radius: 30px;
             cursor: pointer;
             font-size: 11px;
             transition: background 0.2s;
         }
         
-        .change-pwd-btn:hover {
+        .logout-btn:hover, .change-pwd-btn:hover {
             background: rgba(255,255,255,0.35);
+        }
+        
+        /* Mobile optimization */
+        @media (max-width: 550px) {
+            .header {
+                padding: 14px;
+            }
+            
+            .header-top {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .header-title h1 {
+                font-size: 18px;
+            }
+            
+            .user-actions {
+                justify-content: center;
+            }
+            
+            .user-name {
+                font-size: 11px;
+                padding: 4px 10px;
+            }
+            
+            .logout-btn, .change-pwd-btn {
+                padding: 4px 10px;
+                font-size: 10px;
+            }
+        }
+        
+        @media (max-width: 380px) {
+            .user-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .user-name, .logout-btn, .change-pwd-btn {
+                width: 100%;
+                text-align: center;
+            }
         }
         
         .top-section {
@@ -958,18 +999,6 @@
                 font-size: 10px;
             }
         }
-        
-        @media (max-width: 480px) {
-            .user-badge {
-                position: static;
-                justify-content: center;
-                margin-top: 10px;
-                flex-wrap: wrap;
-            }
-            .header {
-                text-align: center;
-            }
-        }
     </style>
 </head>
 <body>
@@ -993,15 +1022,18 @@
 </div>
 
 <div class="app-container" id="appContainer">
+    <!-- IMPROVED HEADER WITH MOBILE LAYOUT -->
     <div class="header">
-        <div class="header-content">
-            <h1>🏛️ Legacy Builders Group</h1>
-            <p>Onchari and Kithinji Families</p>
-        </div>
-        <div class="user-badge">
-            <span><strong id="loggedInUser"></strong></span>
-            <button class="change-pwd-btn" onclick="openChangePasswordModal()">🔐 Change PIN</button>
-            <button class="logout-btn" onclick="logout()">Logout</button>
+        <div class="header-top">
+            <div class="header-title">
+                <h1>🏛️ Legacy Builders Group</h1>
+                <p>Onchari and Kithinji Families</p>
+            </div>
+            <div class="user-actions">
+                <span class="user-name"><strong id="loggedInUser"></strong></span>
+                <button class="change-pwd-btn" onclick="openChangePasswordModal()">🔐 Change PIN</button>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
         </div>
     </div>
     
@@ -1100,7 +1132,7 @@
 // ============================================================
 // CONFIGURATION - REPLACE WITH YOUR APPS SCRIPT URL
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbwovEFoaXHtgBBkC-IDNYxhj4X-Ovm4GS897YQ0UfPoUaJhl9G4ue6myn6fd2fcbphumg/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzYX7TlaH8tD7DUfq23bsv0yRSVF4_oo9MRGtcX-imnH--zKnF16KuQpOhRWuRHPGENVg/exec";
 
 let allRecords = [], allMembers = [], pendingLoans = [], completedLoans = [], currentUser = null;
 let sortColumn = 'date', sortDirection = 'desc', isLoading = false;
@@ -1146,7 +1178,6 @@ function openChangePasswordModal() {
     `;
     document.body.appendChild(modal);
     
-    // Auto-focus and handle enter key
     setTimeout(() => {
         const currentInput = document.getElementById('currentPin');
         if(currentInput) currentInput.focus();
@@ -1158,7 +1189,6 @@ async function changePassword() {
     const newPin = document.getElementById('newPin').value;
     const confirmPin = document.getElementById('confirmPin').value;
     
-    // Validation
     if (!currentPin || !newPin || !confirmPin) {
         showToast('Please fill all fields', 'error');
         return;
@@ -1184,7 +1214,6 @@ async function changePassword() {
         return;
     }
     
-    // Show loading state
     const btn = event.target;
     const originalText = btn.innerHTML;
     btn.disabled = true;
@@ -1200,7 +1229,6 @@ async function changePassword() {
         if (response.success) {
             showToast('PIN changed successfully! Please login again.', 'success');
             document.querySelector('.modal').remove();
-            // Log out after 2 seconds
             setTimeout(() => {
                 logout();
             }, 2000);
@@ -1721,7 +1749,7 @@ function activateTab(tabId) {
 }
 
 // ============================================================
-// LOGIN SYSTEM WITH LOADING ANIMATION
+// LOGIN SYSTEM
 // ============================================================
 async function loadMembersForLogin() {
     const container = document.getElementById('memberListContainer');
