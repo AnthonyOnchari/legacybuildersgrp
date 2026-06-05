@@ -237,6 +237,7 @@
             font-size: 11px;
         }
         
+        /* Balance Cards with Loading Animation */
         .balance-wrapper {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -248,6 +249,8 @@
             border-radius: 18px;
             padding: 12px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
         
         .balance-card:first-child {
@@ -270,6 +273,137 @@
         .balance-card .amount {
             font-size: 20px;
             font-weight: 700;
+        }
+        
+        /* Shimmer loading for balance cards */
+        .balance-skeleton {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            background-size: 200% 100%;
+            animation: shimmerMove 1.5s infinite;
+            border-radius: 18px;
+        }
+        
+        @keyframes shimmerMove {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .balance-loading {
+            opacity: 0.7;
+        }
+        
+        /* View History Button */
+        .view-history-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .view-history-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* History Modal */
+        .history-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .history-modal-content {
+            background: white;
+            border-radius: 28px;
+            width: 95%;
+            max-width: 1000px;
+            max-height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .history-modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-modal-header h3 {
+            color: #1e3c32;
+            font-size: 18px;
+        }
+        
+        .close-history-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+            width: auto;
+            padding: 0 8px;
+        }
+        
+        .history-modal-body {
+            padding: 16px 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        .history-table th, .history-table td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .history-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        
+        .history-search {
+            margin-bottom: 16px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .history-search input, .history-search select {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 30px;
+            font-size: 13px;
+            flex: 1;
         }
         
         .tab-bar {
@@ -490,28 +624,6 @@
             flex: 1;
         }
         
-        .table-wrapper {
-            overflow-x: auto;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-        
-        th, td {
-            padding: 8px 6px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        th {
-            background: #f8fafc;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        
         .badge {
             padding: 3px 8px;
             border-radius: 20px;
@@ -711,8 +823,16 @@
     </div>
     
     <div class="balance-wrapper">
-        <div class="balance-card"><h3>Total Savings</h3><div class="amount" id="totalSavingsTop">KES --</div></div>
-        <div class="balance-card"><h3>Outstanding Loans</h3><div class="amount" id="outstandingTop">KES --</div></div>
+        <div class="balance-card" id="savingsCard">
+            <h3>Total Savings</h3>
+            <div class="amount" id="totalSavingsTop">KES --</div>
+            <div class="balance-skeleton" id="savingsSkeleton" style="display: none;"></div>
+        </div>
+        <div class="balance-card" id="loansCard">
+            <h3>Outstanding Loans</h3>
+            <div class="amount" id="outstandingTop">KES --</div>
+            <div class="balance-skeleton" id="loansSkeleton" style="display: none;"></div>
+        </div>
     </div>
     
     <div id="transactionsPanel" class="panel active-panel">
@@ -727,13 +847,7 @@
             </div>
             <div id="approvalNotice" style="background:#fef3c7; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">Loan requests need approval from ALL other members. 10% interest will be added to the loan.</div>
             <button id="addBtn">Submit Transaction</button>
-        </div>
-        <div class="card">
-            <h2>Transaction History</h2>
-            <div class="table-wrapper">
-                <div id="transactionSkeleton" style="display: block;"><div class="skeleton-transaction"><div class="skeleton-line skeleton-date"></div><div class="skeleton-line skeleton-member"></div><div class="skeleton-line skeleton-type"></div><div class="skeleton-line skeleton-amount"></div><div class="skeleton-line skeleton-message"></div></div></div>
-                <div id="transactionTable" style="display: none;"><table><thead><tr><th onclick="sortTable('date')">Date</th><th onclick="sortTable('member')">Member</th><th onclick="sortTable('type')">Type</th><th onclick="sortTable('amount')">Amount</th><th>Message</th></tr></thead><tbody id="tableBody"></tbody></table></div>
-            </div>
+            <button class="view-history-btn" onclick="openHistoryModal()" style="margin-top: 12px; background: rgba(0,0,0,0.1);">📜 View Transaction History</button>
         </div>
     </div>
     
@@ -806,6 +920,150 @@ let currentTab = localStorage.getItem('legacy_active_tab') || 'transactions';
 let selectedMemberForLogin = null;
 
 // ============================================================
+// BALANCE LOADING ANIMATION
+// ============================================================
+function showBalanceLoading(show) {
+    const savingsSkeleton = document.getElementById('savingsSkeleton');
+    const loansSkeleton = document.getElementById('loansSkeleton');
+    const savingsCard = document.getElementById('savingsCard');
+    const loansCard = document.getElementById('loansCard');
+    
+    if (show) {
+        savingsSkeleton.style.display = 'block';
+        loansSkeleton.style.display = 'block';
+        savingsCard.classList.add('balance-loading');
+        loansCard.classList.add('balance-loading');
+    } else {
+        savingsSkeleton.style.display = 'none';
+        loansSkeleton.style.display = 'none';
+        savingsCard.classList.remove('balance-loading');
+        loansCard.classList.remove('balance-loading');
+    }
+}
+
+// ============================================================
+// HISTORY MODAL
+// ============================================================
+let currentHistoryRecords = [];
+let historySortColumn = 'date';
+let historySortDirection = 'desc';
+
+function openHistoryModal() {
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'history-modal';
+    modal.innerHTML = `
+        <div class="history-modal-content">
+            <div class="history-modal-header">
+                <h3>📜 Transaction History</h3>
+                <button class="close-history-btn" onclick="this.closest('.history-modal').remove()">✕</button>
+            </div>
+            <div class="history-modal-body">
+                <div class="history-search">
+                    <input type="text" id="historySearch" placeholder="Search...">
+                    <select id="historyFilterMember">
+                        <option value="">All Members</option>
+                        ${allMembers.map(m => `<option value="${m}">${m}</option>`).join('')}
+                    </select>
+                    <select id="historyFilterType">
+                        <option value="">All Types</option>
+                        <option value="Savings">Savings</option>
+                        <option value="Loan Taken">Loan Taken</option>
+                        <option value="Loan Repayment">Loan Repayment</option>
+                    </select>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="history-table" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortHistory('date')">Date ⬍</th>
+                                <th onclick="sortHistory('member')">Member ⬍</th>
+                                <th onclick="sortHistory('type')">Type ⬍</th>
+                                <th onclick="sortHistory('amount')">Amount ⬍</th>
+                                <th>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Set current history records
+    currentHistoryRecords = [...allRecords];
+    renderHistoryTable();
+    
+    // Add event listeners
+    document.getElementById('historySearch').addEventListener('input', () => filterHistory());
+    document.getElementById('historyFilterMember').addEventListener('change', () => filterHistory());
+    document.getElementById('historyFilterType').addEventListener('change', () => filterHistory());
+}
+
+function filterHistory() {
+    const searchTerm = document.getElementById('historySearch').value.toLowerCase();
+    const filterMember = document.getElementById('historyFilterMember').value;
+    const filterType = document.getElementById('historyFilterType').value;
+    
+    let filtered = [...allRecords];
+    
+    if (filterMember) filtered = filtered.filter(r => r.member === filterMember);
+    if (filterType) filtered = filtered.filter(r => r.type === filterType);
+    if (searchTerm) {
+        filtered = filtered.filter(r => 
+            r.member.toLowerCase().includes(searchTerm) || 
+            (r.message || '').toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    currentHistoryRecords = filtered;
+    renderHistoryTable();
+}
+
+function sortHistory(column) {
+    if (historySortColumn === column) {
+        historySortDirection = historySortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        historySortColumn = column;
+        historySortDirection = 'desc';
+    }
+    
+    currentHistoryRecords.sort((a, b) => {
+        let aVal = a[historySortColumn];
+        let bVal = b[historySortColumn];
+        if (historySortColumn === 'amount') { aVal = Number(aVal); bVal = Number(bVal); }
+        else if (historySortColumn === 'date') { aVal = new Date(aVal); bVal = new Date(bVal); }
+        else { aVal = (aVal || '').toString().toLowerCase(); bVal = (bVal || '').toString().toLowerCase(); }
+        return aVal < bVal ? (historySortDirection === 'asc' ? -1 : 1) : aVal > bVal ? (historySortDirection === 'asc' ? 1 : -1) : 0;
+    });
+    
+    renderHistoryTable();
+}
+
+function renderHistoryTable() {
+    const tbody = document.getElementById('historyBody');
+    if (!tbody) return;
+    
+    if (!currentHistoryRecords.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No transactions found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = currentHistoryRecords.map(r => {
+        let cls = r.type === 'Savings' ? 'badge-savings' : (r.type === 'Loan Taken' ? 'badge-loan' : 'badge-repayment');
+        let sign = r.type === 'Loan Repayment' ? '+' : (r.type === 'Savings' ? '+' : '-');
+        return `<tr>
+            <td>${new Date(r.date).toLocaleDateString('en-KE')}</td>
+            <td><strong>${r.member}</strong></td>
+            <td><span class="badge ${cls}">${r.type}</span></td>
+            <td>${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td>
+            <td>${r.message || '-'}</td>
+        </tr>`;
+    }).join('');
+}
+
+// ============================================================
 // API CALL
 // ============================================================
 async function callAPI(action, data = {}) {
@@ -819,7 +1077,7 @@ async function callAPI(action, data = {}) {
 }
 
 // ============================================================
-// MEETING MINUTES FUNCTIONS (Now stored in Google Sheets)
+// MEETING MINUTES FUNCTIONS
 // ============================================================
 async function loadMeetingMinutes() {
     const container = document.getElementById('meetingMinutesList');
@@ -933,9 +1191,11 @@ async function checkPersistentLogin() {
         document.getElementById('tabBar').style.display = 'flex';
         document.getElementById('loggedInUser').innerText = currentUser;
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        showBalanceLoading(true);
         await loadAllData();
         await loadMeetingMinutes();
         activateTab(currentTab);
+        showBalanceLoading(false);
         
         if (window.refreshInterval) clearInterval(window.refreshInterval);
         window.refreshInterval = setInterval(() => {
@@ -970,8 +1230,6 @@ async function loadAllData() {
             renderCompletedLoans();
         }
         
-        document.getElementById('transactionSkeleton').style.display = 'none';
-        document.getElementById('transactionTable').style.display = 'block';
         document.getElementById('summarySkeleton').style.display = 'none';
         document.getElementById('summaryContent').style.display = 'block';
         
@@ -1085,13 +1343,10 @@ function applyFilters() {
     if (filterType) filtered = filtered.filter(r => r.type === filterType);
     if (searchTerm) filtered = filtered.filter(r => r.member.toLowerCase().includes(searchTerm) || (r.message || '').toLowerCase().includes(searchTerm));
     filtered.sort((a, b) => { let av = a[sortColumn], bv = b[sortColumn]; if (sortColumn === 'amount') { av = Number(av); bv = Number(bv); } else if (sortColumn === 'date') { av = new Date(av); bv = new Date(bv); } else { av = (av || '').toString().toLowerCase(); bv = (bv || '').toString().toLowerCase(); } return av < bv ? (sortDirection === 'asc' ? -1 : 1) : av > bv ? (sortDirection === 'asc' ? 1 : -1) : 0; });
-    renderTable(filtered);
-}
-
-function renderTable(records) {
-    const tbody = document.getElementById('tableBody');
-    if (!records.length) { tbody.innerHTML = '<td><td colspan="5" class="empty-state">No transactions found</td></tr>'; return; }
-    tbody.innerHTML = records.map(r => { let cls = r.type === 'Savings' ? 'badge-savings' : (r.type === 'Loan Taken' ? 'badge-loan' : 'badge-repayment'); let sign = r.type === 'Loan Repayment' ? '+' : (r.type === 'Savings' ? '+' : '-'); return `<tr><td>${new Date(r.date).toLocaleDateString('en-KE')}</td><td><strong>${r.member}</strong></td><td><span class="badge ${cls}">${r.type}</span></td><td>${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td><td>${r.message || '-'}</td></tr>`; }).join('');
+    // Don't render history here, just update if modal is open
+    if (document.querySelector('.history-modal')) {
+        filterHistory();
+    }
 }
 
 function sortTable(column) { if (sortColumn === column) sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'; else { sortColumn = column; sortDirection = 'desc'; } applyFilters(); }
@@ -1141,9 +1396,11 @@ async function verifyLogin() {
         document.getElementById('tabBar').style.display = 'flex';
         document.getElementById('loggedInUser').innerText = member;
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        showBalanceLoading(true);
         await loadAllData();
         await loadMeetingMinutes();
         activateTab(currentTab);
+        showBalanceLoading(false);
         showToast(`Welcome ${member}!`, 'success');
         if (window.refreshInterval) clearInterval(window.refreshInterval);
         window.refreshInterval = setInterval(() => { if (currentUser && (currentTab === 'summary' || currentTab === 'loans')) loadAllData(); }, 30000);
