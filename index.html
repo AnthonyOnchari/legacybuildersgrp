@@ -334,11 +334,52 @@
         
         /* Mobile adjustments */
         @media (max-width: 480px) {
-            .header-row-1 h1 { font-size: 18px; }
-            .slogan { font-size: 9px; }
-            .slogan-sub { font-size: 8px; }
-            .user-name-badge { font-size: 11px; padding: 4px 10px; }
-            .change-pwd-btn, .logout-btn { font-size: 10px; padding: 4px 10px; }
+            .header-row-1 h1 {
+                font-size: 18px;
+            }
+            
+            .slogan {
+                font-size: 9px;
+            }
+            
+            .slogan-sub {
+                font-size: 8px;
+            }
+            
+            .user-name-badge {
+                font-size: 11px;
+                padding: 4px 10px;
+            }
+            
+            .change-pwd-btn, .logout-btn {
+                font-size: 10px;
+                padding: 4px 10px;
+            }
+            
+            .header-row-3 {
+                padding: 8px 12px;
+                gap: 6px;
+            }
+            
+            .action-buttons {
+                gap: 6px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .user-name-badge {
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+            
+            .change-pwd-btn, .logout-btn {
+                font-size: 9px;
+                padding: 3px 8px;
+            }
+            
+            .action-buttons {
+                gap: 4px;
+            }
         }
         
         .top-section {
@@ -397,11 +438,28 @@
             justify-content: center;
             gap: 4px;
             cursor: pointer;
+            transition: all 0.2s;
             min-width: 65px;
+            width: auto;
         }
         
-        .history-side-btn span:first-child { font-size: 20px; }
-        .history-side-btn span:last-child { font-size: 10px; font-weight: 500; }
+        .history-side-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .history-side-btn:active {
+            transform: translateY(0);
+        }
+        
+        .history-side-btn span:first-child {
+            font-size: 20px;
+        }
+        
+        .history-side-btn span:last-child {
+            font-size: 10px;
+            font-weight: 500;
+        }
         
         .balance-skeleton {
             position: absolute;
@@ -420,7 +478,9 @@
             100% { background-position: -200% 0; }
         }
         
-        .balance-loading { opacity: 0.7; }
+        .balance-loading {
+            opacity: 0.7;
+        }
         
         .tab-bar {
             position: fixed;
@@ -508,7 +568,9 @@
         }
         
         @media (min-width: 640px) {
-            .form-grid { grid-template-columns: repeat(2, 1fr); }
+            .form-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
         
         input, select, textarea {
@@ -518,6 +580,16 @@
             border-radius: 14px;
             font-size: 13px;
             background: white;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2a5a4a;
         }
         
         label {
@@ -545,10 +617,21 @@
             cursor: not-allowed;
         }
         
-        .btn-secondary { background: #64748b; }
-        .approve-btn { background: #10b981; width: auto; padding: 6px 14px; font-size: 12px; }
-        .reject-btn { background: #ef4444; width: auto; padding: 6px 14px; font-size: 12px; }
+        .btn-secondary {
+            background: #64748b;
+        }
         
+        .approve-btn, .reject-btn {
+            width: auto;
+            padding: 6px 14px;
+            font-size: 12px;
+            margin: 4px;
+        }
+        
+        .approve-btn { background: #10b981; }
+        .reject-btn { background: #ef4444; }
+        
+        /* Pending transaction item */
         .pending-item {
             background: #fef3c7;
             border-left: 4px solid #f59e0b;
@@ -556,6 +639,24 @@
             padding: 14px;
             margin-bottom: 12px;
         }
+        
+        .transaction-status {
+            font-size: 11px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-approved { background: #dcfce7; color: #166534; }
+        .status-rejected { background: #fee2e2; color: #991b1b; }
         
         .loan-item {
             background: #f8fafc;
@@ -594,11 +695,32 @@
             gap: 8px;
         }
         
-        .meeting-date { font-weight: 600; color: #1e3c32; font-size: 13px; }
-        .meeting-author { font-size: 11px; color: #64748b; }
-        .meeting-section { margin-top: 8px; }
-        .meeting-section-title { font-weight: 600; font-size: 11px; color: #334155; margin-bottom: 4px; }
-        .meeting-section-content { font-size: 12px; color: #1e293b; }
+        .meeting-date {
+            font-weight: 600;
+            color: #1e3c32;
+            font-size: 13px;
+        }
+        
+        .meeting-author {
+            font-size: 11px;
+            color: #64748b;
+        }
+        
+        .meeting-section {
+            margin-top: 8px;
+        }
+        
+        .meeting-section-title {
+            font-weight: 600;
+            font-size: 11px;
+            color: #334155;
+            margin-bottom: 4px;
+        }
+        
+        .meeting-section-content {
+            font-size: 12px;
+            color: #1e293b;
+        }
         
         .search-container {
             background: white;
@@ -621,7 +743,9 @@
             gap: 8px;
         }
         
-        .filter-row select { flex: 1; }
+        .filter-row select {
+            flex: 1;
+        }
         
         .badge {
             padding: 3px 8px;
@@ -630,6 +754,7 @@
             font-weight: 600;
             display: inline-block;
         }
+        
         .badge-savings { background: #dcfce7; color: #166534; }
         .badge-loan { background: #fee2e2; color: #991b1b; }
         .badge-repayment { background: #fef3c7; color: #92400e; }
@@ -655,8 +780,10 @@
             z-index: 2000;
             animation: slideUp 0.3s ease;
         }
+        
         .toast.success { background: #2a5a4a; }
         .toast.error { background: #dc2626; }
+        .toast.info { background: #3b82f6; }
         
         .summary-stats {
             display: grid;
@@ -670,8 +797,18 @@
             border-radius: 14px;
             text-align: center;
         }
-        .stat h3 { font-size: 10px; color: #64748b; margin-bottom: 4px; }
-        .stat .number { font-size: 15px; font-weight: 700; color: #1e3c32; }
+        
+        .stat h3 {
+            font-size: 10px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+        
+        .stat .number {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1e3c32;
+        }
         
         .progress-bar {
             background: #e2e8f0;
@@ -680,6 +817,7 @@
             margin-top: 8px;
             overflow: hidden;
         }
+        
         .progress-fill {
             background: #10b981;
             height: 100%;
@@ -711,10 +849,24 @@
             overflow-y: auto;
         }
         
-        .modal-content h3 { margin-bottom: 16px; color: #1e3c32; }
-        .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
-        .modal-buttons button { flex: 1; }
-        .close-modal { background: #64748b; }
+        .modal-content h3 {
+            margin-bottom: 16px;
+            color: #1e3c32;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .modal-buttons button {
+            flex: 1;
+        }
+        
+        .close-modal {
+            background: #64748b;
+        }
         
         .loading-spinner {
             width: 40px;
@@ -735,8 +887,12 @@
             padding: 40px;
         }
         
-        .export-btn-inline { background: #0d6efd; margin-bottom: 12px; }
+        .export-btn-inline {
+            background: #0d6efd;
+            margin-bottom: 12px;
+        }
         
+        /* Password Modal Styles */
         .pin-input-field {
             width: 100%;
             padding: 14px;
@@ -748,7 +904,12 @@
             font-weight: 600;
         }
         
-        /* History Modal */
+        .pin-input-field:focus {
+            outline: none;
+            border-color: #2a5a4a;
+        }
+        
+        /* History Modal Styles */
         .history-modal {
             position: fixed;
             top: 0;
@@ -780,6 +941,24 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .history-modal-header h3 {
+            color: #1e3c32;
+            font-size: 18px;
+            margin: 0;
+        }
+        
+        .close-history-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+            width: auto;
+            padding: 0 8px;
         }
         
         .history-modal-body {
@@ -809,11 +988,20 @@
             cursor: pointer;
         }
         
+        .history-table th:hover {
+            background: #e2e8f0;
+        }
+        
         .message-cell {
             max-width: 350px;
             word-break: break-word;
             white-space: normal;
             overflow-wrap: break-word;
+            line-height: 1.4;
+        }
+        
+        .message-text {
+            display: inline;
         }
         
         .message-text.truncated {
@@ -821,6 +1009,7 @@
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         .read-more-btn {
@@ -828,11 +1017,28 @@
             border: none;
             color: #3b82f6;
             font-size: 11px;
+            font-weight: 500;
             cursor: pointer;
             padding: 2px 4px;
+            margin-left: 4px;
             width: auto;
             display: inline;
             text-decoration: underline;
+        }
+        
+        .read-more-btn:hover {
+            color: #1d4ed8;
+            background: none;
+        }
+        
+        @media (max-width: 768px) {
+            .message-cell {
+                max-width: 180px;
+            }
+            .history-table th, .history-table td {
+                padding: 8px 6px;
+                font-size: 11px;
+            }
         }
         
         .history-search {
@@ -856,9 +1062,21 @@
         }
         
         @media (max-width: 640px) {
-            .top-section { flex-direction: column; }
-            .history-side-btn { flex-direction: row; justify-content: center; gap: 8px; padding: 6px 12px; }
-            .history-side-btn span:first-child { font-size: 16px; }
+            .top-section {
+                flex-direction: column;
+            }
+            .history-side-btn {
+                flex-direction: row;
+                justify-content: center;
+                gap: 8px;
+                padding: 6px 12px;
+            }
+            .history-side-btn span:first-child {
+                font-size: 16px;
+            }
+            .history-side-btn span:last-child {
+                font-size: 10px;
+            }
         }
     </style>
 </head>
@@ -868,12 +1086,14 @@
     <div class="login-box">
         <h1>🏛️ Legacy Builders Group</h1>
         <div class="subtitle">Enter your PIN to access</div>
+        
         <div id="memberListContainer" class="member-list-container">
             <div class="skeleton-member"><div class="skeleton-member-avatar"></div><div class="skeleton-member-info"><div class="skeleton-member-name"></div><div class="skeleton-member-role"></div></div></div>
             <div class="skeleton-member"><div class="skeleton-member-avatar"></div><div class="skeleton-member-info"><div class="skeleton-member-name"></div><div class="skeleton-member-role"></div></div></div>
             <div class="skeleton-member"><div class="skeleton-member-avatar"></div><div class="skeleton-member-info"><div class="skeleton-member-name"></div><div class="skeleton-member-role"></div></div></div>
             <div class="skeleton-member"><div class="skeleton-member-avatar"></div><div class="skeleton-member-info"><div class="skeleton-member-name"></div><div class="skeleton-member-role"></div></div></div>
         </div>
+        
         <input type="password" id="pinInput" class="pin-input" placeholder="Enter PIN" maxlength="4" inputmode="numeric" disabled>
         <button class="login-btn" id="loginBtn" onclick="verifyLogin()" disabled>Login</button>
         <div id="loginError" class="error-message">Invalid PIN. Please try again.</div>
@@ -881,12 +1101,18 @@
 </div>
 
 <div class="app-container" id="appContainer">
+    <!-- NEW HEADER LAYOUT: 3 ROWS -->
     <div class="header">
-        <div class="header-row-1"><h1>🏛️ Legacy Builders Group</h1></div>
+        <!-- Row 1: Title -->
+        <div class="header-row-1">
+            <h1>🏛️ Legacy Builders Group</h1>
+        </div>
+        <!-- Row 2: Slogans -->
         <div class="header-row-2">
             <p class="slogan">Where Families Build Wealth Together</p>
             <p class="slogan-sub">Stronger Together, Richer Forever</p>
         </div>
+        <!-- Row 3: User Name + Change PIN + Logout (all on same row) -->
         <div class="header-row-3">
             <span class="user-name-badge"><strong id="loggedInUser"></strong></span>
             <div class="action-buttons">
@@ -898,10 +1124,21 @@
     
     <div class="top-section">
         <div class="balance-wrapper">
-            <div class="balance-card" id="savingsCard"><h3>Total Savings</h3><div class="amount" id="totalSavingsTop">KES --</div><div class="balance-skeleton" id="savingsSkeleton" style="display: none;"></div></div>
-            <div class="balance-card" id="loansCard"><h3>Outstanding Loans</h3><div class="amount" id="outstandingTop">KES --</div><div class="balance-skeleton" id="loansSkeleton" style="display: none;"></div></div>
+            <div class="balance-card" id="savingsCard">
+                <h3>Total Savings</h3>
+                <div class="amount" id="totalSavingsTop">KES --</div>
+                <div class="balance-skeleton" id="savingsSkeleton" style="display: none;"></div>
+            </div>
+            <div class="balance-card" id="loansCard">
+                <h3>Outstanding Loans</h3>
+                <div class="amount" id="outstandingTop">KES --</div>
+                <div class="balance-skeleton" id="loansSkeleton" style="display: none;"></div>
+            </div>
         </div>
-        <button class="history-side-btn" onclick="openHistoryModal()"><span>📜</span><span>History</span></button>
+        <button class="history-side-btn" onclick="openHistoryModal()">
+            <span>📜</span>
+            <span>History</span>
+        </button>
     </div>
     
     <div id="transactionsPanel" class="panel active-panel">
@@ -920,23 +1157,60 @@
     </div>
     
     <div id="summaryPanel" class="panel">
-        <div class="card"><h2>Search & Filter</h2><div class="search-container" style="padding:0;"><input type="text" id="searchInput" class="search-input" placeholder="Search by member or message"><div class="filter-row"><select id="filterMember"><option value="">All Members</option></select><select id="filterType"><option value="">All Types</option><option value="Savings">Savings</option><option value="Loan Taken">Loans Taken</option><option value="Loan Repayment">Repayments</option></select></div></div></div>
-        <div class="card"><h2>Financial Summary</h2><div id="summarySkeleton" style="display: block;"><div class="loading-container"><div class="loading-spinner"></div><div>Loading summary...</div></div></div><div id="summaryContent" style="display: none;"><div class="summary-stats"><div class="stat"><h3>Total Savings</h3><div class="number" id="totalSavings">KES --</div></div><div class="stat"><h3>Loans Taken</h3><div class="number" id="totalLoans">KES --</div></div><div class="stat"><h3>Total Repaid</h3><div class="number" id="totalRepaid">KES --</div></div><div class="stat"><h3>Net Balance</h3><div class="number" id="netBalance">KES --</div></div></div></div></div>
-        <div class="card"><h2>Member Summary</h2><div id="memberSummary" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
-        <div class="card"><h2>Export Data</h2><button id="exportBtn" class="export-btn-inline">📥 Download CSV</button><button id="refreshBtn" class="btn-secondary">🔄 Refresh Data</button></div>
+        <div class="card">
+            <h2>Search & Filter</h2>
+            <div class="search-container" style="padding:0;">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search by member or message">
+                <div class="filter-row">
+                    <select id="filterMember"><option value="">All Members</option></select>
+                    <select id="filterType"><option value="">All Types</option><option value="Savings">Savings</option><option value="Loan Taken">Loans Taken</option><option value="Loan Repayment">Repayments</option></select>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Financial Summary</h2>
+            <div id="summarySkeleton" style="display: block;"><div class="loading-container"><div class="loading-spinner"></div><div class="loading-text">Loading summary...</div></div></div>
+            <div id="summaryContent" style="display: none;">
+                <div class="summary-stats">
+                    <div class="stat"><h3>Total Savings</h3><div class="number" id="totalSavings">KES --</div></div>
+                    <div class="stat"><h3>Loans Taken</h3><div class="number" id="totalLoans">KES --</div></div>
+                    <div class="stat"><h3>Total Repaid</h3><div class="number" id="totalRepaid">KES --</div></div>
+                    <div class="stat"><h3>Net Balance</h3><div class="number" id="netBalance">KES --</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Member Summary</h2>
+            <div id="memberSummary">Loading...</div>
+        </div>
+        <div class="card">
+            <h2>Export Data</h2>
+            <button id="exportBtn" class="export-btn-inline">📥 Download CSV (Excel)</button>
+            <button id="refreshBtn" class="btn-secondary">🔄 Refresh Data</button>
+        </div>
     </div>
     
     <div id="loansPanel" class="panel">
-        <div class="card"><h2>Pending Loan Approvals</h2><div id="pendingLoans" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
-        <div class="card"><h2>Completed Loans</h2><div id="completedLoans" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
+        <div class="card"><h2>Pending Loan Approvals</h2><div id="pendingLoans">Loading...</div></div>
+        <div class="card"><h2>Completed Loans</h2><div id="completedLoans">Loading...</div></div>
     </div>
     
     <div id="meetingsPanel" class="panel">
-        <div class="card"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;"><h2 style="margin:0; border-left: none;">📝 Meeting Minutes</h2><button id="addMeetingBtn" style="width: auto; padding: 8px 16px;">+ Add Meeting</button></div><div id="meetingMinutesList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h2 style="margin:0; border-left: none; padding-left:0;">📝 Meeting Minutes</h2>
+                <button id="addMeetingBtn" style="width: auto; padding: 8px 16px; font-size: 12px;">+ Add Meeting</button>
+            </div>
+            <div id="meetingMinutesList">Loading...</div>
+        </div>
     </div>
     
+    <!-- NEW: Pending Approvals Panel (only visible to Treasurer) -->
     <div id="pendingPanel" class="panel">
-        <div class="card"><h2>⏳ Pending Approvals</h2><div id="pendingApprovalsList" class="loading-container"><div class="loading-spinner"></div><div>Loading pending approvals...</div></div></div>
+        <div class="card">
+            <h2>⏳ Pending Approvals</h2>
+            <div id="pendingApprovalsList" class="loading-container"><div class="loading-spinner"></div><div>Loading pending approvals...</div></div>
+        </div>
     </div>
 </div>
 
@@ -960,7 +1234,19 @@ let sortColumn = 'date', sortDirection = 'desc', isLoading = false;
 let currentTab = localStorage.getItem('legacy_active_tab') || 'transactions';
 let selectedMemberForLogin = null;
 
-function isTreasurer() { return currentUser === TREASURER_NAME; }
+// ============================================================
+// HELPER FUNCTIONS
+// ============================================================
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function isTreasurer() {
+    return currentUser === TREASURER_NAME;
+}
 
 function showButtonLoading(btn, text) {
     btn.disabled = true;
@@ -972,54 +1258,27 @@ function hideButtonLoading(btn, originalText) {
     btn.innerHTML = originalText;
 }
 
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
 }
 
 // ============================================================
-// CHANGE PASSWORD
+// READ MORE FUNCTIONALITY FOR MESSAGES
 // ============================================================
-function openChangePasswordModal() {
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `<div class="modal-content"><h3>🔐 Change PIN</h3><div style="margin-bottom:16px;"><label>Current PIN (4 digits)</label><input type="password" id="currentPin" class="pin-input-field" maxlength="4" inputmode="numeric" placeholder="••••"></div><div style="margin-bottom:16px;"><label>New PIN (4 digits)</label><input type="password" id="newPin" class="pin-input-field" maxlength="4" inputmode="numeric" placeholder="••••"></div><div style="margin-bottom:16px;"><label>Confirm New PIN</label><input type="password" id="confirmPin" class="pin-input-field" maxlength="4" inputmode="numeric" placeholder="••••"></div><div class="modal-buttons"><button onclick="changePassword()">Change PIN</button><button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`;
-    document.body.appendChild(modal);
-    setTimeout(() => document.getElementById('currentPin')?.focus(), 100);
-}
-
-async function changePassword() {
-    const currentPin = document.getElementById('currentPin').value;
-    const newPin = document.getElementById('newPin').value;
-    const confirmPin = document.getElementById('confirmPin').value;
-    if (!currentPin || !newPin || !confirmPin) { showToast('Please fill all fields', 'error'); return; }
-    if (currentPin.length !== 4 || isNaN(currentPin)) { showToast('Current PIN must be 4 digits', 'error'); return; }
-    if (newPin.length !== 4 || isNaN(newPin)) { showToast('New PIN must be 4 digits', 'error'); return; }
-    if (newPin !== confirmPin) { showToast('New PINs do not match', 'error'); return; }
-    if (currentPin === newPin) { showToast('New PIN must be different', 'error'); return; }
-    const btn = event.target;
-    const originalText = btn.innerHTML;
-    showButtonLoading(btn, 'Changing...');
-    try {
-        const response = await callAPI('changePassword', { member: currentUser, oldPin: currentPin, newPin: newPin });
-        if (response.success) {
-            showToast('PIN changed! Please login again.', 'success');
-            document.querySelector('.modal')?.remove();
-            setTimeout(() => logout(), 2000);
-        } else { showToast(response.error || 'Failed', 'error'); }
-    } catch(error) { showToast('Error changing PIN', 'error'); }
-    finally { hideButtonLoading(btn, originalText); }
-}
-
 function createMessageWithReadMore(message, maxLength = 60) {
     if (!message) return '-';
     if (message.length <= maxLength) return escapeHtml(message);
+    
     const truncated = escapeHtml(message.substring(0, maxLength)) + '...';
     const full = escapeHtml(message);
     const uniqueId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-    return `<span id="${uniqueId}" class="message-text truncated">${truncated}</span><button class="read-more-btn" onclick="toggleReadMore('${uniqueId}', '${full.replace(/'/g, "\\'")}', '${truncated.replace(/'/g, "\\'")}')">Read more</button>`;
+    
+    return `<span id="${uniqueId}" class="message-text truncated">${truncated}</span>
+            <button class="read-more-btn" onclick="toggleReadMore('${uniqueId}', '${full.replace(/'/g, "\\'")}', '${truncated.replace(/'/g, "\\'")}')">Read more</button>`;
 }
 
 function toggleReadMore(elementId, fullText, truncatedText) {
@@ -1036,22 +1295,140 @@ function toggleReadMore(elementId, fullText, truncatedText) {
     }
 }
 
+// ============================================================
+// BALANCE LOADING ANIMATION
+// ============================================================
 function showBalanceLoading(show) {
-    const skel = document.getElementById('savingsSkeleton');
-    const lskel = document.getElementById('loansSkeleton');
-    if (skel) skel.style.display = show ? 'block' : 'none';
-    if (lskel) lskel.style.display = show ? 'block' : 'none';
-}
-
-function showLoginLoading(show) {
-    const btn = document.getElementById('loginBtn');
-    const pin = document.getElementById('pinInput');
-    if (show) { btn.disabled = true; btn.innerHTML = '<span class="login-loading"></span> Verifying...'; pin.disabled = true; }
-    else { btn.disabled = false; btn.innerHTML = 'Login'; pin.disabled = false; }
+    const savingsSkeleton = document.getElementById('savingsSkeleton');
+    const loansSkeleton = document.getElementById('loansSkeleton');
+    const savingsCard = document.getElementById('savingsCard');
+    const loansCard = document.getElementById('loansCard');
+    
+    if (show) {
+        if(savingsSkeleton) savingsSkeleton.style.display = 'block';
+        if(loansSkeleton) loansSkeleton.style.display = 'block';
+        if(savingsCard) savingsCard.classList.add('balance-loading');
+        if(loansCard) loansCard.classList.add('balance-loading');
+    } else {
+        if(savingsSkeleton) savingsSkeleton.style.display = 'none';
+        if(loansSkeleton) loansSkeleton.style.display = 'none';
+        if(savingsCard) savingsCard.classList.remove('balance-loading');
+        if(loansCard) loansCard.classList.remove('balance-loading');
+    }
 }
 
 // ============================================================
-// HISTORY MODAL
+// LOGIN LOADING ANIMATION
+// ============================================================
+function showLoginLoading(show) {
+    const loginBtn = document.getElementById('loginBtn');
+    const pinInput = document.getElementById('pinInput');
+    
+    if (show) {
+        if(loginBtn) loginBtn.disabled = true;
+        if(loginBtn) loginBtn.innerHTML = '<span class="login-loading"></span> Verifying...';
+        if(pinInput) pinInput.disabled = true;
+    } else {
+        if(loginBtn) loginBtn.disabled = false;
+        if(loginBtn) loginBtn.innerHTML = 'Login';
+        if(pinInput) pinInput.disabled = false;
+    }
+}
+
+// ============================================================
+// CHANGE PASSWORD FUNCTIONALITY
+// ============================================================
+function openChangePasswordModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>🔐 Change PIN</h3>
+            <div style="margin-bottom: 16px;">
+                <label>Current PIN (4 digits)</label>
+                <input type="password" id="currentPin" class="pin-input-field" maxlength="4" inputmode="numeric" placeholder="••••">
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label>New PIN (4 digits)</label>
+                <input type="password" id="newPin" class="pin-input-field" maxlength="4" inputmode="numeric" placeholder="••••">
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label>Confirm New PIN</label>
+                <input type="password" id="confirmPin" class="pin-input-field" maxlength="4" inputmode="numeric" placeholder="••••">
+            </div>
+            <div class="modal-buttons">
+                <button onclick="changePassword()">Change PIN</button>
+                <button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    setTimeout(() => {
+        const currentInput = document.getElementById('currentPin');
+        if(currentInput) currentInput.focus();
+    }, 100);
+}
+
+async function changePassword() {
+    const currentPin = document.getElementById('currentPin').value;
+    const newPin = document.getElementById('newPin').value;
+    const confirmPin = document.getElementById('confirmPin').value;
+    
+    if (!currentPin || !newPin || !confirmPin) {
+        showToast('Please fill all fields', 'error');
+        return;
+    }
+    
+    if (currentPin.length !== 4 || isNaN(currentPin)) {
+        showToast('Current PIN must be 4 digits', 'error');
+        return;
+    }
+    
+    if (newPin.length !== 4 || isNaN(newPin)) {
+        showToast('New PIN must be 4 digits', 'error');
+        return;
+    }
+    
+    if (newPin !== confirmPin) {
+        showToast('New PINs do not match', 'error');
+        return;
+    }
+    
+    if (currentPin === newPin) {
+        showToast('New PIN must be different from current PIN', 'error');
+        return;
+    }
+    
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    showButtonLoading(btn, 'Changing...');
+    
+    try {
+        const response = await callAPI('changePassword', {
+            member: currentUser,
+            oldPin: currentPin,
+            newPin: newPin
+        });
+        
+        if (response.success) {
+            showToast('PIN changed successfully! Please login again.', 'success');
+            document.querySelector('.modal').remove();
+            setTimeout(() => {
+                logout();
+            }, 2000);
+        } else {
+            showToast(response.error || 'Failed to change PIN', 'error');
+        }
+    } catch (error) {
+        showToast('Error changing PIN', 'error');
+    } finally {
+        hideButtonLoading(btn, originalText);
+    }
+}
+
+// ============================================================
+// HISTORY MODAL WITH READ MORE
 // ============================================================
 let currentHistoryRecords = [];
 let historySortColumn = 'date';
@@ -1060,38 +1437,113 @@ let historySortDirection = 'desc';
 function openHistoryModal() {
     const modal = document.createElement('div');
     modal.className = 'history-modal';
-    modal.innerHTML = `<div class="history-modal-content"><div class="history-modal-header"><h3>📜 Transaction History</h3><button class="close-history-btn" onclick="this.closest('.history-modal').remove()">✕</button></div><div class="history-modal-body"><div class="history-search"><input type="text" id="historySearch" placeholder="Search..."><select id="historyFilterMember"><option value="">All Members</option>${allMembers.map(m => `<option value="${m}">${m}</option>`).join('')}</select><select id="historyFilterType"><option value="">All Types</option><option value="Savings">Savings</option><option value="Loan Taken">Loan Taken</option><option value="Loan Repayment">Loan Repayment</option></select></div><div style="overflow-x: auto;"><table class="history-table"><thead><tr><th onclick="sortHistory('date')">Date ⬍</th><th onclick="sortHistory('member')">Member ⬍</th><th onclick="sortHistory('type')">Type ⬍</th><th onclick="sortHistory('amount')">Amount ⬍</th><th>Message</th></tr></thead><tbody id="historyBody"></tbody></table></div></div></div>`;
+    modal.innerHTML = `
+        <div class="history-modal-content">
+            <div class="history-modal-header">
+                <h3>📜 Transaction History</h3>
+                <button class="close-history-btn" onclick="this.closest('.history-modal').remove()">✕</button>
+            </div>
+            <div class="history-modal-body">
+                <div class="history-search">
+                    <input type="text" id="historySearch" placeholder="Search by member or message...">
+                    <select id="historyFilterMember">
+                        <option value="">All Members</option>
+                        ${allMembers.map(m => `<option value="${m}">${m}</option>`).join('')}
+                    </select>
+                    <select id="historyFilterType">
+                        <option value="">All Types</option>
+                        <option value="Savings">Savings</option>
+                        <option value="Loan Taken">Loan Taken</option>
+                        <option value="Loan Repayment">Loan Repayment</option>
+                    </select>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="history-table" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortHistory('date')">Date ⬍</th>
+                                <th onclick="sortHistory('member')">Member ⬍</th>
+                                <th onclick="sortHistory('type')">Type ⬍</th>
+                                <th onclick="sortHistory('amount')">Amount ⬍</th>
+                                <th>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
     document.body.appendChild(modal);
+    
     currentHistoryRecords = [...allRecords];
     renderHistoryTable();
-    document.getElementById('historySearch')?.addEventListener('input', () => filterHistory());
-    document.getElementById('historyFilterMember')?.addEventListener('change', () => filterHistory());
-    document.getElementById('historyFilterType')?.addEventListener('change', () => filterHistory());
+    
+    document.getElementById('historySearch').addEventListener('input', () => filterHistory());
+    document.getElementById('historyFilterMember').addEventListener('change', () => filterHistory());
+    document.getElementById('historyFilterType').addEventListener('change', () => filterHistory());
 }
 
 function filterHistory() {
-    const searchTerm = document.getElementById('historySearch')?.value.toLowerCase() || '';
-    const filterMember = document.getElementById('historyFilterMember')?.value || '';
-    const filterType = document.getElementById('historyFilterType')?.value || '';
+    const searchTerm = document.getElementById('historySearch').value.toLowerCase();
+    const filterMember = document.getElementById('historyFilterMember').value;
+    const filterType = document.getElementById('historyFilterType').value;
+    
     let filtered = [...allRecords];
+    
     if (filterMember) filtered = filtered.filter(r => r.member === filterMember);
     if (filterType) filtered = filtered.filter(r => r.type === filterType);
-    if (searchTerm) filtered = filtered.filter(r => r.member.toLowerCase().includes(searchTerm) || (r.message || '').toLowerCase().includes(searchTerm));
-    renderHistoryTable(filtered);
+    if (searchTerm) {
+        filtered = filtered.filter(r => 
+            r.member.toLowerCase().includes(searchTerm) || 
+            (r.message || '').toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    currentHistoryRecords = filtered;
+    renderHistoryTable();
 }
 
-function sortHistory(column) { renderHistoryTable(); }
+function sortHistory(column) {
+    if (historySortColumn === column) {
+        historySortDirection = historySortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        historySortColumn = column;
+        historySortDirection = 'desc';
+    }
+    
+    currentHistoryRecords.sort((a, b) => {
+        let aVal = a[historySortColumn];
+        let bVal = b[historySortColumn];
+        if (historySortColumn === 'amount') { aVal = Number(aVal); bVal = Number(bVal); }
+        else if (historySortColumn === 'date') { aVal = new Date(aVal); bVal = new Date(bVal); }
+        else { aVal = (aVal || '').toString().toLowerCase(); bVal = (bVal || '').toString().toLowerCase(); }
+        return aVal < bVal ? (historySortDirection === 'asc' ? -1 : 1) : aVal > bVal ? (historySortDirection === 'asc' ? 1 : -1) : 0;
+    });
+    
+    renderHistoryTable();
+}
 
-function renderHistoryTable(filtered = null) {
+function renderHistoryTable() {
     const tbody = document.getElementById('historyBody');
     if (!tbody) return;
-    const records = filtered || currentHistoryRecords;
-    if (!records.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No transactions found</td></tr>'; return; }
-    tbody.innerHTML = records.map(r => {
+    
+    if (!currentHistoryRecords.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No transactions found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = currentHistoryRecords.map(r => {
         let cls = r.type === 'Savings' ? 'badge-savings' : (r.type === 'Loan Taken' ? 'badge-loan' : 'badge-repayment');
         let sign = r.type === 'Loan Repayment' ? '+' : (r.type === 'Savings' ? '+' : '-');
-        let msg = createMessageWithReadMore(r.message || '-', 50);
-        return `<tr><td style="white-space: nowrap;">${new Date(r.date).toLocaleDateString('en-KE')}</td><td><strong>${escapeHtml(r.member)}</strong></td><td><span class="badge ${cls}">${r.type}</span></td><td style="white-space: nowrap;">${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td><td class="message-cell">${msg}</td></tr>`;
+        let messageHtml = createMessageWithReadMore(r.message || '-', 50);
+        return `<tr>
+            <td style="white-space: nowrap;">${new Date(r.date).toLocaleDateString('en-KE')}</td>
+            <td><strong>${escapeHtml(r.member)}</strong></td>
+            <td><span class="badge ${cls}">${r.type}</span></td>
+            <td style="white-space: nowrap;">${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td>
+            <td class="message-cell">${messageHtml}</td>
+        </tr>`;
     }).join('');
 }
 
@@ -1109,39 +1561,104 @@ async function callAPI(action, data = {}) {
 }
 
 // ============================================================
-// MEETING MINUTES
+// MEETING MINUTES FUNCTIONS
 // ============================================================
 async function loadMeetingMinutes() {
     const container = document.getElementById('meetingMinutesList');
     if(!container) return;
-    container.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div><div>Loading meetings...</div></div>';
+    container.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div><div class="loading-text">Loading meetings...</div></div>';
+    
     const res = await callAPI('getMeetingMinutes');
     if (res.success && res.meetings) {
         const meetings = res.meetings;
-        if (!meetings.length) { container.innerHTML = '<div class="empty-state">No meeting minutes yet</div>'; return; }
-        container.innerHTML = meetings.slice().reverse().map(m => `<div class="meeting-item"><div class="meeting-header"><span class="meeting-date">📅 ${escapeHtml(m.date)}</span><span class="meeting-author">by ${escapeHtml(m.recordedBy)}</span></div><div class="meeting-section"><div class="meeting-section-title">📋 Agenda:</div><div class="meeting-section-content">${escapeHtml(m.agenda)}</div></div><div class="meeting-section"><div class="meeting-section-title">📝 Notes:</div><div class="meeting-section-content">${escapeHtml(m.notes || 'No notes')}</div></div><div class="meeting-section"><div class="meeting-section-title">✅ Decisions:</div><div class="meeting-section-content">${escapeHtml(m.decisions || 'None')}</div></div>${m.nextMeeting ? `<div class="meeting-section"><div class="meeting-section-title">📅 Next Meeting:</div><div class="meeting-section-content">${escapeHtml(m.nextMeeting)}</div></div>` : ''}</div>`).join('');
-    } else { container.innerHTML = '<div class="empty-state">Error loading meetings</div>'; }
+        if (meetings.length === 0) {
+            container.innerHTML = '<div class="empty-state">No meeting minutes recorded yet. Click "Add Meeting" to get started.</div>';
+            return;
+        }
+        container.innerHTML = meetings.slice().reverse().map(meeting => `
+            <div class="meeting-item">
+                <div class="meeting-header">
+                    <span class="meeting-date">📅 ${escapeHtml(meeting.date)}</span>
+                    <span class="meeting-author">Recorded by: ${escapeHtml(meeting.recordedBy)}</span>
+                </div>
+                <div class="meeting-section">
+                    <div class="meeting-section-title">📋 Agenda:</div>
+                    <div class="meeting-section-content">${escapeHtml(meeting.agenda)}</div>
+                </div>
+                <div class="meeting-section">
+                    <div class="meeting-section-title">📝 Notes:</div>
+                    <div class="meeting-section-content">${escapeHtml(meeting.notes || 'No notes recorded')}</div>
+                </div>
+                <div class="meeting-section">
+                    <div class="meeting-section-title">✅ Decisions Made:</div>
+                    <div class="meeting-section-content">${escapeHtml(meeting.decisions || 'No decisions recorded')}</div>
+                </div>
+                ${meeting.nextMeeting ? `
+                <div class="meeting-section">
+                    <div class="meeting-section-title">📅 Next Meeting:</div>
+                    <div class="meeting-section-content">${escapeHtml(meeting.nextMeeting)}</div>
+                </div>
+                ` : ''}
+            </div>
+        `).join('');
+    } else {
+        container.innerHTML = '<div class="empty-state">Error loading meetings. Please refresh.</div>';
+    }
 }
 
 function openAddMeetingModal() {
     const today = new Date().toISOString().split('T')[0];
     const modal = document.createElement('div');
     modal.className = 'modal';
-    modal.innerHTML = `<div class="modal-content"><h3>📝 Add Meeting Minutes</h3><div class="form-grid"><div><label>Meeting Date</label><input type="date" id="meetingDate" value="${today}"></div><div><label>Recorded By</label><input type="text" id="meetingRecordedBy" value="${currentUser}" readonly style="background:#f1f5f9;"></div><div style="grid-column: span 2;"><label>Agenda *</label><textarea id="meetingAgenda" rows="2"></textarea></div><div style="grid-column: span 2;"><label>Notes</label><textarea id="meetingNotes" rows="3"></textarea></div><div style="grid-column: span 2;"><label>Decisions Made</label><textarea id="meetingDecisions" rows="2"></textarea></div><div><label>Next Meeting Date</label><input type="date" id="meetingNext"></div></div><div class="modal-buttons"><button onclick="saveMeetingMinutes()">Save</button><button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`;
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>📝 Add Meeting Minutes</h3>
+            <div class="form-grid" style="margin-bottom:16px;">
+                <div><label>Meeting Date</label><input type="date" id="meetingDate" value="${today}"></div>
+                <div><label>Recorded By</label><input type="text" id="meetingRecordedBy" value="${currentUser}" readonly style="background:#f1f5f9;"></div>
+                <div style="grid-column: span 2;"><label>Agenda *</label><textarea id="meetingAgenda" rows="2" placeholder="What was discussed?"></textarea></div>
+                <div style="grid-column: span 2;"><label>Notes</label><textarea id="meetingNotes" rows="3" placeholder="Detailed notes..."></textarea></div>
+                <div style="grid-column: span 2;"><label>Decisions Made</label><textarea id="meetingDecisions" rows="2" placeholder="What was decided?"></textarea></div>
+                <div><label>Next Meeting Date</label><input type="date" id="meetingNext"></div>
+            </div>
+            <div class="modal-buttons">
+                <button onclick="saveMeetingMinutes()">Save Meeting</button>
+                <button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button>
+            </div>
+        </div>
+    `;
     document.body.appendChild(modal);
 }
 
 async function saveMeetingMinutes() {
     const date = document.getElementById('meetingDate').value;
     const agenda = document.getElementById('meetingAgenda').value.trim();
+    const notes = document.getElementById('meetingNotes').value.trim();
+    const decisions = document.getElementById('meetingDecisions').value.trim();
+    const nextMeeting = document.getElementById('meetingNext').value;
+    
     if (!date || !agenda) { showToast('Please fill required fields', 'error'); return; }
-    const res = await callAPI('saveMeetingMinutes', { date, recordedBy: currentUser, agenda, notes: document.getElementById('meetingNotes').value, decisions: document.getElementById('meetingDecisions').value, nextMeeting: document.getElementById('meetingNext').value });
-    if (res.success) { showToast('Meeting saved!', 'success'); document.querySelector('.modal')?.remove(); await loadMeetingMinutes(); }
-    else showToast('Error: ' + res.error, 'error');
+    
+    const res = await callAPI('saveMeetingMinutes', {
+        date: date,
+        recordedBy: currentUser,
+        agenda: agenda,
+        notes: notes || '',
+        decisions: decisions || '',
+        nextMeeting: nextMeeting || ''
+    });
+    
+    if (res.success) {
+        showToast('Meeting minutes saved!', 'success');
+        document.querySelector('.modal').remove();
+        await loadMeetingMinutes();
+    } else {
+        showToast('Error: ' + res.error, 'error');
+    }
 }
 
 // ============================================================
-// PERSISTENT LOGIN & LOAD DATA
+// PERSISTENT LOGIN
 // ============================================================
 async function checkPersistentLogin() {
     const savedUser = localStorage.getItem('legacy_current_user');
@@ -1152,26 +1669,42 @@ async function checkPersistentLogin() {
         document.getElementById('tabBar').style.display = 'flex';
         document.getElementById('loggedInUser').innerText = currentUser;
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        
+        // Show/hide pending tab based on treasurer status
         const pendingTab = document.getElementById('pendingTab');
         if (pendingTab) pendingTab.style.display = isTreasurer() ? 'flex' : 'none';
+        
         showBalanceLoading(true);
         await loadAllData();
         await loadMeetingMinutes();
         activateTab(currentTab);
         showBalanceLoading(false);
+        
         if (window.refreshInterval) clearInterval(window.refreshInterval);
-        window.refreshInterval = setInterval(() => { if (currentUser) loadAllData(); }, 30000);
+        window.refreshInterval = setInterval(() => {
+            if (currentUser && (currentTab === 'summary' || currentTab === 'loans' || currentTab === 'pending')) {
+                loadAllData();
+            }
+        }, 30000);
     }
 }
 
+// ============================================================
+// LOAD ALL DATA
+// ============================================================
 async function loadAllData() {
     if (isLoading || !currentUser) return;
     isLoading = true;
+    
     try {
         const [recordsRes, membersRes, summaryRes, loansRes, pendingRes] = await Promise.all([
-            callAPI('get'), callAPI('getMembers'), callAPI('getSummary'), callAPI('getPendingLoans'),
+            callAPI('get'), 
+            callAPI('getMembers'), 
+            callAPI('getSummary'), 
+            callAPI('getPendingLoans'),
             isTreasurer() ? callAPI('getPendingTransactions') : Promise.resolve({ success: true, transactions: [] })
         ]);
+        
         if (recordsRes.success) { allRecords = recordsRes.records || []; applyFilters(); }
         if (membersRes.success && membersRes.members?.length) { allMembers = membersRes.members; updateMemberDropdowns(); }
         if (summaryRes.success) updateBalanceDisplays(summaryRes);
@@ -1188,19 +1721,12 @@ async function loadAllData() {
             renderPendingApprovals();
             updatePendingCount();
         }
-        document.getElementById('summarySkeleton').style.display = 'none';
-        document.getElementById('summaryContent').style.display = 'block';
-        const memberSummaryDiv = document.getElementById('memberSummary');
-        if (memberSummaryDiv) {
-            const memberData = {};
-            allRecords.forEach(r => {
-                if (!memberData[r.member]) memberData[r.member] = { savings: 0, loans: 0, repaid: 0 };
-                if (r.type === 'Savings') memberData[r.member].savings += r.amount;
-                else if (r.type === 'Loan Taken') memberData[r.member].loans += r.amount;
-                else if (r.type === 'Loan Repayment') memberData[r.member].repaid += r.amount;
-            });
-            memberSummaryDiv.innerHTML = Object.entries(memberData).length ? Object.entries(memberData).map(([name, data]) => `<div class="stat"><h3>${escapeHtml(name)}</h3><div>Savings: KES ${data.savings.toLocaleString()}</div><div>Loans: KES ${data.loans.toLocaleString()}</div><div>Repaid: KES ${data.repaid.toLocaleString()}</div></div>`).join('') : '<div class="empty-state">No transactions yet</div>';
-        }
+        
+        const summarySkel = document.getElementById('summarySkeleton');
+        const summaryContent = document.getElementById('summaryContent');
+        if(summarySkel) summarySkel.style.display = 'none';
+        if(summaryContent) summaryContent.style.display = 'block';
+        
     } catch(e) { showToast('Error loading data', 'error'); } finally { isLoading = false; }
 }
 
@@ -1208,17 +1734,35 @@ function updateBalanceDisplays(summary) {
     if (!summary) return;
     const savings = summary.savings || 0;
     const outstanding = summary.outstanding || 0;
-    document.getElementById('totalSavingsTop') && (document.getElementById('totalSavingsTop').innerHTML = `KES ${savings.toLocaleString('en-KE')}`);
-    document.getElementById('outstandingTop') && (document.getElementById('outstandingTop').innerHTML = `KES ${outstanding.toLocaleString('en-KE')}`);
-    document.getElementById('totalSavings') && (document.getElementById('totalSavings').innerHTML = `KES ${savings.toLocaleString('en-KE')}`);
-    document.getElementById('totalLoans') && (document.getElementById('totalLoans').innerHTML = `KES ${(summary.loansTaken || 0).toLocaleString('en-KE')}`);
-    document.getElementById('totalRepaid') && (document.getElementById('totalRepaid').innerHTML = `KES ${(summary.repaid || 0).toLocaleString('en-KE')}`);
-    document.getElementById('netBalance') && (document.getElementById('netBalance').innerHTML = `KES ${(savings - outstanding).toLocaleString('en-KE')}`);
+    const totalSavingsTop = document.getElementById('totalSavingsTop');
+    const outstandingTop = document.getElementById('outstandingTop');
+    const totalSavings = document.getElementById('totalSavings');
+    const totalLoans = document.getElementById('totalLoans');
+    const totalRepaid = document.getElementById('totalRepaid');
+    const netBalance = document.getElementById('netBalance');
+    
+    if(totalSavingsTop) totalSavingsTop.innerHTML = `KES ${savings.toLocaleString('en-KE')}`;
+    if(outstandingTop) outstandingTop.innerHTML = `KES ${outstanding.toLocaleString('en-KE')}`;
+    if(totalSavings) totalSavings.innerHTML = `KES ${savings.toLocaleString('en-KE')}`;
+    if(totalLoans) totalLoans.innerHTML = `KES ${(summary.loansTaken || 0).toLocaleString('en-KE')}`;
+    if(totalRepaid) totalRepaid.innerHTML = `KES ${(summary.repaid || 0).toLocaleString('en-KE')}`;
+    if(netBalance) netBalance.innerHTML = `KES ${(savings - outstanding).toLocaleString('en-KE')}`;
+    
+    const memberData = {};
+    allRecords.forEach(r => {
+        if (!memberData[r.member]) memberData[r.member] = { savings: 0, loans: 0, repaid: 0 };
+        if (r.type === 'Savings') memberData[r.member].savings += r.amount;
+        else if (r.type === 'Loan Taken') memberData[r.member].loans += r.amount;
+        else if (r.type === 'Loan Repayment') memberData[r.member].repaid += r.amount;
+    });
+    const summaryHtml = Object.entries(memberData).map(([name, data]) => `<div class="stat"><h3>${escapeHtml(name)}</h3><div style="font-size:11px;">Savings: KES ${data.savings.toLocaleString()}</div><div style="font-size:11px;">Loans: KES ${data.loans.toLocaleString()}</div><div style="font-size:11px;">Repaid: KES ${data.repaid.toLocaleString()}</div></div>`).join('');
+    const memberSummary = document.getElementById('memberSummary');
+    if(memberSummary) memberSummary.innerHTML = summaryHtml || '<div class="empty-state">No transactions yet</div>';
 }
 
 function renderPendingLoans() {
     const container = document.getElementById('pendingLoans');
-    if (!container) return;
+    if(!container) return;
     if (!pendingLoans.length) { container.innerHTML = '<div class="empty-state">No pending loan approvals</div>'; return; }
     container.innerHTML = pendingLoans.map(loan => {
         const isRequester = (loan.member === currentUser);
@@ -1226,22 +1770,38 @@ function renderPendingLoans() {
         const showButtons = !isRequester && !alreadyApproved;
         const totalNeeded = allMembers.length - 1;
         const progressPercent = totalNeeded > 0 ? (loan.approvals.length / totalNeeded) * 100 : 100;
-        return `<div class="loan-item ${isRequester ? 'own-loan' : ''}"><div><strong>${escapeHtml(loan.member)}</strong> requested <strong>KES ${(loan.principal || 0).toLocaleString('en-KE')}</strong> + 10% interest = <strong>KES ${(loan.totalDue || 0).toLocaleString('en-KE')}</strong>${isRequester ? ' (Your request)' : (alreadyApproved ? ' (You approved)' : '')}</div><div style="font-size:12px;">${escapeHtml(loan.message || '')}</div><div style="font-size:11px; margin-top:5px;">Approvals: ${loan.approvals.length}/${totalNeeded} members</div><div class="progress-bar"><div class="progress-fill" style="width: ${progressPercent}%;"></div></div>${showButtons ? `<div style="margin-top:8px; display:flex; gap:8px;"><button class="approve-btn" onclick="approveLoan('${loan.id}')">Approve</button><button class="reject-btn" onclick="rejectLoan('${loan.id}')">Reject</button></div>` : ''}</div>`;
+        return `<div class="loan-item ${isRequester ? 'own-loan' : ''}"><div><strong>${escapeHtml(loan.member)}</strong> requested <strong>KES ${(loan.principal || 0).toLocaleString('en-KE')}</strong> + 10% interest = <strong>KES ${(loan.totalDue || 0).toLocaleString('en-KE')}</strong>${isRequester ? ' (Your request)' : (alreadyApproved ? ' (You approved)' : '')}</div><div style="font-size:12px; color:#666; margin-top:5px;">${escapeHtml(loan.message || '')}</div><div style="font-size:11px; margin-top:5px;">Approvals: ${loan.approvals.length}/${totalNeeded} members</div><div class="progress-bar"><div class="progress-fill" style="width: ${progressPercent}%;"></div></div>${showButtons ? `<div style="margin-top:8px; display:flex; gap:8px;"><button class="approve-btn" onclick="approveLoan('${loan.id}')">Approve</button><button class="reject-btn" onclick="rejectLoan('${loan.id}')">Reject</button></div>` : ''}</div>`;
     }).join('');
 }
 
 function renderCompletedLoans() {
     const container = document.getElementById('completedLoans');
-    if (!container) return;
+    if(!container) return;
     if (!completedLoans.length) { container.innerHTML = '<div class="empty-state">No completed loans yet</div>'; return; }
-    container.innerHTML = completedLoans.map(loan => `<div class="completed-loan-item"><div><strong>${escapeHtml(loan.member)}</strong> borrowed <strong>KES ${(loan.principal || 0).toLocaleString('en-KE')}</strong></div><div>Interest: KES ${(loan.interest || 0).toLocaleString('en-KE')}</div><div><strong>Total Due: KES ${(loan.totalDue || 0).toLocaleString('en-KE')}</strong></div><div style="font-size:10px;">Approved by: ${escapeHtml(loan.approvals.join(', '))}</div><div>${escapeHtml(loan.message || '')}</div></div>`).join('');
+    container.innerHTML = completedLoans.map(loan => `<div class="completed-loan-item"><div><strong>${escapeHtml(loan.member)}</strong> borrowed <strong>KES ${(loan.principal || 0).toLocaleString('en-KE')}</strong></div><div style="font-size:11px; margin-top:4px;">Interest (10%): KES ${(loan.interest || 0).toLocaleString('en-KE')}</div><div style="font-size:12px; font-weight:600; margin-top:4px;">Total Owing: KES ${(loan.totalDue || 0).toLocaleString('en-KE')}</div><div style="font-size:10px; color:#64748b; margin-top:4px;">Approved by: ${escapeHtml(loan.approvals.join(', '))}</div><div style="font-size:11px; margin-top:4px;">${escapeHtml(loan.message || '')}</div></div>`).join('');
 }
 
+// NEW: Render pending approvals for treasurer
 function renderPendingApprovals() {
     const container = document.getElementById('pendingApprovalsList');
     if (!container) return;
-    if (!pendingTransactions.length) { container.innerHTML = '<div class="empty-state">No pending approvals</div>'; return; }
-    container.innerHTML = pendingTransactions.map(t => `<div class="pending-item"><div><strong>📅 ${t.date}</strong></div><div>👤 <strong>Submitted by:</strong> ${escapeHtml(t.submittedBy || t.member)}</div><div>💰 <strong>Type:</strong> ${t.type}</div><div>💵 <strong>Amount:</strong> KES ${(t.amount || 0).toLocaleString('en-KE')}</div><div>💬 <strong>Message:</strong> ${escapeHtml(t.message || '-')}</div><div style="margin-top: 10px; display: flex; gap: 8px;"><button class="approve-btn" onclick="approveTransaction('${t.id}')">✅ Approve</button><button class="reject-btn" onclick="openRejectModal('${t.id}')">❌ Reject</button></div></div>`).join('');
+    if (!pendingTransactions.length) {
+        container.innerHTML = '<div class="empty-state">No pending approvals</div>';
+        return;
+    }
+    container.innerHTML = pendingTransactions.map(t => `
+        <div class="pending-item">
+            <div><strong>📅 ${t.date}</strong></div>
+            <div>👤 <strong>Submitted by:</strong> ${escapeHtml(t.submittedBy || t.member)}</div>
+            <div>💰 <strong>Type:</strong> ${t.type}</div>
+            <div>💵 <strong>Amount:</strong> KES ${(t.amount || 0).toLocaleString('en-KE')}</div>
+            <div>💬 <strong>Message:</strong> ${escapeHtml(t.message || '-')}</div>
+            <div style="margin-top: 10px; display: flex; gap: 8px;">
+                <button class="approve-btn" onclick="approveTransaction('${t.id}')">✅ Approve</button>
+                <button class="reject-btn" onclick="openRejectModal('${t.id}')">❌ Reject</button>
+            </div>
+        </div>
+    `).join('');
 }
 
 function updatePendingCount() {
@@ -1260,28 +1820,52 @@ async function approveTransaction(id) {
     const originalText = btn.innerHTML;
     showButtonLoading(btn, 'Approving...');
     const res = await callAPI('approveTransaction', { id, approvedBy: currentUser });
-    if (res.success) { showToast('Transaction approved!', 'success'); await loadAllData(); }
-    else { showToast(res.error || 'Error', 'error'); }
+    if (res.success) {
+        showToast('Transaction approved!', 'success');
+        await loadAllData();
+    } else {
+        showToast(res.error || 'Error approving transaction', 'error');
+    }
     hideButtonLoading(btn, originalText);
 }
 
 function openRejectModal(id) {
     const modal = document.createElement('div');
     modal.className = 'modal';
-    modal.innerHTML = `<div class="modal-content"><h3>❌ Reject Transaction</h3><div style="margin-bottom:16px;"><label>Reason for rejection</label><textarea id="rejectReason" rows="3" placeholder="Tell the member why..."></textarea></div><div class="modal-buttons"><button onclick="rejectTransaction('${id}')">Submit</button><button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`;
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>❌ Reject Transaction</h3>
+            <div style="margin-bottom:16px;">
+                <label>Reason for rejection</label>
+                <textarea id="rejectReason" rows="3" placeholder="Tell the member why this transaction was rejected..."></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button onclick="rejectTransaction('${id}')">Submit Rejection</button>
+                <button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button>
+            </div>
+        </div>
+    `;
     document.body.appendChild(modal);
 }
 
 async function rejectTransaction(id) {
     const reason = document.getElementById('rejectReason').value;
-    if (!reason) { showToast('Please provide a reason', 'error'); return; }
+    if (!reason) {
+        showToast('Please provide a reason', 'error');
+        return;
+    }
     const modal = document.querySelector('.modal');
     const btn = event.target;
     const originalText = btn.innerHTML;
     showButtonLoading(btn, 'Rejecting...');
     const res = await callAPI('rejectTransaction', { id, rejectedBy: currentUser, reason });
-    if (res.success) { showToast('Transaction rejected', 'success'); if (modal) modal.remove(); await loadAllData(); }
-    else { showToast(res.error || 'Error', 'error'); }
+    if (res.success) {
+        showToast('Transaction rejected', 'success');
+        if (modal) modal.remove();
+        await loadAllData();
+    } else {
+        showToast(res.error || 'Error rejecting transaction', 'error');
+    }
     hideButtonLoading(btn, originalText);
 }
 
@@ -1289,14 +1873,19 @@ function updateMemberDropdowns() {
     const memberSelect = document.getElementById('memberSelect');
     const filterMember = document.getElementById('filterMember');
     if(memberSelect) {
-        memberSelect.innerHTML = allMembers.map(m => `<option value="${m}">${escapeHtml(m)}</option>`).join('');
+        const opts = allMembers.map(m => `<option value="${m}">${escapeHtml(m)}</option>`).join('');
+        memberSelect.innerHTML = opts;
         if (currentUser) memberSelect.value = currentUser;
     }
     if(filterMember) {
-        filterMember.innerHTML = '<option value="">All Members</option>' + allMembers.map(m => `<option value="${m}">${escapeHtml(m)}</option>`).join('');
+        const opts = allMembers.map(m => `<option value="${m}">${escapeHtml(m)}</option>`).join('');
+        filterMember.innerHTML = '<option value="">All Members</option>' + opts;
     }
 }
 
+// ============================================================
+// APPROVAL ACTIONS
+// ============================================================
 async function approveLoan(loanId) {
     const btn = event.target;
     const originalText = btn.innerHTML;
@@ -1304,9 +1893,11 @@ async function approveLoan(loanId) {
     const res = await callAPI('approveLoan', { loanId, approver: currentUser });
     if (res.success) {
         const remainingNeeded = (allMembers.length - 1) - (res.approvals || 0);
-        showToast(remainingNeeded > 0 ? `Approved! Need ${remainingNeeded} more` : `Loan fully approved!`, 'success');
+        showToast(remainingNeeded > 0 ? `Approved! Need ${remainingNeeded} more approval(s).` : `Loan fully approved!`, 'success');
         await loadAllData();
-    } else { showToast('Error: ' + res.error, 'error'); }
+    } else { 
+        showToast('Error: ' + res.error, 'error'); 
+    }
     hideButtonLoading(btn, originalText);
 }
 
@@ -1316,6 +1907,9 @@ async function rejectLoan(loanId) {
     else showToast('Error: ' + res.error, 'error');
 }
 
+// ============================================================
+// ADD TRANSACTION
+// ============================================================
 async function addRecord() {
     if (!currentUser) { showToast('Please login first', 'error'); return; }
     const date = document.getElementById('date').value;
@@ -1323,20 +1917,36 @@ async function addRecord() {
     const type = document.getElementById('type').value;
     const amount = parseFloat(document.getElementById('amount').value);
     const message = document.getElementById('message').value;
-    if (!date || !member || !amount || amount <= 0) { showToast('Please fill all fields', 'error'); return; }
+    if (!date || !member || !amount || amount <= 0) { showToast('Please fill all required fields', 'error'); return; }
     const btn = document.getElementById('addBtn');
     const originalText = btn.innerHTML;
     showButtonLoading(btn, 'Processing...');
+    
     if (type === 'Loan Taken') {
         const savingsRes = await callAPI('getSummary');
         const currentSavings = savingsRes.success ? (savingsRes.savings || 0) : 0;
-        if (amount > currentSavings) { showToast(`Cannot borrow KES ${amount.toLocaleString()}. Available: KES ${currentSavings.toLocaleString()}`, 'error'); hideButtonLoading(btn, originalText); return; }
+        if (amount > currentSavings) { 
+            showToast(`Cannot borrow KES ${amount.toLocaleString()}. Available: KES ${currentSavings.toLocaleString()}`, 'error'); 
+            hideButtonLoading(btn, originalText);
+            return; 
+        }
         const res = await callAPI('submitLoan', { date, member, amount, message, notes: '', requestedBy: currentUser });
-        if (res.success) { showToast(`Loan request submitted! Needs approval from ${allMembers.length - 1} other members.`, 'success'); document.getElementById('amount').value = ''; document.getElementById('message').value = ''; await loadAllData(); }
+        if (res.success) { 
+            showToast(`Loan request submitted! Needs approval from all ${allMembers.length - 1} other members.`, 'success'); 
+            document.getElementById('amount').value = ''; 
+            document.getElementById('message').value = ''; 
+            await loadAllData(); 
+        }
         else showToast('Error: ' + res.error, 'error');
     } else {
+        // For Savings and Loan Repayment, submit for treasurer approval
         const res = await callAPI('submitTransaction', { date, member, type, amount, message, submittedBy: currentUser });
-        if (res.success) { showToast(`Transaction submitted! Waiting for ${TREASURER_NAME} approval.`, 'success'); document.getElementById('amount').value = ''; document.getElementById('message').value = ''; await loadAllData(); }
+        if (res.success) { 
+            showToast(`Transaction submitted! Waiting for treasurer (${TREASURER_NAME}) approval.`, 'success'); 
+            document.getElementById('amount').value = ''; 
+            document.getElementById('message').value = ''; 
+            await loadAllData(); 
+        }
         else showToast('Error: ' + (res.error || 'Failed'), 'error');
     }
     hideButtonLoading(btn, originalText);
@@ -1355,7 +1965,10 @@ function applyFilters() {
     if (filterMember) filtered = filtered.filter(r => r.member === filterMember);
     if (filterType) filtered = filtered.filter(r => r.type === filterType);
     if (searchTerm) filtered = filtered.filter(r => r.member.toLowerCase().includes(searchTerm) || (r.message || '').toLowerCase().includes(searchTerm));
-    if (document.querySelector('.history-modal')) filterHistory();
+    filtered.sort((a, b) => { let av = a[sortColumn], bv = b[sortColumn]; if (sortColumn === 'amount') { av = Number(av); bv = Number(bv); } else if (sortColumn === 'date') { av = new Date(av); bv = new Date(bv); } else { av = (av || '').toString().toLowerCase(); bv = (bv || '').toString().toLowerCase(); } return av < bv ? (sortDirection === 'asc' ? -1 : 1) : av > bv ? (sortDirection === 'asc' ? 1 : -1) : 0; });
+    if (document.querySelector('.history-modal')) {
+        filterHistory();
+    }
 }
 
 function exportToCSV() { 
@@ -1372,14 +1985,6 @@ function exportToCSV() {
     showToast('Export complete', 'success'); 
 }
 
-function showToast(message, type) { 
-    const toast = document.createElement('div'); 
-    toast.className = `toast ${type}`; 
-    toast.textContent = message; 
-    document.body.appendChild(toast); 
-    setTimeout(() => toast.remove(), 3000); 
-}
-
 function activateTab(tabId) { 
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); 
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel')); 
@@ -1389,25 +1994,89 @@ function activateTab(tabId) {
     if (panel) panel.classList.add('active-panel'); 
     localStorage.setItem('legacy_active_tab', tabId); 
     currentTab = tabId; 
-    loadAllData(); 
+    // Refresh data when switching tabs
+    loadAllData();
 }
 
+// ============================================================
+// FIXED LOGOUT FUNCTION - NO MORE "VERIFYING" ERROR
+// ============================================================
 function logout(event) {
-    if (event) { event.stopPropagation(); event.preventDefault(); }
+    // Prevent any event bubbling
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    
+    // Clear all stored data
     localStorage.removeItem('legacy_current_user');
     localStorage.removeItem('legacy_active_tab');
-    if (window.refreshInterval) clearInterval(window.refreshInterval);
+    
+    // Stop auto-refresh interval
+    if (window.refreshInterval) {
+        clearInterval(window.refreshInterval);
+        window.refreshInterval = null;
+    }
+    
+    // Reset global variables
     currentUser = null;
     selectedMemberForLogin = null;
-    document.getElementById('appContainer').style.display = 'none';
-    document.getElementById('tabBar').style.display = 'none';
-    document.getElementById('loginOverlay').style.display = 'flex';
-    document.getElementById('pinInput').value = '';
-    document.getElementById('loginError').style.display = 'none';
+    allRecords = [];
+    allMembers = [];
+    pendingLoans = [];
+    completedLoans = [];
+    pendingTransactions = [];
+    isLoading = false;
+    
+    // Hide app container and show login overlay
+    const appContainer = document.getElementById('appContainer');
+    const loginOverlay = document.getElementById('loginOverlay');
+    const tabBar = document.getElementById('tabBar');
+    
+    if (appContainer) appContainer.style.display = 'none';
+    if (tabBar) tabBar.style.display = 'none';
+    if (loginOverlay) loginOverlay.style.display = 'flex';
+    
+    // Clear PIN input and error
+    const pinInput = document.getElementById('pinInput');
+    const loginError = document.getElementById('loginError');
+    const loginBtn = document.getElementById('loginBtn');
+    
+    if (pinInput) {
+        pinInput.value = '';
+        pinInput.disabled = false;
+        pinInput.placeholder = 'Enter PIN';
+    }
+    if (loginError) loginError.style.display = 'none';
+    if (loginBtn) {
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = 'Login';
+    }
+    
+    // Remove any loading states from member options
+    document.querySelectorAll('.member-option').forEach(el => {
+        el.classList.remove('member-loading');
+        el.style.background = '#f8fafc';
+        el.style.borderColor = '#e2e8f0';
+        el.style.pointerEvents = 'auto';
+    });
+    
+    // Remove login loading state if any
+    const loginLoadingSpinner = document.querySelector('.login-loading');
+    if (loginLoadingSpinner) {
+        loginLoadingSpinner.remove();
+    }
+    
+    // Reload members list
     loadMembersForLogin();
+    
+    // Show logout toast
     showToast('Logged out successfully', 'success');
 }
 
+// ============================================================
+// LOGIN SYSTEM
+// ============================================================
 async function loadMembersForLogin() {
     const container = document.getElementById('memberListContainer');
     const pinInput = document.getElementById('pinInput');
@@ -1417,28 +2086,49 @@ async function loadMembersForLogin() {
     const res = await callAPI('getMembers');
     if (res.success && res.members) {
         allMembers = res.members;
-        if(container) { container.innerHTML = allMembers.map(m => `<div class="member-option" onclick="selectMember('${m}', this)"><div class="member-avatar">${m.charAt(0)}</div><div class="member-info"><h3>${escapeHtml(m)}</h3><p>Click to select</p></div></div>`).join(''); }
+        if(container) {
+            container.innerHTML = allMembers.map(member => `<div class="member-option" onclick="selectMember('${member}', this)"><div class="member-avatar">${member.charAt(0)}</div><div class="member-info"><h3>${escapeHtml(member)}</h3><p>Click to select</p></div></div>`).join('');
+        }
         if(pinInput) pinInput.disabled = false;
         if(loginBtn) loginBtn.disabled = false;
-    } else { if(container) container.innerHTML = '<div class="empty-state">Failed to load members</div>'; }
+    } else {
+        if(container) container.innerHTML = '<div class="empty-state">Failed to load members. Please refresh.</div>';
+    }
 }
 
 function selectMember(member, element) {
     selectedMemberForLogin = member;
-    document.querySelectorAll('.member-option').forEach(opt => { opt.classList.remove('member-loading'); opt.style.background = '#f8fafc'; });
+    document.querySelectorAll('.member-option').forEach(opt => {
+        opt.classList.remove('member-loading');
+        opt.style.background = '#f8fafc';
+        opt.style.borderColor = '#e2e8f0';
+    });
     element.classList.add('member-loading');
     element.style.background = '#e8f0ed';
+    element.style.borderColor = '#2a5a4a';
     document.getElementById('pinInput').focus();
 }
 
 async function verifyLogin() {
     const member = selectedMemberForLogin;
     const pin = document.getElementById('pinInput').value;
-    if (!member) { document.getElementById('loginError').style.display = 'block'; document.getElementById('loginError').textContent = 'Select a member'; return; }
-    if (!pin || pin.length !== 4) { document.getElementById('loginError').style.display = 'block'; document.getElementById('loginError').textContent = 'Enter 4-digit PIN'; return; }
+    
+    if (!member) { 
+        document.getElementById('loginError').style.display = 'block'; 
+        document.getElementById('loginError').textContent = 'Please select a member'; 
+        return; 
+    }
+    if (!pin || pin.length !== 4) { 
+        document.getElementById('loginError').style.display = 'block'; 
+        document.getElementById('loginError').textContent = 'Please enter a 4-digit PIN'; 
+        return; 
+    }
+    
     showLoginLoading(true);
     document.getElementById('loginError').style.display = 'none';
+    
     const res = await callAPI('verifyLogin', { name: member, pin: pin });
+    
     if (res.success) {
         currentUser = member;
         localStorage.setItem('legacy_current_user', member);
@@ -1447,8 +2137,11 @@ async function verifyLogin() {
         document.getElementById('tabBar').style.display = 'flex';
         document.getElementById('loggedInUser').innerText = member;
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        
+        // Show/hide pending tab based on treasurer status
         const pendingTab = document.getElementById('pendingTab');
         if (pendingTab) pendingTab.style.display = isTreasurer() ? 'flex' : 'none';
+        
         showBalanceLoading(true);
         await loadAllData();
         await loadMeetingMinutes();
@@ -1459,27 +2152,41 @@ async function verifyLogin() {
         window.refreshInterval = setInterval(() => { if (currentUser) loadAllData(); }, 30000);
     } else {
         document.getElementById('loginError').style.display = 'block';
-        document.getElementById('loginError').textContent = 'Invalid PIN';
+        document.getElementById('loginError').textContent = 'Invalid PIN. Please try again.';
         document.getElementById('pinInput').value = '';
         showLoginLoading(false);
     }
 }
 
+// ============================================================
+// INITIALIZATION
+// ============================================================
 loadMembersForLogin();
 checkPersistentLogin();
 
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('addBtn').onclick = addRecord;
-    document.getElementById('refreshBtn').onclick = () => { loadAllData(); loadMeetingMinutes(); };
-    document.getElementById('exportBtn').onclick = exportToCSV;
-    document.getElementById('addMeetingBtn').onclick = openAddMeetingModal;
-    document.getElementById('searchInput').oninput = applyFilters;
-    document.getElementById('filterMember').onchange = applyFilters;
-    document.getElementById('filterType').onchange = applyFilters;
-    document.getElementById('pinInput')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') verifyLogin(); });
+    const addBtn = document.getElementById('addBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const addMeetingBtn = document.getElementById('addMeetingBtn');
+    const searchInput = document.getElementById('searchInput');
+    const filterMember = document.getElementById('filterMember');
+    const filterType = document.getElementById('filterType');
+    const pinInput = document.getElementById('pinInput');
+    
+    if(addBtn) addBtn.onclick = addRecord;
+    if(refreshBtn) refreshBtn.onclick = () => { loadAllData(); loadMeetingMinutes(); };
+    if(exportBtn) exportBtn.onclick = exportToCSV;
+    if(addMeetingBtn) addMeetingBtn.onclick = openAddMeetingModal;
+    if(searchInput) searchInput.oninput = () => applyFilters();
+    if(filterMember) filterMember.onchange = () => applyFilters();
+    if(filterType) filterType.onchange = () => applyFilters();
+    if(pinInput) pinInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') verifyLogin(); });
+    
     document.querySelectorAll('.tab').forEach(tab => { tab.onclick = () => activateTab(tab.dataset.panel); });
 });
 
+// Make functions globally available
 window.toggleReadMore = toggleReadMore;
 window.openChangePasswordModal = openChangePasswordModal;
 window.changePassword = changePassword;
