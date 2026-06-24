@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Legacy Builders Group · Under Maintenance</title>
+    <title>Legacy Builders Group · Maintenance</title>
     <style>
         * {
             margin: 0;
@@ -12,442 +12,239 @@
         }
 
         body {
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             padding: 1.5rem;
-            background: linear-gradient(135deg, #0f2027 0%, #203a43 25%, #2c5364 50%, #1e3c32 75%, #0a1f1a 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 18s ease infinite;
-            position: relative;
             overflow: hidden;
         }
 
-        @keyframes gradientShift {
+        .card {
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 2.5rem;
+            padding: 2.5rem 2rem;
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            box-shadow:
+                0 25px 50px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Colorful top accent bar */
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 20%;
+            right: 20%;
+            height: 4px;
+            border-radius: 0 0 10px 10px;
+            background: linear-gradient(90deg, #f59e0b, #10b981, #3b82f6, #ef4444, #a855f7);
+            background-size: 200% 100%;
+            animation: rainbowSlide 3s linear infinite;
+        }
+
+        @keyframes rainbowSlide {
             0% {
                 background-position: 0% 50%;
             }
-            50% {
-                background-position: 100% 50%;
-            }
             100% {
-                background-position: 0% 50%;
+                background-position: 200% 50%;
             }
         }
 
-        /* Floating orbs */
-        .orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(60px);
-            opacity: 0.25;
-            animation: floatOrb 12s infinite ease-in-out;
-            z-index: 0;
-        }
-
-        .orb-1 {
-            width: 320px;
-            height: 320px;
-            background: radial-gradient(circle, #ffd966 0%, #f59e0b 70%);
-            top: -80px;
-            right: -60px;
-            animation-delay: 0s;
-        }
-
-        .orb-2 {
-            width: 250px;
-            height: 250px;
-            background: radial-gradient(circle, #10b981 0%, #059669 70%);
-            bottom: -70px;
-            left: -70px;
-            animation-delay: -4s;
-        }
-
-        .orb-3 {
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, #3b82f6 0%, #1d4ed8 70%);
-            top: 50%;
-            left: 60%;
-            animation-delay: -8s;
-            opacity: 0.2;
-        }
-
-        .orb-4 {
-            width: 180px;
-            height: 180px;
-            background: radial-gradient(circle, #ef4444 0%, #991b1b 70%);
-            bottom: 30%;
-            right: 15%;
-            animation-delay: -6s;
-            opacity: 0.18;
-        }
-
-        .orb-5 {
-            width: 150px;
-            height: 150px;
-            background: radial-gradient(circle, #a855f7 0%, #7c3aed 70%);
-            top: 15%;
-            left: 20%;
-            animation-delay: -10s;
-            opacity: 0.22;
-        }
-
-        @keyframes floatOrb {
-            0%,
-            100% {
-                transform: translate(0, 0) scale(1);
-            }
-            25% {
-                transform: translate(25px, -30px) scale(1.08);
-            }
-            50% {
-                transform: translate(-15px, 20px) scale(0.94);
-            }
-            75% {
-                transform: translate(-28px, -12px) scale(1.04);
-            }
-        }
-
-        /* Main card */
-        .maintenance-card {
-            position: relative;
-            z-index: 10;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
-            border-radius: 3rem;
-            max-width: 600px;
-            width: 100%;
-            padding: 3rem 2.5rem;
-            box-shadow:
-                0 30px 60px rgba(0, 0, 0, 0.35),
-                0 0 0 1px rgba(255, 255, 255, 0.15) inset,
-                0 0 80px rgba(255, 217, 102, 0.08);
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            transition: transform 0.3s ease;
-        }
-
-        .maintenance-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 35px 70px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.22) inset;
-        }
-
-        /* Icon area */
-        .icon-wrapper {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 1.8rem;
-            position: relative;
-        }
-
-        .icon-circle {
-            width: 110px;
-            height: 110px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ffd966 0%, #f59e0b 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 15px 35px rgba(245, 158, 11, 0.45), 0 0 0 8px rgba(255, 217, 102, 0.15);
-            animation: gentlePulse 2.5s ease-in-out infinite;
-            position: relative;
-            z-index: 2;
-        }
-
-        @keyframes gentlePulse {
-            0%,
-            100% {
-                transform: scale(1);
-                box-shadow: 0 15px 35px rgba(245, 158, 11, 0.45), 0 0 0 8px rgba(255, 217, 102, 0.15);
-            }
-            50% {
-                transform: scale(1.05);
-                box-shadow: 0 18px 40px rgba(245, 158, 11, 0.55), 0 0 0 14px rgba(255, 217, 102, 0.08);
-            }
-        }
-
-        .icon-emoji {
-            font-size: 3.8rem;
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
-            animation: swing 2s ease-in-out infinite;
-        }
-
-        @keyframes swing {
-            0%,
-            100% {
-                transform: rotate(0deg);
-            }
-            25% {
-                transform: rotate(5deg);
-            }
-            75% {
-                transform: rotate(-5deg);
-            }
-        }
-
-        /* Sparkles around icon */
-        .sparkle {
-            position: absolute;
-            font-size: 1.4rem;
-            animation: sparkleFloat 2.5s ease-in-out infinite;
-            pointer-events: none;
-        }
-        .sparkle:nth-child(2) {
-            top: -8px;
-            right: 8px;
-            animation-delay: 0s;
-        }
-        .sparkle:nth-child(3) {
-            bottom: -5px;
-            left: 10px;
-            animation-delay: 0.8s;
-        }
-        .sparkle:nth-child(4) {
-            top: 10px;
-            left: -10px;
-            animation-delay: 1.6s;
-        }
-
-        @keyframes sparkleFloat {
-            0%,
-            100% {
-                opacity: 0.3;
-                transform: translateY(0) scale(0.8);
-            }
-            50% {
-                opacity: 1;
-                transform: translateY(-10px) scale(1.2);
-            }
-        }
-
-        /* Headings */
-        h1 {
-            font-size: 2.3rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, #ffd966 0%, #fbbf24 40%, #f59e0b 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -0.4px;
-            line-height: 1.3;
-        }
-
-        .tagline {
-            font-size: 0.95rem;
-            color: rgba(255, 255, 255, 0.7);
-            font-style: italic;
-            margin-bottom: 1.8rem;
-            letter-spacing: 0.4px;
-        }
-
-        /* Info card */
-        .info-box {
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 2rem;
-            padding: 1.8rem 1.4rem;
-            margin: 1.5rem 0 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            backdrop-filter: blur(8px);
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 1rem;
-            line-height: 1.7;
-        }
-
-        .info-box p {
-            margin-bottom: 0.7rem;
-        }
-        .info-box p:last-child {
-            margin-bottom: 0;
-        }
-
-        .highlight {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: #0a1f1a;
-            font-weight: 700;
-            padding: 0.15rem 0.8rem;
-            border-radius: 2rem;
+        .emoji {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounce 1.5s ease-in-out infinite;
             display: inline-block;
-            letter-spacing: 0.2px;
         }
 
-        /* Dots animation */
-        .dots-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.6rem;
-            margin: 1.8rem 0 1.4rem;
-        }
-
-        .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #fbbf24;
-            animation: dotBounce 1.3s infinite ease-in-out;
-            box-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
-        }
-
-        .dot:nth-child(2) {
-            animation-delay: 0.2s;
-            background: #f59e0b;
-        }
-        .dot:nth-child(3) {
-            animation-delay: 0.4s;
-            background: #fbbf24;
-        }
-        .dot:nth-child(4) {
-            animation-delay: 0.6s;
-            background: #f59e0b;
-        }
-
-        @keyframes dotBounce {
+        @keyframes bounce {
             0%,
             100% {
                 transform: translateY(0);
-                opacity: 0.7;
             }
             50% {
-                transform: translateY(-10px);
-                opacity: 1;
+                transform: translateY(-12px);
             }
         }
 
-        .eta-badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            padding: 0.5rem 1.6rem;
-            border-radius: 3rem;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #ffd966;
-            letter-spacing: 0.3px;
-            backdrop-filter: blur(4px);
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.4rem;
+            letter-spacing: -0.3px;
         }
 
-        /* Footer contact */
-        .contact-line {
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        .sub {
             font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.75);
+            color: #64748b;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+
+        .status-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .pill {
+            padding: 0.35rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .pill-yellow {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .pill-green {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .pill-blue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .loader-row {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.4rem;
-            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 1rem 0 1.5rem;
         }
 
-        .contact-line a {
+        .bar {
+            width: 8px;
+            height: 28px;
+            border-radius: 8px;
+            animation: loaderBar 1s infinite ease-in-out;
+        }
+
+        .bar:nth-child(1) {
+            background: #f59e0b;
+            animation-delay: 0s;
+        }
+        .bar:nth-child(2) {
+            background: #10b981;
+            animation-delay: 0.15s;
+        }
+        .bar:nth-child(3) {
+            background: #3b82f6;
+            animation-delay: 0.3s;
+        }
+        .bar:nth-child(4) {
+            background: #ef4444;
+            animation-delay: 0.45s;
+        }
+
+        @keyframes loaderBar {
+            0%,
+            100% {
+                height: 28px;
+            }
+            50% {
+                height: 12px;
+            }
+        }
+
+        .time-badge {
+            display: inline-block;
+            background: #1e293b;
             color: #ffd966;
+            padding: 0.5rem 1.4rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            text-decoration: none;
-            border-bottom: 1px dotted #ffd966;
-            transition: all 0.2s;
+            letter-spacing: 0.4px;
         }
 
-        .contact-line a:hover {
-            color: #fbbf24;
-            border-bottom: 1px solid #fbbf24;
-        }
-
-        .brand-footer {
+        .contact {
             margin-top: 1.5rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid #e2e8f0;
             font-size: 0.8rem;
-            font-weight: 500;
-            letter-spacing: 1.2px;
+            color: #64748b;
+        }
+
+        .contact strong {
+            color: #1e293b;
+        }
+
+        .brand {
+            margin-top: 0.8rem;
+            font-size: 0.7rem;
+            font-weight: 600;
             text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 1px;
+            color: #94a3b8;
         }
 
-        .brand-footer span {
-            color: #ffd966;
-            font-weight: 700;
-        }
-
-        @media (max-width: 500px) {
-            .maintenance-card {
-                padding: 2.5rem 1.5rem;
-                border-radius: 2.5rem;
+        @media (max-width: 400px) {
+            .card {
+                padding: 2rem 1.5rem;
+                border-radius: 2rem;
             }
             h1 {
-                font-size: 1.9rem;
+                font-size: 1.5rem;
             }
-            .icon-circle {
-                width: 90px;
-                height: 90px;
-            }
-            .icon-emoji {
+            .emoji {
                 font-size: 3rem;
-            }
-            .info-box {
-                padding: 1.4rem 1rem;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Colorful floating orbs -->
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-    <div class="orb orb-4"></div>
-    <div class="orb orb-5"></div>
+    <div class="card">
+        <div class="emoji">🛠️</div>
+        <h1>We'll be right back</h1>
+        <p class="sub">Legacy Builders Group is getting a quick refresh</p>
 
-    <!-- Main card -->
-    <div class="maintenance-card">
-        <div class="icon-wrapper">
-            <div class="icon-circle">
-                <span class="icon-emoji">🔧</span>
-            </div>
-            <span class="sparkle">✨</span>
-            <span class="sparkle">💫</span>
-            <span class="sparkle">⭐</span>
+        <div class="status-pills">
+            <span class="pill pill-yellow">💰 Savings</span>
+            <span class="pill pill-green">💸 Loans</span>
+            <span class="pill pill-blue">📊 Reports</span>
         </div>
 
-        <h1>Building Something Greater</h1>
-        <div class="tagline">Legacy Builders Group · Temporary Maintenance</div>
-
-        <div class="info-box">
-            <p>
-                We're upgrading our <span class="highlight">chama platform</span> with exciting new features to help your family build wealth together.
-            </p>
-            <p>
-                💰 Savings · 💸 Loans · 📊 Reports · 📝 Meetings
-            </p>
-            <p style="font-size: 0.9rem; opacity: 0.8;">
-                Everything will be back shortly — fresher, faster, and more secure.
-            </p>
+        <div class="loader-row">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
         </div>
 
-        <div class="dots-row">
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
+        <div class="time-badge">⏳ Back by 10:00 PM EAT</div>
+
+        <div class="contact">
+            📞 Questions? Call <strong>Mrs. Kithinji</strong>
         </div>
 
-        <div class="eta-badge">
-            ⏳ Estimated return: 10:00 PM EAT
-        </div>
-
-        <div class="contact-line">
-            📞 Questions? Call <strong>Mrs. Kithinji</strong> ·
-            <a href="tel:+254700000000">+254746625271</a>
-        </div>
-
-        <div class="brand-footer">
-            <span>🏛️ Legacy Builders Group</span> · Stronger Together, Richer Forever
-        </div>
+        <div class="brand">🏛️ Stronger Together · Richer Forever</div>
     </div>
 </body>
 </html>
