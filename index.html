@@ -1,266 +1,453 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Legacy Builders Group · Maintenance</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Legacy Builders Group · Under Maintenance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(145deg, #f5f3ef 0%, #e8e2d6 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1.5rem;
-      margin: 0;
-      position: relative;
-      overflow-x: hidden;
-    }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 25%, #2c5364 50%, #1e3c32 75%, #0a1f1a 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 18s ease infinite;
+            position: relative;
+            overflow: hidden;
+        }
 
-    /* subtle textured overlay */
-    body::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="M20 20 L30 20 L25 30 Z" fill="%23d4c9b8" opacity="0.08"/><circle cx="70" cy="70" r="8" fill="%23b7a48c" opacity="0.06"/></svg>');
-      background-size: 180px 180px;
-      pointer-events: none;
-    }
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
 
-    .maintenance-card {
-      position: relative;
-      background: rgba(255, 252, 248, 0.85);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      background: #fffcf7;
-      border-radius: 3.5rem;
-      max-width: 620px;
-      width: 100%;
-      padding: 3rem 2.5rem;
-      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.08), 0 10px 25px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-      text-align: center;
-      border: 1px solid rgba(210, 190, 160, 0.3);
-      transition: all 0.2s ease;
-      z-index: 2;
-    }
+        /* Floating orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.25;
+            animation: floatOrb 12s infinite ease-in-out;
+            z-index: 0;
+        }
 
-    .icon-container {
-      margin-bottom: 2rem;
-      display: flex;
-      justify-content: center;
-    }
+        .orb-1 {
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, #ffd966 0%, #f59e0b 70%);
+            top: -80px;
+            right: -60px;
+            animation-delay: 0s;
+        }
 
-    .maintenance-icon {
-      background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 20px 35px rgba(30, 60, 50, 0.25);
-      position: relative;
-    }
+        .orb-2 {
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, #10b981 0%, #059669 70%);
+            bottom: -70px;
+            left: -70px;
+            animation-delay: -4s;
+        }
 
-    .maintenance-icon span {
-      font-size: 3.8rem;
-      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
-    }
+        .orb-3 {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, #3b82f6 0%, #1d4ed8 70%);
+            top: 50%;
+            left: 60%;
+            animation-delay: -8s;
+            opacity: 0.2;
+        }
 
-    .wrench-emoji {
-      display: inline-block;
-      animation: float 3s ease-in-out infinite;
-    }
+        .orb-4 {
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, #ef4444 0%, #991b1b 70%);
+            bottom: 30%;
+            right: 15%;
+            animation-delay: -6s;
+            opacity: 0.18;
+        }
 
-    @keyframes float {
-      0% { transform: translateY(0px); }
-      50% { transform: translateY(-5px); }
-      100% { transform: translateY(0px); }
-    }
+        .orb-5 {
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, #a855f7 0%, #7c3aed 70%);
+            top: 15%;
+            left: 20%;
+            animation-delay: -10s;
+            opacity: 0.22;
+        }
 
-    h1 {
-      font-size: 2.4rem;
-      font-weight: 600;
-      color: #1e3c32;
-      letter-spacing: -0.5px;
-      margin-bottom: 0.6rem;
-      line-height: 1.2;
-    }
+        @keyframes floatOrb {
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+            25% {
+                transform: translate(25px, -30px) scale(1.08);
+            }
+            50% {
+                transform: translate(-15px, 20px) scale(0.94);
+            }
+            75% {
+                transform: translate(-28px, -12px) scale(1.04);
+            }
+        }
 
-    .subtitle {
-      font-size: 1.1rem;
-      font-weight: 400;
-      color: #5e6b5e;
-      margin-bottom: 2rem;
-      border-bottom: 2px dashed #d9cdb3;
-      padding-bottom: 1.5rem;
-      display: inline-block;
-      font-style: italic;
-    }
+        /* Main card */
+        .maintenance-card {
+            position: relative;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border-radius: 3rem;
+            max-width: 600px;
+            width: 100%;
+            padding: 3rem 2.5rem;
+            box-shadow:
+                0 30px 60px rgba(0, 0, 0, 0.35),
+                0 0 0 1px rgba(255, 255, 255, 0.15) inset,
+                0 0 80px rgba(255, 217, 102, 0.08);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: transform 0.3s ease;
+        }
 
-    .message-box {
-      background: #f4efe7;
-      border-radius: 2rem;
-      padding: 1.8rem 1.5rem;
-      margin: 1.2rem 0 2rem;
-      border: 1px solid #e2d5c2;
-      color: #2d4a3b;
-      font-size: 1.05rem;
-      line-height: 1.7;
-      backdrop-filter: blur(4px);
-    }
+        .maintenance-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 35px 70px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.22) inset;
+        }
 
-    .message-box p {
-      margin-bottom: 0.8rem;
-      font-weight: 450;
-    }
+        /* Icon area */
+        .icon-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.8rem;
+            position: relative;
+        }
 
-    .message-box p:last-child {
-      margin-bottom: 0;
-    }
+        .icon-circle {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffd966 0%, #f59e0b 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 15px 35px rgba(245, 158, 11, 0.45), 0 0 0 8px rgba(255, 217, 102, 0.15);
+            animation: gentlePulse 2.5s ease-in-out infinite;
+            position: relative;
+            z-index: 2;
+        }
 
-    .highlight {
-      font-weight: 700;
-      color: #1e3c32;
-      background: #e7dbcb;
-      padding: 0.2rem 0.7rem;
-      border-radius: 2rem;
-      display: inline-block;
-    }
+        @keyframes gentlePulse {
+            0%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 15px 35px rgba(245, 158, 11, 0.45), 0 0 0 8px rgba(255, 217, 102, 0.15);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 18px 40px rgba(245, 158, 11, 0.55), 0 0 0 14px rgba(255, 217, 102, 0.08);
+            }
+        }
 
-    .progress-indicator {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      margin: 2rem 0 1.8rem;
-      flex-wrap: wrap;
-    }
+        .icon-emoji {
+            font-size: 3.8rem;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+            animation: swing 2s ease-in-out infinite;
+        }
 
-    .dot {
-      width: 10px;
-      height: 10px;
-      background: #cbb295;
-      border-radius: 50%;
-      display: inline-block;
-      animation: pulseDot 1.4s infinite ease-in-out;
-    }
+        @keyframes swing {
+            0%,
+            100% {
+                transform: rotate(0deg);
+            }
+            25% {
+                transform: rotate(5deg);
+            }
+            75% {
+                transform: rotate(-5deg);
+            }
+        }
 
-    .dot:nth-child(2) { animation-delay: 0.2s; }
-    .dot:nth-child(3) { animation-delay: 0.4s; }
+        /* Sparkles around icon */
+        .sparkle {
+            position: absolute;
+            font-size: 1.4rem;
+            animation: sparkleFloat 2.5s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .sparkle:nth-child(2) {
+            top: -8px;
+            right: 8px;
+            animation-delay: 0s;
+        }
+        .sparkle:nth-child(3) {
+            bottom: -5px;
+            left: 10px;
+            animation-delay: 0.8s;
+        }
+        .sparkle:nth-child(4) {
+            top: 10px;
+            left: -10px;
+            animation-delay: 1.6s;
+        }
 
-    @keyframes pulseDot {
-      0%, 100% { background: #cbb295; transform: scale(1); }
-      50% { background: #2a5a4a; transform: scale(1.3); }
-    }
+        @keyframes sparkleFloat {
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: translateY(0) scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: translateY(-10px) scale(1.2);
+            }
+        }
 
-    .estimated-time {
-      font-weight: 500;
-      color: #4b5d4b;
-      background: rgba(255,255,240,0.7);
-      padding: 0.5rem 1.5rem;
-      border-radius: 3rem;
-      font-size: 0.9rem;
-      letter-spacing: 0.3px;
-    }
+        /* Headings */
+        h1 {
+            font-size: 2.3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #ffd966 0%, #fbbf24 40%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.4px;
+            line-height: 1.3;
+        }
 
-    .contact-note {
-      margin-top: 2.2rem;
-      font-size: 0.9rem;
-      color: #5a6b5a;
-      border-top: 1px solid #e2d6c4;
-      padding-top: 1.7rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.3rem;
-      flex-wrap: wrap;
-    }
+        .tagline {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
+            margin-bottom: 1.8rem;
+            letter-spacing: 0.4px;
+        }
 
-    .contact-note a {
-      color: #1e3c32;
-      font-weight: 600;
-      text-decoration: none;
-      border-bottom: 1px dotted #2a5a4a;
-      transition: 0.2s;
-    }
+        /* Info card */
+        .info-box {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 2rem;
+            padding: 1.8rem 1.4rem;
+            margin: 1.5rem 0 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            line-height: 1.7;
+        }
 
-    .contact-note a:hover {
-      color: #0f2a21;
-      border-bottom: 1px solid #2a5a4a;
-    }
+        .info-box p {
+            margin-bottom: 0.7rem;
+        }
+        .info-box p:last-child {
+            margin-bottom: 0;
+        }
 
-    .brand-tag {
-      margin-top: 2rem;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: #7b8a7b;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-    }
+        .highlight {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #0a1f1a;
+            font-weight: 700;
+            padding: 0.15rem 0.8rem;
+            border-radius: 2rem;
+            display: inline-block;
+            letter-spacing: 0.2px;
+        }
 
-    .brand-tag span {
-      font-weight: 700;
-      color: #1e3c32;
-    }
+        /* Dots animation */
+        .dots-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            margin: 1.8rem 0 1.4rem;
+        }
 
-    @media (max-width: 500px) {
-      .maintenance-card {
-        padding: 2.5rem 1.5rem;
-        border-radius: 2.5rem;
-      }
-      h1 {
-        font-size: 2rem;
-      }
-      .maintenance-icon {
-        width: 85px;
-        height: 85px;
-      }
-      .maintenance-icon span {
-        font-size: 3rem;
-      }
-    }
-  </style>
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #fbbf24;
+            animation: dotBounce 1.3s infinite ease-in-out;
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+            background: #f59e0b;
+        }
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+            background: #fbbf24;
+        }
+        .dot:nth-child(4) {
+            animation-delay: 0.6s;
+            background: #f59e0b;
+        }
+
+        @keyframes dotBounce {
+            0%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.7;
+            }
+            50% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        .eta-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 0.5rem 1.6rem;
+            border-radius: 3rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #ffd966;
+            letter-spacing: 0.3px;
+            backdrop-filter: blur(4px);
+        }
+
+        /* Footer contact */
+        .contact-line {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .contact-line a {
+            color: #ffd966;
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 1px dotted #ffd966;
+            transition: all 0.2s;
+        }
+
+        .contact-line a:hover {
+            color: #fbbf24;
+            border-bottom: 1px solid #fbbf24;
+        }
+
+        .brand-footer {
+            margin-top: 1.5rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .brand-footer span {
+            color: #ffd966;
+            font-weight: 700;
+        }
+
+        @media (max-width: 500px) {
+            .maintenance-card {
+                padding: 2.5rem 1.5rem;
+                border-radius: 2.5rem;
+            }
+            h1 {
+                font-size: 1.9rem;
+            }
+            .icon-circle {
+                width: 90px;
+                height: 90px;
+            }
+            .icon-emoji {
+                font-size: 3rem;
+            }
+            .info-box {
+                padding: 1.4rem 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="maintenance-card">
-    <div class="icon-container">
-      <div class="maintenance-icon">
-        <span class="wrench-emoji">🛠️</span>
-      </div>
+    <!-- Colorful floating orbs -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+    <div class="orb orb-5"></div>
+
+    <!-- Main card -->
+    <div class="maintenance-card">
+        <div class="icon-wrapper">
+            <div class="icon-circle">
+                <span class="icon-emoji">🔧</span>
+            </div>
+            <span class="sparkle">✨</span>
+            <span class="sparkle">💫</span>
+            <span class="sparkle">⭐</span>
+        </div>
+
+        <h1>Building Something Greater</h1>
+        <div class="tagline">Legacy Builders Group · Temporary Maintenance</div>
+
+        <div class="info-box">
+            <p>
+                We're upgrading our <span class="highlight">chama platform</span> with exciting new features to help your family build wealth together.
+            </p>
+            <p>
+                💰 Savings · 💸 Loans · 📊 Reports · 📝 Meetings
+            </p>
+            <p style="font-size: 0.9rem; opacity: 0.8;">
+                Everything will be back shortly — fresher, faster, and more secure.
+            </p>
+        </div>
+
+        <div class="dots-row">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </div>
+
+        <div class="eta-badge">
+            ⏳ Estimated return: 10:00 PM EAT
+        </div>
+
+        <div class="contact-line">
+            📞 Questions? Call <strong>Mrs. Kithinji</strong> ·
+            <a href="tel:+254700000000">+254746625271</a>
+        </div>
+
+        <div class="brand-footer">
+            <span>🏛️ Legacy Builders Group</span> · Stronger Together, Richer Forever
+        </div>
     </div>
-    
-    <h1>We're polishing the vault</h1>
-    <div class="subtitle">Legacy Builders Group · Temporary pause</div>
-    
-    <div class="message-box">
-      <p>Our digital <span class="highlight">chama</span> is getting a careful upgrade to serve you better.</p>
-      <p>We'll be back shortly with a smoother experience for your savings, loans, and family wealth journey.</p>
-    </div>
-    
-    <div class="progress-indicator">
-      <span class="dot"></span>
-      <span class="dot"></span>
-      <span class="dot"></span>
-      <span class="estimated-time">Back around 10:00 PM EAT</span>
-    </div>
-    
-    <div class="contact-note">
-      📞 Need assistance? Reach <strong>Mrs. Kithinji</strong> at 
-      <a href="tel:+254700000000">+254 700 000 000</a>
-    </div>
-    
-    <div class="brand-tag">
-      <span>Legacy Builders Group</span> · Stronger Together, Richer Forever
-    </div>
-  </div>
 </body>
 </html>
