@@ -1,1764 +1,269 @@
+This is a complete HTML page that displays a stylish "Under Maintenance" screen, designed to replace your application while you perform updates.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Legacy Builders Group</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        
-        body {
-            background: #f0f2f5;
-            min-height: 100vh;
-        }
-        
-        /* Login Overlay */
-        .login-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .login-box {
-            background: white;
-            border-radius: 32px;
-            padding: 32px 24px;
-            max-width: 400px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-        }
-        
-        .login-box h1 {
-            color: #1e3c32;
-            font-size: 28px;
-            margin-bottom: 6px;
-        }
-        
-        .login-box .subtitle {
-            color: #64748b;
-            font-size: 13px;
-            margin-bottom: 24px;
-        }
-        
-        .member-list-container {
-            min-height: 200px;
-            margin-bottom: 16px;
-        }
-        
-        .skeleton-member {
-            display: flex;
-            align-items: center;
-            padding: 12px 14px;
-            margin: 8px 0;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-        }
-        
-        .skeleton-member-avatar {
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 22px;
-            margin-right: 14px;
-        }
-        
-        .skeleton-member-info {
-            flex: 1;
-            text-align: left;
-        }
-        
-        .skeleton-member-name {
-            width: 120px;
-            height: 16px;
-            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 8px;
-            margin-bottom: 8px;
-        }
-        
-        .skeleton-member-role {
-            width: 80px;
-            height: 12px;
-            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 6px;
-        }
-        
-        .member-option {
-            display: flex;
-            align-items: center;
-            padding: 12px 14px;
-            margin: 8px 0;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .member-option:hover {
-            background: white;
-            border-color: #2a5a4a;
-            transform: translateX(4px);
-        }
-        
-        .member-loading {
-            position: relative;
-            pointer-events: none;
-            opacity: 0.7;
-        }
-        
-        .member-loading::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            animation: memberShimmer 1s infinite;
-        }
-        
-        @keyframes memberShimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-        
-        .member-avatar {
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(135deg, #2a5a4a, #1e3c32);
-            border-radius: 22px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 18px;
-            margin-right: 14px;
-        }
-        
-        .member-info {
-            text-align: left;
-        }
-        
-        .member-info h3 {
-            font-size: 16px;
-            color: #1e293b;
-        }
-        
-        .member-info p {
-            font-size: 11px;
-            color: #64748b;
-        }
-        
-        .pin-input {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid #e2e8f0;
-            border-radius: 16px;
-            font-size: 16px;
-            text-align: center;
-            letter-spacing: 4px;
-            margin-bottom: 20px;
-            transition: all 0.2s;
-        }
-        
-        .pin-input:focus {
-            outline: none;
-            border-color: #2a5a4a;
-        }
-        
-        .login-btn {
-            background: #2a5a4a;
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 40px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.2s;
-        }
-        
-        .login-btn:active {
-            transform: scale(0.97);
-        }
-        
-        .login-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        
-        .error-message {
-            color: #dc2626;
-            font-size: 13px;
-            margin-top: 12px;
-            display: none;
-        }
-        
-        .login-loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid white;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-            margin-right: 8px;
-            vertical-align: middle;
-        }
-        
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .app-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 12px 12px 70px;
-            display: none;
-        }
-        
-        /* ============================================ */
-        /* HEADER - NEW MOBILE LAYOUT */
-        /* ============================================ */
-        .header {
-            background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
-            color: white;
-            border-radius: 24px;
-            margin-bottom: 16px;
-            overflow: hidden;
-        }
-        
-        /* Row 1 - Title */
-        .header-row-1 {
-            padding: 16px 16px 4px 16px;
-            text-align: center;
-        }
-        
-        .header-row-1 h1 {
-            font-size: 22px;
-            font-weight: 600;
-            margin: 0;
-        }
-        
-        /* Row 2 - Slogans */
-        .header-row-2 {
-            padding: 0 16px 8px 16px;
-            text-align: center;
-        }
-        
-        .slogan {
-            font-size: 11px;
-            font-style: italic;
-            margin-top: 4px;
-            letter-spacing: 0.5px;
-            color: #ffd966;
-        }
-        
-        .slogan-sub {
-            font-size: 10px;
-            opacity: 0.85;
-            margin-top: 2px;
-        }
-        
-        /* Row 3 - User Info + Buttons (all on same row) */
-        .header-row-3 {
-            background: rgba(0, 0, 0, 0.15);
-            padding: 10px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: nowrap;
-            gap: 8px;
-        }
-        
-        .user-name-badge {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 5px 12px;
-            border-radius: 30px;
-            font-size: 12px;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .change-pwd-btn, .logout-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: 500;
-            transition: background 0.2s;
-            white-space: nowrap;
-        }
-        
-        .change-pwd-btn:hover, .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.35);
-        }
-        
-        /* Mobile adjustments */
-        @media (max-width: 480px) {
-            .header-row-1 h1 {
-                font-size: 18px;
-            }
-            
-            .slogan {
-                font-size: 9px;
-            }
-            
-            .slogan-sub {
-                font-size: 8px;
-            }
-            
-            .user-name-badge {
-                font-size: 11px;
-                padding: 4px 10px;
-            }
-            
-            .change-pwd-btn, .logout-btn {
-                font-size: 10px;
-                padding: 4px 10px;
-            }
-            
-            .header-row-3 {
-                padding: 8px 12px;
-                gap: 6px;
-            }
-            
-            .action-buttons {
-                gap: 6px;
-            }
-        }
-        
-        @media (max-width: 400px) {
-            .user-name-badge {
-                font-size: 10px;
-                padding: 3px 8px;
-            }
-            
-            .change-pwd-btn, .logout-btn {
-                font-size: 9px;
-                padding: 3px 8px;
-            }
-            
-            .action-buttons {
-                gap: 4px;
-            }
-        }
-        
-        .top-section {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 16px;
-            align-items: stretch;
-        }
-        
-        .balance-wrapper {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            flex: 1;
-        }
-        
-        .balance-card {
-            border-radius: 18px;
-            padding: 12px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .balance-card:first-child {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-        }
-        
-        .balance-card:last-child {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-        }
-        
-        .balance-card h3 {
-            font-size: 11px;
-            font-weight: 500;
-            opacity: 0.9;
-            margin-bottom: 4px;
-        }
-        
-        .balance-card .amount {
-            font-size: 20px;
-            font-weight: 700;
-        }
-        
-        .history-side-btn {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            padding: 8px 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-            min-width: 65px;
-            width: auto;
-        }
-        
-        .history-side-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        
-        .history-side-btn:active {
-            transform: translateY(0);
-        }
-        
-        .history-side-btn span:first-child {
-            font-size: 20px;
-        }
-        
-        .history-side-btn span:last-child {
-            font-size: 10px;
-            font-weight: 500;
-        }
-        
-        .balance-skeleton {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
-            background-size: 200% 100%;
-            animation: shimmerMove 1.5s infinite;
-            border-radius: 18px;
-        }
-        
-        @keyframes shimmerMove {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-        
-        .balance-loading {
-            opacity: 0.7;
-        }
-        
-        /* Tab Bar */
-        .tab-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            display: flex;
-            justify-content: space-around;
-            padding: 6px 12px 18px;
-            box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
-            border-top-left-radius: 24px;
-            border-top-right-radius: 24px;
-            z-index: 100;
-        }
-        
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding: 8px 4px;
-            background: none;
-            border: none;
-            font-size: 11px;
-            font-weight: 500;
-            color: #94a3b8;
-            cursor: pointer;
-            border-radius: 24px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-        }
-        
-        .tab.active {
-            color: #2a5a4a;
-            background: #e8f0ed;
-        }
-        
-        .tab-icon {
-            font-size: 20px;
-            display: block;
-        }
-        
-        .pending-count {
-            background: #f59e0b;
-            color: white;
-            border-radius: 12px;
-            padding: 0px 6px;
-            font-size: 10px;
-            margin-left: 4px;
-            display: none;
-        }
-        
-        .pending-count.visible { display: inline-block; }
-        
-        .pending-item {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            border-radius: 14px;
-            padding: 14px;
-            margin-bottom: 12px;
-        }
-        
-        .panel { display: none; }
-        .panel.active-panel { display: block; }
-        
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 16px;
-            margin-bottom: 14px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        
-        .card h2 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #1e3c32;
-            border-left: 3px solid #2a5a4a;
-            padding-left: 10px;
-            margin-bottom: 14px;
-        }
-        
-        .form-grid {
-            display: grid;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-        
-        @media (min-width: 640px) {
-            .form-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-        
-        input, select, textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            font-size: 13px;
-            background: white;
-        }
-        
-        select:disabled {
-            background: #f1f5f9;
-            cursor: not-allowed;
-        }
-        
-        textarea { resize: vertical; min-height: 80px; }
-        
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #2a5a4a;
-        }
-        
-        label {
-            font-weight: 500;
-            margin-bottom: 4px;
-            display: block;
-            font-size: 11px;
-            color: #334155;
-        }
-        
-        button {
-            background: #2a5a4a;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 40px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            width: 100%;
-        }
-        
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        
-        .btn-secondary { background: #64748b; }
-        .approve-btn { background: #10b981; width: auto; padding: 6px 14px; font-size: 12px; margin: 4px; }
-        .reject-btn { background: #ef4444; width: auto; padding: 6px 14px; font-size: 12px; margin: 4px; }
-        .cancel-btn { background: #6b7280; width: auto; padding: 6px 14px; font-size: 12px; margin-top: 8px; }
-        .delete-meeting-btn { background: #ef4444; width: auto; padding: 4px 10px; font-size: 10px; margin-top: 8px; }
-        
-        .countdown-timer {
-            background: linear-gradient(135deg, #1e3c32, #2a5a4a);
-            color: #ffd966;
-            padding: 8px 12px;
-            border-radius: 30px;
-            font-size: 12px;
-            font-weight: bold;
-            display: inline-block;
-            margin-top: 8px;
-        }
-        
-        .countdown-timer.urgent {
-            background: linear-gradient(135deg, #dc2626, #991b1b);
-            animation: pulse 1s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-        
-        .loan-item {
-            background: #f8fafc;
-            border-radius: 14px;
-            padding: 12px;
-            margin-bottom: 10px;
-            border-left: 3px solid #f59e0b;
-        }
-        
-        .loan-item.own-loan {
-            background: #fef3c7;
-            border-left-color: #d97706;
-        }
-        
-        .completed-loan-item {
-            background: #e8f0ed;
-            border-radius: 14px;
-            padding: 12px;
-            margin-bottom: 10px;
-        }
-        
-        .meeting-item {
-            background: #f8fafc;
-            border-radius: 14px;
-            padding: 12px;
-            margin-bottom: 10px;
-            border-left: 3px solid #3b82f6;
-        }
-        
-        .meeting-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        
-        .meeting-date { font-weight: 600; color: #1e3c32; font-size: 13px; }
-        .meeting-author { font-size: 11px; color: #64748b; }
-        .meeting-section { margin-top: 8px; }
-        .meeting-section-title { font-weight: 600; font-size: 11px; color: #334155; margin-bottom: 4px; }
-        .meeting-section-content { font-size: 12px; color: #1e293b; }
-        
-        /* Upcoming Meeting Card */
-        .upcoming-meeting-card {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            border-left: 4px solid #f59e0b;
-        }
-        
-        .search-container {
-            background: white;
-            border-radius: 16px;
-            padding: 12px;
-            margin-bottom: 14px;
-        }
-        
-        .search-input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 30px;
-            font-size: 13px;
-            margin-bottom: 10px;
-        }
-        
-        .filter-row { display: flex; gap: 8px; }
-        .filter-row select { flex: 1; }
-        
-        .badge {
-            padding: 3px 8px;
-            border-radius: 20px;
-            font-size: 10px;
-            font-weight: 600;
-            display: inline-block;
-        }
-        .badge-savings { background: #dcfce7; color: #166534; }
-        .badge-loan { background: #fee2e2; color: #991b1b; }
-        .badge-repayment { background: #fef3c7; color: #92400e; }
-        
-        .empty-state {
-            text-align: center;
-            padding: 30px;
-            color: #64748b;
-            font-size: 13px;
-        }
-        
-        .toast {
-            position: fixed;
-            bottom: 80px;
-            left: 16px;
-            right: 16px;
-            background: #1e293b;
-            color: white;
-            padding: 10px 16px;
-            border-radius: 50px;
-            text-align: center;
-            font-size: 13px;
-            z-index: 2000;
-            animation: slideUp 0.3s ease;
-        }
-        .toast.success { background: #2a5a4a; }
-        .toast.error { background: #dc2626; }
-        
-        .summary-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-        
-        .stat {
-            background: #f8fafc;
-            padding: 10px;
-            border-radius: 14px;
-            text-align: center;
-        }
-        .stat h3 { font-size: 10px; color: #64748b; margin-bottom: 4px; }
-        .stat .number { font-size: 15px; font-weight: 700; color: #1e3c32; }
-        
-        .progress-bar {
-            background: #e2e8f0;
-            border-radius: 10px;
-            height: 6px;
-            margin-top: 8px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            background: #10b981;
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.3s ease;
-        }
-        
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1001;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 28px;
-            padding: 24px;
-            max-width: 500px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        
-        .modal-content h3 { margin-bottom: 16px; color: #1e3c32; }
-        .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
-        .modal-buttons button { flex: 1; }
-        .close-modal { background: #64748b; }
-        
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #e2e8f0;
-            border-top-color: #2a5a4a;
-            border-right-color: #2a5a4a;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 12px;
-        }
-        
-        .loading-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-        }
-        
-        .export-btn-inline { background: #0d6efd; margin-bottom: 12px; }
-        
-        .pin-input-field {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid #e2e8f0;
-            border-radius: 16px;
-            font-size: 20px;
-            text-align: center;
-            letter-spacing: 8px;
-            font-weight: 600;
-        }
-        
-        /* History Modal - SMALL SIZE */
-        .history-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .history-modal-content {
-            background: white;
-            border-radius: 28px;
-            width: 95%;
-            max-width: 1100px;
-            max-height: 85vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .history-modal-header {
-            padding: 14px 20px;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .history-modal-header h3 {
-            color: #1e3c32;
-            font-size: 16px;
-            margin: 0;
-        }
-        
-        .close-history-btn {
-            background: none;
-            border: none;
-            font-size: 22px;
-            cursor: pointer;
-            color: #64748b;
-            width: auto;
-            padding: 0 8px;
-        }
-        
-        .history-modal-body {
-            padding: 14px 20px;
-            overflow-y: auto;
-            flex: 1;
-        }
-        
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-        
-        .history-table th, .history-table td {
-            padding: 8px 6px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-            vertical-align: top;
-        }
-        
-        .history-table th {
-            background: #f8fafc;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            cursor: pointer;
-            font-size: 11px;
-        }
-        
-        .message-cell {
-            max-width: 250px;
-            word-break: break-word;
-            white-space: normal;
-            overflow-wrap: break-word;
-            line-height: 1.3;
-        }
-        
-        .message-text { display: inline; }
-        .message-text.truncated {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        
-        .read-more-btn {
-            background: none;
-            border: none;
-            color: #3b82f6;
-            font-size: 10px;
-            cursor: pointer;
-            padding: 2px 4px;
-            width: auto;
-            display: inline;
-            text-decoration: underline;
-        }
-        
-        .history-search {
-            margin-bottom: 12px;
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        
-        .history-search input, .history-search select {
-            padding: 6px 10px;
-            border: 1px solid #e2e8f0;
-            border-radius: 30px;
-            font-size: 12px;
-            flex: 1;
-        }
-        
-        @media (max-width: 768px) {
-            .message-cell { max-width: 150px; }
-            .history-table th, .history-table td { padding: 6px 4px; font-size: 10px; }
-        }
-        
-        @keyframes slideUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
-        @media (max-width: 640px) {
-            .top-section { flex-direction: column; }
-            .history-side-btn { flex-direction: row; justify-content: center; gap: 8px; padding: 6px 12px; }
-            .history-side-btn span:first-child { font-size: 16px; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Legacy Builders Group · Maintenance</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(145deg, #f5f3ef 0%, #e8e2d6 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      margin: 0;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* subtle textured overlay */
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="M20 20 L30 20 L25 30 Z" fill="%23d4c9b8" opacity="0.08"/><circle cx="70" cy="70" r="8" fill="%23b7a48c" opacity="0.06"/></svg>');
+      background-size: 180px 180px;
+      pointer-events: none;
+    }
+
+    .maintenance-card {
+      position: relative;
+      background: rgba(255, 252, 248, 0.85);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      background: #fffcf7;
+      border-radius: 3.5rem;
+      max-width: 620px;
+      width: 100%;
+      padding: 3rem 2.5rem;
+      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.08), 0 10px 25px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      text-align: center;
+      border: 1px solid rgba(210, 190, 160, 0.3);
+      transition: all 0.2s ease;
+      z-index: 2;
+    }
+
+    .icon-container {
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .maintenance-icon {
+      background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 20px 35px rgba(30, 60, 50, 0.25);
+      position: relative;
+    }
+
+    .maintenance-icon span {
+      font-size: 3.8rem;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+    }
+
+    .wrench-emoji {
+      display: inline-block;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+      100% { transform: translateY(0px); }
+    }
+
+    h1 {
+      font-size: 2.4rem;
+      font-weight: 600;
+      color: #1e3c32;
+      letter-spacing: -0.5px;
+      margin-bottom: 0.6rem;
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      font-weight: 400;
+      color: #5e6b5e;
+      margin-bottom: 2rem;
+      border-bottom: 2px dashed #d9cdb3;
+      padding-bottom: 1.5rem;
+      display: inline-block;
+      font-style: italic;
+    }
+
+    .message-box {
+      background: #f4efe7;
+      border-radius: 2rem;
+      padding: 1.8rem 1.5rem;
+      margin: 1.2rem 0 2rem;
+      border: 1px solid #e2d5c2;
+      color: #2d4a3b;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      backdrop-filter: blur(4px);
+    }
+
+    .message-box p {
+      margin-bottom: 0.8rem;
+      font-weight: 450;
+    }
+
+    .message-box p:last-child {
+      margin-bottom: 0;
+    }
+
+    .highlight {
+      font-weight: 700;
+      color: #1e3c32;
+      background: #e7dbcb;
+      padding: 0.2rem 0.7rem;
+      border-radius: 2rem;
+      display: inline-block;
+    }
+
+    .progress-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 2rem 0 1.8rem;
+      flex-wrap: wrap;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      background: #cbb295;
+      border-radius: 50%;
+      display: inline-block;
+      animation: pulseDot 1.4s infinite ease-in-out;
+    }
+
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes pulseDot {
+      0%, 100% { background: #cbb295; transform: scale(1); }
+      50% { background: #2a5a4a; transform: scale(1.3); }
+    }
+
+    .estimated-time {
+      font-weight: 500;
+      color: #4b5d4b;
+      background: rgba(255,255,240,0.7);
+      padding: 0.5rem 1.5rem;
+      border-radius: 3rem;
+      font-size: 0.9rem;
+      letter-spacing: 0.3px;
+    }
+
+    .contact-note {
+      margin-top: 2.2rem;
+      font-size: 0.9rem;
+      color: #5a6b5a;
+      border-top: 1px solid #e2d6c4;
+      padding-top: 1.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+      flex-wrap: wrap;
+    }
+
+    .contact-note a {
+      color: #1e3c32;
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 1px dotted #2a5a4a;
+      transition: 0.2s;
+    }
+
+    .contact-note a:hover {
+      color: #0f2a21;
+      border-bottom: 1px solid #2a5a4a;
+    }
+
+    .brand-tag {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #7b8a7b;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .brand-tag span {
+      font-weight: 700;
+      color: #1e3c32;
+    }
+
+    @media (max-width: 500px) {
+      .maintenance-card {
+        padding: 2.5rem 1.5rem;
+        border-radius: 2.5rem;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+      .maintenance-icon {
+        width: 85px;
+        height: 85px;
+      }
+      .maintenance-icon span {
+        font-size: 3rem;
+      }
+    }
+  </style>
 </head>
 <body>
-
-<div id="loginOverlay" class="login-overlay">
-    <div class="login-box">
-        <h1>🏛️ Legacy Builders Group</h1>
-        <div class="subtitle">Enter your PIN to access</div>
-        <div id="memberListContainer" class="member-list-container">
-            <div class="skeleton-member"><div class="skeleton-member-avatar"></div><div class="skeleton-member-info"><div class="skeleton-member-name"></div><div class="skeleton-member-role"></div></div></div>
-            <div class="skeleton-member"><div class="skeleton-member-avatar"></div><div class="skeleton-member-info"><div class="skeleton-member-name"></div><div class="skeleton-member-role"></div></div></div>
-            <div class="skeleton-member"><div class="skeleton-member-avatar"></div><div class="skeleton-member-info"><div class="skeleton-member-name"></div><div class="skeleton-member-role"></div></div></div>
-            <div class="skeleton-member"><div class="skeleton-member-avatar"></div><div class="skeleton-member-info"><div class="skeleton-member-name"></div><div class="skeleton-member-role"></div></div></div>
-        </div>
-        <input type="password" id="pinInput" class="pin-input" placeholder="Enter PIN" maxlength="4" inputmode="numeric" disabled>
-        <button class="login-btn" id="loginBtn" onclick="verifyLogin()" disabled>Login</button>
-        <div id="loginError" class="error-message">Invalid PIN. Please try again.</div>
-    </div>
-</div>
-
-<div class="app-container" id="appContainer">
-    <div class="header">
-        <div class="header-row-1"><h1>🏛️ Legacy Builders Group</h1></div>
-        <div class="header-row-2">
-            <p class="slogan">Where Families Build Wealth Together</p>
-            <p class="slogan-sub">Stronger Together, Richer Forever</p>
-        </div>
-        <div class="header-row-3">
-            <span class="user-name-badge"><strong id="loggedInUser"></strong></span>
-            <div class="action-buttons">
-                <button class="change-pwd-btn" onclick="openChangePasswordModal()">🔐 Change PIN</button>
-                <button class="logout-btn" onclick="logout(event)">Logout</button>
-            </div>
-        </div>
+  <div class="maintenance-card">
+    <div class="icon-container">
+      <div class="maintenance-icon">
+        <span class="wrench-emoji">🛠️</span>
+      </div>
     </div>
     
-    <div class="top-section">
-        <div class="balance-wrapper">
-            <div class="balance-card" id="savingsCard"><h3>Total Savings</h3><div class="amount" id="totalSavingsTop">KES --</div><div class="balance-skeleton" id="savingsSkeleton" style="display: none;"></div></div>
-            <div class="balance-card" id="loansCard"><h3>Outstanding Loans</h3><div class="amount" id="outstandingTop">KES --</div><div class="balance-skeleton" id="loansSkeleton" style="display: none;"></div></div>
-        </div>
-        <button class="history-side-btn" onclick="openHistoryModal()"><span>📜</span><span>History</span></button>
+    <h1>We're polishing the vault</h1>
+    <div class="subtitle">Legacy Builders Group · Temporary pause</div>
+    
+    <div class="message-box">
+      <p>Our digital <span class="highlight">chama</span> is getting a careful upgrade to serve you better.</p>
+      <p>We'll be back shortly with a smoother experience for your savings, loans, and family wealth journey.</p>
     </div>
     
-    <div id="transactionsPanel" class="panel active-panel">
-        <div class="card">
-            <h2>Add Transaction</h2>
-            <div class="form-grid">
-                <div><label>📅 Date</label><input type="date" id="date"></div>
-                <div><label>👤 Member Selected</label><select id="memberSelect" disabled style="background:#f1f5f9;"><option value="">Loading...</option></select></div>
-                <div><label>Choose Transaction Type</label><select id="type" onchange="toggleApprovalNotice()"><option value="Savings">Savings (Deposit)</option><option value="Loan Taken">Loan Request (Needs ALL Members to Approve)</option><option value="Loan Repayment">Loan Repayment</option></select></div>
-                <div><label>Amount (KES)</label><input type="number" id="amount" placeholder="0"><small style="font-size:10px; color:#64748b; display:block; margin-top:4px;">For loans: Enter PRINCIPAL amount (10% interest will be added)</small></div>
-                <div><label>Transaction Message</label><input type="text" id="message" placeholder="e.g., Bank/Mpesa Message"></div>
-            </div>
-            <div id="approvalNotice" style="background:#fef3c7; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">⚠️ Loan requests need approval from ALL other members. 10% interest will be added to the loan.</div>
-            <button id="addBtn">Submit Transaction</button>
-        </div>
+    <div class="progress-indicator">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="estimated-time">Back around 10:00 PM EAT</span>
     </div>
     
-    <div id="summaryPanel" class="panel">
-        <div class="card"><h2>Search & Filter</h2><div class="search-container" style="padding:0;"><input type="text" id="searchInput" class="search-input" placeholder="Search by member or message"><div class="filter-row"><select id="filterMember"><option value="">All Members</option></select><select id="filterType"><option value="">All Types</option><option value="Savings">Savings</option><option value="Loan Taken">Loans Taken</option><option value="Loan Repayment">Repayments</option></select></div></div></div>
-        <div class="card"><h2>Financial Summary</h2><div id="summarySkeleton" class="loading-container"><div class="loading-spinner"></div><div>Loading summary...</div></div><div id="summaryContent" style="display: none;"><div class="summary-stats"><div class="stat"><h3>Total Savings</h3><div class="number" id="totalSavings">KES --</div></div><div class="stat"><h3>Loans Taken</h3><div class="number" id="totalLoans">KES --</div></div><div class="stat"><h3>Total Repaid</h3><div class="number" id="totalRepaid">KES --</div></div><div class="stat"><h3>Net Balance</h3><div class="number" id="netBalance">KES --</div></div></div></div></div>
-        <div class="card"><h2>Member Summary</h2><div id="memberSummary" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
-        <div class="card"><h2>Export Data</h2><button id="exportBtn" class="export-btn-inline">📥 Download CSV</button><button id="refreshBtn" class="btn-secondary">🔄 Refresh Data</button></div>
+    <div class="contact-note">
+      📞 Need assistance? Reach <strong>Mrs. Kithinji</strong> at 
+      <a href="tel:+254700000000">+254 700 000 000</a>
     </div>
     
-    <div id="loansPanel" class="panel">
-        <div class="card"><h2>Pending Loan Approvals</h2><div id="pendingLoans" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
-        <div class="card"><h2>Completed Loans</h2><div id="completedLoans" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
+    <div class="brand-tag">
+      <span>Legacy Builders Group</span> · Stronger Together, Richer Forever
     </div>
-    
-    <div id="meetingsPanel" class="panel">
-        <!-- Meeting Minutes Section -->
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                <h2 style="margin:0; border-left: none; padding-left:0;">📝 Meeting Minutes</h2>
-                <button id="addMeetingBtn" style="width: auto; padding: 8px 16px;">+ Add Meeting</button>
-            </div>
-            <div id="meetingMinutesList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
-        </div>
-        
-        <!-- Next Meeting Scheduler Section -->
-        <div class="card">
-            <h2>📅 Schedule Next Meeting</h2>
-            <div class="form-grid">
-                <div><label>📅 Next Meeting Date</label><input type="date" id="nextMeetingDate"></div>
-                <div><label>📋 Meeting Agenda</label><input type="text" id="nextMeetingAgenda" placeholder="What will be discussed?"></div>
-                <div><label>📍 Venue / Location</label><input type="text" id="nextMeetingVenue" placeholder="e.g., Online / Hall"></div>
-            </div>
-            <button id="scheduleMeetingBtn">📅 Schedule Next Meeting</button>
-        </div>
-        
-        <!-- Upcoming Meeting Display -->
-        <div id="upcomingMeetingCard" class="card upcoming-meeting-card" style="display: none;">
-            <h2>⏰ Upcoming Meeting</h2>
-            <div id="upcomingMeetingInfo"></div>
-        </div>
-    </div>
-    
-    <div id="pendingPanel" class="panel">
-        <div class="card"><h2>⏳ Pending Approvals</h2><div id="pendingApprovalsList" class="loading-container"><div class="loading-spinner"></div><div>Loading pending approvals...</div></div></div>
-    </div>
-</div>
-
-<div class="tab-bar" id="tabBar" style="display: none;">
-    <button class="tab" data-panel="transactions"><span class="tab-icon">📋</span><span>Transactions</span></button>
-    <button class="tab" data-panel="summary"><span class="tab-icon">📊</span><span>Summary</span></button>
-    <button class="tab" data-panel="loans"><span class="tab-icon">💰</span><span>Loans</span></button>
-    <button class="tab" data-panel="meetings"><span class="tab-icon">📝</span><span>Meetings</span></button>
-    <button class="tab" data-panel="pending" id="pendingTab" style="display: none;"><span class="tab-icon">⏳</span><span>Pending<span id="pendingCount" class="pending-count"></span></span></button>
-</div>
-
-<script>
-// ============================================================
-// CONFIGURATION
-// ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbxGLPnt_112Aj8ep7z0t00ZhU-Rh84fdXmc3tuijlTjDE_Vk5JczoFjNqb-Zp7qty-56Q/exec";
-const TREASURER_NAME = "Mrs. Kithinji";
-
-let allRecords = [], allMembers = [], pendingLoans = [], completedLoans = [], pendingTransactions = [], currentUser = null;
-let sortColumn = 'date', sortDirection = 'desc', isLoading = false;
-let currentTab = localStorage.getItem('legacy_active_tab') || 'transactions';
-let selectedMemberForLogin = null;
-let countdownInterval = null;
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function isTreasurer() { return currentUser === TREASURER_NAME; }
-
-function showToast(message, type) {
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-}
-
-function showButtonLoading(btn, text) {
-    btn.disabled = true;
-    btn.innerHTML = `<span class="login-loading"></span> ${text}`;
-}
-
-function hideButtonLoading(btn, originalText) {
-    btn.disabled = false;
-    btn.innerHTML = originalText;
-}
-
-// ============================================================
-// COUNTDOWN TIMER
-// ============================================================
-function updateCountdowns() {
-    const els = document.querySelectorAll('.countdown-timer[data-date]');
-    const now = new Date();
-    els.forEach(el => {
-        const target = new Date(el.getAttribute('data-date'));
-        const diff = target - now;
-        if (diff <= 0) {
-            el.innerHTML = '🎉 Meeting is today!';
-            el.classList.add('urgent');
-        } else {
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % 86400000) / (1000 * 60 * 60));
-            const mins = Math.floor((diff % 3600000) / (1000 * 60));
-            if (days > 0) el.innerHTML = `📅 Countdown: ${days}d ${hours}h`;
-            else if (hours > 0) { el.innerHTML = `⏰ Countdown: ${hours}h ${mins}m`; el.classList.add('urgent'); }
-            else { el.innerHTML = `⏰ Countdown: ${mins}m`; el.classList.add('urgent'); }
-        }
-    });
-}
-
-function startCountdown() {
-    if (countdownInterval) clearInterval(countdownInterval);
-    updateCountdowns();
-    countdownInterval = setInterval(updateCountdowns, 60000);
-}
-
-// ============================================================
-// NEXT MEETING SCHEDULER FUNCTIONS
-// ============================================================
-async function loadScheduledMeeting() {
-    try {
-        const res = await callAPI('getScheduledMeeting');
-        const card = document.getElementById('upcomingMeetingCard');
-        const info = document.getElementById('upcomingMeetingInfo');
-        
-        if (res.success && res.meeting && res.meeting.date) {
-            card.style.display = 'block';
-            info.innerHTML = `
-                <div class="meeting-item" style="border-left-color: #f59e0b; background: #fffbeb;">
-                    <div class="meeting-header">
-                        <span class="meeting-date">📅 ${escapeHtml(res.meeting.date)}</span>
-                    </div>
-                    <div class="meeting-section">
-                        <div class="meeting-section-title">📋 Agenda:</div>
-                        <div class="meeting-section-content">${escapeHtml(res.meeting.agenda || 'Not set')}</div>
-                    </div>
-                    <div class="meeting-section">
-                        <div class="meeting-section-title">📍 Venue:</div>
-                        <div class="meeting-section-content">${escapeHtml(res.meeting.venue || 'Not set')}</div>
-                    </div>
-                    <div class="countdown-timer" data-date="${res.meeting.date}">📅 Loading countdown...</div>
-                    <div class="meeting-section" style="margin-top: 10px;">
-                        <div class="meeting-section-title">📅 Scheduled by:</div>
-                        <div class="meeting-section-content">${escapeHtml(res.meeting.scheduledBy || 'Unknown')}</div>
-                    </div>
-                    ${isTreasurer() ? `<button class="delete-meeting-btn" onclick="cancelScheduledMeeting()" style="margin-top: 10px;">🗑️ Cancel Schedule</button>` : ''}
-                </div>
-            `;
-            updateCountdowns();
-            startCountdown();
-        } else {
-            card.style.display = 'none';
-        }
-    } catch(e) {
-        console.error('Error loading scheduled meeting:', e);
-    }
-}
-
-async function scheduleNextMeeting() {
-    const date = document.getElementById('nextMeetingDate').value;
-    const agenda = document.getElementById('nextMeetingAgenda').value;
-    const venue = document.getElementById('nextMeetingVenue').value;
-    
-    if (!date) {
-        showToast('Please select a meeting date', 'error');
-        return;
-    }
-    
-    const btn = document.getElementById('scheduleMeetingBtn');
-    const originalText = btn.innerHTML;
-    showButtonLoading(btn, 'Scheduling...');
-    
-    const res = await callAPI('scheduleMeeting', { date, agenda, venue, scheduledBy: currentUser });
-    if (res.success) {
-        showToast('Next meeting scheduled!', 'success');
-        document.getElementById('nextMeetingDate').value = '';
-        document.getElementById('nextMeetingAgenda').value = '';
-        document.getElementById('nextMeetingVenue').value = '';
-        await loadScheduledMeeting();
-    } else {
-        showToast(res.error || 'Error scheduling meeting', 'error');
-    }
-    hideButtonLoading(btn, originalText);
-}
-
-async function cancelScheduledMeeting() {
-    if (!confirm('Are you sure you want to cancel the scheduled meeting?')) return;
-    const res = await callAPI('cancelScheduledMeeting');
-    if (res.success) {
-        showToast('Scheduled meeting cancelled', 'success');
-        await loadScheduledMeeting();
-    } else {
-        showToast('Error cancelling meeting', 'error');
-    }
-}
-
-// ============================================================
-// CHANGE PASSWORD
-// ============================================================
-function openChangePasswordModal() {
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `<div class="modal-content"><h3>🔐 Change PIN</h3><div style="margin-bottom:16px;"><label>Current PIN (4 digits)</label><input type="password" id="currentPin" class="pin-input-field" maxlength="4" inputmode="numeric" placeholder="••••"></div><div style="margin-bottom:16px;"><label>New PIN (4 digits)</label><input type="password" id="newPin" class="pin-input-field" maxlength="4" inputmode="numeric" placeholder="••••"></div><div style="margin-bottom:16px;"><label>Confirm New PIN</label><input type="password" id="confirmPin" class="pin-input-field" maxlength="4" inputmode="numeric" placeholder="••••"></div><div class="modal-buttons"><button onclick="changePassword()">Change PIN</button><button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`;
-    document.body.appendChild(modal);
-    setTimeout(() => document.getElementById('currentPin')?.focus(), 100);
-}
-
-async function changePassword() {
-    const cur = document.getElementById('currentPin').value;
-    const newPin = document.getElementById('newPin').value;
-    const confirm = document.getElementById('confirmPin').value;
-    if (!cur || !newPin || !confirm) { showToast('Please fill all fields', 'error'); return; }
-    if (cur.length !== 4 || isNaN(cur)) { showToast('Current PIN must be 4 digits', 'error'); return; }
-    if (newPin.length !== 4 || isNaN(newPin)) { showToast('New PIN must be 4 digits', 'error'); return; }
-    if (newPin !== confirm) { showToast('New PINs do not match', 'error'); return; }
-    if (cur === newPin) { showToast('New PIN must be different', 'error'); return; }
-    const btn = event.target;
-    const orig = btn.innerHTML;
-    showButtonLoading(btn, 'Changing...');
-    try {
-        const res = await callAPI('changePassword', { member: currentUser, oldPin: cur, newPin: newPin });
-        if (res.success) { showToast('PIN changed! Please login again.', 'success'); document.querySelector('.modal')?.remove(); setTimeout(() => logout(), 2000); }
-        else { showToast(res.error || 'Failed', 'error'); }
-    } catch(e) { showToast('Error changing PIN', 'error'); }
-    finally { hideButtonLoading(btn, orig); }
-}
-
-function createMessageWithReadMore(msg, maxLen = 60) {
-    if (!msg) return '-';
-    if (msg.length <= maxLen) return escapeHtml(msg);
-    const truncated = escapeHtml(msg.substring(0, maxLen)) + '...';
-    const full = escapeHtml(msg);
-    const id = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-    return `<span id="${id}" class="message-text truncated">${truncated}</span><button class="read-more-btn" onclick="toggleReadMore('${id}', '${full.replace(/'/g, "\\'")}', '${truncated.replace(/'/g, "\\'")}')">Read more</button>`;
-}
-
-function toggleReadMore(id, full, truncated) {
-    const el = document.getElementById(id);
-    const btn = el.nextElementSibling;
-    if (el.classList.contains('truncated')) {
-        el.classList.remove('truncated');
-        el.innerHTML = full;
-        btn.innerHTML = 'Read less';
-    } else {
-        el.classList.add('truncated');
-        el.innerHTML = truncated;
-        btn.innerHTML = 'Read more';
-    }
-}
-
-function showBalanceLoading(show) {
-    const s1 = document.getElementById('savingsSkeleton');
-    const s2 = document.getElementById('loansSkeleton');
-    if (s1) s1.style.display = show ? 'block' : 'none';
-    if (s2) s2.style.display = show ? 'block' : 'none';
-}
-
-function showLoginLoading(show) {
-    const btn = document.getElementById('loginBtn');
-    const pin = document.getElementById('pinInput');
-    if (show) { btn.disabled = true; btn.innerHTML = '<span class="login-loading"></span> Verifying...'; pin.disabled = true; }
-    else { btn.disabled = false; btn.innerHTML = 'Login'; pin.disabled = false; }
-}
-
-// ============================================================
-// HISTORY MODAL
-// ============================================================
-let currentHistoryRecords = [];
-let historySortColumn = 'date';
-let historySortDirection = 'desc';
-
-function openHistoryModal() {
-    const modal = document.createElement('div');
-    modal.className = 'history-modal';
-    modal.innerHTML = `<div class="history-modal-content"><div class="history-modal-header"><h3>📜 Transaction History</h3><button class="close-history-btn" onclick="this.closest('.history-modal').remove()">✕</button></div><div class="history-modal-body"><div class="history-search"><input type="text" id="historySearch" placeholder="Search..."><select id="historyFilterMember"><option value="">All Members</option>${allMembers.map(m => `<option value="${m}">${m}</option>`).join('')}</select><select id="historyFilterType"><option value="">All Types</option><option value="Savings">Savings</option><option value="Loan Taken">Loan Taken</option><option value="Loan Repayment">Loan Repayment</option></select></div><div style="overflow-x: auto;"><table class="history-table"><thead><tr><th onclick="sortHistory('date')">Date ⬍</th><th onclick="sortHistory('member')">Member ⬍</th><th onclick="sortHistory('type')">Type ⬍</th><th onclick="sortHistory('amount')">Amount ⬍</th><th>Message</th></tr></thead><tbody id="historyBody"></tbody></tr></div></div></div>`;
-    document.body.appendChild(modal);
-    currentHistoryRecords = [...allRecords];
-    renderHistoryTable();
-    document.getElementById('historySearch')?.addEventListener('input', () => filterHistory());
-    document.getElementById('historyFilterMember')?.addEventListener('change', () => filterHistory());
-    document.getElementById('historyFilterType')?.addEventListener('change', () => filterHistory());
-}
-
-function filterHistory() {
-    const search = document.getElementById('historySearch')?.value.toLowerCase() || '';
-    const filterMember = document.getElementById('historyFilterMember')?.value || '';
-    const filterType = document.getElementById('historyFilterType')?.value || '';
-    let filtered = [...allRecords];
-    if (filterMember) filtered = filtered.filter(r => r.member === filterMember);
-    if (filterType) filtered = filtered.filter(r => r.type === filterType);
-    if (search) filtered = filtered.filter(r => r.member.toLowerCase().includes(search) || (r.message || '').toLowerCase().includes(search));
-    renderHistoryTable(filtered);
-}
-
-function sortHistory(column) { renderHistoryTable(); }
-
-function renderHistoryTable(filtered = null) {
-    const tbody = document.getElementById('historyBody');
-    if (!tbody) return;
-    const records = filtered || currentHistoryRecords;
-    if (!records.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No transactions found</td></tr>'; return; }
-    tbody.innerHTML = records.map(r => {
-        let cls = r.type === 'Savings' ? 'badge-savings' : (r.type === 'Loan Taken' ? 'badge-loan' : 'badge-repayment');
-        let sign = r.type === 'Loan Repayment' ? '+' : (r.type === 'Savings' ? '+' : '-');
-        let msg = createMessageWithReadMore(r.message || '-', 50);
-        return `<tr><td style="white-space: nowrap;">${new Date(r.date).toLocaleDateString('en-KE')}</td><td><strong>${escapeHtml(r.member)}</strong></td><td><span class="badge ${cls}">${r.type}</span></td><td style="white-space: nowrap;">${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td><td class="message-cell">${msg}</td></tr>`;
-    }).join('');
-}
-
-async function callAPI(action, data = {}) {
-    try {
-        const params = new URLSearchParams({action, ...data});
-        const url = `${API_URL}?${params.toString()}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return await response.json();
-    } catch(e) { return { success: false, error: e.message }; }
-}
-
-// ============================================================
-// MEETING MINUTES
-// ============================================================
-async function loadMeetingMinutes() {
-    const container = document.getElementById('meetingMinutesList');
-    if(!container) return;
-    container.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div><div>Loading meetings...</div></div>';
-    const res = await callAPI('getMeetingMinutes');
-    if (res.success && res.meetings) {
-        const meetings = res.meetings;
-        if (meetings.length === 0) {
-            container.innerHTML = '<div class="empty-state">No meeting minutes recorded yet. Click "Add Meeting" to get started.</div>';
-            return;
-        }
-        container.innerHTML = meetings.slice().reverse().map(meeting => {
-            let countdownHtml = '';
-            if (meeting.nextMeeting && meeting.nextMeeting !== '') {
-                countdownHtml = `<div class="countdown-timer" data-date="${meeting.nextMeeting}">📅 Loading countdown...</div>`;
-            }
-            return `<div class="meeting-item"><div class="meeting-header"><span class="meeting-date">📅 ${escapeHtml(meeting.date)}</span><span class="meeting-author">by ${escapeHtml(meeting.recordedBy)}</span></div><div class="meeting-section"><div class="meeting-section-title">📋 Agenda:</div><div class="meeting-section-content">${escapeHtml(meeting.agenda)}</div></div><div class="meeting-section"><div class="meeting-section-title">📝 Notes:</div><div class="meeting-section-content">${escapeHtml(meeting.notes || 'No notes')}</div></div><div class="meeting-section"><div class="meeting-section-title">✅ Decisions:</div><div class="meeting-section-content">${escapeHtml(meeting.decisions || 'None')}</div></div>${meeting.nextMeeting ? `<div class="meeting-section"><div class="meeting-section-title">📅 Next Meeting:</div><div class="meeting-section-content">${escapeHtml(meeting.nextMeeting)}</div>${countdownHtml}</div>` : ''}${isTreasurer() ? `<button class="delete-meeting-btn" onclick="deleteMeeting('${meeting.id}')">🗑️ Delete Meeting</button>` : ''}</div>`;
-        }).join('');
-        updateCountdowns();
-        startCountdown();
-    } else { container.innerHTML = '<div class="empty-state">Error loading meetings</div>'; }
-}
-
-async function deleteMeeting(id) {
-    if (!confirm('Delete this meeting?')) return;
-    const res = await callAPI('deleteMeeting', { id });
-    if (res.success) { showToast('Meeting deleted!', 'success'); await loadMeetingMinutes(); }
-    else showToast('Error deleting meeting', 'error');
-}
-
-function openAddMeetingModal() {
-    const today = new Date().toISOString().split('T')[0];
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `<div class="modal-content"><h3>📝 Add Meeting Minutes</h3><div class="form-grid"><div><label>Meeting Date</label><input type="date" id="meetingDate" value="${today}"></div><div><label>Recorded By</label><input type="text" id="meetingRecordedBy" value="${currentUser}" readonly></div><div style="grid-column: span 2;"><label>Agenda *</label><textarea id="meetingAgenda" rows="2"></textarea></div><div style="grid-column: span 2;"><label>Notes</label><textarea id="meetingNotes" rows="3"></textarea></div><div style="grid-column: span 2;"><label>Decisions Made</label><textarea id="meetingDecisions" rows="2"></textarea></div><div><label>Next Meeting Date</label><input type="date" id="meetingNext"></div></div><div class="modal-buttons"><button onclick="saveMeetingMinutes()">Save</button><button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`;
-    document.body.appendChild(modal);
-}
-
-async function saveMeetingMinutes() {
-    const date = document.getElementById('meetingDate').value;
-    const agenda = document.getElementById('meetingAgenda').value.trim();
-    if (!date || !agenda) { showToast('Please fill required fields', 'error'); return; }
-    const res = await callAPI('saveMeetingMinutes', { date, recordedBy: currentUser, agenda, notes: document.getElementById('meetingNotes').value, decisions: document.getElementById('meetingDecisions').value, nextMeeting: document.getElementById('meetingNext').value });
-    if (res.success) { showToast('Meeting saved!', 'success'); document.querySelector('.modal')?.remove(); await loadMeetingMinutes(); }
-    else showToast('Error: ' + res.error, 'error');
-}
-
-async function cancelLoanRequest(loanId) {
-    if (!confirm('Cancel this loan request?')) return;
-    const btn = event.target;
-    const orig = btn.innerHTML;
-    showButtonLoading(btn, 'Cancelling...');
-    const res = await callAPI('cancelLoan', { loanId });
-    if (res.success) { showToast('Loan cancelled!', 'success'); await loadAllData(); }
-    else showToast(res.error || 'Error', 'error');
-    hideButtonLoading(btn, orig);
-}
-
-async function checkPersistentLogin() {
-    const saved = localStorage.getItem('legacy_current_user');
-    if (saved) {
-        currentUser = saved;
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('appContainer').style.display = 'block';
-        document.getElementById('tabBar').style.display = 'flex';
-        document.getElementById('loggedInUser').innerText = currentUser;
-        document.getElementById('date').value = new Date().toISOString().split('T')[0];
-        const pendingTab = document.getElementById('pendingTab');
-        if (pendingTab) pendingTab.style.display = isTreasurer() ? 'flex' : 'none';
-        showBalanceLoading(true);
-        await loadAllData();
-        await loadMeetingMinutes();
-        await loadScheduledMeeting();
-        activateTab(currentTab);
-        showBalanceLoading(false);
-        if (window.refreshInterval) clearInterval(window.refreshInterval);
-        window.refreshInterval = setInterval(() => { if (currentUser) { loadAllData(); loadScheduledMeeting(); } }, 30000);
-    }
-}
-
-async function loadAllData() {
-    if (isLoading || !currentUser) return;
-    isLoading = true;
-    try {
-        const [recordsRes, membersRes, summaryRes, loansRes, pendingRes] = await Promise.all([
-            callAPI('get'), callAPI('getMembers'), callAPI('getSummary'), callAPI('getPendingLoans'),
-            isTreasurer() ? callAPI('getPendingTransactions') : Promise.resolve({ success: true, transactions: [] })
-        ]);
-        if (recordsRes.success) { allRecords = recordsRes.records || []; applyFilters(); }
-        if (membersRes.success && membersRes.members?.length) { allMembers = membersRes.members; updateMemberDropdowns(); }
-        if (summaryRes.success) updateBalanceDisplays(summaryRes);
-        if (loansRes.success) {
-            const total = allMembers.length;
-            const allLoans = loansRes.loans || [];
-            pendingLoans = allLoans.filter(l => l.approvals.length < (total - 1) && l.status !== 'completed' && l.status !== 'rejected');
-            completedLoans = allLoans.filter(l => l.approvals.length >= (total - 1) || l.status === 'completed');
-            renderPendingLoans();
-            renderCompletedLoans();
-        }
-        if (pendingRes.success && isTreasurer()) {
-            pendingTransactions = pendingRes.transactions || [];
-            renderPendingApprovals();
-            updatePendingCount();
-        }
-        document.getElementById('summarySkeleton').style.display = 'none';
-        document.getElementById('summaryContent').style.display = 'block';
-        const memberDiv = document.getElementById('memberSummary');
-        if (memberDiv) {
-            const data = {};
-            allRecords.forEach(r => {
-                if (!data[r.member]) data[r.member] = { savings: 0, loans: 0, repaid: 0 };
-                if (r.type === 'Savings') data[r.member].savings += r.amount;
-                else if (r.type === 'Loan Taken') data[r.member].loans += r.amount;
-                else if (r.type === 'Loan Repayment') data[r.member].repaid += r.amount;
-            });
-            memberDiv.innerHTML = Object.entries(data).length ? Object.entries(data).map(([name, d]) => `<div class="stat"><h3>${escapeHtml(name)}</h3><div>Savings: KES ${d.savings.toLocaleString()}</div><div>Loans: KES ${d.loans.toLocaleString()}</div><div>Repaid: KES ${d.repaid.toLocaleString()}</div></div>`).join('') : '<div class="empty-state">No transactions yet</div>';
-        }
-    } catch(e) { showToast('Error loading data', 'error'); } finally { isLoading = false; }
-}
-
-function updateBalanceDisplays(summary) {
-    if (!summary) return;
-    const savings = summary.savings || 0;
-    const outstanding = summary.outstanding || 0;
-    document.getElementById('totalSavingsTop') && (document.getElementById('totalSavingsTop').innerHTML = `KES ${savings.toLocaleString('en-KE')}`);
-    document.getElementById('outstandingTop') && (document.getElementById('outstandingTop').innerHTML = `KES ${outstanding.toLocaleString('en-KE')}`);
-    document.getElementById('totalSavings') && (document.getElementById('totalSavings').innerHTML = `KES ${savings.toLocaleString('en-KE')}`);
-    document.getElementById('totalLoans') && (document.getElementById('totalLoans').innerHTML = `KES ${(summary.loansTaken || 0).toLocaleString('en-KE')}`);
-    document.getElementById('totalRepaid') && (document.getElementById('totalRepaid').innerHTML = `KES ${(summary.repaid || 0).toLocaleString('en-KE')}`);
-    document.getElementById('netBalance') && (document.getElementById('netBalance').innerHTML = `KES ${(savings - outstanding).toLocaleString('en-KE')}`);
-}
-
-function renderPendingLoans() {
-    const container = document.getElementById('pendingLoans');
-    if (!container) return;
-    if (!pendingLoans.length) { container.innerHTML = '<div class="empty-state">No pending loan approvals</div>'; return; }
-    container.innerHTML = pendingLoans.map(loan => {
-        const isRequester = (loan.member === currentUser);
-        const alreadyApproved = loan.approvals.includes(currentUser);
-        const showButtons = !isRequester && !alreadyApproved;
-        const totalNeeded = allMembers.length - 1;
-        const percent = totalNeeded > 0 ? (loan.approvals.length / totalNeeded) * 100 : 100;
-        return `<div class="loan-item ${isRequester ? 'own-loan' : ''}"><div><strong>${escapeHtml(loan.member)}</strong> requested <strong>KES ${(loan.principal || 0).toLocaleString('en-KE')}</strong> + 10% interest = <strong>KES ${(loan.totalDue || 0).toLocaleString('en-KE')}</strong>${isRequester ? ' (Your request - cannot approve)' : (alreadyApproved ? ' (You approved)' : '')}</div><div style="font-size:12px;">${escapeHtml(loan.message || '')}</div><div style="font-size:11px; margin-top:5px;">Approvals: ${loan.approvals.length}/${totalNeeded}</div><div class="progress-bar"><div class="progress-fill" style="width: ${percent}%;"></div></div>${showButtons ? `<div style="margin-top:8px; display:flex; gap:8px;"><button class="approve-btn" onclick="approveLoan('${loan.id}')">Approve</button><button class="reject-btn" onclick="rejectLoan('${loan.id}')">Reject</button></div>` : ''}${isRequester && loan.status === 'pending' ? `<div style="margin-top:8px;"><button class="cancel-btn" onclick="cancelLoanRequest('${loan.id}')">❌ Cancel Request</button></div>` : ''}</div>`;
-    }).join('');
-}
-
-function renderCompletedLoans() {
-    const container = document.getElementById('completedLoans');
-    if (!container) return;
-    if (!completedLoans.length) { container.innerHTML = '<div class="empty-state">No completed loans yet</div>'; return; }
-    container.innerHTML = completedLoans.map(loan => `<div class="completed-loan-item"><div><strong>${escapeHtml(loan.member)}</strong> borrowed <strong>KES ${(loan.principal || 0).toLocaleString('en-KE')}</strong></div><div>Interest: KES ${(loan.interest || 0).toLocaleString('en-KE')}</div><div><strong>Total Due: KES ${(loan.totalDue || 0).toLocaleString('en-KE')}</strong></div><div style="font-size:10px;">Approved by: ${escapeHtml(loan.approvals.join(', '))}</div><div>${escapeHtml(loan.message || '')}</div></div>`).join('');
-}
-
-function renderPendingApprovals() {
-    const container = document.getElementById('pendingApprovalsList');
-    if (!container) return;
-    if (!pendingTransactions.length) { container.innerHTML = '<div class="empty-state">No pending approvals</div>'; return; }
-    container.innerHTML = pendingTransactions.map(t => `<div class="pending-item"><div><strong>📅 ${t.date}</strong></div><div>👤 <strong>Submitted by:</strong> ${escapeHtml(t.submittedBy || t.member)}</div><div>💰 <strong>Type:</strong> ${t.type}</div><div>💵 <strong>Amount:</strong> KES ${(t.amount || 0).toLocaleString('en-KE')}</div><div>💬 <strong>Message:</strong> ${escapeHtml(t.message || '-')}</div><div style="margin-top: 10px; display: flex; gap: 8px;"><button class="approve-btn" onclick="approveTransaction('${t.id}')">✅ Approve</button><button class="reject-btn" onclick="rejectTransaction('${t.id}')">❌ Reject</button></div></div>`).join('');
-}
-
-function updatePendingCount() {
-    const span = document.getElementById('pendingCount');
-    if (span && pendingTransactions.length > 0) {
-        span.textContent = ` ${pendingTransactions.length}`;
-        span.classList.add('visible');
-    } else if (span) {
-        span.textContent = '';
-        span.classList.remove('visible');
-    }
-}
-
-async function approveTransaction(id) {
-    const btn = event.target;
-    const orig = btn.innerHTML;
-    showButtonLoading(btn, 'Approving...');
-    const res = await callAPI('approveTransaction', { id, approvedBy: currentUser });
-    if (res.success) { showToast('Transaction approved!', 'success'); await loadAllData(); }
-    else { showToast(res.error || 'Error', 'error'); }
-    hideButtonLoading(btn, orig);
-}
-
-async function rejectTransaction(id) {
-    const btn = event.target;
-    const orig = btn.innerHTML;
-    showButtonLoading(btn, 'Rejecting...');
-    const res = await callAPI('rejectTransaction', { id });
-    if (res.success) { showToast('Transaction rejected', 'success'); await loadAllData(); }
-    else { showToast(res.error || 'Error', 'error'); }
-    hideButtonLoading(btn, orig);
-}
-
-function updateMemberDropdowns() {
-    const memberSelect = document.getElementById('memberSelect');
-    const filterMember = document.getElementById('filterMember');
-    if(memberSelect) {
-        memberSelect.innerHTML = `<option value="${currentUser}">${escapeHtml(currentUser)}</option>`;
-        memberSelect.disabled = true;
-        memberSelect.style.background = '#f1f5f9';
-    }
-    if(filterMember) {
-        filterMember.innerHTML = '<option value="">All Members</option>' + allMembers.map(m => `<option value="${m}">${escapeHtml(m)}</option>`).join('');
-    }
-}
-
-async function approveLoan(loanId) {
-    const btn = event.target;
-    const orig = btn.innerHTML;
-    showButtonLoading(btn, 'Approving...');
-    const res = await callAPI('approveLoan', { loanId, approver: currentUser });
-    if (res.success) {
-        const remaining = (allMembers.length - 1) - (res.approvals || 0);
-        showToast(remaining > 0 ? `Approved! Need ${remaining} more` : `Loan fully approved!`, 'success');
-        await loadAllData();
-    } else { showToast('Error: ' + res.error, 'error'); }
-    hideButtonLoading(btn, orig);
-}
-
-async function rejectLoan(loanId) {
-    const res = await callAPI('rejectLoan', { loanId });
-    if (res.success) { showToast('Loan rejected', 'success'); await loadAllData(); }
-    else showToast('Error: ' + res.error, 'error');
-}
-
-async function addRecord() {
-    if (!currentUser) { showToast('Please login first', 'error'); return; }
-    const date = document.getElementById('date').value;
-    const member = currentUser;
-    const type = document.getElementById('type').value;
-    const amount = parseFloat(document.getElementById('amount').value);
-    const message = document.getElementById('message').value;
-    if (!date || !amount || amount <= 0) { showToast('Please fill all fields', 'error'); return; }
-    const btn = document.getElementById('addBtn');
-    const orig = btn.innerHTML;
-    showButtonLoading(btn, 'Processing...');
-    if (type === 'Loan Taken') {
-        const savingsRes = await callAPI('getSummary');
-        const currentSavings = savingsRes.success ? (savingsRes.savings || 0) : 0;
-        if (amount > currentSavings) { showToast(`Cannot borrow KES ${amount.toLocaleString()}. Available: KES ${currentSavings.toLocaleString()}`, 'error'); hideButtonLoading(btn, orig); return; }
-        const res = await callAPI('submitLoan', { date, member, amount, message, notes: '', requestedBy: currentUser });
-        if (res.success) { showToast(`Loan request submitted! Needs ${allMembers.length - 1} other approvals.`, 'success'); document.getElementById('amount').value = ''; document.getElementById('message').value = ''; await loadAllData(); }
-        else showToast('Error: ' + res.error, 'error');
-    } else {
-        const res = await callAPI('submitTransaction', { date, member, type, amount, message, submittedBy: currentUser });
-        if (res.success) { showToast(`Transaction submitted! Waiting for ${TREASURER_NAME} approval.`, 'success'); document.getElementById('amount').value = ''; document.getElementById('message').value = ''; await loadAllData(); }
-        else showToast('Error: ' + (res.error || 'Failed'), 'error');
-    }
-    hideButtonLoading(btn, orig);
-}
-
-function toggleApprovalNotice() { 
-    const notice = document.getElementById('approvalNotice');
-    if(notice) notice.style.display = document.getElementById('type').value === 'Loan Taken' ? 'block' : 'none'; 
-}
-
-function applyFilters() {
-    const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
-    const filterMember = document.getElementById('filterMember')?.value || '';
-    const filterType = document.getElementById('filterType')?.value || '';
-    let filtered = [...allRecords];
-    if (filterMember) filtered = filtered.filter(r => r.member === filterMember);
-    if (filterType) filtered = filtered.filter(r => r.type === filterType);
-    if (search) filtered = filtered.filter(r => r.member.toLowerCase().includes(search) || (r.message || '').toLowerCase().includes(search));
-    if (document.querySelector('.history-modal')) filterHistory();
-}
-
-function exportToCSV() { 
-    if (!allRecords.length) { showToast('No data to export', 'error'); return; } 
-    const headers = ['Date', 'Member', 'Type', 'Amount (KES)', 'Message', 'Balance']; 
-    const rows = allRecords.map(r => [r.date, r.member, r.type, r.amount, r.message || '', r.balanceAfter]); 
-    const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n'); 
-    const blob = new Blob([csv], { type: 'text/csv' }); 
-    const link = document.createElement('a'); 
-    link.href = URL.createObjectURL(blob); 
-    link.download = `legacy_builders_${new Date().toISOString().split('T')[0]}.csv`; 
-    link.click(); 
-    URL.revokeObjectURL(link.href); 
-    showToast('Export complete', 'success'); 
-}
-
-function activateTab(tabId) { 
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); 
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel')); 
-    const btn = document.querySelector(`.tab[data-panel="${tabId}"]`); 
-    if (btn) btn.classList.add('active'); 
-    const panel = document.getElementById(tabId + 'Panel'); 
-    if (panel) panel.classList.add('active-panel'); 
-    localStorage.setItem('legacy_active_tab', tabId); 
-    currentTab = tabId; 
-    loadAllData(); 
-}
-
-function logout(event) {
-    if (event) { event.stopPropagation(); event.preventDefault(); }
-    if (countdownInterval) clearInterval(countdownInterval);
-    localStorage.removeItem('legacy_current_user');
-    localStorage.removeItem('legacy_active_tab');
-    if (window.refreshInterval) clearInterval(window.refreshInterval);
-    currentUser = null;
-    selectedMemberForLogin = null;
-    allRecords = []; allMembers = []; pendingLoans = []; completedLoans = []; pendingTransactions = [];
-    isLoading = false;
-    document.getElementById('appContainer').style.display = 'none';
-    document.getElementById('tabBar').style.display = 'none';
-    document.getElementById('loginOverlay').style.display = 'flex';
-    document.getElementById('pinInput').value = '';
-    document.getElementById('loginError').style.display = 'none';
-    loadMembersForLogin();
-    showToast('Logged out successfully', 'success');
-}
-
-async function loadMembersForLogin() {
-    const container = document.getElementById('memberListContainer');
-    const pin = document.getElementById('pinInput');
-    const loginBtn = document.getElementById('loginBtn');
-    if(pin) pin.disabled = true;
-    if(loginBtn) loginBtn.disabled = true;
-    const res = await callAPI('getMembers');
-    if (res.success && res.members) {
-        allMembers = res.members;
-        if(container) { container.innerHTML = allMembers.map(m => `<div class="member-option" onclick="selectMember('${m}', this)"><div class="member-avatar">${m.charAt(0)}</div><div class="member-info"><h3>${escapeHtml(m)}</h3><p>Click to select</p></div></div>`).join(''); }
-        if(pin) pin.disabled = false;
-        if(loginBtn) loginBtn.disabled = false;
-    } else { if(container) container.innerHTML = '<div class="empty-state">Failed to load members</div>'; }
-}
-
-function selectMember(member, element) {
-    selectedMemberForLogin = member;
-    document.querySelectorAll('.member-option').forEach(opt => { opt.classList.remove('member-loading'); opt.style.background = '#f8fafc'; });
-    element.classList.add('member-loading');
-    element.style.background = '#e8f0ed';
-    document.getElementById('pinInput').focus();
-}
-
-async function verifyLogin() {
-    const member = selectedMemberForLogin;
-    const pin = document.getElementById('pinInput').value;
-    if (!member) { document.getElementById('loginError').style.display = 'block'; document.getElementById('loginError').textContent = 'Select a member'; return; }
-    if (!pin || pin.length !== 4) { document.getElementById('loginError').style.display = 'block'; document.getElementById('loginError').textContent = 'Enter 4-digit PIN'; return; }
-    showLoginLoading(true);
-    document.getElementById('loginError').style.display = 'none';
-    const res = await callAPI('verifyLogin', { name: member, pin: pin });
-    if (res.success) {
-        currentUser = member;
-        localStorage.setItem('legacy_current_user', member);
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('appContainer').style.display = 'block';
-        document.getElementById('tabBar').style.display = 'flex';
-        document.getElementById('loggedInUser').innerText = member;
-        document.getElementById('date').value = new Date().toISOString().split('T')[0];
-        const pendingTab = document.getElementById('pendingTab');
-        if (pendingTab) pendingTab.style.display = isTreasurer() ? 'flex' : 'none';
-        showBalanceLoading(true);
-        await loadAllData();
-        await loadMeetingMinutes();
-        await loadScheduledMeeting();
-        activateTab(currentTab);
-        showBalanceLoading(false);
-        showToast(`Welcome ${member}!`, 'success');
-        if (window.refreshInterval) clearInterval(window.refreshInterval);
-        window.refreshInterval = setInterval(() => { if (currentUser) { loadAllData(); loadScheduledMeeting(); } }, 30000);
-    } else {
-        document.getElementById('loginError').style.display = 'block';
-        document.getElementById('loginError').textContent = 'Invalid PIN';
-        document.getElementById('pinInput').value = '';
-        showLoginLoading(false);
-    }
-}
-
-loadMembersForLogin();
-checkPersistentLogin();
-
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('addBtn').onclick = addRecord;
-    document.getElementById('refreshBtn').onclick = () => { loadAllData(); loadMeetingMinutes(); loadScheduledMeeting(); };
-    document.getElementById('exportBtn').onclick = exportToCSV;
-    document.getElementById('addMeetingBtn').onclick = openAddMeetingModal;
-    document.getElementById('scheduleMeetingBtn').onclick = scheduleNextMeeting;
-    document.getElementById('searchInput').oninput = applyFilters;
-    document.getElementById('filterMember').onchange = applyFilters;
-    document.getElementById('filterType').onchange = applyFilters;
-    document.getElementById('pinInput')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') verifyLogin(); });
-    document.querySelectorAll('.tab').forEach(tab => { tab.onclick = () => activateTab(tab.dataset.panel); });
-});
-
-window.toggleReadMore = toggleReadMore;
-window.openChangePasswordModal = openChangePasswordModal;
-window.changePassword = changePassword;
-window.logout = logout;
-window.cancelLoanRequest = cancelLoanRequest;
-window.deleteMeeting = deleteMeeting;
-window.scheduleNextMeeting = scheduleNextMeeting;
-window.cancelScheduledMeeting = cancelScheduledMeeting;
-</script>
+  </div>
 </body>
 </html>
+```
