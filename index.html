@@ -54,138 +54,29 @@
             margin-bottom: 24px;
         }
         
-        .member-list-container {
-            min-height: 200px;
+        .login-form-group {
             margin-bottom: 16px;
-        }
-        
-        .skeleton-member {
-            display: flex;
-            align-items: center;
-            padding: 12px 14px;
-            margin: 8px 0;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-        }
-        
-        .skeleton-member-avatar {
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 22px;
-            margin-right: 14px;
-        }
-        
-        .skeleton-member-info {
-            flex: 1;
             text-align: left;
         }
         
-        .skeleton-member-name {
-            width: 120px;
-            height: 16px;
-            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 8px;
-            margin-bottom: 8px;
+        .login-form-group label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #334155;
+            display: block;
+            margin-bottom: 4px;
         }
         
-        .skeleton-member-role {
-            width: 80px;
-            height: 12px;
-            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 6px;
-        }
-        
-        .member-option {
-            display: flex;
-            align-items: center;
-            padding: 12px 14px;
-            margin: 8px 0;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .member-option:hover {
-            background: white;
-            border-color: #2a5a4a;
-            transform: translateX(4px);
-        }
-        
-        .member-loading {
-            position: relative;
-            pointer-events: none;
-            opacity: 0.7;
-        }
-        
-        .member-loading::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            animation: memberShimmer 1s infinite;
-        }
-        
-        @keyframes memberShimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-        
-        .member-avatar {
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(135deg, #2a5a4a, #1e3c32);
-            border-radius: 22px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 18px;
-            margin-right: 14px;
-        }
-        
-        .member-info {
-            text-align: left;
-        }
-        
-        .member-info h3 {
-            font-size: 16px;
-            color: #1e293b;
-        }
-        
-        .member-info p {
-            font-size: 11px;
-            color: #64748b;
-        }
-        
-        .pin-input {
+        .login-form-group input {
             width: 100%;
-            padding: 14px;
+            padding: 12px 14px;
             border: 2px solid #e2e8f0;
             border-radius: 16px;
-            font-size: 16px;
-            text-align: center;
-            letter-spacing: 4px;
-            margin-bottom: 20px;
+            font-size: 14px;
             transition: all 0.2s;
         }
         
-        .pin-input:focus {
+        .login-form-group input:focus {
             outline: none;
             border-color: #2a5a4a;
         }
@@ -201,6 +92,7 @@
             cursor: pointer;
             width: 100%;
             transition: all 0.2s;
+            margin-top: 8px;
         }
         
         .login-btn:active {
@@ -231,13 +123,25 @@
             vertical-align: middle;
         }
         
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-        
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+        
+        .register-link {
+            margin-top: 16px;
+            font-size: 13px;
+            color: #64748b;
+        }
+        
+        .register-link a {
+            color: #2a5a4a;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        
+        .register-link a:hover {
+            text-decoration: underline;
         }
         
         .app-container {
@@ -332,7 +236,6 @@
             background: rgba(255, 255, 255, 0.35);
         }
         
-        /* Mobile adjustments */
         @media (max-width: 480px) {
             .header-row-1 h1 {
                 font-size: 18px;
@@ -987,16 +890,47 @@
 <div id="loginOverlay" class="login-overlay">
     <div class="login-box">
         <h1>🏛️ Legacy Builders Group</h1>
-        <div class="subtitle">Enter your PIN to access</div>
-        <div id="memberListContainer" class="member-list-container">
-            <div class="skeleton-member"><div class="skeleton-member-avatar"></div><div class="skeleton-member-info"><div class="skeleton-member-name"></div><div class="skeleton-member-role"></div></div></div>
-            <div class="skeleton-member"><div class="skeleton-member-avatar"></div><div class="skeleton-member-info"><div class="skeleton-member-name"></div><div class="skeleton-member-role"></div></div></div>
-            <div class="skeleton-member"><div class="skeleton-member-avatar"></div><div class="skeleton-member-info"><div class="skeleton-member-name"></div><div class="skeleton-member-role"></div></div></div>
-            <div class="skeleton-member"><div class="skeleton-member-avatar"></div><div class="skeleton-member-info"><div class="skeleton-member-name"></div><div class="skeleton-member-role"></div></div></div>
+        <div class="subtitle">Login to access your account</div>
+        
+        <div id="loginForm">
+            <div class="login-form-group">
+                <label>📧 Email Address</label>
+                <input type="email" id="loginEmail" placeholder="Enter your email" autocomplete="email">
+            </div>
+            <div class="login-form-group">
+                <label>🔒 Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password">
+            </div>
+            <button class="login-btn" id="loginBtn" onclick="loginWithPassword()">Login</button>
+            <div id="loginError" class="error-message">Invalid email or password. Please try again.</div>
+            <div class="register-link">
+                Don't have an account? <a onclick="showRegisterForm()">Register here</a>
+            </div>
         </div>
-        <input type="password" id="pinInput" class="pin-input" placeholder="Enter PIN" maxlength="4" inputmode="numeric" disabled>
-        <button class="login-btn" id="loginBtn" onclick="verifyLogin()" disabled>Login</button>
-        <div id="loginError" class="error-message">Invalid PIN. Please try again.</div>
+        
+        <div id="registerForm" style="display: none;">
+            <div class="login-form-group">
+                <label>📧 Email Address</label>
+                <input type="email" id="registerEmail" placeholder="Enter your email">
+            </div>
+            <div class="login-form-group">
+                <label>👤 Full Name</label>
+                <input type="text" id="registerName" placeholder="Enter your full name">
+            </div>
+            <div class="login-form-group">
+                <label>🔒 Password</label>
+                <input type="password" id="registerPassword" placeholder="Create a password (min 6 characters)">
+            </div>
+            <div class="login-form-group">
+                <label>🔒 Confirm Password</label>
+                <input type="password" id="registerConfirmPassword" placeholder="Confirm your password">
+            </div>
+            <button class="login-btn" onclick="registerUser()">Create Account</button>
+            <div id="registerError" class="error-message"></div>
+            <div class="register-link">
+                Already have an account? <a onclick="showLoginForm()">Login here</a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1010,7 +944,7 @@
         <div class="header-row-3">
             <span class="user-name-badge"><strong id="loggedInUser"></strong></span>
             <div class="action-buttons">
-                <button class="change-pwd-btn" onclick="openChangePasswordModal()">🔐 Change PIN</button>
+                <button class="change-pwd-btn" onclick="openChangePasswordModal()">🔐 Change Password</button>
                 <button class="logout-btn" onclick="logout(event)">Logout</button>
             </div>
         </div>
@@ -1096,13 +1030,12 @@
 // ============================================================
 // CONFIGURATION
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbwQKOPQr3CKsOY8JqEsdAkl_fwB3MmWixKy4oSrXFTILlw5GHdVoooP7HqWTA5VOUxd/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbziFnRJu0VwXFjKTw-P5e0X1yB1Zb7ZvqeOrsYqSQRSxCoreCMtoUB3FKXd1Gbjc4QO/exec";
 const TREASURER_NAME = "Mrs. Kithinji";
 
-let allRecords = [], allMembers = [], pendingLoans = [], completedLoans = [], pendingTransactions = [], currentUser = null;
+let allRecords = [], allMembers = [], pendingLoans = [], completedLoans = [], pendingTransactions = [], currentUser = null, currentUserEmail = null;
 let sortColumn = 'date', sortDirection = 'desc', isLoading = false;
 let currentTab = localStorage.getItem('legacy_active_tab') || 'transactions';
-let selectedMemberForLogin = null;
 let countdownInterval = null;
 
 function escapeHtml(text) {
@@ -1130,6 +1063,147 @@ function showButtonLoading(btn, text) {
 function hideButtonLoading(btn, originalText) {
     btn.disabled = false;
     btn.innerHTML = originalText;
+}
+
+function showLoginLoading(show) {
+    const btn = document.getElementById('loginBtn');
+    if (show) { btn.disabled = true; btn.innerHTML = '<span class="login-loading"></span> Logging in...'; }
+    else { btn.disabled = false; btn.innerHTML = 'Login'; }
+}
+
+function showRegisterLoading(show) {
+    const btn = document.querySelector('#registerForm .login-btn');
+    if (show) { btn.disabled = true; btn.innerHTML = '<span class="login-loading"></span> Creating account...'; }
+    else { btn.disabled = false; btn.innerHTML = 'Create Account'; }
+}
+
+// ============================================================
+// LOGIN / REGISTRATION FUNCTIONS
+// ============================================================
+function showRegisterForm() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'block';
+    document.getElementById('loginError').style.display = 'none';
+    document.getElementById('registerError').style.display = 'none';
+}
+
+function showLoginForm() {
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('loginError').style.display = 'none';
+    document.getElementById('registerError').style.display = 'none';
+}
+
+async function registerUser() {
+    const email = document.getElementById('registerEmail').value.trim();
+    const name = document.getElementById('registerName').value.trim();
+    const password = document.getElementById('registerPassword').value;
+    const confirmPassword = document.getElementById('registerConfirmPassword').value;
+    
+    const errorEl = document.getElementById('registerError');
+    errorEl.style.display = 'none';
+    
+    if (!email || !name || !password || !confirmPassword) {
+        errorEl.textContent = 'Please fill all fields';
+        errorEl.style.display = 'block';
+        return;
+    }
+    
+    if (!email.includes('@')) {
+        errorEl.textContent = 'Please enter a valid email address';
+        errorEl.style.display = 'block';
+        return;
+    }
+    
+    if (password.length < 6) {
+        errorEl.textContent = 'Password must be at least 6 characters';
+        errorEl.style.display = 'block';
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        errorEl.textContent = 'Passwords do not match';
+        errorEl.style.display = 'block';
+        return;
+    }
+    
+    showRegisterLoading(true);
+    
+    try {
+        const res = await callAPI('register', { email, name, password });
+        if (res.success) {
+            showToast('Account created successfully! Please login.', 'success');
+            showLoginForm();
+            document.getElementById('loginEmail').value = email;
+            document.getElementById('registerEmail').value = '';
+            document.getElementById('registerName').value = '';
+            document.getElementById('registerPassword').value = '';
+            document.getElementById('registerConfirmPassword').value = '';
+        } else {
+            errorEl.textContent = res.error || 'Registration failed';
+            errorEl.style.display = 'block';
+        }
+    } catch(e) {
+        errorEl.textContent = 'Error connecting to server';
+        errorEl.style.display = 'block';
+    }
+    
+    showRegisterLoading(false);
+}
+
+async function loginWithPassword() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    
+    const errorEl = document.getElementById('loginError');
+    errorEl.style.display = 'none';
+    
+    if (!email || !password) {
+        errorEl.textContent = 'Please enter email and password';
+        errorEl.style.display = 'block';
+        return;
+    }
+    
+    showLoginLoading(true);
+    
+    try {
+        const res = await callAPI('login', { email, password });
+        if (res.success) {
+            currentUser = res.name;
+            currentUserEmail = email;
+            localStorage.setItem('legacy_current_user', currentUser);
+            localStorage.setItem('legacy_current_email', email);
+            
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            document.getElementById('tabBar').style.display = 'flex';
+            document.getElementById('loggedInUser').innerText = currentUser;
+            document.getElementById('date').value = new Date().toISOString().split('T')[0];
+            
+            const pendingTab = document.getElementById('pendingTab');
+            if (pendingTab) pendingTab.style.display = isTreasurer() ? 'flex' : 'none';
+            
+            showBalanceLoading(true);
+            await loadAllData();
+            await loadMeetingMinutes();
+            await loadScheduledMeeting();
+            activateTab(currentTab);
+            showBalanceLoading(false);
+            showToast(`Welcome ${currentUser}!`, 'success');
+            
+            if (window.refreshInterval) clearInterval(window.refreshInterval);
+            window.refreshInterval = setInterval(() => { if (currentUser) { loadAllData(); loadScheduledMeeting(); } }, 30000);
+        } else {
+            errorEl.textContent = res.error || 'Invalid email or password';
+            errorEl.style.display = 'block';
+            document.getElementById('loginPassword').value = '';
+        }
+    } catch(e) {
+        errorEl.textContent = 'Error connecting to server';
+        errorEl.style.display = 'block';
+    }
+    
+    showLoginLoading(false);
 }
 
 // ============================================================
@@ -1247,66 +1321,28 @@ async function cancelScheduledMeeting() {
 function openChangePasswordModal() {
     const modal = document.createElement('div');
     modal.className = 'modal';
-    modal.innerHTML = `<div class="modal-content"><h3>🔐 Change PIN</h3><div style="margin-bottom:16px;"><label>Current PIN (4 digits)</label><input type="password" id="currentPin" class="pin-input-field" maxlength="4" inputmode="numeric" placeholder="••••"></div><div style="margin-bottom:16px;"><label>New PIN (4 digits)</label><input type="password" id="newPin" class="pin-input-field" maxlength="4" inputmode="numeric" placeholder="••••"></div><div style="margin-bottom:16px;"><label>Confirm New PIN</label><input type="password" id="confirmPin" class="pin-input-field" maxlength="4" inputmode="numeric" placeholder="••••"></div><div class="modal-buttons"><button onclick="changePassword()">Change PIN</button><button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`;
+    modal.innerHTML = `<div class="modal-content"><h3>🔐 Change Password</h3><div style="margin-bottom:16px;"><label>Current Password</label><input type="password" id="currentPassword" class="pin-input-field" placeholder="Enter current password"></div><div style="margin-bottom:16px;"><label>New Password (min 6 characters)</label><input type="password" id="newPassword" class="pin-input-field" placeholder="Enter new password"></div><div style="margin-bottom:16px;"><label>Confirm New Password</label><input type="password" id="confirmPassword" class="pin-input-field" placeholder="Confirm new password"></div><div class="modal-buttons"><button onclick="changePassword()">Change Password</button><button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`;
     document.body.appendChild(modal);
-    setTimeout(() => document.getElementById('currentPin')?.focus(), 100);
+    setTimeout(() => document.getElementById('currentPassword')?.focus(), 100);
 }
 
 async function changePassword() {
-    const cur = document.getElementById('currentPin').value;
-    const newPin = document.getElementById('newPin').value;
-    const confirm = document.getElementById('confirmPin').value;
-    if (!cur || !newPin || !confirm) { showToast('Please fill all fields', 'error'); return; }
-    if (cur.length !== 4 || isNaN(cur)) { showToast('Current PIN must be 4 digits', 'error'); return; }
-    if (newPin.length !== 4 || isNaN(newPin)) { showToast('New PIN must be 4 digits', 'error'); return; }
-    if (newPin !== confirm) { showToast('New PINs do not match', 'error'); return; }
-    if (cur === newPin) { showToast('New PIN must be different', 'error'); return; }
+    const cur = document.getElementById('currentPassword').value;
+    const newPwd = document.getElementById('newPassword').value;
+    const confirm = document.getElementById('confirmPassword').value;
+    if (!cur || !newPwd || !confirm) { showToast('Please fill all fields', 'error'); return; }
+    if (newPwd.length < 6) { showToast('New password must be at least 6 characters', 'error'); return; }
+    if (newPwd !== confirm) { showToast('New passwords do not match', 'error'); return; }
+    if (cur === newPwd) { showToast('New password must be different', 'error'); return; }
     const btn = event.target;
     const orig = btn.innerHTML;
     showButtonLoading(btn, 'Changing...');
     try {
-        const res = await callAPI('changePassword', { member: currentUser, oldPin: cur, newPin: newPin });
-        if (res.success) { showToast('PIN changed! Please login again.', 'success'); document.querySelector('.modal')?.remove(); setTimeout(() => logout(), 2000); }
+        const res = await callAPI('changePassword', { email: currentUserEmail, oldPassword: cur, newPassword: newPwd });
+        if (res.success) { showToast('Password changed! Please login again.', 'success'); document.querySelector('.modal')?.remove(); setTimeout(() => logout(), 2000); }
         else { showToast(res.error || 'Failed', 'error'); }
-    } catch(e) { showToast('Error changing PIN', 'error'); }
+    } catch(e) { showToast('Error changing password', 'error'); }
     finally { hideButtonLoading(btn, orig); }
-}
-
-function createMessageWithReadMore(msg, maxLen = 60) {
-    if (!msg) return '-';
-    if (msg.length <= maxLen) return escapeHtml(msg);
-    const truncated = escapeHtml(msg.substring(0, maxLen)) + '...';
-    const full = escapeHtml(msg);
-    const id = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-    return `<span id="${id}" class="message-text truncated">${truncated}</span><button class="read-more-btn" onclick="toggleReadMore('${id}', '${full.replace(/'/g, "\\'")}', '${truncated.replace(/'/g, "\\'")}')">Read more</button>`;
-}
-
-function toggleReadMore(id, full, truncated) {
-    const el = document.getElementById(id);
-    const btn = el.nextElementSibling;
-    if (el.classList.contains('truncated')) {
-        el.classList.remove('truncated');
-        el.innerHTML = full;
-        btn.innerHTML = 'Read less';
-    } else {
-        el.classList.add('truncated');
-        el.innerHTML = truncated;
-        btn.innerHTML = 'Read more';
-    }
-}
-
-function showBalanceLoading(show) {
-    const s1 = document.getElementById('savingsSkeleton');
-    const s2 = document.getElementById('loansSkeleton');
-    if (s1) s1.style.display = show ? 'block' : 'none';
-    if (s2) s2.style.display = show ? 'block' : 'none';
-}
-
-function showLoginLoading(show) {
-    const btn = document.getElementById('loginBtn');
-    const pin = document.getElementById('pinInput');
-    if (show) { btn.disabled = true; btn.innerHTML = '<span class="login-loading"></span> Verifying...'; pin.disabled = true; }
-    else { btn.disabled = false; btn.innerHTML = 'Login'; pin.disabled = false; }
 }
 
 // ============================================================
@@ -1352,6 +1388,36 @@ function renderHistoryTable(filtered = null) {
         let msg = createMessageWithReadMore(r.message || '-', 50);
         return `<tr><td style="white-space: nowrap;">${new Date(r.date).toLocaleDateString('en-KE')}</td><td><strong>${escapeHtml(r.member)}</strong></td><td><span class="badge ${cls}">${r.type}</span></td><td style="white-space: nowrap;">${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td><td class="message-cell">${msg}</td></tr>`;
     }).join('');
+}
+
+function createMessageWithReadMore(msg, maxLen = 60) {
+    if (!msg) return '-';
+    if (msg.length <= maxLen) return escapeHtml(msg);
+    const truncated = escapeHtml(msg.substring(0, maxLen)) + '...';
+    const full = escapeHtml(msg);
+    const id = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    return `<span id="${id}" class="message-text truncated">${truncated}</span><button class="read-more-btn" onclick="toggleReadMore('${id}', '${full.replace(/'/g, "\\'")}', '${truncated.replace(/'/g, "\\'")}')">Read more</button>`;
+}
+
+function toggleReadMore(id, full, truncated) {
+    const el = document.getElementById(id);
+    const btn = el.nextElementSibling;
+    if (el.classList.contains('truncated')) {
+        el.classList.remove('truncated');
+        el.innerHTML = full;
+        btn.innerHTML = 'Read less';
+    } else {
+        el.classList.add('truncated');
+        el.innerHTML = truncated;
+        btn.innerHTML = 'Read more';
+    }
+}
+
+function showBalanceLoading(show) {
+    const s1 = document.getElementById('savingsSkeleton');
+    const s2 = document.getElementById('loansSkeleton');
+    if (s1) s1.style.display = show ? 'block' : 'none';
+    if (s2) s2.style.display = show ? 'block' : 'none';
 }
 
 async function callAPI(action, data = {}) {
@@ -1427,8 +1493,10 @@ async function cancelLoanRequest(loanId) {
 
 async function checkPersistentLogin() {
     const saved = localStorage.getItem('legacy_current_user');
-    if (saved) {
+    const savedEmail = localStorage.getItem('legacy_current_email');
+    if (saved && savedEmail) {
         currentUser = saved;
+        currentUserEmail = savedEmail;
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('appContainer').style.display = 'block';
         document.getElementById('tabBar').style.display = 'flex';
@@ -1662,81 +1730,20 @@ function logout(event) {
     if (event) { event.stopPropagation(); event.preventDefault(); }
     if (countdownInterval) clearInterval(countdownInterval);
     localStorage.removeItem('legacy_current_user');
+    localStorage.removeItem('legacy_current_email');
     localStorage.removeItem('legacy_active_tab');
     if (window.refreshInterval) clearInterval(window.refreshInterval);
     currentUser = null;
-    selectedMemberForLogin = null;
+    currentUserEmail = null;
     allRecords = []; allMembers = []; pendingLoans = []; completedLoans = []; pendingTransactions = [];
     isLoading = false;
     document.getElementById('appContainer').style.display = 'none';
     document.getElementById('tabBar').style.display = 'none';
     document.getElementById('loginOverlay').style.display = 'flex';
-    document.getElementById('pinInput').value = '';
+    document.getElementById('loginPassword').value = '';
     document.getElementById('loginError').style.display = 'none';
-    loadMembersForLogin();
     showToast('Logged out successfully', 'success');
 }
-
-async function loadMembersForLogin() {
-    const container = document.getElementById('memberListContainer');
-    const pin = document.getElementById('pinInput');
-    const loginBtn = document.getElementById('loginBtn');
-    if(pin) pin.disabled = true;
-    if(loginBtn) loginBtn.disabled = true;
-    const res = await callAPI('getMembers');
-    if (res.success && res.members) {
-        allMembers = res.members;
-        if(container) { container.innerHTML = allMembers.map(m => `<div class="member-option" onclick="selectMember('${m}', this)"><div class="member-avatar">${m.charAt(0)}</div><div class="member-info"><h3>${escapeHtml(m)}</h3><p>Click to select</p></div></div>`).join(''); }
-        if(pin) pin.disabled = false;
-        if(loginBtn) loginBtn.disabled = false;
-    } else { if(container) container.innerHTML = '<div class="empty-state">Failed to load members</div>'; }
-}
-
-function selectMember(member, element) {
-    selectedMemberForLogin = member;
-    document.querySelectorAll('.member-option').forEach(opt => { opt.classList.remove('member-loading'); opt.style.background = '#f8fafc'; });
-    element.classList.add('member-loading');
-    element.style.background = '#e8f0ed';
-    document.getElementById('pinInput').focus();
-}
-
-async function verifyLogin() {
-    const member = selectedMemberForLogin;
-    const pin = document.getElementById('pinInput').value;
-    if (!member) { document.getElementById('loginError').style.display = 'block'; document.getElementById('loginError').textContent = 'Select a member'; return; }
-    if (!pin || pin.length !== 4) { document.getElementById('loginError').style.display = 'block'; document.getElementById('loginError').textContent = 'Enter 4-digit PIN'; return; }
-    showLoginLoading(true);
-    document.getElementById('loginError').style.display = 'none';
-    const res = await callAPI('verifyLogin', { name: member, pin: pin });
-    if (res.success) {
-        currentUser = member;
-        localStorage.setItem('legacy_current_user', member);
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('appContainer').style.display = 'block';
-        document.getElementById('tabBar').style.display = 'flex';
-        document.getElementById('loggedInUser').innerText = member;
-        document.getElementById('date').value = new Date().toISOString().split('T')[0];
-        const pendingTab = document.getElementById('pendingTab');
-        if (pendingTab) pendingTab.style.display = isTreasurer() ? 'flex' : 'none';
-        showBalanceLoading(true);
-        await loadAllData();
-        await loadMeetingMinutes();
-        await loadScheduledMeeting();
-        activateTab(currentTab);
-        showBalanceLoading(false);
-        showToast(`Welcome ${member}!`, 'success');
-        if (window.refreshInterval) clearInterval(window.refreshInterval);
-        window.refreshInterval = setInterval(() => { if (currentUser) { loadAllData(); loadScheduledMeeting(); } }, 30000);
-    } else {
-        document.getElementById('loginError').style.display = 'block';
-        document.getElementById('loginError').textContent = 'Invalid PIN';
-        document.getElementById('pinInput').value = '';
-        showLoginLoading(false);
-    }
-}
-
-loadMembersForLogin();
-checkPersistentLogin();
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addBtn').onclick = addRecord;
@@ -1747,7 +1754,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('searchInput').oninput = applyFilters;
     document.getElementById('filterMember').onchange = applyFilters;
     document.getElementById('filterType').onchange = applyFilters;
-    document.getElementById('pinInput')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') verifyLogin(); });
+    document.getElementById('loginPassword')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') loginWithPassword(); });
     document.querySelectorAll('.tab').forEach(tab => { tab.onclick = () => activateTab(tab.dataset.panel); });
 });
 
@@ -1759,6 +1766,12 @@ window.cancelLoanRequest = cancelLoanRequest;
 window.deleteMeeting = deleteMeeting;
 window.scheduleNextMeeting = scheduleNextMeeting;
 window.cancelScheduledMeeting = cancelScheduledMeeting;
+window.loginWithPassword = loginWithPassword;
+window.registerUser = registerUser;
+window.showRegisterForm = showRegisterForm;
+window.showLoginForm = showLoginForm;
+
+checkPersistentLogin();
 </script>
 </body>
 </html>
