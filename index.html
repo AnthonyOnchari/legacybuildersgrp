@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Legacy Builders Group</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js">
     </script>
     <!-- FIX: html2pdf.js was used in exportToPDF() (html2pdf().set(opt).from(content).save())
@@ -12,17 +15,50 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
     </script>
     <style>
+        /* ============================================
+           DESIGN TOKENS — "Warm Chama" palette
+           Grounded in the subject: a family savings circle.
+           Terracotta + soil + parchment + sage, evoking woven
+           baskets, sun-baked earth, and ledger books — not a
+           generic fintech dark-green-gradient.
+           ============================================ */
+        :root {
+            --clay: #C1652F;          /* primary accent — terracotta */
+            --clay-deep: #A14F22;     /* pressed/hover state of clay */
+            --soil: #3D2817;          /* deep brown — headers, dark text */
+            --soil-soft: #5C4332;     /* secondary text on cream */
+            --parchment: #F7EDE0;     /* warm cream — page background */
+            --parchment-card: #FFFBF5;/* card background, lighter than page */
+            --sage: #7A8B5C;         /* savings / positive */
+            --sage-deep: #5F6E45;
+            --gold: #D4A24C;         /* treasurer / accent highlights */
+            --gold-soft: #F0DCAE;
+            --rust: #B0492F;         /* loans / attention */
+            --rust-soft: #E8C4B5;
+            --ink: #2A1E14;          /* near-black warm ink for body text */
+            --line: #E4D4BE;         /* hairline borders on parchment */
+        }
+
         * {
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Karla', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 0;
         }
-        
+
+        h1, h2, h3,
+        .splash-title, .login-box h1, .profile-name, .member-card .member-name,
+        .card h2, .header-row-1 h1, .history-modal-header h3, .modal-content h3,
+        .balance-card .amount {
+            font-family: 'Fraunces', Georgia, serif;
+        }
+
         body {
-            background: #f0f2f5;
+            background: var(--parchment);
+            color: var(--ink);
             min-height: 100vh;
         }
+
 
         /* ============================================
            SPLASH LOADING SCREEN
@@ -33,7 +69,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
+            background: linear-gradient(135deg, var(--soil) 0%, var(--clay) 100%);
             z-index: 9999;
             display: flex;
             flex-direction: column;
@@ -69,7 +105,7 @@
             width: 40px;
             height: 40px;
             border: 3px solid rgba(255,255,255,0.2);
-            border-top-color: #ffd966;
+            border-top-color: var(--gold);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -84,7 +120,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
+            background: linear-gradient(135deg, var(--soil) 0%, var(--clay) 100%);
             z-index: 1000;
             display: none;
             align-items: center;
@@ -113,13 +149,13 @@
         }
         
         .login-box h1 {
-            color: #1e3c32;
+            color: var(--soil);
             font-size: 28px;
             margin-bottom: 6px;
         }
         
         .login-box .subtitle {
-            color: #64748b;
+            color: var(--soil-soft);
             font-size: 13px;
             margin-bottom: 24px;
         }
@@ -132,7 +168,7 @@
         .login-form-group label {
             font-size: 12px;
             font-weight: 500;
-            color: #334155;
+            color: var(--soil-soft);
             display: block;
             margin-bottom: 4px;
         }
@@ -140,7 +176,7 @@
         .login-form-group input {
             width: 100%;
             padding: 12px 14px;
-            border: 2px solid #e2e8f0;
+            border: 2px solid var(--line);
             border-radius: 16px;
             font-size: 14px;
             transition: all 0.2s;
@@ -148,11 +184,11 @@
         
         .login-form-group input:focus {
             outline: none;
-            border-color: #2a5a4a;
+            border-color: var(--clay);
         }
         
         .login-btn {
-            background: #2a5a4a;
+            background: var(--clay);
             color: white;
             border: none;
             padding: 14px;
@@ -175,14 +211,14 @@
         }
         
         .error-message {
-            color: #dc2626;
+            color: var(--rust);
             font-size: 13px;
             margin-top: 12px;
             display: none;
         }
         
         .success-message {
-            color: #059669;
+            color: var(--sage-deep);
             font-size: 13px;
             margin-top: 12px;
             display: none;
@@ -204,12 +240,12 @@
         .forgot-password-link {
             margin-top: 16px;
             font-size: 13px;
-            color: #64748b;
+            color: var(--soil-soft);
         }
         
         .register-link a,
         .forgot-password-link a {
-            color: #2a5a4a;
+            color: var(--clay);
             font-weight: 600;
             cursor: pointer;
             text-decoration: none;
@@ -228,7 +264,7 @@
             bottom: 80px;
             left: 50%;
             transform: translateX(-50%);
-            background: #1e3c32;
+            background: var(--soil);
             color: white;
             padding: 12px 20px;
             border-radius: 50px;
@@ -242,8 +278,8 @@
         }
         .notification-prompt.active { display: flex; }
         .notification-prompt button {
-            background: #ffd966;
-            color: #1e3c32;
+            background: var(--gold);
+            color: var(--soil);
             border: none;
             padding: 8px 16px;
             border-radius: 30px;
@@ -254,7 +290,7 @@
         }
         .notification-prompt .dismiss-btn {
             background: transparent;
-            color: #94a3b8;
+            color: #A88E72;
             padding: 4px 8px;
             font-size: 18px;
             width: auto;
@@ -296,7 +332,7 @@
            HEADER - SCROLLABLE
            ============================================ */
         .header {
-            background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
+            background: linear-gradient(135deg, var(--soil) 0%, var(--clay) 100%);
             color: white;
             border-radius: 24px;
             margin-bottom: 16px;
@@ -325,7 +361,7 @@
             font-style: italic;
             margin-top: 4px;
             letter-spacing: 0.5px;
-            color: #ffd966;
+            color: var(--gold);
         }
         
         .slogan-sub {
@@ -460,31 +496,50 @@
             position: relative;
             overflow: hidden;
         }
+
+        /* Signature element: a faint woven-basket texture on the balance
+           cards — the concrete object a chama's pooled money is associated
+           with, rendered as a lightweight repeating diagonal weave instead
+           of an image asset. */
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(45deg, rgba(255,255,255,0.07) 0 2px, transparent 2px 10px),
+                repeating-linear-gradient(-45deg, rgba(0,0,0,0.05) 0 2px, transparent 2px 10px);
+            pointer-events: none;
+        }
         
         .balance-card:first-child {
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: linear-gradient(135deg, var(--sage), var(--sage-deep));
             color: white;
         }
         
         .balance-card:last-child {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
+            background: linear-gradient(135deg, #C1593D, var(--rust));
             color: white;
         }
         
         .balance-card h3 {
             font-size: 11px;
-            font-weight: 500;
+            font-weight: 600;
             opacity: 0.9;
             margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            position: relative;
         }
         
         .balance-card .amount {
-            font-size: 20px;
-            font-weight: 700;
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 21px;
+            font-weight: 600;
+            position: relative;
         }
         
         .history-side-btn {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            background: linear-gradient(135deg, var(--gold), var(--clay-deep));
             color: white;
             border: none;
             border-radius: 14px;
@@ -558,7 +613,7 @@
             border: none;
             font-size: 11px;
             font-weight: 500;
-            color: #94a3b8;
+            color: #A88E72;
             cursor: pointer;
             border-radius: 24px;
             display: flex;
@@ -568,8 +623,8 @@
         }
         
         .tab.active {
-            color: #2a5a4a;
-            background: #e8f0ed;
+            color: var(--clay);
+            background: var(--gold-soft);
         }
         
         .tab-icon {
@@ -578,7 +633,7 @@
         }
         
         .pending-count {
-            background: #f59e0b;
+            background: var(--gold);
             color: white;
             border-radius: 12px;
             padding: 0px 6px;
@@ -590,8 +645,8 @@
         .pending-count.visible { display: inline-block; }
         
         .pending-item {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
+            background: var(--gold-soft);
+            border-left: 4px solid var(--gold);
             border-radius: 14px;
             padding: 14px;
             margin-bottom: 12px;
@@ -611,8 +666,8 @@
         .card h2 {
             font-size: 16px;
             font-weight: 600;
-            color: #1e3c32;
-            border-left: 3px solid #2a5a4a;
+            color: var(--soil);
+            border-left: 3px solid var(--clay);
             padding-left: 10px;
             margin-bottom: 14px;
         }
@@ -632,14 +687,14 @@
         textarea {
             width: 100%;
             padding: 10px 12px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--line);
             border-radius: 14px;
             font-size: 13px;
             background: white;
         }
         
         select:disabled {
-            background: #f1f5f9;
+            background: var(--parchment);
             cursor: not-allowed;
         }
         
@@ -650,7 +705,7 @@
         select:focus,
         textarea:focus {
             outline: none;
-            border-color: #2a5a4a;
+            border-color: var(--clay);
         }
         
         label {
@@ -658,11 +713,11 @@
             margin-bottom: 4px;
             display: block;
             font-size: 11px;
-            color: #334155;
+            color: var(--soil-soft);
         }
         
         button {
-            background: #2a5a4a;
+            background: var(--clay);
             color: white;
             border: none;
             padding: 12px 20px;
@@ -678,16 +733,16 @@
             cursor: not-allowed;
         }
         
-        .btn-secondary { background: #64748b; }
+        .btn-secondary { background: var(--soil-soft); }
         .approve-btn {
-            background: #10b981;
+            background: var(--sage);
             width: auto;
             padding: 6px 14px;
             font-size: 12px;
             margin: 4px;
         }
         .reject-btn {
-            background: #ef4444;
+            background: #C1593D;
             width: auto;
             padding: 6px 14px;
             font-size: 12px;
@@ -701,7 +756,7 @@
             margin-top: 8px;
         }
         .delete-meeting-btn {
-            background: #ef4444;
+            background: #C1593D;
             width: auto;
             padding: 4px 10px;
             font-size: 10px;
@@ -709,8 +764,8 @@
         }
         
         .countdown-timer {
-            background: linear-gradient(135deg, #1e3c32, #2a5a4a);
-            color: #ffd966;
+            background: linear-gradient(135deg, var(--soil), var(--clay));
+            color: var(--gold);
             padding: 8px 12px;
             border-radius: 30px;
             font-size: 12px;
@@ -720,7 +775,7 @@
         }
         
         .countdown-timer.urgent {
-            background: linear-gradient(135deg, #dc2626, #991b1b);
+            background: linear-gradient(135deg, var(--rust), #7A2E1C);
             animation: pulse 1s infinite;
         }
         
@@ -731,31 +786,31 @@
         }
         
         .loan-item {
-            background: #f8fafc;
+            background: var(--parchment);
             border-radius: 14px;
             padding: 12px;
             margin-bottom: 10px;
-            border-left: 3px solid #f59e0b;
+            border-left: 3px solid var(--gold);
         }
         
         .loan-item.own-loan {
-            background: #fef3c7;
-            border-left-color: #d97706;
+            background: var(--gold-soft);
+            border-left-color: #A87A2E;
         }
         
         .completed-loan-item {
-            background: #e8f0ed;
+            background: var(--gold-soft);
             border-radius: 14px;
             padding: 12px;
             margin-bottom: 10px;
         }
         
         .meeting-item {
-            background: #f8fafc;
+            background: var(--parchment);
             border-radius: 14px;
             padding: 12px;
             margin-bottom: 10px;
-            border-left: 3px solid #3b82f6;
+            border-left: 3px solid var(--gold);
         }
         
         .meeting-header {
@@ -768,21 +823,21 @@
         }
         
         .meeting-date { font-weight: 600;
-            color: #1e3c32;
+            color: var(--soil);
             font-size: 13px; }
         .meeting-author { font-size: 11px;
-            color: #64748b; }
+            color: var(--soil-soft); }
         .meeting-section { margin-top: 8px; }
         .meeting-section-title { font-weight: 600;
             font-size: 11px;
-            color: #334155;
+            color: var(--soil-soft);
             margin-bottom: 4px; }
         .meeting-section-content { font-size: 12px;
-            color: #1e293b; }
+            color: var(--ink); }
         
         .upcoming-meeting-card {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            border-left: 4px solid #f59e0b;
+            background: linear-gradient(135deg, var(--gold-soft), #F5E6BF);
+            border-left: 4px solid var(--gold);
         }
         
         .search-container {
@@ -795,7 +850,7 @@
         .search-input {
             width: 100%;
             padding: 10px 12px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--line);
             border-radius: 30px;
             font-size: 13px;
             margin-bottom: 10px;
@@ -812,17 +867,17 @@
             font-weight: 600;
             display: inline-block;
         }
-        .badge-savings { background: #dcfce7;
+        .badge-savings { background: #E5EBDB;
             color: #166534; }
-        .badge-loan { background: #fee2e2;
-            color: #991b1b; }
-        .badge-repayment { background: #fef3c7;
-            color: #92400e; }
+        .badge-loan { background: var(--rust-soft);
+            color: #7A2E1C; }
+        .badge-repayment { background: var(--gold-soft);
+            color: #7A5420; }
         
         .empty-state {
             text-align: center;
             padding: 30px;
-            color: #64748b;
+            color: var(--soil-soft);
             font-size: 13px;
         }
         
@@ -831,7 +886,7 @@
             bottom: 80px;
             left: 16px;
             right: 16px;
-            background: #1e293b;
+            background: var(--ink);
             color: white;
             padding: 10px 16px;
             border-radius: 50px;
@@ -840,18 +895,18 @@
             z-index: 2000;
             animation: slideUp 0.3s ease;
         }
-        .toast.success { background: #2a5a4a; }
-        .toast.error { background: #dc2626; }
+        .toast.success { background: var(--clay); }
+        .toast.error { background: var(--rust); }
         
         .progress-bar {
-            background: #e2e8f0;
+            background: var(--line);
             border-radius: 10px;
             height: 6px;
             margin-top: 8px;
             overflow: hidden;
         }
         .progress-fill {
-            background: #10b981;
+            background: var(--sage);
             height: 100%;
             border-radius: 10px;
             transition: width 0.3s ease;
@@ -884,19 +939,19 @@
         }
         
         .modal-content h3 { margin-bottom: 16px;
-            color: #1e3c32; }
+            color: var(--soil); }
         .modal-buttons { display: flex;
             gap: 10px;
             margin-top: 20px; }
         .modal-buttons button { flex: 1; }
-        .close-modal { background: #64748b; }
+        .close-modal { background: var(--soil-soft); }
         
         .loading-spinner {
             width: 40px;
             height: 40px;
-            border: 3px solid #e2e8f0;
-            border-top-color: #2a5a4a;
-            border-right-color: #2a5a4a;
+            border: 3px solid var(--line);
+            border-top-color: var(--clay);
+            border-right-color: var(--clay);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             margin-bottom: 12px;
@@ -913,7 +968,7 @@
         .pin-input-field {
             width: 100%;
             padding: 14px;
-            border: 2px solid #e2e8f0;
+            border: 2px solid var(--line);
             border-radius: 16px;
             font-size: 20px;
             text-align: center;
@@ -948,7 +1003,7 @@
         
         .history-modal-header {
             padding: 14px 20px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--line);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -957,7 +1012,7 @@
         }
         
         .history-modal-header h3 {
-            color: #1e3c32;
+            color: var(--soil);
             font-size: 16px;
             margin: 0;
         }
@@ -967,7 +1022,7 @@
             border: none;
             font-size: 22px;
             cursor: pointer;
-            color: #64748b;
+            color: var(--soil-soft);
             width: auto;
             padding: 0 8px;
         }
@@ -988,12 +1043,12 @@
         .history-table td {
             padding: 8px 6px;
             text-align: left;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--line);
             vertical-align: top;
         }
         
         .history-table th {
-            background: #f8fafc;
+            background: var(--parchment);
             font-weight: 600;
             position: sticky;
             top: 0;
@@ -1020,7 +1075,7 @@
         .read-more-btn {
             background: none;
             border: none;
-            color: #3b82f6;
+            color: var(--gold);
             font-size: 10px;
             cursor: pointer;
             padding: 2px 4px;
@@ -1039,7 +1094,7 @@
         .history-search input,
         .history-search select {
             padding: 6px 10px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--line);
             border-radius: 30px;
             font-size: 12px;
             flex: 1;
@@ -1105,13 +1160,13 @@
             background: transparent;
         }
         .profile-modal::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
+            background: var(--line);
             border-radius: 10px;
         }
         
         .profile-cover {
             height: 120px;
-            background: linear-gradient(135deg, #1e3c32, #2a5a4a);
+            background: linear-gradient(135deg, var(--soil), var(--clay));
             border-radius: 32px 32px 0 0;
             position: relative;
         }
@@ -1128,13 +1183,13 @@
             height: 100px;
             border-radius: 50%;
             border: 4px solid white;
-            background: linear-gradient(135deg, #e8f0ed, #d1d9d6);
+            background: linear-gradient(135deg, var(--gold-soft), #E8C98A);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 40px;
             font-weight: 700;
-            color: #1e3c32;
+            color: var(--soil);
             overflow: hidden;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
@@ -1184,13 +1239,13 @@
         .profile-name {
             font-size: 24px;
             font-weight: 700;
-            color: #1e293b;
+            color: var(--ink);
             margin-bottom: 2px;
         }
         
         .profile-email {
             font-size: 14px;
-            color: #64748b;
+            color: var(--soil-soft);
             margin-bottom: 4px;
         }
         
@@ -1200,19 +1255,19 @@
             border-radius: 30px;
             font-size: 11px;
             font-weight: 600;
-            background: #e8f0ed;
-            color: #1e3c32;
+            background: var(--gold-soft);
+            color: var(--soil);
             margin-bottom: 20px;
         }
         
         .profile-role.treasurer {
-            background: #fef3c7;
-            color: #92400e;
+            background: var(--gold-soft);
+            color: #7A5420;
         }
         
         .profile-divider {
             height: 1px;
-            background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+            background: linear-gradient(to right, transparent, var(--line), transparent);
             margin: 16px 0;
         }
         
@@ -1224,7 +1279,7 @@
         }
         
         .profile-stat-card {
-            background: #f8fafc;
+            background: var(--parchment);
             border-radius: 16px;
             padding: 14px 12px;
             text-align: center;
@@ -1233,7 +1288,7 @@
         }
         
         .profile-stat-card:hover {
-            border-color: #e2e8f0;
+            border-color: var(--line);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
@@ -1241,22 +1296,22 @@
         .profile-stat-card .stat-number {
             font-size: 20px;
             font-weight: 700;
-            color: #1e3c32;
+            color: var(--soil);
         }
         
         .profile-stat-card .stat-label {
             font-size: 10px;
-            color: #64748b;
+            color: var(--soil-soft);
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-top: 2px;
         }
         
-        .profile-stat-card.savings .stat-number { color: #059669; }
-        .profile-stat-card.loans .stat-number { color: #dc2626; }
+        .profile-stat-card.savings .stat-number { color: var(--sage-deep); }
+        .profile-stat-card.loans .stat-number { color: var(--rust); }
         .profile-stat-card.repaid .stat-number { color: #2563eb; }
-        .profile-stat-card.net .stat-number { color: #7c3aed; }
+        .profile-stat-card.net .stat-number { color: #8B5A8C; }
         
         .profile-actions {
             display: flex;
@@ -1276,21 +1331,21 @@
         }
         
         .profile-actions .btn-change-pwd {
-            background: #f1f5f9;
-            color: #334155;
+            background: var(--parchment);
+            color: var(--soil-soft);
         }
         
         .profile-actions .btn-change-pwd:hover {
-            background: #e2e8f0;
+            background: var(--line);
         }
         
         .profile-actions .btn-close {
-            background: #2a5a4a;
+            background: var(--clay);
             color: white;
         }
         
         .profile-actions .btn-close:hover {
-            background: #1e3c32;
+            background: var(--soil);
         }
         
         .profile-file-input {
@@ -1301,7 +1356,7 @@
             display: none;
             margin-top: 8px;
             font-size: 12px;
-            color: #64748b;
+            color: var(--soil-soft);
         }
         
         .upload-progress.active {
@@ -1311,7 +1366,7 @@
         .upload-progress .progress-bar {
             width: 100%;
             height: 4px;
-            background: #e2e8f0;
+            background: var(--line);
             border-radius: 4px;
             margin-top: 4px;
             overflow: hidden;
@@ -1319,7 +1374,7 @@
         
         .upload-progress .progress-bar .progress-fill {
             height: 100%;
-            background: #2a5a4a;
+            background: var(--clay);
             width: 0%;
             transition: width 0.3s ease;
         }
@@ -1334,7 +1389,7 @@
             border-radius: 16px;
             margin: 12px 0;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            background: #e8f0ed;
+            background: var(--gold-soft);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1347,7 +1402,7 @@
             max-height: 400px;
             object-fit: contain;
             display: block;
-            background: #e8f0ed;
+            background: var(--gold-soft);
         }
         
         .about-values {
@@ -1358,11 +1413,11 @@
         }
         
         .about-value {
-            background: #f8fafc;
+            background: var(--parchment);
             padding: 14px 10px;
             border-radius: 16px;
             text-align: center;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--line);
         }
         
         .about-value .icon {
@@ -1374,21 +1429,21 @@
         .about-value .title {
             font-size: 12px;
             font-weight: 600;
-            color: #1e3c32;
+            color: var(--soil);
         }
         
         .about-value .desc {
             font-size: 10px;
-            color: #64748b;
+            color: var(--soil-soft);
         }
         
         .members-section-title {
             font-size: 14px;
             font-weight: 600;
-            color: #1e3c32;
+            color: var(--soil);
             margin: 20px 0 12px;
             padding-bottom: 8px;
-            border-bottom: 2px solid #e8f0ed;
+            border-bottom: 2px solid var(--gold-soft);
             text-align: center;
         }
         
@@ -1414,7 +1469,7 @@
             text-align: center;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             transition: all 0.3s ease;
-            border: 1px solid #f1f5f9;
+            border: 1px solid var(--parchment);
             cursor: pointer;
             display: flex;
             flex-direction: column;
@@ -1424,7 +1479,7 @@
         .member-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            border-color: #2a5a4a;
+            border-color: var(--clay);
         }
         
         .member-avatar {
@@ -1432,15 +1487,15 @@
             height: 72px;
             border-radius: 50%;
             margin: 0 auto 10px;
-            background: linear-gradient(135deg, #e8f0ed, #d1d9d6);
+            background: linear-gradient(135deg, var(--gold-soft), #E8C98A);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 28px;
             font-weight: 700;
-            color: #1e3c32;
+            color: var(--soil);
             overflow: hidden;
-            border: 3px solid #e8f0ed;
+            border: 3px solid var(--gold-soft);
             flex-shrink: 0;
         }
         
@@ -1453,17 +1508,17 @@
         .member-card .member-name {
             font-size: 14px;
             font-weight: 600;
-            color: #1e293b;
+            color: var(--ink);
         }
         
         .member-card .member-role {
             font-size: 11px;
-            color: #64748b;
+            color: var(--soil-soft);
             margin-top: 2px;
         }
         
         .member-card .member-role.treasurer {
-            color: #92400e;
+            color: #7A5420;
             font-weight: 600;
         }
         
@@ -1473,12 +1528,12 @@
             grid-template-columns: 1fr 1fr;
             gap: 4px;
             font-size: 10px;
-            color: #64748b;
+            color: var(--soil-soft);
             width: 100%;
         }
         
         .member-card .member-stats span {
-            background: #f8fafc;
+            background: var(--parchment);
             padding: 4px 6px;
             border-radius: 8px;
             text-align: center;
@@ -1486,7 +1541,7 @@
         
         .member-count-badge {
             display: inline-block;
-            background: #2a5a4a;
+            background: var(--clay);
             color: white;
             padding: 2px 14px;
             border-radius: 30px;
@@ -1500,9 +1555,9 @@
         .chart-wrapper {
             position: relative;
             padding: 8px;
-            background: #fafbfc;
+            background: var(--parchment);
             border-radius: 16px;
-            border: 1px solid #e8f0ed;
+            border: 1px solid var(--gold-soft);
             min-height: 280px;
             width: 100%;
             overflow: hidden;
@@ -1525,10 +1580,10 @@
         }
         
         .pdf-btn {
-            background: #dc2626;
+            background: var(--rust);
         }
         .pdf-btn:hover {
-            background: #b91c1c;
+            background: var(--clay-deep);
         }
 
         /* ============================================
@@ -1561,7 +1616,7 @@
             max-height: 90vh;
             overflow-y: auto;
             font-family: Arial, sans-serif;
-            color: #1e293b;
+            color: var(--ink);
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             position: relative;
         }
@@ -1574,16 +1629,16 @@
             border: none;
             font-size: 24px;
             cursor: pointer;
-            color: #64748b;
+            color: var(--soil-soft);
             width: auto;
         }
         
         .pdf-close-btn:hover {
-            color: #1e293b;
+            color: var(--ink);
         }
         
         .pdf-generate-btn {
-            background: #2a5a4a;
+            background: var(--clay);
             color: white;
             border: none;
             padding: 12px 24px;
@@ -1596,7 +1651,7 @@
         }
         
         .pdf-generate-btn:hover {
-            background: #1e3c32;
+            background: var(--soil);
         }
         
         .pdf-generate-btn:disabled {
@@ -1607,7 +1662,7 @@
         .pdf-progress-container {
             max-width: 300px;
             margin: 12px auto;
-            background: #e2e8f0;
+            background: var(--line);
             border-radius: 10px;
             height: 6px;
             overflow: hidden;
@@ -1616,13 +1671,13 @@
         .pdf-progress-bar {
             width: 0%;
             height: 100%;
-            background: linear-gradient(90deg, #2a5a4a, #10b981);
+            background: linear-gradient(90deg, var(--clay), var(--sage));
             border-radius: 10px;
             transition: width 0.3s ease;
         }
         
         .pdf-progress-text {
-            color: #94a3b8;
+            color: #A88E72;
             font-size: 11px;
             margin-top: 4px;
         }
@@ -1746,12 +1801,12 @@
                 <h2>Add Transaction</h2>
                 <div class="form-grid">
                     <div><label>📅 Date</label><input type="date" id="date"></div>
-                    <div><label>👤 Member Selected</label><select id="memberSelect" disabled style="background:#f1f5f9;"><option value="">Loading...</option></select></div>
+                    <div><label>👤 Member Selected</label><select id="memberSelect" disabled style="background:#F7EDE0;"><option value="">Loading...</option></select></div>
                     <div><label>Choose Transaction Type</label><select id="type" onchange="toggleApprovalNotice()"><option value="Savings">Savings (Deposit)</option><option value="Loan Taken">Loan Request (Needs ALL Members to Approve)</option><option value="Loan Repayment">Loan Repayment</option></select></div>
-                    <div><label>Amount (KES)</label><input type="number" id="amount" placeholder="0"><small style="font-size:10px; color:#64748b; display:block; margin-top:4px;">For loans: Enter PRINCIPAL amount (10% interest will be added)</small></div>
+                    <div><label>Amount (KES)</label><input type="number" id="amount" placeholder="0"><small style="font-size:10px; color:#5C4332; display:block; margin-top:4px;">For loans: Enter PRINCIPAL amount (10% interest will be added)</small></div>
                     <div><label>Transaction Message</label><input type="text" id="message" placeholder="e.g., Bank/Mpesa Message"></div>
                 </div>
-                <div id="approvalNotice" style="background:#fef3c7; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">⚠️ Loan requests need approval from ALL other members. 10% interest will be added to the loan.</div>
+                <div id="approvalNotice" style="background:#F0DCAE; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">⚠️ Loan requests need approval from ALL other members. 10% interest will be added to the loan.</div>
                 <button id="addBtn">Submit Transaction</button>
             </div>
         </div>
@@ -1902,8 +1957,8 @@
     <div id="pdfGenerator">
         <div class="pdf-preview" id="pdfPreview">
             <div style="text-align: center; padding: 40px;">
-                <div style="width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #2a5a4a; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;"></div>
-                <p style="color: #64748b;">Generating PDF...</p>
+                <div style="width: 40px; height: 40px; border: 3px solid #E4D4BE; border-top-color: #C1652F; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;"></div>
+                <p style="color: #5C4332;">Generating PDF...</p>
             </div>
         </div>
     </div>
@@ -2313,7 +2368,7 @@
                 if (res.success && res.meeting && res.meeting.date) {
                     card.style.display = 'block';
                     info.innerHTML = `
-                            <div class="meeting-item" style="border-left-color: #f59e0b; background: #fffbeb;">
+                            <div class="meeting-item" style="border-left-color: #D4A24C; background: #FBF3E3;">
                                 <div class="meeting-header">
                                     <span class="meeting-date">📅 ${escapeHtml(res.meeting.date)}</span>
                                 </div>
@@ -2952,10 +3007,10 @@
                     ctx.save();
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillStyle = '#64748b';
+                    ctx.fillStyle = '#5C4332';
                     ctx.font = `600 ${window.innerWidth < 500 ? 9 : 11}px -apple-system, sans-serif`;
                     ctx.fillText('NET BALANCE', cx, cy - 14);
-                    ctx.fillStyle = net >= 0 ? '#059669' : '#dc2626';
+                    ctx.fillStyle = net >= 0 ? '#5F6E45' : '#B0492F';
                     ctx.font = `700 ${window.innerWidth < 500 ? 16 : 20}px -apple-system, sans-serif`;
                     ctx.fillText('KES ' + Math.round(net).toLocaleString('en-KE'), cx, cy + 8);
                     ctx.restore();
@@ -2973,7 +3028,7 @@
                             'rgba(245, 158, 11, 0.85)',
                             'rgba(59, 130, 246, 0.85)'
                         ],
-                        borderColor: ['#059669', '#d97706', '#1d4ed8'],
+                        borderColor: ['#5F6E45', '#A87A2E', '#A14F22'],
                         borderWidth: 2,
                         hoverOffset: 8
                     }]
@@ -2992,7 +3047,7 @@
                                 boxHeight: 12,
                                 padding: 14,
                                 font: { size: window.innerWidth < 500 ? 10 : 12, weight: '600' },
-                                color: '#334155'
+                                color: '#5C4332'
                             }
                         },
                         tooltip: {
@@ -3070,7 +3125,7 @@
                     const { ctx, chartArea } = chart;
                     if (!chartArea) return;
                     ctx.save();
-                    ctx.fillStyle = '#eaf6ff';
+                    ctx.fillStyle = '#F0DCAE';
                     ctx.fillRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
                     ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
                     ctx.lineWidth = 1;
@@ -3099,14 +3154,14 @@
                     datasets: [{
                         label: 'Savings Balance (KES)',
                         data: values,
-                        borderColor: '#f2622e',
-                        backgroundColor: '#f2622e',
+                        borderColor: '#C1652F',
+                        backgroundColor: '#C1652F',
                         borderWidth: 3,
                         pointStyle: 'crossRot',
                         pointRadius: 6,
-                        pointBorderColor: '#1e293b',
+                        pointBorderColor: '#2A1E14',
                         pointBorderWidth: 2,
-                        pointBackgroundColor: '#1e293b',
+                        pointBackgroundColor: '#2A1E14',
                         tension: 0,
                         fill: false
                     }]
@@ -3121,7 +3176,7 @@
                             display: true,
                             text: 'Savings Balance Over Time',
                             font: { size: window.innerWidth < 500 ? 13 : 16, weight: '700' },
-                            color: '#1e293b',
+                            color: '#2A1E14',
                             padding: { bottom: 12 }
                         },
                         tooltip: {
@@ -3136,9 +3191,9 @@
                         y: {
                             beginAtZero: true,
                             grid: { display: false },
-                            border: { color: '#1e293b', width: 2 },
+                            border: { color: '#2A1E14', width: 2 },
                             ticks: {
-                                color: '#1e293b',
+                                color: '#2A1E14',
                                 font: { size: window.innerWidth < 500 ? 9 : 11, weight: '600' },
                                 callback: function(value) {
                                     return value.toLocaleString('en-KE');
@@ -3147,22 +3202,22 @@
                             title: {
                                 display: true,
                                 text: 'Savings (KES)',
-                                color: '#1e293b',
+                                color: '#2A1E14',
                                 font: { size: window.innerWidth < 500 ? 10 : 12, weight: '600' }
                             }
                         },
                         x: {
                             grid: { display: false },
-                            border: { color: '#1e293b', width: 2 },
+                            border: { color: '#2A1E14', width: 2 },
                             ticks: {
-                                color: '#1e293b',
+                                color: '#2A1E14',
                                 font: { size: window.innerWidth < 500 ? 9 : 11, weight: '600' },
                                 maxRotation: 0
                             },
                             title: {
                                 display: true,
                                 text: 'Date',
-                                color: '#1e293b',
+                                color: '#2A1E14',
                                 font: { size: window.innerWidth < 500 ? 10 : 12, weight: '600' }
                             }
                         }
@@ -3305,7 +3360,7 @@
             if (memberSelect) {
                 memberSelect.innerHTML = `<option value="${currentUser}">${escapeHtml(currentUser)}</option>`;
                 memberSelect.disabled = true;
-                memberSelect.style.background = '#f1f5f9';
+                memberSelect.style.background = '#F7EDE0';
             }
             if (filterMember) {
                 filterMember.innerHTML = '<option value="">All Members</option>' + allMembers.map(m =>
@@ -3416,12 +3471,12 @@
             
             preview.innerHTML = `
                     <div style="text-align: center; padding: 30px;">
-                        <div style="width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #2a5a4a; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;"></div>
-                        <p style="color: #64748b; font-size: 14px; font-weight: 500;">Generating PDF...</p>
-                        <div style="max-width: 300px; margin: 12px auto; background: #e2e8f0; border-radius: 10px; height: 6px; overflow: hidden;">
-                            <div id="pdfProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #2a5a4a, #10b981); border-radius: 10px; transition: width 0.3s ease;"></div>
+                        <div style="width: 40px; height: 40px; border: 3px solid #E4D4BE; border-top-color: #C1652F; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;"></div>
+                        <p style="color: #5C4332; font-size: 14px; font-weight: 500;">Generating PDF...</p>
+                        <div style="max-width: 300px; margin: 12px auto; background: #E4D4BE; border-radius: 10px; height: 6px; overflow: hidden;">
+                            <div id="pdfProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #C1652F, #7A8B5C); border-radius: 10px; transition: width 0.3s ease;"></div>
                         </div>
-                        <p id="pdfProgressText" style="color: #94a3b8; font-size: 11px; margin-top: 4px;">Initializing...</p>
+                        <p id="pdfProgressText" style="color: #A88E72; font-size: 11px; margin-top: 4px;">Initializing...</p>
                     </div>
                 `;
             generator.classList.add('active');
@@ -3445,52 +3500,52 @@
                 const savingsTrendImg = savingsTrendChartInstance ? savingsTrendChartInstance.toBase64Image('image/png', 1) : null;
 
                 const contentHtml = `
-                        <div style="max-width: 800px; margin: 0 auto; font-family: Arial, sans-serif; color: #1e293b; font-size: 12px; padding: 10px;">
-                            <h1 style="color: #1e3c32; text-align: center; border-bottom: 2px solid #2a5a4a; padding-bottom: 8px; font-size: 20px; margin: 0 0 6px 0;">
+                        <div style="max-width: 800px; margin: 0 auto; font-family: Arial, sans-serif; color: #2A1E14; font-size: 12px; padding: 10px;">
+                            <h1 style="color: #3D2817; text-align: center; border-bottom: 2px solid #C1652F; padding-bottom: 8px; font-size: 20px; margin: 0 0 6px 0;">
                                 🏛️ Legacy Builders Group
                             </h1>
-                            <h2 style="color: #1e3c32; text-align: center; font-weight: 400; margin-top: 0; font-size: 15px;">
+                            <h2 style="color: #3D2817; text-align: center; font-weight: 400; margin-top: 0; font-size: 15px;">
                                 Financial Report
                             </h2>
-                            <p style="text-align: center; color: #64748b; font-size: 10px; margin-bottom: 10px;">
+                            <p style="text-align: center; color: #5C4332; font-size: 10px; margin-bottom: 10px;">
                                 ${new Date().toLocaleDateString('en-KE', { year: 'numeric', month: 'short', day: 'numeric' })}
                             </p>
                             
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin: 10px 0; background: #f8fafc; padding: 10px; border-radius: 8px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin: 10px 0; background: #F7EDE0; padding: 10px; border-radius: 8px;">
                                 <div style="text-align: center;">
-                                    <div style="font-size: 8px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Savings</div>
-                                    <div style="font-size: 13px; font-weight: 700; color: #059669;">KES ${savings.toLocaleString()}</div>
+                                    <div style="font-size: 8px; color: #5C4332; text-transform: uppercase; letter-spacing: 0.5px;">Savings</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #5F6E45;">KES ${savings.toLocaleString()}</div>
                                 </div>
                                 <div style="text-align: center;">
-                                    <div style="font-size: 8px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Loans</div>
-                                    <div style="font-size: 13px; font-weight: 700; color: #d97706;">KES ${loansTaken.toLocaleString()}</div>
+                                    <div style="font-size: 8px; color: #5C4332; text-transform: uppercase; letter-spacing: 0.5px;">Loans</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #A87A2E;">KES ${loansTaken.toLocaleString()}</div>
                                 </div>
                                 <div style="text-align: center;">
-                                    <div style="font-size: 8px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Repaid</div>
-                                    <div style="font-size: 13px; font-weight: 700; color: #1d4ed8;">KES ${repaid.toLocaleString()}</div>
+                                    <div style="font-size: 8px; color: #5C4332; text-transform: uppercase; letter-spacing: 0.5px;">Repaid</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #A14F22;">KES ${repaid.toLocaleString()}</div>
                                 </div>
                                 <div style="text-align: center;">
-                                    <div style="font-size: 8px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Net</div>
-                                    <div style="font-size: 13px; font-weight: 700; color: #7c3aed;">KES ${net.toLocaleString()}</div>
+                                    <div style="font-size: 8px; color: #5C4332; text-transform: uppercase; letter-spacing: 0.5px;">Net</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #8B5A8C;">KES ${net.toLocaleString()}</div>
                                 </div>
                             </div>
 
                             ${financialChartImg ? `
-                            <div style="margin: 10px 0; background: white; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
-                                <h3 style="color: #1e3c32; margin: 0 0 8px 0; font-size: 12px;">📊 Financial Overview</h3>
+                            <div style="margin: 10px 0; background: white; padding: 10px; border-radius: 8px; border: 1px solid #E4D4BE; text-align: center;">
+                                <h3 style="color: #3D2817; margin: 0 0 8px 0; font-size: 12px;">📊 Financial Overview</h3>
                                 <img src="${financialChartImg}" style="max-width: 100%; height: auto;" />
                             </div>` : ''}
 
                             ${savingsTrendImg ? `
-                            <div style="margin: 10px 0; background: white; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
-                                <h3 style="color: #1e3c32; margin: 0 0 8px 0; font-size: 12px;">📈 Savings Over Time</h3>
+                            <div style="margin: 10px 0; background: white; padding: 10px; border-radius: 8px; border: 1px solid #E4D4BE; text-align: center;">
+                                <h3 style="color: #3D2817; margin: 0 0 8px 0; font-size: 12px;">📈 Savings Over Time</h3>
                                 <img src="${savingsTrendImg}" style="max-width: 100%; height: auto;" />
                             </div>` : ''}
                             
-                            <h3 style="color: #1e3c32; margin: 10px 0 4px 0; font-size: 12px;">📜 Recent Transactions (Last ${recentRecords.length})</h3>
+                            <h3 style="color: #3D2817; margin: 10px 0 4px 0; font-size: 12px;">📜 Recent Transactions (Last ${recentRecords.length})</h3>
                             <table style="width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 4px;">
                                 <thead>
-                                    <tr style="background: #2a5a4a; color: white;">
+                                    <tr style="background: #C1652F; color: white;">
                                         <th style="padding: 3px 5px; text-align: left;">Date</th>
                                         <th style="padding: 3px 5px; text-align: left;">Member</th>
                                         <th style="padding: 3px 5px; text-align: left;">Type</th>
@@ -3499,7 +3554,7 @@
                                 </thead>
                                 <tbody>
                                     ${recentRecords.map(r => `
-                                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                                        <tr style="border-bottom: 1px solid #E4D4BE;">
                                             <td style="padding: 3px 5px;">${new Date(r.date).toLocaleDateString('en-KE')}</td>
                                             <td style="padding: 3px 5px; font-weight: 500;">${escapeHtml(r.member)}</td>
                                             <td style="padding: 3px 5px;">${r.type}</td>
@@ -3509,25 +3564,25 @@
                                 </tbody>
                             </table>
                             
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; padding: 8px; background: #f8fafc; border-radius: 8px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; padding: 8px; background: #F7EDE0; border-radius: 8px;">
                                 <div style="text-align: center;">
-                                    <div style="font-size: 8px; color: #64748b;">Total Members</div>
-                                    <div style="font-size: 13px; font-weight: 700; color: #1e3c32;">${allMembers.length}</div>
+                                    <div style="font-size: 8px; color: #5C4332;">Total Members</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #3D2817;">${allMembers.length}</div>
                                 </div>
                                 <div style="text-align: center;">
-                                    <div style="font-size: 8px; color: #64748b;">Total Transactions</div>
-                                    <div style="font-size: 13px; font-weight: 700; color: #1e3c32;">${allRecords.length}</div>
+                                    <div style="font-size: 8px; color: #5C4332;">Total Transactions</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #3D2817;">${allRecords.length}</div>
                                 </div>
                             </div>
                             
-                            <p style="text-align: center; color: #64748b; font-size: 9px; margin-top: 12px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+                            <p style="text-align: center; color: #5C4332; font-size: 9px; margin-top: 12px; border-top: 1px solid #E4D4BE; padding-top: 10px;">
                                 Legacy Builders Group — Building Wealth Together
                             </p>
                             
-                            <button class="pdf-generate-btn" id="pdfGenerateBtn" style="background: #2a5a4a; color: white; border: none; padding: 10px 20px; border-radius: 40px; font-size: 13px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 12px;">
+                            <button class="pdf-generate-btn" id="pdfGenerateBtn" style="background: #C1652F; color: white; border: none; padding: 10px 20px; border-radius: 40px; font-size: 13px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 12px;">
                                 📥 Download PDF
                             </button>
-                            <button class="pdf-close-btn" onclick="document.getElementById('pdfGenerator').classList.remove('active')" style="position: absolute; top: 8px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b; width: auto;">
+                            <button class="pdf-close-btn" onclick="document.getElementById('pdfGenerator').classList.remove('active')" style="position: absolute; top: 8px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: #5C4332; width: auto;">
                                 ✕
                             </button>
                         </div>
