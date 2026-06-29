@@ -20,7 +20,7 @@
         }
 
         /* ============================================
-           SPLASH LOADING SCREEN - NO BLANK TRANSITION
+           SPLASH LOADING SCREEN
            ============================================ */
         #splashScreen {
             position: fixed;
@@ -216,7 +216,59 @@
         }
         
         /* ============================================
-           APP CONTAINER WITH LOADING STATE
+           NOTIFICATION PROMPT
+           ============================================ */
+        .notification-prompt {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e3c32;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 50px;
+            z-index: 2001;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            max-width: 90%;
+            animation: slideUp 0.4s ease;
+        }
+        .notification-prompt.active { display: flex; }
+        .notification-prompt button {
+            background: #ffd966;
+            color: #1e3c32;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 12px;
+            width: auto;
+        }
+        .notification-prompt .dismiss-btn {
+            background: transparent;
+            color: #94a3b8;
+            padding: 4px 8px;
+            font-size: 18px;
+            width: auto;
+        }
+        .notification-prompt button:hover {
+            opacity: 0.8;
+        }
+        @media (max-width: 640px) {
+            .notification-prompt { 
+                bottom: 100px;
+                font-size: 12px;
+                padding: 10px 16px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+        
+        /* ============================================
+           APP CONTAINER
            ============================================ */
         .app-container {
             max-width: 1200px;
@@ -236,7 +288,7 @@
         }
         
         /* ============================================
-           HEADER - STICKY
+           HEADER - SCROLLABLE
            ============================================ */
         .header {
             background: linear-gradient(135deg, #1e3c32 0%, #2a5a4a 100%);
@@ -244,9 +296,6 @@
             border-radius: 24px;
             margin-bottom: 16px;
             overflow: hidden;
-            position: sticky;
-            top: 0;
-            z-index: 50;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         
@@ -826,6 +875,7 @@
             width: 100%;
             max-height: 80vh;
             overflow-y: auto;
+            position: relative;
         }
         
         .modal-content h3 { margin-bottom: 16px;
@@ -1030,13 +1080,6 @@
             padding: 20px;
             backdrop-filter: blur(10px);
             animation: fadeIn 0.3s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0;
-                transform: scale(0.95); }
-            to { opacity: 1;
-                transform: scale(1); }
         }
         
         .profile-modal {
@@ -1484,138 +1527,105 @@
         }
 
         /* ============================================
-           PDF CONTENT STYLES
+           PDF GENERATION CONTAINER
            ============================================ */
-        #pdfPrintContent {
+        #pdfGenerator {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9998;
             display: none;
-            font-family: Arial, sans-serif;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
-            max-width: 1000px;
-            margin: 0 auto;
+        }
+        
+        #pdfGenerator.active {
+            display: flex;
+        }
+        
+        #pdfGenerator .pdf-preview {
             background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            font-family: Arial, sans-serif;
+            color: #1e293b;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        .pdf-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+            width: auto;
+        }
+        
+        .pdf-close-btn:hover {
             color: #1e293b;
         }
-        #pdfPrintContent h1 {
-            color: #1e3c32;
-            text-align: center;
-            border-bottom: 3px solid #2a5a4a;
-            padding-bottom: 10px;
-        }
-        #pdfPrintContent h2 {
-            color: #1e3c32;
-            text-align: center;
-            font-weight: 400;
-            margin-top: 0;
-        }
-        #pdfPrintContent .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 12px;
-            margin: 20px 0;
-            background: #f8fafc;
-            padding: 16px;
-            border-radius: 12px;
-        }
-        #pdfPrintContent .stats-grid div {
-            text-align: center;
-        }
-        #pdfPrintContent .stats-grid .label {
-            font-size: 11px;
-            color: #64748b;
-        }
-        #pdfPrintContent .stats-grid .value {
-            font-size: 18px;
-            font-weight: 700;
-        }
-        #pdfPrintContent .stats-grid .value.green { color: #059669; }
-        #pdfPrintContent .stats-grid .value.orange { color: #d97706; }
-        #pdfPrintContent .stats-grid .value.blue { color: #1d4ed8; }
-        #pdfPrintContent .stats-grid .value.purple { color: #7c3aed; }
         
-        #pdfPrintContent .chart-section {
-            margin: 20px 0;
-            background: white;
-            padding: 16px;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-        }
-        #pdfPrintContent .chart-section h3 {
-            color: #1e3c32;
-            margin: 0 0 12px 0;
-            text-align: center;
-        }
-        #pdfPrintContent .bar-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 10px;
-        }
-        #pdfPrintContent .bar-row .bar-label {
-            width: 100px;
-            font-size: 12px;
-            color: #334155;
-            font-weight: 500;
-        }
-        #pdfPrintContent .bar-row .bar-track {
-            flex: 1;
-            height: 24px;
-            background: #e8f0ed;
-            border-radius: 6px;
-            overflow: hidden;
-        }
-        #pdfPrintContent .bar-row .bar-track .bar-fill {
-            height: 100%;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding-right: 8px;
-        }
-        #pdfPrintContent .bar-row .bar-track .bar-fill span {
-            font-size: 10px;
-            font-weight: 600;
-            color: white;
-        }
-        
-        #pdfPrintContent table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
-            margin-top: 8px;
-        }
-        #pdfPrintContent table th {
+        .pdf-generate-btn {
             background: #2a5a4a;
             color: white;
-            padding: 6px 10px;
-            text-align: left;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 16px;
         }
-        #pdfPrintContent table td {
-            padding: 5px 10px;
-            border-bottom: 1px solid #e2e8f0;
+        
+        .pdf-generate-btn:hover {
+            background: #1e3c32;
         }
-        #pdfPrintContent .footer-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 20px;
-            padding: 12px;
-            background: #f8fafc;
-            border-radius: 12px;
-            text-align: center;
+        
+        .pdf-generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
-        #pdfPrintContent .footer {
-            text-align: center;
-            color: #64748b;
+
+        .pdf-progress-container {
+            max-width: 300px;
+            margin: 12px auto;
+            background: #e2e8f0;
+            border-radius: 10px;
+            height: 6px;
+            overflow: hidden;
+        }
+        
+        .pdf-progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #2a5a4a, #10b981);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        
+        .pdf-progress-text {
+            color: #94a3b8;
             font-size: 11px;
-            margin-top: 20px;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 16px;
+            margin-top: 4px;
         }
     </style>
 </head>
 <body>
 
-    <!-- SPLASH SCREEN - No blank transition -->
+    <!-- SPLASH SCREEN -->
     <div id="splashScreen">
         <div class="splash-logo">🏛️</div>
         <div class="splash-title">Legacy Builders Group</div>
@@ -1623,6 +1633,7 @@
         <div class="splash-loader"></div>
     </div>
 
+    <!-- LOGIN OVERLAY -->
     <div id="loginOverlay" class="login-overlay">
         <div class="login-box">
             <h1>🏛️ Legacy Builders Group</h1>
@@ -1686,6 +1697,14 @@
         </div>
     </div>
 
+    <!-- NOTIFICATION PROMPT -->
+    <div class="notification-prompt" id="notificationPrompt">
+        <span>🔔 Get real-time alerts</span>
+        <button onclick="requestNotificationPermission()">Enable Notifications</button>
+        <button class="dismiss-btn" onclick="dismissNotificationPrompt()">✕</button>
+    </div>
+
+    <!-- APP CONTAINER -->
     <div class="app-container" id="appContainer">
         <div class="header">
             <div class="header-row-1"><h1>🏛️ Legacy Builders Group</h1></div>
@@ -1846,6 +1865,7 @@
         </div>
     </div>
 
+    <!-- TAB BAR -->
     <div class="tab-bar" id="tabBar" style="display: none;">
         <button class="tab" data-panel="transactions"><span class="tab-icon">📋</span><span>Transactions</span></button>
         <button class="tab" data-panel="summary"><span class="tab-icon">📊</span><span>Summary</span></button>
@@ -1855,15 +1875,25 @@
         <button class="tab" data-panel="pending" id="pendingTab" style="display: none;"><span class="tab-icon">⏳</span><span>Pending<span id="pendingCount" class="pending-count"></span></span></button>
     </div>
 
-    <!-- Hidden div for PDF generation -->
-    <div id="pdfPrintContent"></div>
+    <!-- PDF GENERATOR CONTAINER -->
+    <div id="pdfGenerator">
+        <div class="pdf-preview" id="pdfPreview">
+            <div style="text-align: center; padding: 40px;">
+                <div style="width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #2a5a4a; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;"></div>
+                <p style="color: #64748b;">Generating PDF...</p>
+            </div>
+        </div>
+    </div>
 
     <script>
         // ============================================================
         // CONFIGURATION
         // ============================================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbyCD942IOX8IBqEz1bAPckWrf0tAM-FBztFDi8KuQ4QhlqCTf1EWEyCjwIbT8n7b2RW/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbwN6ZXeEEXl562IyRGNF2BglYgdbkQeialWFyTCLQ1Beyt7tWFnDpMRb087Q1XYNiEK/exec";
         const TREASURER_NAME = "Mrs. Kithinji";
+        
+        // VAPID Public Key from your backend
+        const VAPID_PUBLIC_KEY = 'BLRv32OrPaKbJk561GqfjSw62YrE770hOx24kaQEXCyXXgRqNZksmHk1ummZ1AA2KfmINuDXt83_WQu-YHJKYnY';
 
         let allRecords = [],
             allMembers = [],
@@ -1879,10 +1909,11 @@
         let userProfileImage = localStorage.getItem('legacy_profile_image') || null;
         let isLoading = false;
         let chartInstance = null;
-        let appReady = false;
+        let serviceWorkerRegistered = false;
+        let pushSubscription = null;
 
         // ============================================================
-        // SPLASH SCREEN - Hide when ready
+        // SPLASH SCREEN
         // ============================================================
         function hideSplashScreen() {
             const splash = document.getElementById('splashScreen');
@@ -1942,7 +1973,7 @@
         }
 
         // ============================================================
-        // PERSISTENT LOGIN - Check on page load
+        // PERSISTENT LOGIN
         // ============================================================
         function checkPersistentLogin() {
             const saved = localStorage.getItem('legacy_current_user');
@@ -2162,7 +2193,6 @@
                         localStorage.removeItem('legacy_profile_image');
                     }
 
-                    // Show app, hide login
                     document.getElementById('loginOverlay').classList.remove('active');
                     document.getElementById('appContainer').classList.add('active');
                     document.getElementById('tabBar').style.display = 'flex';
@@ -2182,6 +2212,12 @@
                     activateTab(currentTab);
                     showBalanceLoading(false);
                     showToast(`Welcome ${currentUser}!`, 'success');
+
+                    // Initialize push notifications
+                    setTimeout(() => {
+                        checkAndShowNotificationPrompt();
+                        registerServiceWorker();
+                    }, 3000);
 
                     if (refreshInterval) clearInterval(refreshInterval);
                     refreshInterval = setInterval(() => {
@@ -2235,7 +2271,7 @@
         }
 
         // ============================================================
-        // NEXT MEETING SCHEDULER FUNCTIONS
+        // NEXT MEETING SCHEDULER
         // ============================================================
         async function loadScheduledMeeting() {
             try {
@@ -2315,7 +2351,7 @@
         }
 
         // ============================================================
-        // CHANGE PASSWORD (Inside Profile)
+        // CHANGE PASSWORD
         // ============================================================
         function openChangePasswordModal() {
             document.querySelectorAll('.modal').forEach(el => el.remove());
@@ -2536,7 +2572,7 @@
         }
 
         // ============================================================
-        // ABOUT US / MEMBERS LIST (FROM USERS SHEET)
+        // ABOUT US / MEMBERS LIST
         // ============================================================
         async function loadMembersList() {
             const container = document.getElementById('membersList');
@@ -2814,7 +2850,7 @@
         }
 
         // ============================================================
-        // CHART FUNCTION - MOBILE FRIENDLY
+        // CHART FUNCTION
         // ============================================================
         function renderChart(summary) {
             const canvas = document.getElementById('financialChart');
@@ -3120,7 +3156,7 @@
         }
 
         // ============================================================
-        // EXPORT PDF - FIXED USING WINDOW.PRINT
+        // EXPORT PDF
         // ============================================================
         function exportToPDF() {
             if (!allRecords.length) {
@@ -3130,9 +3166,8 @@
 
             const btn = document.getElementById('exportPdfBtn');
             const orig = btn.innerHTML;
-            showButtonLoading(btn, 'Generating PDF...');
+            showButtonLoading(btn, 'Preparing PDF...');
 
-            // Calculate stats
             let savings = 0,
                 loansTaken = 0,
                 repaid = 0;
@@ -3145,122 +3180,311 @@
             const net = savings - outstanding;
             const maxVal = Math.max(savings, loansTaken, repaid, net, 1);
 
-            // Build the PDF content
-            const pdfContainer = document.getElementById('pdfPrintContent');
-            pdfContainer.style.display = 'block';
-            pdfContainer.style.position = 'fixed';
-            pdfContainer.style.left = '0';
-            pdfContainer.style.top = '0';
-            pdfContainer.style.width = '100%';
-            pdfContainer.style.height = '100%';
-            pdfContainer.style.background = 'white';
-            pdfContainer.style.zIndex = '9999';
-            pdfContainer.style.overflow = 'auto';
-            pdfContainer.style.padding = '20px';
-            pdfContainer.style.fontFamily = 'Arial, sans-serif';
-
-            pdfContainer.innerHTML = `
-                    <div style="max-width: 1000px; margin: 0 auto; padding: 20px;">
-                        <h1 style="color: #1e3c32; text-align: center; border-bottom: 3px solid #2a5a4a; padding-bottom: 10px;">
-                            🏛️ Legacy Builders Group
-                        </h1>
-                        <h2 style="color: #1e3c32; text-align: center; font-weight: 400; margin-top: 0;">
-                            Financial Report
-                        </h2>
-                        <p style="text-align: center; color: #64748b; font-size: 14px;">
-                            Generated on ${new Date().toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' })}
-                        </p>
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin: 20px 0; background: #f8fafc; padding: 16px; border-radius: 12px;">
-                            <div style="text-align: center;">
-                                <div style="font-size: 11px; color: #64748b;">Total Savings</div>
-                                <div style="font-size: 18px; font-weight: 700; color: #059669;">KES ${savings.toLocaleString()}</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 11px; color: #64748b;">Loans Taken</div>
-                                <div style="font-size: 18px; font-weight: 700; color: #d97706;">KES ${loansTaken.toLocaleString()}</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 11px; color: #64748b;">Total Repaid</div>
-                                <div style="font-size: 18px; font-weight: 700; color: #1d4ed8;">KES ${repaid.toLocaleString()}</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 11px; color: #64748b;">Net Balance</div>
-                                <div style="font-size: 18px; font-weight: 700; color: #7c3aed;">KES ${net.toLocaleString()}</div>
-                            </div>
+            const generator = document.getElementById('pdfGenerator');
+            const preview = document.getElementById('pdfPreview');
+            
+            preview.innerHTML = `
+                    <div style="text-align: center; padding: 30px;">
+                        <div style="width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #2a5a4a; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;"></div>
+                        <p style="color: #64748b; font-size: 14px; font-weight: 500;">Generating PDF...</p>
+                        <div style="max-width: 300px; margin: 12px auto; background: #e2e8f0; border-radius: 10px; height: 6px; overflow: hidden;">
+                            <div id="pdfProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #2a5a4a, #10b981); border-radius: 10px; transition: width 0.3s ease;"></div>
                         </div>
-                        
-                        <div style="margin: 20px 0; background: white; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                            <h3 style="color: #1e3c32; margin: 0 0 12px 0; text-align: center;">📊 Financial Overview</h3>
-                            ${[
-                                { label: '💰 Savings', value: savings, color: '#059669' },
-                                { label: '📊 Loans', value: loansTaken, color: '#d97706' },
-                                { label: '🔄 Repaid', value: repaid, color: '#1d4ed8' },
-                                { label: '⚖️ Net', value: net, color: '#7c3aed' }
-                            ].map(item => `
-                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
-                                    <div style="width: 100px; font-size: 12px; color: #334155; font-weight: 500;">${item.label}</div>
-                                    <div style="flex: 1; height: 24px; background: #e8f0ed; border-radius: 6px; overflow: hidden;">
-                                        <div style="height: 100%; width: ${(item.value / maxVal) * 100}%; background: ${item.color}; border-radius: 6px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px;">
-                                            <span style="font-size: 10px; font-weight: 600; color: white;">KES ${item.value.toLocaleString()}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                        
-                        <h3 style="color: #1e3c32; margin-top: 20px;">📜 Transaction History (Last 50)</h3>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px;">
-                            <thead>
-                                <tr style="background: #2a5a4a; color: white;">
-                                    <th style="padding: 6px 10px; text-align: left;">Date</th>
-                                    <th style="padding: 6px 10px; text-align: left;">Member</th>
-                                    <th style="padding: 6px 10px; text-align: left;">Type</th>
-                                    <th style="padding: 6px 10px; text-align: right;">Amount</th>
-                                    <th style="padding: 6px 10px; text-align: left;">Message</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${allRecords.slice(-50).reverse().map(r => `
-                                    <tr style="border-bottom: 1px solid #e2e8f0;">
-                                        <td style="padding: 5px 10px;">${new Date(r.date).toLocaleDateString('en-KE')}</td>
-                                        <td style="padding: 5px 10px; font-weight: 500;">${escapeHtml(r.member)}</td>
-                                        <td style="padding: 5px 10px;">${r.type}</td>
-                                        <td style="padding: 5px 10px; text-align: right;">${r.type === 'Loan Repayment' ? '+' : (r.type === 'Savings' ? '+' : '-')} KES ${(r.amount || 0).toLocaleString('en-KE')}</td>
-                                        <td style="padding: 5px 10px;">${escapeHtml(r.message || '-')}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; padding: 12px; background: #f8fafc; border-radius: 12px;">
-                            <div style="text-align: center;">
-                                <div style="font-size: 11px; color: #64748b;">Total Members</div>
-                                <div style="font-size: 16px; font-weight: 700; color: #1e3c32;">${allMembers.length}</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 11px; color: #64748b;">Total Transactions</div>
-                                <div style="font-size: 16px; font-weight: 700; color: #1e3c32;">${allRecords.length}</div>
-                            </div>
-                        </div>
-                        
-                        <p style="text-align: center; color: #64748b; font-size: 11px; margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
-                            Legacy Builders Group — Building Wealth Together
-                        </p>
+                        <p id="pdfProgressText" style="color: #94a3b8; font-size: 11px; margin-top: 4px;">Initializing...</p>
                     </div>
                 `;
+            generator.classList.add('active');
 
-            // Use window.print() for reliable PDF generation
+            function updateProgress(percent, text) {
+                const bar = document.getElementById('pdfProgressBar');
+                const textEl = document.getElementById('pdfProgressText');
+                if (bar) bar.style.width = Math.min(percent, 100) + '%';
+                if (textEl) textEl.textContent = text;
+            }
+
             setTimeout(() => {
-                window.print();
+                updateProgress(10, 'Building report...');
+                const recentRecords = allRecords.slice(-10).reverse();
+                updateProgress(30, 'Formatting data...');
 
-                // Restore after printing
-                setTimeout(() => {
-                    pdfContainer.style.display = 'none';
-                    hideButtonLoading(btn, orig);
-                    showToast('PDF generated successfully!', 'success');
-                }, 500);
+                const contentHtml = `
+                        <div style="max-width: 800px; margin: 0 auto; font-family: Arial, sans-serif; color: #1e293b; font-size: 12px; padding: 10px;">
+                            <h1 style="color: #1e3c32; text-align: center; border-bottom: 2px solid #2a5a4a; padding-bottom: 8px; font-size: 20px; margin: 0 0 6px 0;">
+                                🏛️ Legacy Builders Group
+                            </h1>
+                            <h2 style="color: #1e3c32; text-align: center; font-weight: 400; margin-top: 0; font-size: 15px;">
+                                Financial Report
+                            </h2>
+                            <p style="text-align: center; color: #64748b; font-size: 10px; margin-bottom: 10px;">
+                                ${new Date().toLocaleDateString('en-KE', { year: 'numeric', month: 'short', day: 'numeric' })}
+                            </p>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin: 10px 0; background: #f8fafc; padding: 10px; border-radius: 8px;">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 8px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Savings</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #059669;">KES ${savings.toLocaleString()}</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 8px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Loans</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #d97706;">KES ${loansTaken.toLocaleString()}</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 8px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Repaid</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #1d4ed8;">KES ${repaid.toLocaleString()}</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 8px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Net</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #7c3aed;">KES ${net.toLocaleString()}</div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin: 10px 0; background: white; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <h3 style="color: #1e3c32; margin: 0 0 6px 0; text-align: center; font-size: 12px;">📊 Financial Overview</h3>
+                                ${[
+                                    { label: '💰 Savings', value: savings, color: '#059669' },
+                                    { label: '📊 Loans', value: loansTaken, color: '#d97706' },
+                                    { label: '🔄 Repaid', value: repaid, color: '#1d4ed8' },
+                                    { label: '⚖️ Net', value: net, color: '#7c3aed' }
+                                ].map(item => `
+                                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                                        <div style="width: 60px; font-size: 9px; color: #334155; font-weight: 500;">${item.label}</div>
+                                        <div style="flex: 1; height: 16px; background: #e8f0ed; border-radius: 4px; overflow: hidden;">
+                                            <div style="height: 100%; width: ${(item.value / maxVal) * 100}%; background: ${item.color}; border-radius: 4px; display: flex; align-items: center; justify-content: flex-end; padding-right: 4px;">
+                                                <span style="font-size: 7px; font-weight: 600; color: white;">KES ${item.value.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            
+                            <h3 style="color: #1e3c32; margin: 10px 0 4px 0; font-size: 12px;">📜 Recent Transactions (Last ${recentRecords.length})</h3>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 4px;">
+                                <thead>
+                                    <tr style="background: #2a5a4a; color: white;">
+                                        <th style="padding: 3px 5px; text-align: left;">Date</th>
+                                        <th style="padding: 3px 5px; text-align: left;">Member</th>
+                                        <th style="padding: 3px 5px; text-align: left;">Type</th>
+                                        <th style="padding: 3px 5px; text-align: right;">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${recentRecords.map(r => `
+                                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                                            <td style="padding: 3px 5px;">${new Date(r.date).toLocaleDateString('en-KE')}</td>
+                                            <td style="padding: 3px 5px; font-weight: 500;">${escapeHtml(r.member)}</td>
+                                            <td style="padding: 3px 5px;">${r.type}</td>
+                                            <td style="padding: 3px 5px; text-align: right;">${r.type === 'Loan Repayment' ? '+' : (r.type === 'Savings' ? '+' : '-')} KES ${(r.amount || 0).toLocaleString('en-KE')}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; padding: 8px; background: #f8fafc; border-radius: 8px;">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 8px; color: #64748b;">Total Members</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #1e3c32;">${allMembers.length}</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 8px; color: #64748b;">Total Transactions</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #1e3c32;">${allRecords.length}</div>
+                                </div>
+                            </div>
+                            
+                            <p style="text-align: center; color: #64748b; font-size: 9px; margin-top: 12px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+                                Legacy Builders Group — Building Wealth Together
+                            </p>
+                            
+                            <button class="pdf-generate-btn" id="pdfGenerateBtn" style="background: #2a5a4a; color: white; border: none; padding: 10px 20px; border-radius: 40px; font-size: 13px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 12px;">
+                                📥 Download PDF
+                            </button>
+                            <button class="pdf-close-btn" onclick="document.getElementById('pdfGenerator').classList.remove('active')" style="position: absolute; top: 8px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b; width: auto;">
+                                ✕
+                            </button>
+                        </div>
+                    `;
+
+                updateProgress(60, 'Generating preview...');
+                preview.innerHTML = contentHtml;
+                updateProgress(80, 'Ready to download');
+
+                document.getElementById('pdfGenerateBtn').addEventListener('click', function() {
+                    const btn = this;
+                    btn.disabled = true;
+                    btn.innerHTML = '⏳ Generating...';
+                    updateProgress(90, 'Creating PDF file...');
+
+                    const opt = {
+                        margin: 8,
+                        filename: `Legacy_Builders_Report_${new Date().toISOString().split('T')[0]}.pdf`,
+                        image: { type: 'jpeg', quality: 0.7 },
+                        html2canvas: {
+                            scale: 1.5,
+                            useCORS: true,
+                            logging: false,
+                            letterRendering: false,
+                            backgroundColor: '#ffffff',
+                            width: 750
+                        },
+                        jsPDF: {
+                            unit: 'mm',
+                            format: 'a4',
+                            orientation: 'portrait'
+                        },
+                        pagebreak: { mode: 'avoid-all' }
+                    };
+
+                    const content = preview.cloneNode(true);
+                    const buttons = content.querySelectorAll('.pdf-generate-btn, .pdf-close-btn');
+                    buttons.forEach(b => b.remove());
+
+                    html2pdf().set(opt).from(content).save().then(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = '📥 Download PDF';
+                        document.getElementById('pdfGenerator').classList.remove('active');
+                        hideButtonLoading(btn, orig);
+                        updateProgress(100, '✅ Done!');
+                        showToast('PDF downloaded successfully!', 'success');
+                    }).catch((err) => {
+                        btn.disabled = false;
+                        btn.innerHTML = '📥 Download PDF';
+                        hideButtonLoading(btn, orig);
+                        showToast('Error generating PDF: ' + err.message, 'error');
+                        console.error('PDF Error:', err);
+                    });
+                });
+
+                updateProgress(100, '✅ Ready');
+                hideButtonLoading(btn, orig);
             }, 300);
+        }
+
+        // ============================================================
+        // ============ PUSH NOTIFICATIONS ============
+        // ============================================================
+
+        // Check if browser supports notifications
+        function isNotificationSupported() {
+            return 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
+        }
+
+        // Get notification permission status
+        function getNotificationPermission() {
+            if (!isNotificationSupported()) return 'unsupported';
+            return Notification.permission;
+        }
+
+        // Show notification prompt if not granted
+        function checkAndShowNotificationPrompt() {
+            if (!isNotificationSupported()) return;
+            
+            const permission = getNotificationPermission();
+            if (permission === 'default') {
+                const prompt = document.getElementById('notificationPrompt');
+                if (prompt) {
+                    prompt.classList.add('active');
+                    setTimeout(() => {
+                        prompt.classList.remove('active');
+                    }, 10000);
+                }
+            } else if (permission === 'granted') {
+                registerServiceWorker();
+            }
+        }
+
+        function dismissNotificationPrompt() {
+            document.getElementById('notificationPrompt').classList.remove('active');
+        }
+
+        // Request notification permission
+        async function requestNotificationPermission() {
+            if (!isNotificationSupported()) {
+                showToast('Notifications are not supported on this browser', 'error');
+                return;
+            }
+
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    showToast('✅ Notifications enabled!', 'success');
+                    document.getElementById('notificationPrompt').classList.remove('active');
+                    await registerServiceWorker();
+                    await subscribeToPush();
+                } else {
+                    showToast('❌ Notification permission denied', 'error');
+                }
+            } catch (e) {
+                console.error('Error requesting notification permission:', e);
+                showToast('Error enabling notifications', 'error');
+            }
+        }
+
+        // Register Service Worker
+        async function registerServiceWorker() {
+            try {
+                if ('serviceWorker' in navigator) {
+                    const registration = await navigator.serviceWorker.register('/service-worker.js');
+                    console.log('Service Worker registered successfully');
+                    serviceWorkerRegistered = true;
+                    return registration;
+                }
+            } catch (e) {
+                console.error('Service Worker registration failed:', e);
+            }
+            return null;
+        }
+
+        // Subscribe to push notifications
+        async function subscribeToPush() {
+            try {
+                if (!serviceWorkerRegistered) {
+                    await registerServiceWorker();
+                }
+                
+                const registration = await navigator.serviceWorker.ready;
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: VAPID_PUBLIC_KEY
+                });
+
+                // Send subscription to your server
+                const res = await callAPI('savePushSubscription', {
+                    email: currentUserEmail,
+                    subscription: subscription
+                });
+
+                if (res.success) {
+                    pushSubscription = subscription;
+                    console.log('Push subscription saved');
+                    showToast('🔔 Push notifications enabled!', 'success');
+                } else {
+                    console.error('Failed to save subscription:', res.error);
+                }
+                
+                return subscription;
+            } catch (e) {
+                console.error('Push subscription failed:', e);
+                return null;
+            }
+        }
+
+        // Show browser notification
+        function showBrowserNotification(title, body, icon = '🏛️') {
+            if (getNotificationPermission() === 'granted') {
+                const options = {
+                    body: body,
+                    icon: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ctext y=".9em" font-size="90"%3E🏛️%3C/text%3E%3C/svg%3E',
+                    badge: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ctext y=".9em" font-size="90"%3E🏛️%3C/text%3E%3C/svg%3E',
+                    vibrate: [200, 100, 200],
+                    requireInteraction: true
+                };
+                const notification = new Notification(title, options);
+                notification.onclick = function() {
+                    window.focus();
+                    this.close();
+                };
+                return notification;
+            }
+            return null;
         }
 
         // ============================================================
@@ -3297,37 +3521,34 @@
             completedLoans = [];
             pendingTransactions = [];
             isLoading = false;
+            pushSubscription = null;
+            serviceWorkerRegistered = false;
             document.getElementById('appContainer').classList.remove('active');
             document.getElementById('tabBar').style.display = 'none';
             document.getElementById('loginOverlay').classList.add('active');
             document.getElementById('loginPassword').value = '';
             document.getElementById('loginError').style.display = 'none';
             showToast('Logged out successfully', 'success');
-            // Show splash briefly then hide
             document.getElementById('splashScreen').style.display = 'flex';
             document.getElementById('splashScreen').classList.remove('hidden');
             setTimeout(hideSplashScreen, 800);
         }
 
         // ============================================================
-        // DOM READY - CHECK PERSISTENT LOGIN WITH SPLASH SCREEN
+        // DOM READY
         // ============================================================
         document.addEventListener('DOMContentLoaded', async () => {
-            // Show splash screen immediately
             const splash = document.getElementById('splashScreen');
             splash.style.display = 'flex';
             splash.classList.remove('hidden');
 
-            // Check if user is already logged in
             if (checkPersistentLogin()) {
-                // Load profile image
                 const profileRes = await callAPI('getProfileImage', { email: currentUserEmail });
                 if (profileRes.success && profileRes.image) {
                     userProfileImage = profileRes.image;
                     localStorage.setItem('legacy_profile_image', userProfileImage);
                 }
 
-                // Hide splash and show app
                 hideSplashScreen();
 
                 document.getElementById('loginOverlay').classList.remove('active');
@@ -3342,12 +3563,18 @@
                 if (pendingTab) pendingTab.style.display = isTreasurer() ? 'flex' : 'none';
 
                 showBalanceLoading(true);
-                await loadAllData();
-                await loadMeetingMinutes();
-                await loadScheduledMeeting();
-                await loadMembersList();
+                await Promise.all([
+                    loadAllData(),
+                    loadMeetingMinutes(),
+                    loadScheduledMeeting(),
+                    loadMembersList()
+                ]);
                 activateTab(currentTab);
                 showBalanceLoading(false);
+
+                setTimeout(() => {
+                    checkAndShowNotificationPrompt();
+                }, 3000);
 
                 if (refreshInterval) clearInterval(refreshInterval);
                 refreshInterval = setInterval(() => {
@@ -3358,7 +3585,6 @@
                     }
                 }, 30000);
             } else {
-                // Hide splash and show login
                 hideSplashScreen();
                 document.getElementById('loginOverlay').classList.add('active');
             }
@@ -3397,6 +3623,9 @@
         window.handleProfileImageUpload = handleProfileImageUpload;
         window.viewMemberProfile = viewMemberProfile;
         window.exportToPDF = exportToPDF;
+        window.requestNotificationPermission = requestNotificationPermission;
+        window.dismissNotificationPrompt = dismissNotificationPrompt;
+        window.checkAndShowNotificationPrompt = checkAndShowNotificationPrompt;
     </script>
 
 </body>
