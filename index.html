@@ -1887,13 +1887,14 @@
 
     <script>
         // ============================================================
-        // CONFIGURATION
-        // ============================================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbzm2O2jDqTFwK7v730s2AkD7gxCb2UgtgseUaBGMrfLruwtJZqD_r0_7wajvf0qLkdT/exec";
-        const TREASURER_NAME = "Mrs. Kithinji";
-        
-        // VAPID Public Key from your backend
-       const VAPID_PUBLIC_KEY = 'BHyIXHgBdbBrRhFP7RRUKhIItMR6z8e_a_5TKmdexZXK12R9ftEGrUCLlTDZXwP-4p8AFNK26D05wZArdn2i9Mw';
+// CONFIGURATION
+// ============================================================
+const API_URL = "/api/sheets-proxy";  // ← Use the Vercel proxy API
+const TREASURER_NAME = "Mrs. Kithinji";
+
+// VAPID Public Key from your backend
+const VAPID_PUBLIC_KEY = 'BHyIXHgBdbBrRhFP7RRUKhIItMR6z8e_a_5TKmdexZXK12R9ftEGrUCLlTDZXwP-4p8AFNK26D05wZArdn2i9Mw';
+    
 
         let allRecords = [],
             allMembers = [],
