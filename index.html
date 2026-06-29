@@ -2935,72 +2935,73 @@
             }
 
             const ctx = canvas.getContext('2d');
+            const total = savings + loans + repaid;
+
+            // Donut chart: Savings / Loans / Repaid as slices (the three real,
+            // independent money movements), with Net shown as a center label
+            // instead of a fourth slice — Net is a derived value (Savings -
+            // Loans + Repaid), not an independent share, so it can't honestly
+            // be a slice of the same pie.
+            const centerTextPlugin = {
+                id: 'centerText',
+                afterDraw(chart) {
+                    const { ctx, chartArea } = chart;
+                    if (!chartArea) return;
+                    const cx = (chartArea.left + chartArea.right) / 2;
+                    const cy = (chartArea.top + chartArea.bottom) / 2;
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#64748b';
+                    ctx.font = `600 ${window.innerWidth < 500 ? 9 : 11}px -apple-system, sans-serif`;
+                    ctx.fillText('NET BALANCE', cx, cy - 14);
+                    ctx.fillStyle = net >= 0 ? '#059669' : '#dc2626';
+                    ctx.font = `700 ${window.innerWidth < 500 ? 16 : 20}px -apple-system, sans-serif`;
+                    ctx.fillText('KES ' + Math.round(net).toLocaleString('en-KE'), cx, cy + 8);
+                    ctx.restore();
+                }
+            };
 
             chartInstance = new Chart(ctx, {
-                type: 'bar',
+                type: 'doughnut',
                 data: {
-                    labels: ['Savings', 'Loans', 'Repaid', 'Net'],
+                    labels: ['Savings', 'Loans Taken', 'Repaid'],
                     datasets: [{
-                        label: 'Amount (KES)',
-                        data: [savings, loans, repaid, net],
+                        data: [savings, loans, repaid],
                         backgroundColor: [
-                            'rgba(16, 185, 129, 0.8)',
-                            'rgba(245, 158, 11, 0.8)',
-                            'rgba(59, 130, 246, 0.8)',
-                            'rgba(139, 92, 246, 0.8)'
+                            'rgba(16, 185, 129, 0.85)',
+                            'rgba(245, 158, 11, 0.85)',
+                            'rgba(59, 130, 246, 0.85)'
                         ],
-                        borderColor: [
-                            '#059669',
-                            '#d97706',
-                            '#1d4ed8',
-                            '#7c3aed'
-                        ],
+                        borderColor: ['#059669', '#d97706', '#1d4ed8'],
                         borderWidth: 2,
-                        borderRadius: 8,
-                        barPercentage: 0.6
+                        hoverOffset: 8
                     }]
                 },
+                plugins: [centerTextPlugin],
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
+                    cutout: '68%',
                     plugins: {
                         legend: {
-                            display: false
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                boxHeight: 12,
+                                padding: 14,
+                                font: { size: window.innerWidth < 500 ? 10 : 12, weight: '600' },
+                                color: '#334155'
+                            }
                         },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return 'KES ' + context.parsed.y.toLocaleString('en-KE');
+                                    const value = context.parsed;
+                                    const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+                                    return `${context.label}: KES ${value.toLocaleString('en-KE')} (${pct}%)`;
                                 }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return 'KES ' + value.toLocaleString('en-KE');
-                                },
-                                font: {
-                                    size: window.innerWidth < 500 ? 8 : 10
-                                },
-                                maxTicksLimit: window.innerWidth < 500 ? 4 : 6
-                            },
-                            grid: {
-                                color: 'rgba(0,0,0,0.05)'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                font: {
-                                    size: window.innerWidth < 500 ? 9 : 11,
-                                    weight: '600'
-                                },
-                                maxRotation: 0
                             }
                         }
                     },
