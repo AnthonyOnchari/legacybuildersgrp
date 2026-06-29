@@ -6,7 +6,7 @@
     <title>Legacy Builders Group</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js">
     </script>
     <!-- FIX: html2pdf.js was used in exportToPDF() (html2pdf().set(opt).from(content).save())
@@ -16,32 +16,38 @@
     </script>
     <style>
         /* ============================================
-           DESIGN TOKENS — "Warm Chama" palette
-           Grounded in the subject: a family savings circle.
-           Terracotta + soil + parchment + sage, evoking woven
-           baskets, sun-baked earth, and ledger books — not a
-           generic fintech dark-green-gradient.
+           DESIGN TOKENS — "Private Ledger" palette
+           Grounded in the subject: a member-run financial
+           institution that real people trust with real money.
+           Navy/charcoal + a single restrained gold accent reads
+           as a private bank statement, not a consumer app.
+           Signature: a hairline gold "ledger rule" under every
+           section heading, echoing a handwritten account book —
+           specific to a savings group's own history, not generic
+           dark-mode-with-accent.
            ============================================ */
         :root {
-            --clay: #C1652F;          /* primary accent — terracotta */
-            --clay-deep: #A14F22;     /* pressed/hover state of clay */
-            --soil: #3D2817;          /* deep brown — headers, dark text */
-            --soil-soft: #5C4332;     /* secondary text on cream */
-            --parchment: #F7EDE0;     /* warm cream — page background */
-            --parchment-card: #FFFBF5;/* card background, lighter than page */
-            --sage: #7A8B5C;         /* savings / positive */
-            --sage-deep: #5F6E45;
-            --gold: #D4A24C;         /* treasurer / accent highlights */
-            --gold-soft: #F0DCAE;
-            --rust: #B0492F;         /* loans / attention */
-            --rust-soft: #E8C4B5;
-            --ink: #2A1E14;          /* near-black warm ink for body text */
-            --line: #E4D4BE;         /* hairline borders on parchment */
+            --navy: #0F1B2D;          /* deepest background, header, sidebar */
+            --navy-soft: #16263D;     /* card surface on dark contexts */
+            --charcoal: #1A2638;      /* secondary dark surface */
+            --slate: #3A4A5E;         /* muted borders/dividers on dark */
+            --gold: #C9A356;         /* the one accent — treasurer, CTAs, active states */
+            --gold-deep: #A9853F;    /* pressed/hover gold */
+            --gold-soft: #EFE3C8;    /* pale gold tint for light backgrounds */
+            --paper: #F4F2ED;        /* off-white page background */
+            --paper-card: #FFFFFF;   /* card surface on light contexts */
+            --ink: #15202E;          /* near-black navy ink, body text on paper */
+            --ink-soft: #5B6B7E;     /* secondary text */
+            --line: #DCD7CC;         /* hairline border on paper */
+            --sage: #4A7A6B;         /* savings / positive, used sparingly */
+            --sage-deep: #386054;
+            --rust: #A8453A;         /* loans / attention, used sparingly */
+            --rust-soft: #E6C9C4;
         }
 
         * {
             box-sizing: border-box;
-            font-family: 'Karla', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 0;
         }
@@ -49,12 +55,22 @@
         h1, h2, h3,
         .splash-title, .login-box h1, .profile-name, .member-card .member-name,
         .card h2, .header-row-1 h1, .history-modal-header h3, .modal-content h3,
-        .balance-card .amount {
+        .balance-card .amount, .sidebar-brand-name {
             font-family: 'Fraunces', Georgia, serif;
         }
 
+        /* Signature element: a hairline gold ledger-rule beneath every
+           card heading, with a small serif folio numeral — the visual
+           memory of a handwritten account ledger, rendered in CSS. */
+        .card h2 {
+            counter-increment: ledger-line;
+        }
+        .card {
+            counter-reset: ledger-line;
+        }
+
         body {
-            background: var(--parchment);
+            background: var(--paper);
             color: var(--ink);
             min-height: 100vh;
         }
@@ -63,13 +79,14 @@
         /* ============================================
            SPLASH LOADING SCREEN
            ============================================ */
+
         #splashScreen {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, var(--soil) 0%, var(--clay) 100%);
+            background: linear-gradient(160deg, var(--navy) 0%, #0A1422 100%);
             z-index: 9999;
             display: flex;
             flex-direction: column;
@@ -120,7 +137,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, var(--soil) 0%, var(--clay) 100%);
+            background: linear-gradient(160deg, var(--navy) 0%, #0A1422 100%);
             z-index: 1000;
             display: none;
             align-items: center;
@@ -134,7 +151,7 @@
         
         .login-box {
             background: white;
-            border-radius: 32px;
+            border-radius: 10px;
             padding: 32px 24px;
             max-width: 420px;
             width: 100%;
@@ -149,13 +166,13 @@
         }
         
         .login-box h1 {
-            color: var(--soil);
+            color: var(--navy);
             font-size: 28px;
             margin-bottom: 6px;
         }
         
         .login-box .subtitle {
-            color: var(--soil-soft);
+            color: var(--ink-soft);
             font-size: 13px;
             margin-bottom: 24px;
         }
@@ -168,7 +185,7 @@
         .login-form-group label {
             font-size: 12px;
             font-weight: 500;
-            color: var(--soil-soft);
+            color: var(--ink-soft);
             display: block;
             margin-bottom: 4px;
         }
@@ -177,22 +194,22 @@
             width: 100%;
             padding: 12px 14px;
             border: 2px solid var(--line);
-            border-radius: 16px;
+            border-radius: 8px;
             font-size: 14px;
             transition: all 0.2s;
         }
         
         .login-form-group input:focus {
             outline: none;
-            border-color: var(--clay);
+            border-color: var(--gold);
         }
         
         .login-btn {
-            background: var(--clay);
+            background: var(--gold);
             color: white;
             border: none;
             padding: 14px;
-            border-radius: 40px;
+            border-radius: 6px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
@@ -240,12 +257,12 @@
         .forgot-password-link {
             margin-top: 16px;
             font-size: 13px;
-            color: var(--soil-soft);
+            color: var(--ink-soft);
         }
         
         .register-link a,
         .forgot-password-link a {
-            color: var(--clay);
+            color: var(--gold);
             font-weight: 600;
             cursor: pointer;
             text-decoration: none;
@@ -264,10 +281,10 @@
             bottom: 80px;
             left: 50%;
             transform: translateX(-50%);
-            background: var(--soil);
+            background: var(--navy);
             color: white;
             padding: 12px 20px;
-            border-radius: 50px;
+            border-radius: 6px;
             z-index: 2001;
             display: none;
             align-items: center;
@@ -279,10 +296,10 @@
         .notification-prompt.active { display: flex; }
         .notification-prompt button {
             background: var(--gold);
-            color: var(--soil);
+            color: var(--navy);
             border: none;
             padding: 8px 16px;
-            border-radius: 30px;
+            border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
             font-size: 12px;
@@ -309,14 +326,23 @@
         }
         
         /* ============================================
-           APP CONTAINER
+           APP CONTAINER — now a flex shell that holds an
+           optional sidebar (desktop/tablet) alongside the
+           main content column.
            ============================================ */
+        .app-shell {
+            display: flex;
+            min-height: 100vh;
+        }
+
         .app-container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 12px 12px 70px;
             display: none;
             animation: fadeIn 0.3s ease;
+            flex: 1;
+            width: 100%;
         }
         
         .app-container.active {
@@ -327,32 +353,147 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
+
+        /* ============================================
+           SIDEBAR — replaces the bottom tab bar on wider
+           screens (>=900px). A persistent left rail reads
+           as a dashboard/institution rather than a consumer
+           app's bottom tabs.
+           ============================================ */
+        .sidebar {
+            display: none;
+            width: 248px;
+            flex-shrink: 0;
+            background: var(--navy);
+            min-height: 100vh;
+            padding: 28px 0;
+            position: sticky;
+            top: 0;
+        }
+
+        .sidebar.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-brand {
+            padding: 0 24px 28px;
+            border-bottom: 1px solid var(--slate);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-brand-name {
+            color: var(--paper);
+            font-size: 19px;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+
+        .sidebar-brand-tagline {
+            color: var(--gold);
+            font-size: 10px;
+            font-style: italic;
+            letter-spacing: 0.4px;
+            margin-top: 4px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 0 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: 8px;
+            color: #8294A8;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            background: none;
+            text-align: left;
+            width: 100%;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .sidebar-link:hover {
+            background: var(--navy-soft);
+            color: var(--paper);
+        }
+
+        .sidebar-link.active {
+            background: var(--navy-soft);
+            color: var(--gold);
+            box-shadow: inset 3px 0 0 var(--gold);
+        }
+
+        .sidebar-link .tab-icon {
+            font-size: 16px;
+            width: 18px;
+            text-align: center;
+        }
+
+        .sidebar-link .pending-count {
+            margin-left: auto;
+        }
+
+        .sidebar-foot {
+            padding: 16px 24px 0;
+            border-top: 1px solid var(--slate);
+            margin-top: 16px;
+        }
+
+        .sidebar-foot button {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--slate);
+            color: #8294A8;
+            font-size: 12px;
+            padding: 9px;
+        }
+
+        .sidebar-foot button:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        @media (min-width: 900px) {
+            .tab-bar { display: none !important; }
+            .app-container { padding-bottom: 32px; max-width: 980px; }
+        }
         
         /* ============================================
            HEADER - SCROLLABLE
            ============================================ */
         .header {
-            background: linear-gradient(135deg, var(--soil) 0%, var(--clay) 100%);
-            color: white;
-            border-radius: 24px;
+            background: var(--navy);
+            color: var(--paper);
+            border-radius: 10px;
             margin-bottom: 16px;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-bottom: 2px solid var(--gold);
         }
         
         .header-row-1 {
-            padding: 16px 16px 4px 16px;
+            padding: 18px 16px 4px 16px;
             text-align: center;
         }
         
         .header-row-1 h1 {
-            font-size: 22px;
+            font-size: 21px;
             font-weight: 600;
             margin: 0;
+            letter-spacing: 0.2px;
         }
         
         .header-row-2 {
-            padding: 0 16px 8px 16px;
+            padding: 0 16px 10px 16px;
             text-align: center;
         }
         
@@ -366,24 +507,26 @@
         
         .slogan-sub {
             font-size: 10px;
-            opacity: 0.85;
+            opacity: 0.7;
             margin-top: 2px;
+            color: #8294A8;
         }
         
         .header-row-3 {
-            background: rgba(0, 0, 0, 0.15);
+            background: var(--navy-soft);
             padding: 10px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: nowrap;
             gap: 8px;
+            border-top: 1px solid var(--slate);
         }
         
         .user-name-badge {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
             padding: 5px 12px;
-            border-radius: 30px;
+            border-radius: 6px;
             font-size: 12px;
             font-weight: 500;
             white-space: nowrap;
@@ -395,14 +538,14 @@
         }
         
         .user-name-badge:hover {
-            background: rgba(255, 255, 255, 0.35);
+            background: rgba(255, 255, 255, 0.16);
         }
         
         .user-avatar-small {
             width: 28px;
             height: 28px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.15);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -429,7 +572,7 @@
             border: none;
             color: white;
             padding: 5px 12px;
-            border-radius: 30px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 11px;
             font-weight: 500;
@@ -490,7 +633,7 @@
         }
         
         .balance-card {
-            border-radius: 18px;
+            border-radius: 10px;
             padding: 12px;
             text-align: center;
             position: relative;
@@ -539,10 +682,10 @@
         }
         
         .history-side-btn {
-            background: linear-gradient(135deg, var(--gold), var(--clay-deep));
+            background: linear-gradient(135deg, var(--gold), var(--gold-deep));
             color: white;
             border: none;
-            border-radius: 14px;
+            border-radius: 8px;
             padding: 8px 16px;
             display: flex;
             flex-direction: column;
@@ -582,7 +725,7 @@
             background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
             background-size: 200% 100%;
             animation: shimmerMove 1.5s infinite;
-            border-radius: 18px;
+            border-radius: 10px;
         }
         
         @keyframes shimmerMove {
@@ -595,14 +738,13 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: white;
+            background: var(--navy);
             display: flex;
             justify-content: space-around;
             padding: 6px 12px 18px;
-            box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
-            border-top-left-radius: 24px;
-            border-top-right-radius: 24px;
+            box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.25);
             z-index: 100;
+            border-top: 1px solid var(--slate);
         }
         
         .tab {
@@ -613,9 +755,8 @@
             border: none;
             font-size: 11px;
             font-weight: 500;
-            color: #A88E72;
+            color: #8294A8;
             cursor: pointer;
-            border-radius: 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -623,8 +764,7 @@
         }
         
         .tab.active {
-            color: var(--clay);
-            background: var(--gold-soft);
+            color: var(--gold);
         }
         
         .tab-icon {
@@ -634,10 +774,11 @@
         
         .pending-count {
             background: var(--gold);
-            color: white;
-            border-radius: 12px;
+            color: var(--navy);
+            border-radius: 10px;
             padding: 0px 6px;
             font-size: 10px;
+            font-weight: 700;
             margin-left: 4px;
             display: none;
         }
@@ -647,7 +788,7 @@
         .pending-item {
             background: var(--gold-soft);
             border-left: 4px solid var(--gold);
-            border-radius: 14px;
+            border-radius: 8px;
             padding: 14px;
             margin-bottom: 12px;
         }
@@ -656,20 +797,22 @@
         .panel.active-panel { display: block; }
         
         .card {
-            background: white;
-            border-radius: 20px;
-            padding: 16px;
+            background: var(--paper-card);
+            border-radius: 10px;
+            padding: 18px;
             margin-bottom: 14px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--line);
+            box-shadow: 0 1px 2px rgba(15, 27, 45, 0.04);
         }
         
         .card h2 {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
-            color: var(--soil);
-            border-left: 3px solid var(--clay);
-            padding-left: 10px;
-            margin-bottom: 14px;
+            color: var(--navy);
+            padding-bottom: 10px;
+            margin-bottom: 16px;
+            border-bottom: 2px solid var(--gold);
+            position: relative;
         }
         
         .form-grid {
@@ -688,13 +831,13 @@
             width: 100%;
             padding: 10px 12px;
             border: 1px solid var(--line);
-            border-radius: 14px;
+            border-radius: 8px;
             font-size: 13px;
             background: white;
         }
         
         select:disabled {
-            background: var(--parchment);
+            background: var(--paper);
             cursor: not-allowed;
         }
         
@@ -705,7 +848,7 @@
         select:focus,
         textarea:focus {
             outline: none;
-            border-color: var(--clay);
+            border-color: var(--gold);
         }
         
         label {
@@ -713,19 +856,24 @@
             margin-bottom: 4px;
             display: block;
             font-size: 11px;
-            color: var(--soil-soft);
+            color: var(--ink-soft);
         }
         
         button {
-            background: var(--clay);
-            color: white;
+            background: var(--gold);
+            color: var(--navy);
             border: none;
             padding: 12px 20px;
-            border-radius: 40px;
+            border-radius: 6px;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             width: 100%;
+            transition: background 0.15s;
+        }
+
+        button:hover {
+            background: var(--gold-deep);
         }
         
         button:disabled {
@@ -733,7 +881,7 @@
             cursor: not-allowed;
         }
         
-        .btn-secondary { background: var(--soil-soft); }
+        .btn-secondary { background: var(--ink-soft); }
         .approve-btn {
             background: var(--sage);
             width: auto;
@@ -764,10 +912,11 @@
         }
         
         .countdown-timer {
-            background: linear-gradient(135deg, var(--soil), var(--clay));
+            background: var(--navy);
             color: var(--gold);
             padding: 8px 12px;
-            border-radius: 30px;
+            border-radius: 6px;
+            border: 1px solid var(--gold);
             font-size: 12px;
             font-weight: bold;
             display: inline-block;
@@ -786,8 +935,8 @@
         }
         
         .loan-item {
-            background: var(--parchment);
-            border-radius: 14px;
+            background: var(--paper);
+            border-radius: 8px;
             padding: 12px;
             margin-bottom: 10px;
             border-left: 3px solid var(--gold);
@@ -800,14 +949,14 @@
         
         .completed-loan-item {
             background: var(--gold-soft);
-            border-radius: 14px;
+            border-radius: 8px;
             padding: 12px;
             margin-bottom: 10px;
         }
         
         .meeting-item {
-            background: var(--parchment);
-            border-radius: 14px;
+            background: var(--paper);
+            border-radius: 8px;
             padding: 12px;
             margin-bottom: 10px;
             border-left: 3px solid var(--gold);
@@ -823,14 +972,14 @@
         }
         
         .meeting-date { font-weight: 600;
-            color: var(--soil);
+            color: var(--navy);
             font-size: 13px; }
         .meeting-author { font-size: 11px;
-            color: var(--soil-soft); }
+            color: var(--ink-soft); }
         .meeting-section { margin-top: 8px; }
         .meeting-section-title { font-weight: 600;
             font-size: 11px;
-            color: var(--soil-soft);
+            color: var(--ink-soft);
             margin-bottom: 4px; }
         .meeting-section-content { font-size: 12px;
             color: var(--ink); }
@@ -842,7 +991,7 @@
         
         .search-container {
             background: white;
-            border-radius: 16px;
+            border-radius: 8px;
             padding: 12px;
             margin-bottom: 14px;
         }
@@ -851,7 +1000,7 @@
             width: 100%;
             padding: 10px 12px;
             border: 1px solid var(--line);
-            border-radius: 30px;
+            border-radius: 6px;
             font-size: 13px;
             margin-bottom: 10px;
         }
@@ -862,7 +1011,7 @@
         
         .badge {
             padding: 3px 8px;
-            border-radius: 20px;
+            border-radius: 10px;
             font-size: 10px;
             font-weight: 600;
             display: inline-block;
@@ -877,7 +1026,7 @@
         .empty-state {
             text-align: center;
             padding: 30px;
-            color: var(--soil-soft);
+            color: var(--ink-soft);
             font-size: 13px;
         }
         
@@ -889,13 +1038,13 @@
             background: var(--ink);
             color: white;
             padding: 10px 16px;
-            border-radius: 50px;
+            border-radius: 6px;
             text-align: center;
             font-size: 13px;
             z-index: 2000;
             animation: slideUp 0.3s ease;
         }
-        .toast.success { background: var(--clay); }
+        .toast.success { background: var(--gold); }
         .toast.error { background: var(--rust); }
         
         .progress-bar {
@@ -929,7 +1078,7 @@
         
         .modal-content {
             background: white;
-            border-radius: 28px;
+            border-radius: 10px;
             padding: 24px;
             max-width: 500px;
             width: 100%;
@@ -939,19 +1088,19 @@
         }
         
         .modal-content h3 { margin-bottom: 16px;
-            color: var(--soil); }
+            color: var(--navy); }
         .modal-buttons { display: flex;
             gap: 10px;
             margin-top: 20px; }
         .modal-buttons button { flex: 1; }
-        .close-modal { background: var(--soil-soft); }
+        .close-modal { background: var(--ink-soft); }
         
         .loading-spinner {
             width: 40px;
             height: 40px;
             border: 3px solid var(--line);
-            border-top-color: var(--clay);
-            border-right-color: var(--clay);
+            border-top-color: var(--gold);
+            border-right-color: var(--gold);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             margin-bottom: 12px;
@@ -969,7 +1118,7 @@
             width: 100%;
             padding: 14px;
             border: 2px solid var(--line);
-            border-radius: 16px;
+            border-radius: 8px;
             font-size: 20px;
             text-align: center;
             letter-spacing: 8px;
@@ -992,7 +1141,7 @@
         
         .history-modal-content {
             background: white;
-            border-radius: 28px;
+            border-radius: 10px;
             width: 95%;
             max-width: 1100px;
             max-height: 85vh;
@@ -1012,7 +1161,7 @@
         }
         
         .history-modal-header h3 {
-            color: var(--soil);
+            color: var(--navy);
             font-size: 16px;
             margin: 0;
         }
@@ -1022,7 +1171,7 @@
             border: none;
             font-size: 22px;
             cursor: pointer;
-            color: var(--soil-soft);
+            color: var(--ink-soft);
             width: auto;
             padding: 0 8px;
         }
@@ -1048,7 +1197,7 @@
         }
         
         .history-table th {
-            background: var(--parchment);
+            background: var(--paper);
             font-weight: 600;
             position: sticky;
             top: 0;
@@ -1095,7 +1244,7 @@
         .history-search select {
             padding: 6px 10px;
             border: 1px solid var(--line);
-            border-radius: 30px;
+            border-radius: 6px;
             font-size: 12px;
             flex: 1;
         }
@@ -1144,7 +1293,7 @@
         
         .profile-modal {
             background: white;
-            border-radius: 32px;
+            border-radius: 10px;
             max-width: 480px;
             width: 100%;
             max-height: 90vh;
@@ -1166,8 +1315,8 @@
         
         .profile-cover {
             height: 120px;
-            background: linear-gradient(135deg, var(--soil), var(--clay));
-            border-radius: 32px 32px 0 0;
+            background: linear-gradient(160deg, var(--navy), #0A1422);
+            border-radius: 10px 10px 0 0;
             position: relative;
         }
         
@@ -1189,7 +1338,7 @@
             justify-content: center;
             font-size: 40px;
             font-weight: 700;
-            color: var(--soil);
+            color: var(--navy);
             overflow: hidden;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
@@ -1245,18 +1394,18 @@
         
         .profile-email {
             font-size: 14px;
-            color: var(--soil-soft);
+            color: var(--ink-soft);
             margin-bottom: 4px;
         }
         
         .profile-role {
             display: inline-block;
             padding: 4px 16px;
-            border-radius: 30px;
+            border-radius: 6px;
             font-size: 11px;
             font-weight: 600;
             background: var(--gold-soft);
-            color: var(--soil);
+            color: var(--navy);
             margin-bottom: 20px;
         }
         
@@ -1279,8 +1428,8 @@
         }
         
         .profile-stat-card {
-            background: var(--parchment);
-            border-radius: 16px;
+            background: var(--paper);
+            border-radius: 8px;
             padding: 14px 12px;
             text-align: center;
             transition: all 0.2s ease;
@@ -1296,12 +1445,12 @@
         .profile-stat-card .stat-number {
             font-size: 20px;
             font-weight: 700;
-            color: var(--soil);
+            color: var(--navy);
         }
         
         .profile-stat-card .stat-label {
             font-size: 10px;
-            color: var(--soil-soft);
+            color: var(--ink-soft);
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -1322,7 +1471,7 @@
         .profile-actions button {
             flex: 1;
             padding: 10px;
-            border-radius: 30px;
+            border-radius: 6px;
             font-size: 13px;
             font-weight: 500;
             border: none;
@@ -1331,8 +1480,8 @@
         }
         
         .profile-actions .btn-change-pwd {
-            background: var(--parchment);
-            color: var(--soil-soft);
+            background: var(--paper);
+            color: var(--ink-soft);
         }
         
         .profile-actions .btn-change-pwd:hover {
@@ -1340,12 +1489,12 @@
         }
         
         .profile-actions .btn-close {
-            background: var(--clay);
+            background: var(--gold);
             color: white;
         }
         
         .profile-actions .btn-close:hover {
-            background: var(--soil);
+            background: var(--navy);
         }
         
         .profile-file-input {
@@ -1356,7 +1505,7 @@
             display: none;
             margin-top: 8px;
             font-size: 12px;
-            color: var(--soil-soft);
+            color: var(--ink-soft);
         }
         
         .upload-progress.active {
@@ -1374,7 +1523,7 @@
         
         .upload-progress .progress-bar .progress-fill {
             height: 100%;
-            background: var(--clay);
+            background: var(--gold);
             width: 0%;
             transition: width 0.3s ease;
         }
@@ -1386,7 +1535,7 @@
             width: 100%;
             max-height: 400px;
             overflow: hidden;
-            border-radius: 16px;
+            border-radius: 8px;
             margin: 12px 0;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             background: var(--gold-soft);
@@ -1413,9 +1562,9 @@
         }
         
         .about-value {
-            background: var(--parchment);
+            background: var(--paper);
             padding: 14px 10px;
-            border-radius: 16px;
+            border-radius: 8px;
             text-align: center;
             border: 1px solid var(--line);
         }
@@ -1429,18 +1578,18 @@
         .about-value .title {
             font-size: 12px;
             font-weight: 600;
-            color: var(--soil);
+            color: var(--navy);
         }
         
         .about-value .desc {
             font-size: 10px;
-            color: var(--soil-soft);
+            color: var(--ink-soft);
         }
         
         .members-section-title {
             font-size: 14px;
             font-weight: 600;
-            color: var(--soil);
+            color: var(--navy);
             margin: 20px 0 12px;
             padding-bottom: 8px;
             border-bottom: 2px solid var(--gold-soft);
@@ -1464,12 +1613,12 @@
         
         .member-card {
             background: white;
-            border-radius: 20px;
+            border-radius: 10px;
             padding: 16px;
             text-align: center;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             transition: all 0.3s ease;
-            border: 1px solid var(--parchment);
+            border: 1px solid var(--paper);
             cursor: pointer;
             display: flex;
             flex-direction: column;
@@ -1479,7 +1628,7 @@
         .member-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            border-color: var(--clay);
+            border-color: var(--gold);
         }
         
         .member-avatar {
@@ -1493,7 +1642,7 @@
             justify-content: center;
             font-size: 28px;
             font-weight: 700;
-            color: var(--soil);
+            color: var(--navy);
             overflow: hidden;
             border: 3px solid var(--gold-soft);
             flex-shrink: 0;
@@ -1513,7 +1662,7 @@
         
         .member-card .member-role {
             font-size: 11px;
-            color: var(--soil-soft);
+            color: var(--ink-soft);
             margin-top: 2px;
         }
         
@@ -1528,12 +1677,12 @@
             grid-template-columns: 1fr 1fr;
             gap: 4px;
             font-size: 10px;
-            color: var(--soil-soft);
+            color: var(--ink-soft);
             width: 100%;
         }
         
         .member-card .member-stats span {
-            background: var(--parchment);
+            background: var(--paper);
             padding: 4px 6px;
             border-radius: 8px;
             text-align: center;
@@ -1541,10 +1690,10 @@
         
         .member-count-badge {
             display: inline-block;
-            background: var(--clay);
+            background: var(--gold);
             color: white;
             padding: 2px 14px;
-            border-radius: 30px;
+            border-radius: 6px;
             font-size: 12px;
             margin: 0 auto 8px;
         }
@@ -1555,8 +1704,8 @@
         .chart-wrapper {
             position: relative;
             padding: 8px;
-            background: var(--parchment);
-            border-radius: 16px;
+            background: var(--paper);
+            border-radius: 8px;
             border: 1px solid var(--gold-soft);
             min-height: 280px;
             width: 100%;
@@ -1583,7 +1732,7 @@
             background: var(--rust);
         }
         .pdf-btn:hover {
-            background: var(--clay-deep);
+            background: var(--gold-deep);
         }
 
         /* ============================================
@@ -1609,7 +1758,7 @@
         
         #pdfGenerator .pdf-preview {
             background: white;
-            border-radius: 16px;
+            border-radius: 8px;
             padding: 30px;
             max-width: 800px;
             width: 100%;
@@ -1629,7 +1778,7 @@
             border: none;
             font-size: 24px;
             cursor: pointer;
-            color: var(--soil-soft);
+            color: var(--ink-soft);
             width: auto;
         }
         
@@ -1638,11 +1787,11 @@
         }
         
         .pdf-generate-btn {
-            background: var(--clay);
+            background: var(--gold);
             color: white;
             border: none;
             padding: 12px 24px;
-            border-radius: 40px;
+            border-radius: 6px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
@@ -1651,7 +1800,7 @@
         }
         
         .pdf-generate-btn:hover {
-            background: var(--soil);
+            background: var(--navy);
         }
         
         .pdf-generate-btn:disabled {
@@ -1671,7 +1820,7 @@
         .pdf-progress-bar {
             width: 0%;
             height: 100%;
-            background: linear-gradient(90deg, var(--clay), var(--sage));
+            background: linear-gradient(90deg, var(--gold), var(--sage));
             border-radius: 10px;
             transition: width 0.3s ease;
         }
@@ -1764,6 +1913,28 @@
         <button class="dismiss-btn" onclick="dismissNotificationPrompt()">✕</button>
     </div>
 
+    <!-- APP SHELL: sidebar (desktop/tablet) + main content -->
+    <div class="app-shell">
+        <!-- SIDEBAR — mirrors the bottom tab bar's data-panel targets so the
+             existing activateTab() JS drives both without any logic changes. -->
+        <nav class="sidebar" id="sidebarNav">
+            <div class="sidebar-brand">
+                <div class="sidebar-brand-name">🏛️ Legacy Builders</div>
+                <div class="sidebar-brand-tagline">Where Families Build Wealth Together</div>
+            </div>
+            <div class="sidebar-nav">
+                <button class="sidebar-link" data-panel="transactions"><span class="tab-icon">📋</span><span>Transactions</span></button>
+                <button class="sidebar-link" data-panel="summary"><span class="tab-icon">📊</span><span>Summary</span></button>
+                <button class="sidebar-link" data-panel="loans"><span class="tab-icon">💰</span><span>Loans</span></button>
+                <button class="sidebar-link" data-panel="meetings"><span class="tab-icon">📝</span><span>Meetings</span></button>
+                <button class="sidebar-link" data-panel="about"><span class="tab-icon">👥</span><span>About Us</span></button>
+                <button class="sidebar-link" data-panel="pending" id="pendingSidebarLink" style="display: none;"><span class="tab-icon">⏳</span><span>Pending</span><span id="pendingCountSidebar" class="pending-count"></span></button>
+            </div>
+            <div class="sidebar-foot">
+                <button onclick="logout(event)">Logout</button>
+            </div>
+        </nav>
+
     <!-- APP CONTAINER -->
     <div class="app-container" id="appContainer">
         <div class="header">
@@ -1801,12 +1972,12 @@
                 <h2>Add Transaction</h2>
                 <div class="form-grid">
                     <div><label>📅 Date</label><input type="date" id="date"></div>
-                    <div><label>👤 Member Selected</label><select id="memberSelect" disabled style="background:#F7EDE0;"><option value="">Loading...</option></select></div>
+                    <div><label>👤 Member Selected</label><select id="memberSelect" disabled style="background:#F4F2ED;"><option value="">Loading...</option></select></div>
                     <div><label>Choose Transaction Type</label><select id="type" onchange="toggleApprovalNotice()"><option value="Savings">Savings (Deposit)</option><option value="Loan Taken">Loan Request (Needs ALL Members to Approve)</option><option value="Loan Repayment">Loan Repayment</option></select></div>
-                    <div><label>Amount (KES)</label><input type="number" id="amount" placeholder="0"><small style="font-size:10px; color:#5C4332; display:block; margin-top:4px;">For loans: Enter PRINCIPAL amount (10% interest will be added)</small></div>
+                    <div><label>Amount (KES)</label><input type="number" id="amount" placeholder="0"><small style="font-size:10px; color:#5B6B7E; display:block; margin-top:4px;">For loans: Enter PRINCIPAL amount (10% interest will be added)</small></div>
                     <div><label>Transaction Message</label><input type="text" id="message" placeholder="e.g., Bank/Mpesa Message"></div>
                 </div>
-                <div id="approvalNotice" style="background:#F0DCAE; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">⚠️ Loan requests need approval from ALL other members. 10% interest will be added to the loan.</div>
+                <div id="approvalNotice" style="background:#EFE3C8; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">⚠️ Loan requests need approval from ALL other members. 10% interest will be added to the loan.</div>
                 <button id="addBtn">Submit Transaction</button>
             </div>
         </div>
@@ -1942,6 +2113,7 @@
             </div>
         </div>
     </div>
+    </div><!-- /app-shell -->
 
     <!-- TAB BAR -->
     <div class="tab-bar" id="tabBar" style="display: none;">
@@ -1957,8 +2129,8 @@
     <div id="pdfGenerator">
         <div class="pdf-preview" id="pdfPreview">
             <div style="text-align: center; padding: 40px;">
-                <div style="width: 40px; height: 40px; border: 3px solid #E4D4BE; border-top-color: #C1652F; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;"></div>
-                <p style="color: #5C4332;">Generating PDF...</p>
+                <div style="width: 40px; height: 40px; border: 3px solid #DCD7CC; border-top-color: #C9A356; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;"></div>
+                <p style="color: #5B6B7E;">Generating PDF...</p>
             </div>
         </div>
     </div>
@@ -2282,6 +2454,7 @@
                     document.getElementById('loginOverlay').classList.remove('active');
                     document.getElementById('appContainer').classList.add('active');
                     document.getElementById('tabBar').style.display = 'flex';
+                    document.getElementById('sidebarNav')?.classList.add('active');
                     document.getElementById('loggedInUser').innerText = currentUser;
                     document.getElementById('date').value = new Date().toISOString().split('T')[0];
 
@@ -2289,6 +2462,8 @@
 
                     const pendingTab = document.getElementById('pendingTab');
                     if (pendingTab) pendingTab.style.display = isTreasurer() ? 'flex' : 'none';
+                    const pendingSidebarLink = document.getElementById('pendingSidebarLink');
+                    if (pendingSidebarLink) pendingSidebarLink.style.display = isTreasurer() ? 'flex' : 'none';
 
                     showBalanceLoading(true);
                     await loadAllData();
@@ -2368,7 +2543,7 @@
                 if (res.success && res.meeting && res.meeting.date) {
                     card.style.display = 'block';
                     info.innerHTML = `
-                            <div class="meeting-item" style="border-left-color: #D4A24C; background: #FBF3E3;">
+                            <div class="meeting-item" style="border-left-color: #C9A356; background: #F4F2ED;">
                                 <div class="meeting-header">
                                     <span class="meeting-date">📅 ${escapeHtml(res.meeting.date)}</span>
                                 </div>
@@ -3007,11 +3182,11 @@
                     ctx.save();
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillStyle = '#5C4332';
-                    ctx.font = `600 ${window.innerWidth < 500 ? 9 : 11}px -apple-system, sans-serif`;
+                    ctx.fillStyle = '#5B6B7E';
+                    ctx.font = `600 ${window.innerWidth < 500 ? 9 : 11}px Inter, sans-serif`;
                     ctx.fillText('NET BALANCE', cx, cy - 14);
-                    ctx.fillStyle = net >= 0 ? '#5F6E45' : '#B0492F';
-                    ctx.font = `700 ${window.innerWidth < 500 ? 16 : 20}px -apple-system, sans-serif`;
+                    ctx.fillStyle = net >= 0 ? '#386054' : '#A8453A';
+                    ctx.font = `700 ${window.innerWidth < 500 ? 16 : 20}px Inter, sans-serif`;
                     ctx.fillText('KES ' + Math.round(net).toLocaleString('en-KE'), cx, cy + 8);
                     ctx.restore();
                 }
@@ -3028,7 +3203,7 @@
                             'rgba(245, 158, 11, 0.85)',
                             'rgba(59, 130, 246, 0.85)'
                         ],
-                        borderColor: ['#5F6E45', '#A87A2E', '#A14F22'],
+                        borderColor: ['#386054', '#A9853F', '#A9853F'],
                         borderWidth: 2,
                         hoverOffset: 8
                     }]
@@ -3047,7 +3222,7 @@
                                 boxHeight: 12,
                                 padding: 14,
                                 font: { size: window.innerWidth < 500 ? 10 : 12, weight: '600' },
-                                color: '#5C4332'
+                                color: '#5B6B7E'
                             }
                         },
                         tooltip: {
@@ -3125,9 +3300,9 @@
                     const { ctx, chartArea } = chart;
                     if (!chartArea) return;
                     ctx.save();
-                    ctx.fillStyle = '#F0DCAE';
+                    ctx.fillStyle = '#FAF6EC';
                     ctx.fillRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
-                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+                    ctx.strokeStyle = 'rgba(201, 163, 86, 0.25)';
                     ctx.lineWidth = 1;
                     const stepX = (chartArea.right - chartArea.left) / 20;
                     const stepY = (chartArea.bottom - chartArea.top) / 14;
@@ -3154,14 +3329,14 @@
                     datasets: [{
                         label: 'Savings Balance (KES)',
                         data: values,
-                        borderColor: '#C1652F',
-                        backgroundColor: '#C1652F',
+                        borderColor: '#C9A356',
+                        backgroundColor: '#C9A356',
                         borderWidth: 3,
                         pointStyle: 'crossRot',
                         pointRadius: 6,
-                        pointBorderColor: '#2A1E14',
+                        pointBorderColor: '#15202E',
                         pointBorderWidth: 2,
-                        pointBackgroundColor: '#2A1E14',
+                        pointBackgroundColor: '#15202E',
                         tension: 0,
                         fill: false
                     }]
@@ -3176,7 +3351,7 @@
                             display: true,
                             text: 'Savings Balance Over Time',
                             font: { size: window.innerWidth < 500 ? 13 : 16, weight: '700' },
-                            color: '#2A1E14',
+                            color: '#15202E',
                             padding: { bottom: 12 }
                         },
                         tooltip: {
@@ -3191,9 +3366,9 @@
                         y: {
                             beginAtZero: true,
                             grid: { display: false },
-                            border: { color: '#2A1E14', width: 2 },
+                            border: { color: '#15202E', width: 2 },
                             ticks: {
-                                color: '#2A1E14',
+                                color: '#15202E',
                                 font: { size: window.innerWidth < 500 ? 9 : 11, weight: '600' },
                                 callback: function(value) {
                                     return value.toLocaleString('en-KE');
@@ -3202,22 +3377,22 @@
                             title: {
                                 display: true,
                                 text: 'Savings (KES)',
-                                color: '#2A1E14',
+                                color: '#15202E',
                                 font: { size: window.innerWidth < 500 ? 10 : 12, weight: '600' }
                             }
                         },
                         x: {
                             grid: { display: false },
-                            border: { color: '#2A1E14', width: 2 },
+                            border: { color: '#15202E', width: 2 },
                             ticks: {
-                                color: '#2A1E14',
+                                color: '#15202E',
                                 font: { size: window.innerWidth < 500 ? 9 : 11, weight: '600' },
                                 maxRotation: 0
                             },
                             title: {
                                 display: true,
                                 text: 'Date',
-                                color: '#2A1E14',
+                                color: '#15202E',
                                 font: { size: window.innerWidth < 500 ? 10 : 12, weight: '600' }
                             }
                         }
@@ -3324,14 +3499,17 @@
         }
 
         function updatePendingCount() {
-            const span = document.getElementById('pendingCount');
-            if (span && pendingTransactions.length > 0) {
-                span.textContent = ` ${pendingTransactions.length}`;
-                span.classList.add('visible');
-            } else if (span) {
-                span.textContent = '';
-                span.classList.remove('visible');
-            }
+            const spans = [document.getElementById('pendingCount'), document.getElementById('pendingCountSidebar')];
+            spans.forEach(span => {
+                if (!span) return;
+                if (pendingTransactions.length > 0) {
+                    span.textContent = ` ${pendingTransactions.length}`;
+                    span.classList.add('visible');
+                } else {
+                    span.textContent = '';
+                    span.classList.remove('visible');
+                }
+            });
         }
 
         async function approveTransaction(id) {
@@ -3360,7 +3538,7 @@
             if (memberSelect) {
                 memberSelect.innerHTML = `<option value="${currentUser}">${escapeHtml(currentUser)}</option>`;
                 memberSelect.disabled = true;
-                memberSelect.style.background = '#F7EDE0';
+                memberSelect.style.background = '#F4F2ED';
             }
             if (filterMember) {
                 filterMember.innerHTML = '<option value="">All Members</option>' + allMembers.map(m =>
@@ -3471,12 +3649,12 @@
             
             preview.innerHTML = `
                     <div style="text-align: center; padding: 30px;">
-                        <div style="width: 40px; height: 40px; border: 3px solid #E4D4BE; border-top-color: #C1652F; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;"></div>
-                        <p style="color: #5C4332; font-size: 14px; font-weight: 500;">Generating PDF...</p>
-                        <div style="max-width: 300px; margin: 12px auto; background: #E4D4BE; border-radius: 10px; height: 6px; overflow: hidden;">
-                            <div id="pdfProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #C1652F, #7A8B5C); border-radius: 10px; transition: width 0.3s ease;"></div>
+                        <div style="width: 40px; height: 40px; border: 3px solid #DCD7CC; border-top-color: #C9A356; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;"></div>
+                        <p style="color: #5B6B7E; font-size: 14px; font-weight: 500;">Generating PDF...</p>
+                        <div style="max-width: 300px; margin: 12px auto; background: #DCD7CC; border-radius: 10px; height: 6px; overflow: hidden;">
+                            <div id="pdfProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #C9A356, #4A7A6B); border-radius: 10px; transition: width 0.3s ease;"></div>
                         </div>
-                        <p id="pdfProgressText" style="color: #A88E72; font-size: 11px; margin-top: 4px;">Initializing...</p>
+                        <p id="pdfProgressText" style="color: #5B6B7E; font-size: 11px; margin-top: 4px;">Initializing...</p>
                     </div>
                 `;
             generator.classList.add('active');
@@ -3500,52 +3678,52 @@
                 const savingsTrendImg = savingsTrendChartInstance ? savingsTrendChartInstance.toBase64Image('image/png', 1) : null;
 
                 const contentHtml = `
-                        <div style="max-width: 800px; margin: 0 auto; font-family: Arial, sans-serif; color: #2A1E14; font-size: 12px; padding: 10px;">
-                            <h1 style="color: #3D2817; text-align: center; border-bottom: 2px solid #C1652F; padding-bottom: 8px; font-size: 20px; margin: 0 0 6px 0;">
+                        <div style="max-width: 800px; margin: 0 auto; font-family: Arial, sans-serif; color: #15202E; font-size: 12px; padding: 10px;">
+                            <h1 style="color: #0F1B2D; text-align: center; border-bottom: 2px solid #C9A356; padding-bottom: 8px; font-size: 20px; margin: 0 0 6px 0;">
                                 🏛️ Legacy Builders Group
                             </h1>
-                            <h2 style="color: #3D2817; text-align: center; font-weight: 400; margin-top: 0; font-size: 15px;">
+                            <h2 style="color: #0F1B2D; text-align: center; font-weight: 400; margin-top: 0; font-size: 15px;">
                                 Financial Report
                             </h2>
-                            <p style="text-align: center; color: #5C4332; font-size: 10px; margin-bottom: 10px;">
+                            <p style="text-align: center; color: #5B6B7E; font-size: 10px; margin-bottom: 10px;">
                                 ${new Date().toLocaleDateString('en-KE', { year: 'numeric', month: 'short', day: 'numeric' })}
                             </p>
                             
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin: 10px 0; background: #F7EDE0; padding: 10px; border-radius: 8px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin: 10px 0; background: #F4F2ED; padding: 10px; border-radius: 8px;">
                                 <div style="text-align: center;">
-                                    <div style="font-size: 8px; color: #5C4332; text-transform: uppercase; letter-spacing: 0.5px;">Savings</div>
-                                    <div style="font-size: 13px; font-weight: 700; color: #5F6E45;">KES ${savings.toLocaleString()}</div>
+                                    <div style="font-size: 8px; color: #5B6B7E; text-transform: uppercase; letter-spacing: 0.5px;">Savings</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #386054;">KES ${savings.toLocaleString()}</div>
                                 </div>
                                 <div style="text-align: center;">
-                                    <div style="font-size: 8px; color: #5C4332; text-transform: uppercase; letter-spacing: 0.5px;">Loans</div>
-                                    <div style="font-size: 13px; font-weight: 700; color: #A87A2E;">KES ${loansTaken.toLocaleString()}</div>
+                                    <div style="font-size: 8px; color: #5B6B7E; text-transform: uppercase; letter-spacing: 0.5px;">Loans</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #A9853F;">KES ${loansTaken.toLocaleString()}</div>
                                 </div>
                                 <div style="text-align: center;">
-                                    <div style="font-size: 8px; color: #5C4332; text-transform: uppercase; letter-spacing: 0.5px;">Repaid</div>
-                                    <div style="font-size: 13px; font-weight: 700; color: #A14F22;">KES ${repaid.toLocaleString()}</div>
+                                    <div style="font-size: 8px; color: #5B6B7E; text-transform: uppercase; letter-spacing: 0.5px;">Repaid</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #A9853F;">KES ${repaid.toLocaleString()}</div>
                                 </div>
                                 <div style="text-align: center;">
-                                    <div style="font-size: 8px; color: #5C4332; text-transform: uppercase; letter-spacing: 0.5px;">Net</div>
-                                    <div style="font-size: 13px; font-weight: 700; color: #8B5A8C;">KES ${net.toLocaleString()}</div>
+                                    <div style="font-size: 8px; color: #5B6B7E; text-transform: uppercase; letter-spacing: 0.5px;">Net</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #386054;">KES ${net.toLocaleString()}</div>
                                 </div>
                             </div>
 
                             ${financialChartImg ? `
-                            <div style="margin: 10px 0; background: white; padding: 10px; border-radius: 8px; border: 1px solid #E4D4BE; text-align: center;">
-                                <h3 style="color: #3D2817; margin: 0 0 8px 0; font-size: 12px;">📊 Financial Overview</h3>
+                            <div style="margin: 10px 0; background: white; padding: 10px; border-radius: 8px; border: 1px solid #DCD7CC; text-align: center;">
+                                <h3 style="color: #0F1B2D; margin: 0 0 8px 0; font-size: 12px;">📊 Financial Overview</h3>
                                 <img src="${financialChartImg}" style="max-width: 100%; height: auto;" />
                             </div>` : ''}
 
                             ${savingsTrendImg ? `
-                            <div style="margin: 10px 0; background: white; padding: 10px; border-radius: 8px; border: 1px solid #E4D4BE; text-align: center;">
-                                <h3 style="color: #3D2817; margin: 0 0 8px 0; font-size: 12px;">📈 Savings Over Time</h3>
+                            <div style="margin: 10px 0; background: white; padding: 10px; border-radius: 8px; border: 1px solid #DCD7CC; text-align: center;">
+                                <h3 style="color: #0F1B2D; margin: 0 0 8px 0; font-size: 12px;">📈 Savings Over Time</h3>
                                 <img src="${savingsTrendImg}" style="max-width: 100%; height: auto;" />
                             </div>` : ''}
                             
-                            <h3 style="color: #3D2817; margin: 10px 0 4px 0; font-size: 12px;">📜 Recent Transactions (Last ${recentRecords.length})</h3>
+                            <h3 style="color: #0F1B2D; margin: 10px 0 4px 0; font-size: 12px;">📜 Recent Transactions (Last ${recentRecords.length})</h3>
                             <table style="width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 4px;">
                                 <thead>
-                                    <tr style="background: #C1652F; color: white;">
+                                    <tr style="background: #C9A356; color: white;">
                                         <th style="padding: 3px 5px; text-align: left;">Date</th>
                                         <th style="padding: 3px 5px; text-align: left;">Member</th>
                                         <th style="padding: 3px 5px; text-align: left;">Type</th>
@@ -3554,7 +3732,7 @@
                                 </thead>
                                 <tbody>
                                     ${recentRecords.map(r => `
-                                        <tr style="border-bottom: 1px solid #E4D4BE;">
+                                        <tr style="border-bottom: 1px solid #DCD7CC;">
                                             <td style="padding: 3px 5px;">${new Date(r.date).toLocaleDateString('en-KE')}</td>
                                             <td style="padding: 3px 5px; font-weight: 500;">${escapeHtml(r.member)}</td>
                                             <td style="padding: 3px 5px;">${r.type}</td>
@@ -3564,25 +3742,25 @@
                                 </tbody>
                             </table>
                             
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; padding: 8px; background: #F7EDE0; border-radius: 8px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; padding: 8px; background: #F4F2ED; border-radius: 8px;">
                                 <div style="text-align: center;">
-                                    <div style="font-size: 8px; color: #5C4332;">Total Members</div>
-                                    <div style="font-size: 13px; font-weight: 700; color: #3D2817;">${allMembers.length}</div>
+                                    <div style="font-size: 8px; color: #5B6B7E;">Total Members</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #0F1B2D;">${allMembers.length}</div>
                                 </div>
                                 <div style="text-align: center;">
-                                    <div style="font-size: 8px; color: #5C4332;">Total Transactions</div>
-                                    <div style="font-size: 13px; font-weight: 700; color: #3D2817;">${allRecords.length}</div>
+                                    <div style="font-size: 8px; color: #5B6B7E;">Total Transactions</div>
+                                    <div style="font-size: 13px; font-weight: 700; color: #0F1B2D;">${allRecords.length}</div>
                                 </div>
                             </div>
                             
-                            <p style="text-align: center; color: #5C4332; font-size: 9px; margin-top: 12px; border-top: 1px solid #E4D4BE; padding-top: 10px;">
+                            <p style="text-align: center; color: #5B6B7E; font-size: 9px; margin-top: 12px; border-top: 1px solid #DCD7CC; padding-top: 10px;">
                                 Legacy Builders Group — Building Wealth Together
                             </p>
                             
-                            <button class="pdf-generate-btn" id="pdfGenerateBtn" style="background: #C1652F; color: white; border: none; padding: 10px 20px; border-radius: 40px; font-size: 13px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 12px;">
+                            <button class="pdf-generate-btn" id="pdfGenerateBtn" style="background: #C9A356; color: #0F1B2D; border: none; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 12px;">
                                 📥 Download PDF
                             </button>
-                            <button class="pdf-close-btn" onclick="document.getElementById('pdfGenerator').classList.remove('active')" style="position: absolute; top: 8px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: #5C4332; width: auto;">
+                            <button class="pdf-close-btn" onclick="document.getElementById('pdfGenerator').classList.remove('active')" style="position: absolute; top: 8px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: #5B6B7E; width: auto;">
                                 ✕
                             </button>
                         </div>
@@ -3810,10 +3988,12 @@
         // TAB ACTIVATION
         // ============================================================
         function activateTab(tabId) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab, .sidebar-link').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
             const btn = document.querySelector(`.tab[data-panel="${tabId}"]`);
             if (btn) btn.classList.add('active');
+            const sidebarBtn = document.querySelector(`.sidebar-link[data-panel="${tabId}"]`);
+            if (sidebarBtn) sidebarBtn.classList.add('active');
             const panel = document.getElementById(tabId + 'Panel');
             if (panel) panel.classList.add('active-panel');
             localStorage.setItem('legacy_active_tab', tabId);
@@ -3844,6 +4024,7 @@
             serviceWorkerRegistered = false;
             document.getElementById('appContainer').classList.remove('active');
             document.getElementById('tabBar').style.display = 'none';
+            document.getElementById('sidebarNav')?.classList.remove('active');
             document.getElementById('loginOverlay').classList.add('active');
             document.getElementById('loginPassword').value = '';
             document.getElementById('loginError').style.display = 'none';
@@ -3873,6 +4054,7 @@
                 document.getElementById('loginOverlay').classList.remove('active');
                 document.getElementById('appContainer').classList.add('active');
                 document.getElementById('tabBar').style.display = 'flex';
+                document.getElementById('sidebarNav')?.classList.add('active');
                 document.getElementById('loggedInUser').innerText = currentUser;
                 document.getElementById('date').value = new Date().toISOString().split('T')[0];
 
@@ -3880,6 +4062,8 @@
 
                 const pendingTab = document.getElementById('pendingTab');
                 if (pendingTab) pendingTab.style.display = isTreasurer() ? 'flex' : 'none';
+                const pendingSidebarLink = document.getElementById('pendingSidebarLink');
+                if (pendingSidebarLink) pendingSidebarLink.style.display = isTreasurer() ? 'flex' : 'none';
 
                 showBalanceLoading(true);
                 await Promise.all([
@@ -3919,7 +4103,7 @@
             document.getElementById('filterType').onchange = applyFilters;
             document.getElementById('loginPassword')?.addEventListener('keypress', (e) => { if (e.key === 'Enter')
                     loginWithPassword(); });
-            document.querySelectorAll('.tab').forEach(tab => { tab.onclick = () => activateTab(tab.dataset.panel); });
+            document.querySelectorAll('.tab, .sidebar-link').forEach(tab => { tab.onclick = () => activateTab(tab.dataset.panel); });
         });
 
         // ============================================================
