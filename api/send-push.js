@@ -1,9 +1,9 @@
 // api/send-push.js
 const webPush = require('web-push');
 
-// Your VAPID keys from Firebase (copy exactly from screenshot)
-const VAPID_PUBLIC_KEY = 'BHyIXHgBdbBrRhFP7RRUKHlItMR6z8e_a_5TKmdexZXK12R9ftEGr';
-const VAPID_PRIVATE_KEY = 'UCLITDZXwP-4p8AFNK26D05wZArdn2j9Mw';
+// Your VAPID keys from Firebase
+const VAPID_PUBLIC_KEY = 'BHyIXHgBdbBrRhFP7RRUKhIItMR6z8e_a_5TKmdexZXK12R9ftEGrUCLlTDZXwP-4p8AFNK26D05wZArdn2i9Mw';
+const VAPID_PRIVATE_KEY = '8NP_Py8Muou-s40uxkRbfTaZn-ecVK9Y2IHFfa4yekk';
 
 webPush.setVapidDetails(
     'mailto:info.onchari@gmail.com', // Change this to your email
