@@ -6,6 +6,11 @@
     <title>Legacy Builders Group</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js">
     </script>
+    <!-- FIX: html2pdf.js was used in exportToPDF() (html2pdf().set(opt).from(content).save())
+         but was never actually loaded, causing "html2pdf is not defined" when clicking
+         Download PDF. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
+    </script>
     <style>
         * {
             box-sizing: border-box;
