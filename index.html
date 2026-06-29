@@ -354,15 +354,49 @@
         .app-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 12px 12px 70px;
+            padding: 12px 12px 0;
             display: none;
-            animation: fadeIn 0.3s ease;
             flex: 1;
             width: 100%;
+            height: 100vh;
+            flex-direction: column;
+            overflow: hidden;
         }
         
         .app-container.active {
-            display: block;
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* STICKY TOP — header + quick actions never scroll away on
+           mobile. Only the panel content below scrolls, like a
+           native app's fixed wallet card over a scrolling feed. */
+        .sticky-top {
+            flex-shrink: 0;
+        }
+
+        .scroll-panels {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 86px; /* clears the fixed bottom tab bar on mobile */
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @media (min-width: 900px) {
+            .app-container {
+                height: auto;
+                overflow: visible;
+            }
+            .scroll-panels {
+                overflow: visible;
+                padding-bottom: 32px;
+            }
+            .sticky-top {
+                position: sticky;
+                top: 12px;
+                z-index: 10;
+            }
         }
         
         @keyframes fadeIn {
@@ -501,6 +535,8 @@
             overflow: hidden;
             padding: 18px 18px 20px;
             position: relative;
+            animation: cardFadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+            animation-delay: 0.05s;
         }
 
         .header::before {
@@ -767,6 +803,8 @@
             display: flex;
             justify-content: space-around;
             box-shadow: 0 2px 10px rgba(22, 61, 44, 0.06);
+            animation: cardFadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+            animation-delay: 0.15s;
         }
 
         .quick-action {
@@ -793,11 +831,18 @@
             justify-content: center;
             font-size: 19px;
             border: 1.5px solid var(--line);
-            transition: transform 0.15s;
+            transition: transform 0.15s, box-shadow 0.15s;
         }
 
         .quick-action:hover .quick-action-icon {
             transform: translateY(-2px);
+        }
+
+        /* Tap feedback for touch devices — :hover doesn't fire reliably
+           on tap, so :active gives the same "press" feel on phones. */
+        .quick-action:active .quick-action-icon {
+            transform: scale(0.88);
+            box-shadow: 0 0 0 6px rgba(198, 242, 78, 0.18);
         }
 
         .qa-save { background: var(--lime-soft); border-color: var(--lime-soft); }
@@ -871,20 +916,22 @@
             color: var(--lime);
         }
 
-        .tab.active .tab-icon {
-            background: var(--lime);
-            color: var(--forest-deep);
-            border-radius: 50%;
-            width: 26px;
-            height: 26px;
+        .tab-icon {
+            font-size: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: transparent;
+            transition: background 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.25s ease;
         }
-        
-        .tab-icon {
-            font-size: 14px;
-            display: block;
+
+        .tab.active .tab-icon {
+            background: var(--lime);
+            color: var(--forest-deep);
+            transform: scale(1.05);
         }
         
         .pending-count {
@@ -910,6 +957,39 @@
         
         .panel { display: none; }
         .panel.active-panel { display: block; }
+
+        /* PANEL ENTRANCE — slide+fade when a tab becomes active, and a
+           staggered fade-up on each card inside it so content feels like
+           it's arriving in sequence rather than popping in all at once. */
+        .panel-enter {
+            animation: panelSlideIn 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes panelSlideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .panel-enter .card {
+            animation: cardFadeUp 0.42s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+        }
+
+        .panel-enter .card:nth-of-type(1) { animation-delay: 0.02s; }
+        .panel-enter .card:nth-of-type(2) { animation-delay: 0.08s; }
+        .panel-enter .card:nth-of-type(3) { animation-delay: 0.14s; }
+        .panel-enter .card:nth-of-type(4) { animation-delay: 0.20s; }
+        .panel-enter .card:nth-of-type(n+5) { animation-delay: 0.24s; }
+
+        @keyframes cardFadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .panel-enter, .panel-enter .card, .header, .quick-actions-card {
+                animation: none;
+            }
+        }
         
         .card {
             background: var(--paper-card);
@@ -2055,6 +2135,7 @@
 
     <!-- APP CONTAINER -->
     <div class="app-container" id="appContainer">
+        <div class="sticky-top">
         <div class="header">
             <div class="header-row-1">
                 <h1>🏛️ Legacy Builders Group</h1>
@@ -2071,14 +2152,14 @@
             </div>
             <div class="header-row-2">
                 <div class="wallet-label">Total Savings</div>
-                <div class="wallet-balance" id="totalSavingsTop">KES --</div>
+                <div class="wallet-balance" id="totalSavingsTop" data-target="0">KES --</div>
             </div>
             <div class="wallet-pill-row">
                 <div class="wallet-pill">
                     <span class="wallet-pill-icon">↓</span>
                     <div>
                         <div class="wallet-pill-label">Outstanding Loans</div>
-                        <div class="wallet-pill-amount" id="outstandingTop">KES --</div>
+                        <div class="wallet-pill-amount" id="outstandingTop" data-target="0">KES --</div>
                     </div>
                 </div>
                 <button class="history-side-btn" onclick="openHistoryModal()"><span>📜</span><span>History</span></button>
@@ -2107,7 +2188,9 @@
                 <span>History</span>
             </button>
         </div>
+        </div><!-- /sticky-top -->
 
+        <div class="scroll-panels">
         <div id="transactionsPanel" class="panel active-panel">
             <div class="card">
                 <h2>Add Transaction</h2>
@@ -2253,6 +2336,7 @@
                 </div>
             </div>
         </div>
+        </div><!-- /scroll-panels -->
     </div>
     </div><!-- /app-shell -->
 
@@ -3594,14 +3678,49 @@
             }
         }
 
+        // ============================================================
+        // COUNT-UP ANIMATION
+        // Animates a number from its previous displayed value up (or
+        // down) to a new target, rather than snapping instantly — gives
+        // the wallet balance a sense of being "live" money rather than
+        // a static label that just changes.
+        // ============================================================
+        function animateCountUp(el, newValue, prefix = 'KES ') {
+            if (!el) return;
+            const prevTarget = Number(el.getAttribute('data-target') || 0);
+            const target = Number(newValue) || 0;
+            el.setAttribute('data-target', target);
+
+            // Respect users who've asked for reduced motion: just set the
+            // final value instantly rather than animating.
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                el.innerHTML = `${prefix}${target.toLocaleString('en-KE')}`;
+                return;
+            }
+
+            const duration = 700;
+            const start = performance.now();
+            const from = isFinite(prevTarget) ? prevTarget : 0;
+
+            function tick(now) {
+                const elapsed = now - start;
+                const progress = Math.min(elapsed / duration, 1);
+                // easeOutQuart — fast start, gentle settle, matches the
+                // chart animations elsewhere in the app for consistency.
+                const eased = 1 - Math.pow(1 - progress, 4);
+                const current = Math.round(from + (target - from) * eased);
+                el.innerHTML = `${prefix}${current.toLocaleString('en-KE')}`;
+                if (progress < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        }
+
         function updateBalanceDisplays(summary) {
             if (!summary) return;
             const savings = summary.savings || 0;
             const outstanding = summary.outstanding || 0;
-            document.getElementById('totalSavingsTop') && (document.getElementById('totalSavingsTop').innerHTML =
-                `KES ${savings.toLocaleString('en-KE')}`);
-            document.getElementById('outstandingTop') && (document.getElementById('outstandingTop').innerHTML =
-                `KES ${outstanding.toLocaleString('en-KE')}`);
+            animateCountUp(document.getElementById('totalSavingsTop'), savings);
+            animateCountUp(document.getElementById('outstandingTop'), outstanding);
         }
 
         function renderPendingLoans() {
@@ -4136,7 +4255,14 @@
             const sidebarBtn = document.querySelector(`.sidebar-link[data-panel="${tabId}"]`);
             if (sidebarBtn) sidebarBtn.classList.add('active');
             const panel = document.getElementById(tabId + 'Panel');
-            if (panel) panel.classList.add('active-panel');
+            if (panel) {
+                // Force a reflow before re-adding the animated class so the
+                // entrance animation replays every time a tab is selected,
+                // not just the first time this panel becomes active.
+                panel.classList.remove('panel-enter');
+                void panel.offsetWidth;
+                panel.classList.add('active-panel', 'panel-enter');
+            }
             localStorage.setItem('legacy_active_tab', tabId);
             currentTab = tabId;
             loadAllData();
