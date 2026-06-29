@@ -960,8 +960,11 @@
 
         /* PANEL ENTRANCE — slide+fade when a tab becomes active, and a
            staggered fade-up on each card inside it so content feels like
-           it's arriving in sequence rather than popping in all at once. */
-        .panel-enter {
+           it's arriving in sequence rather than popping in all at once.
+           Scoped to NOT fullscreen-panel, since those get their own
+           screenPushIn animation instead (see below) — without this
+           scoping, both animations would apply at once. */
+        .panel-enter:not(.fullscreen-panel) {
             animation: panelSlideIn 0.32s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
@@ -980,6 +983,17 @@
         .panel-enter .card:nth-of-type(4) { animation-delay: 0.20s; }
         .panel-enter .card:nth-of-type(n+5) { animation-delay: 0.24s; }
 
+        /* Fullscreen panels have an extra .fullscreen-panel-bar div before
+           their cards, which shifts the :nth-of-type div count by one —
+           these overrides realign the stagger so the first real card still
+           animates first instead of being skipped. */
+        .fullscreen-panel.panel-enter .card:nth-of-type(1) { animation-delay: 0.24s; }
+        .fullscreen-panel.panel-enter .card:nth-of-type(2) { animation-delay: 0.02s; }
+        .fullscreen-panel.panel-enter .card:nth-of-type(3) { animation-delay: 0.08s; }
+        .fullscreen-panel.panel-enter .card:nth-of-type(4) { animation-delay: 0.14s; }
+        .fullscreen-panel.panel-enter .card:nth-of-type(5) { animation-delay: 0.20s; }
+        .fullscreen-panel.panel-enter .card:nth-of-type(n+6) { animation-delay: 0.24s; }
+
         @keyframes cardFadeUp {
             from { opacity: 0; transform: translateY(14px); }
             to { opacity: 1; transform: translateY(0); }
@@ -988,6 +1002,92 @@
         @media (prefers-reduced-motion: reduce) {
             .panel-enter, .panel-enter .card, .header, .quick-actions-card {
                 animation: none;
+            }
+        }
+
+        /* FULL-SCREEN PANELS — every tab except Transactions (the home
+           view) opens as a full-viewport screen over everything, including
+           the sticky header, like a bank app pushing a new screen rather
+           than swapping content underneath a fixed top bar. Only the home
+           tab keeps the sticky-top + scroll-panels split. */
+        .fullscreen-panel.active-panel {
+            position: fixed;
+            inset: 0;
+            z-index: 500;
+            background: var(--paper);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 0 12px 24px;
+            display: block;
+        }
+
+        .fullscreen-panel.active-panel.panel-enter {
+            animation: screenPushIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes screenPushIn {
+            from { opacity: 0; transform: translateY(28px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .fullscreen-panel.active-panel.panel-enter {
+                animation: none;
+            }
+        }
+
+        .fullscreen-panel-bar {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            background: var(--paper);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 0 10px;
+            margin: 0 -12px 12px;
+            padding-left: 12px;
+            padding-right: 12px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .fullscreen-panel-back {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--white);
+            border: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            flex-shrink: 0;
+            color: var(--ink);
+            padding: 0;
+        }
+
+        .fullscreen-panel-bar h2 {
+            font-size: 16px;
+            margin: 0;
+            border: none;
+            padding: 0;
+        }
+
+        @media (min-width: 900px) {
+            /* On desktop the sidebar already provides persistent nav and
+               there's no bottom tab bar competing for space — a full-screen
+               takeover feels out of place there, so fall back to the normal
+               in-page panel behavior used before this change. */
+            .fullscreen-panel.active-panel {
+                position: static;
+                inset: auto;
+                z-index: auto;
+                padding: 0;
+                overflow: visible;
+            }
+            .fullscreen-panel-bar {
+                display: none;
             }
         }
         
@@ -1282,6 +1382,28 @@
             overflow-y: auto;
             position: relative;
         }
+
+        /* On phone, modals take over the full screen instead of floating
+           as a centered card — matches the bank-app pattern of pushing a
+           full screen for any focused task (changing a password, adding
+           meeting minutes) rather than a popup overlay. */
+        @media (max-width: 640px) {
+            .modal {
+                padding: 0;
+                align-items: stretch;
+                backdrop-filter: none;
+                background: var(--paper);
+            }
+            .modal-content {
+                border-radius: 0;
+                max-width: none;
+                max-height: none;
+                height: 100%;
+                width: 100%;
+                padding: 20px 16px 24px;
+                animation: screenPushIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+            }
+        }
         
         .modal-content h3 { margin-bottom: 16px;
             color: var(--navy); }
@@ -1344,6 +1466,21 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+        }
+
+        @media (max-width: 640px) {
+            .history-modal {
+                padding: 0;
+                background: var(--paper);
+            }
+            .history-modal-content {
+                border-radius: 0;
+                width: 100%;
+                max-width: none;
+                max-height: none;
+                height: 100%;
+                animation: screenPushIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+            }
         }
         
         .history-modal-header {
@@ -1498,6 +1635,22 @@
             overflow-y: auto;
             box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
             position: relative;
+        }
+
+        @media (max-width: 640px) {
+            .profile-modal-overlay {
+                padding: 0;
+                backdrop-filter: none;
+                background: var(--paper);
+            }
+            .profile-modal {
+                border-radius: 0;
+                max-width: none;
+                max-height: none;
+                height: 100%;
+                box-shadow: none;
+                animation: screenPushIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+            }
         }
         
         .profile-modal::-webkit-scrollbar {
@@ -2206,7 +2359,7 @@
             </div>
         </div>
 
-        <div id="summaryPanel" class="panel">
+        <div id="summaryPanel" class="panel fullscreen-panel">
             <div class="card"><h2>Search & Filter</h2>
                 <div class="search-container" style="padding:0;">
                     <input type="text" id="searchInput" class="search-input" placeholder="Search by member or message">
@@ -2237,12 +2390,12 @@
             <div class="card"><h2>Export Data</h2><button id="exportPdfBtn" class="pdf-btn">📄 Download PDF</button></div>
         </div>
 
-        <div id="loansPanel" class="panel">
+        <div id="loansPanel" class="panel fullscreen-panel">
             <div class="card"><h2>Pending Loan Approvals</h2><div id="pendingLoans" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
             <div class="card"><h2>Completed Loans</h2><div id="completedLoans" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
         </div>
 
-        <div id="meetingsPanel" class="panel">
+        <div id="meetingsPanel" class="panel fullscreen-panel">
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                     <h2 style="margin:0; border-left: none; padding-left:0;">📝 Meeting Minutes</h2>
@@ -2276,12 +2429,12 @@
             </div>
         </div>
 
-        <div id="pendingPanel" class="panel">
+        <div id="pendingPanel" class="panel fullscreen-panel">
             <div class="card"><h2>⏳ Pending Approvals</h2><div id="pendingApprovalsList" class="loading-container"><div class="loading-spinner"></div><div>Loading pending approvals...</div></div></div>
         </div>
 
         <!-- About Us / Members Panel -->
-        <div id="aboutPanel" class="panel">
+        <div id="aboutPanel" class="panel fullscreen-panel">
             <div class="card">
                 <div class="about-description">
                     <h2>👥 About Us</h2>
@@ -3889,9 +4042,9 @@
                 return;
             }
 
-            const btn = document.getElementById('exportPdfBtn');
-            const orig = btn.innerHTML;
-            showButtonLoading(btn, 'Preparing PDF...');
+            const exportBtn = document.getElementById('exportPdfBtn');
+            const exportBtnOrig = exportBtn.innerHTML;
+            showButtonLoading(exportBtn, 'Preparing PDF...');
 
             let savings = 0,
                 loansTaken = 0,
@@ -4036,10 +4189,17 @@
                     btn.innerHTML = '⏳ Generating...';
                     updateProgress(90, 'Creating PDF file...');
 
-                    // FIX: higher scale + higher JPEG quality + PNG image type
-                    // for crisper text and charts in the exported PDF. Higher
-                    // scale costs more render time but the result is much
-                    // sharper, especially for the embedded chart images.
+                    // FIX: the previous version called preview.cloneNode(true)
+                    // and rendered html2pdf from that detached clone. html2canvas
+                    // needs the element to be part of the live, laid-out DOM to
+                    // capture computed styles/fonts/images correctly — rendering
+                    // a detached clone is exactly what was producing the blank
+                    // or garbled downloaded PDF. Fix: hide just the action
+                    // buttons in place (display:none, not removed) and capture
+                    // the real attached #pdfPreview element directly.
+                    const actionButtons = preview.querySelectorAll('.pdf-generate-btn, .pdf-close-btn');
+                    actionButtons.forEach(b => { b.style.display = 'none'; });
+
                     const opt = {
                         margin: 8,
                         filename: `Legacy_Builders_Report_${new Date().toISOString().split('T')[0]}.pdf`,
@@ -4050,7 +4210,8 @@
                             logging: false,
                             letterRendering: true,
                             backgroundColor: '#ffffff',
-                            width: 750
+                            windowWidth: preview.scrollWidth,
+                            width: preview.scrollWidth
                         },
                         jsPDF: {
                             unit: 'mm',
@@ -4060,28 +4221,24 @@
                         pagebreak: { mode: ['css', 'legacy'] }
                     };
 
-                    const content = preview.cloneNode(true);
-                    const buttons = content.querySelectorAll('.pdf-generate-btn, .pdf-close-btn');
-                    buttons.forEach(b => b.remove());
-
-                    html2pdf().set(opt).from(content).save().then(() => {
+                    html2pdf().set(opt).from(preview).save().then(() => {
+                        actionButtons.forEach(b => { b.style.display = ''; });
                         btn.disabled = false;
                         btn.innerHTML = '📥 Download PDF';
                         document.getElementById('pdfGenerator').classList.remove('active');
-                        hideButtonLoading(btn, orig);
                         updateProgress(100, '✅ Done!');
                         showToast('PDF downloaded successfully!', 'success');
                     }).catch((err) => {
+                        actionButtons.forEach(b => { b.style.display = ''; });
                         btn.disabled = false;
                         btn.innerHTML = '📥 Download PDF';
-                        hideButtonLoading(btn, orig);
                         showToast('Error generating PDF: ' + err.message, 'error');
                         console.error('PDF Error:', err);
                     });
                 });
 
                 updateProgress(100, '✅ Ready');
-                hideButtonLoading(btn, orig);
+                hideButtonLoading(exportBtn, exportBtnOrig);
             }, 300);
         }
 
@@ -4247,6 +4404,24 @@
         // ============================================================
         // TAB ACTIVATION
         // ============================================================
+        // Human-readable titles for each full-screen panel's header bar.
+        const PANEL_TITLES = {
+            summary: '📊 Summary',
+            loans: '💰 Loans',
+            meetings: '📝 Meetings',
+            pending: '⏳ Pending Approvals',
+            about: '👥 About Us'
+        };
+
+        function ensureFullscreenBar(panel, tabId) {
+            if (!panel.classList.contains('fullscreen-panel')) return;
+            if (panel.querySelector('.fullscreen-panel-bar')) return; // already injected
+            const bar = document.createElement('div');
+            bar.className = 'fullscreen-panel-bar';
+            bar.innerHTML = `<button class="fullscreen-panel-back" onclick="activateTab('transactions')">←</button><h2>${PANEL_TITLES[tabId] || ''}</h2>`;
+            panel.insertBefore(bar, panel.firstChild);
+        }
+
         function activateTab(tabId) {
             document.querySelectorAll('.tab, .sidebar-link').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
@@ -4256,6 +4431,7 @@
             if (sidebarBtn) sidebarBtn.classList.add('active');
             const panel = document.getElementById(tabId + 'Panel');
             if (panel) {
+                ensureFullscreenBar(panel, tabId);
                 // Force a reflow before re-adding the animated class so the
                 // entrance animation replays every time a tab is selected,
                 // not just the first time this panel becomes active.
