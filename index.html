@@ -1788,6 +1788,15 @@
             </div>
 
             <div class="card">
+                <h2>📢 Send Announcement</h2>
+                <div class="form-grid">
+                    <div style="grid-column: span 2;"><label>Title</label><input type="text" id="announcementTitle" placeholder="e.g., Meeting moved to 6pm" maxlength="80"></div>
+                    <div style="grid-column: span 2;"><label>Message</label><textarea id="announcementBody" rows="3" placeholder="Write your announcement here..." maxlength="500"></textarea></div>
+                </div>
+                <button id="sendAnnouncementBtn">📢 Send to All Members</button>
+            </div>
+
+            <div class="card">
                 <h2>📅 Schedule Next Meeting</h2>
                 <div class="form-grid">
                     <div><label>📅 Next Meeting Date</label><input type="date" id="nextMeetingDate"></div>
@@ -2355,6 +2364,43 @@
             } else {
                 showToast('Error cancelling meeting', 'error');
             }
+        }
+
+        // ============================================================
+        // SEND ANNOUNCEMENT (push notification to all members)
+        // ============================================================
+        async function sendAnnouncement() {
+            const titleInput = document.getElementById('announcementTitle').value.trim();
+            const bodyInput = document.getElementById('announcementBody').value.trim();
+
+            if (!bodyInput) {
+                showToast('Please write a message before sending', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('sendAnnouncementBtn');
+            const originalText = btn.innerHTML;
+            showButtonLoading(btn, 'Sending...');
+
+            // Prefix with sender name so recipients know who sent it
+            const title = titleInput ? `📢 ${titleInput}` : `📢 Announcement from ${currentUser}`;
+            const body = `${bodyInput} — sent by ${currentUser}`;
+
+            const res = await callAPI('sendPushNotification', {
+                title,
+                body,
+                sender: currentUser
+            });
+
+            if (res.success) {
+                const sent = res.sent || 0;
+                showToast(sent > 0 ? `Announcement sent to ${sent} member${sent > 1 ? 's' : ''}!` : 'No other members are subscribed yet', 'success');
+                document.getElementById('announcementTitle').value = '';
+                document.getElementById('announcementBody').value = '';
+            } else {
+                showToast(res.error || 'Error sending announcement', 'error');
+            }
+            hideButtonLoading(btn, originalText);
         }
 
         // ============================================================
@@ -3631,6 +3677,7 @@
             document.getElementById('exportPdfBtn').onclick = exportToPDF;
             document.getElementById('addMeetingBtn').onclick = openAddMeetingModal;
             document.getElementById('scheduleMeetingBtn').onclick = scheduleNextMeeting;
+            document.getElementById('sendAnnouncementBtn').onclick = sendAnnouncement;
             document.getElementById('searchInput').oninput = applyFilters;
             document.getElementById('filterMember').onchange = applyFilters;
             document.getElementById('filterType').onchange = applyFilters;
@@ -3650,6 +3697,7 @@
         window.deleteMeeting = deleteMeeting;
         window.scheduleNextMeeting = scheduleNextMeeting;
         window.cancelScheduledMeeting = cancelScheduledMeeting;
+        window.sendAnnouncement = sendAnnouncement;
         window.loginWithPassword = loginWithPassword;
         window.registerUser = registerUser;
         window.showRegisterForm = showRegisterForm;
