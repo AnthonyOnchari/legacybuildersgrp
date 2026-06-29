@@ -1775,6 +1775,15 @@
                     </div>
                 </div>
             </div>
+            <div class="card">
+                <h2>📈 Savings Over Time</h2>
+                <div id="savingsTrendSkeleton" class="loading-container"><div class="loading-spinner"></div><div>Loading trend...</div></div>
+                <div id="savingsTrendContent" style="display: none;">
+                    <div class="chart-wrapper" style="background: #ffffff;">
+                        <canvas id="savingsTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
             <div class="card"><h2>Export Data</h2><button id="exportPdfBtn" class="pdf-btn">📄 Download PDF</button></div>
         </div>
 
@@ -1930,6 +1939,7 @@
         let userProfileImage = localStorage.getItem('legacy_profile_image') || null;
         let isLoading = false;
         let chartInstance = null;
+        let savingsTrendChartInstance = null;
         let serviceWorkerRegistered = false;
         let pushSubscription = null;
 
@@ -3003,6 +3013,168 @@
         }
 
         // ============================================================
+        // SAVINGS TREND LINE CHART (styled like a textbook line graph:
+        // light blue grid, orange line, X markers)
+        // ============================================================
+        function computeSavingsTrend() {
+            // Build a running savings balance per date from allRecords,
+            // sorted chronologically. Savings & Loan Repayment add to the
+            // balance, Loan Taken subtracts — matching appendApprovedTransaction()
+            // in the backend.
+            const sorted = [...allRecords].sort((a, b) => new Date(a.date) - new Date(b.date));
+            let running = 0;
+            const byDate = new Map();
+            sorted.forEach(r => {
+                const amt = Number(r.amount) || 0;
+                if (r.type === 'Savings' || r.type === 'Loan Repayment') running += amt;
+                else if (r.type === 'Loan Taken') running -= amt;
+                byDate.set(r.date, running);
+            });
+            const labels = Array.from(byDate.keys()).map(d => {
+                const dt = new Date(d);
+                return isNaN(dt) ? d : dt.toLocaleDateString('en-KE', { day: 'numeric', month: 'short' });
+            });
+            const values = Array.from(byDate.values());
+            return { labels, values };
+        }
+
+        function renderSavingsTrendChart() {
+            const canvas = document.getElementById('savingsTrendChart');
+            if (!canvas) return;
+
+            const { labels, values } = computeSavingsTrend();
+
+            const skeleton = document.getElementById('savingsTrendSkeleton');
+            const content = document.getElementById('savingsTrendContent');
+
+            if (!values.length) {
+                if (skeleton) skeleton.innerHTML = '<div class="empty-state">No savings history yet</div>';
+                if (content) content.style.display = 'none';
+                return;
+            }
+            if (skeleton) skeleton.style.display = 'none';
+            if (content) content.style.display = 'block';
+
+            if (savingsTrendChartInstance) {
+                savingsTrendChartInstance.destroy();
+                savingsTrendChartInstance = null;
+            }
+
+            const ctx = canvas.getContext('2d');
+
+            // Light blue graph-paper style grid, drawn behind the line via a plugin
+            const gridPaperPlugin = {
+                id: 'gridPaper',
+                beforeDraw(chart) {
+                    const { ctx, chartArea } = chart;
+                    if (!chartArea) return;
+                    ctx.save();
+                    ctx.fillStyle = '#eaf6ff';
+                    ctx.fillRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+                    ctx.lineWidth = 1;
+                    const stepX = (chartArea.right - chartArea.left) / 20;
+                    const stepY = (chartArea.bottom - chartArea.top) / 14;
+                    for (let x = chartArea.left; x <= chartArea.right; x += stepX) {
+                        ctx.beginPath();
+                        ctx.moveTo(x, chartArea.top);
+                        ctx.lineTo(x, chartArea.bottom);
+                        ctx.stroke();
+                    }
+                    for (let y = chartArea.top; y <= chartArea.bottom; y += stepY) {
+                        ctx.beginPath();
+                        ctx.moveTo(chartArea.left, y);
+                        ctx.lineTo(chartArea.right, y);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+            };
+
+            savingsTrendChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Savings Balance (KES)',
+                        data: values,
+                        borderColor: '#f2622e',
+                        backgroundColor: '#f2622e',
+                        borderWidth: 3,
+                        pointStyle: 'crossRot',
+                        pointRadius: 6,
+                        pointBorderColor: '#1e293b',
+                        pointBorderWidth: 2,
+                        pointBackgroundColor: '#1e293b',
+                        tension: 0,
+                        fill: false
+                    }]
+                },
+                plugins: [gridPaperPlugin],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: 'Savings Balance Over Time',
+                            font: { size: window.innerWidth < 500 ? 13 : 16, weight: '700' },
+                            color: '#1e293b',
+                            padding: { bottom: 12 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'KES ' + context.parsed.y.toLocaleString('en-KE');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { display: false },
+                            border: { color: '#1e293b', width: 2 },
+                            ticks: {
+                                color: '#1e293b',
+                                font: { size: window.innerWidth < 500 ? 9 : 11, weight: '600' },
+                                callback: function(value) {
+                                    return value.toLocaleString('en-KE');
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Savings (KES)',
+                                color: '#1e293b',
+                                font: { size: window.innerWidth < 500 ? 10 : 12, weight: '600' }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            border: { color: '#1e293b', width: 2 },
+                            ticks: {
+                                color: '#1e293b',
+                                font: { size: window.innerWidth < 500 ? 9 : 11, weight: '600' },
+                                maxRotation: 0
+                            },
+                            title: {
+                                display: true,
+                                text: 'Date',
+                                color: '#1e293b',
+                                font: { size: window.innerWidth < 500 ? 10 : 12, weight: '600' }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+
+        // ============================================================
         // LOAD ALL DATA
         // ============================================================
         async function loadAllData() {
@@ -3018,7 +3190,8 @@
                         transactions: [] })
                 ]);
                 if (recordsRes.success) { allRecords = recordsRes.records || [];
-                    applyFilters(); }
+                    applyFilters();
+                    renderSavingsTrendChart(); }
                 if (membersRes.success && membersRes.members?.length) { allMembers = membersRes.members;
                     updateMemberDropdowns(); }
                 if (summaryRes.success) {
@@ -3236,7 +3409,6 @@
             });
             const outstanding = Math.max(0, loansTaken - repaid);
             const net = savings - outstanding;
-            const maxVal = Math.max(savings, loansTaken, repaid, net, 1);
 
             const generator = document.getElementById('pdfGenerator');
             const preview = document.getElementById('pdfPreview');
@@ -3264,6 +3436,12 @@
                 updateProgress(10, 'Building report...');
                 const recentRecords = allRecords.slice(-10).reverse();
                 updateProgress(30, 'Formatting data...');
+
+                // FIX: capture the real on-screen Chart.js charts as images so the
+                // PDF shows the actual financial bar chart and savings trend line
+                // chart, instead of only the hand-built summary bars below.
+                const financialChartImg = chartInstance ? chartInstance.toBase64Image('image/png', 1) : null;
+                const savingsTrendImg = savingsTrendChartInstance ? savingsTrendChartInstance.toBase64Image('image/png', 1) : null;
 
                 const contentHtml = `
                         <div style="max-width: 800px; margin: 0 auto; font-family: Arial, sans-serif; color: #1e293b; font-size: 12px; padding: 10px;">
@@ -3295,25 +3473,18 @@
                                     <div style="font-size: 13px; font-weight: 700; color: #7c3aed;">KES ${net.toLocaleString()}</div>
                                 </div>
                             </div>
-                            
-                            <div style="margin: 10px 0; background: white; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                                <h3 style="color: #1e3c32; margin: 0 0 6px 0; text-align: center; font-size: 12px;">📊 Financial Overview</h3>
-                                ${[
-                                    { label: '💰 Savings', value: savings, color: '#059669' },
-                                    { label: '📊 Loans', value: loansTaken, color: '#d97706' },
-                                    { label: '🔄 Repaid', value: repaid, color: '#1d4ed8' },
-                                    { label: '⚖️ Net', value: net, color: '#7c3aed' }
-                                ].map(item => `
-                                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-                                        <div style="width: 60px; font-size: 9px; color: #334155; font-weight: 500;">${item.label}</div>
-                                        <div style="flex: 1; height: 16px; background: #e8f0ed; border-radius: 4px; overflow: hidden;">
-                                            <div style="height: 100%; width: ${(item.value / maxVal) * 100}%; background: ${item.color}; border-radius: 4px; display: flex; align-items: center; justify-content: flex-end; padding-right: 4px;">
-                                                <span style="font-size: 7px; font-weight: 600; color: white;">KES ${item.value.toLocaleString()}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
+
+                            ${financialChartImg ? `
+                            <div style="margin: 10px 0; background: white; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
+                                <h3 style="color: #1e3c32; margin: 0 0 8px 0; font-size: 12px;">📊 Financial Overview</h3>
+                                <img src="${financialChartImg}" style="max-width: 100%; height: auto;" />
+                            </div>` : ''}
+
+                            ${savingsTrendImg ? `
+                            <div style="margin: 10px 0; background: white; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
+                                <h3 style="color: #1e3c32; margin: 0 0 8px 0; font-size: 12px;">📈 Savings Over Time</h3>
+                                <img src="${savingsTrendImg}" style="max-width: 100%; height: auto;" />
+                            </div>` : ''}
                             
                             <h3 style="color: #1e3c32; margin: 10px 0 4px 0; font-size: 12px;">📜 Recent Transactions (Last ${recentRecords.length})</h3>
                             <table style="width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 4px;">
@@ -3371,15 +3542,19 @@
                     btn.innerHTML = '⏳ Generating...';
                     updateProgress(90, 'Creating PDF file...');
 
+                    // FIX: higher scale + higher JPEG quality + PNG image type
+                    // for crisper text and charts in the exported PDF. Higher
+                    // scale costs more render time but the result is much
+                    // sharper, especially for the embedded chart images.
                     const opt = {
                         margin: 8,
                         filename: `Legacy_Builders_Report_${new Date().toISOString().split('T')[0]}.pdf`,
-                        image: { type: 'jpeg', quality: 0.7 },
+                        image: { type: 'jpeg', quality: 0.95 },
                         html2canvas: {
-                            scale: 1.5,
+                            scale: 3,
                             useCORS: true,
                             logging: false,
-                            letterRendering: false,
+                            letterRendering: true,
                             backgroundColor: '#ffffff',
                             width: 750
                         },
@@ -3388,7 +3563,7 @@
                             format: 'a4',
                             orientation: 'portrait'
                         },
-                        pagebreak: { mode: 'avoid-all' }
+                        pagebreak: { mode: ['css', 'legacy'] }
                     };
 
                     const content = preview.cloneNode(true);
