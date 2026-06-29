@@ -1887,13 +1887,19 @@
 
     <script>
         // ============================================================
-// CONFIGURATION
-// ============================================================
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwE5MM2lTuME8hQOjjRpv7UJh0DAUPw0tQlREy681R06pFdZB9kwbBX0-n9NpuUbksz/exec";
-const TREASURER_NAME = "Mrs. Kithinji";
+        // CONFIGURATION
+        // ============================================================
+        // FIX: API_URL is now defined and points at your own Vercel proxy
+        // (/api/sheets-proxy) instead of calling Google Apps Script directly.
+        // This avoids the "API_URL is not defined" ReferenceError and the
+        // CORS errors you were seeing, because the browser only ever talks
+        // to your own domain — your serverless function does the
+        // server-to-server call to Apps Script behind the scenes.
+        const API_URL = "/api/sheets-proxy";
+        const TREASURER_NAME = "Mrs. Kithinji";
 
-// VAPID Public Key from your backend
-const VAPID_PUBLIC_KEY = 'BHyIXHgBdbBrRhFP7RRUKhIItMR6z8e_a_5TKmdexZXK12R9ftEGrUCLlTDZXwP-4p8AFNK26D05wZArdn2i9Mw';
+        // VAPID Public Key from your backend
+        const VAPID_PUBLIC_KEY = 'BB4N47xyKjLw-K29lXDolpcht45pVZcqV4m-Iw-8tJBk8g21yE66KVJmxbNOIDEIRBun-JDACI0lK4MRIvVwYH0';
     
 
         let allRecords = [],
@@ -3436,64 +3442,67 @@ const VAPID_PUBLIC_KEY = 'BHyIXHgBdbBrRhFP7RRUKhIItMR6z8e_a_5TKmdexZXK12R9ftEGrU
 
         // Subscribe to push notifications
         // Helper: VAPID keys are base64url — must convert to Uint8Array for the browser API
-function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-}
-
-// Subscribe to push notifications
-async function subscribeToPush() {
-    try {
-        if (!serviceWorkerRegistered) {
-            await registerServiceWorker();
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
         }
 
-        const registration = await navigator.serviceWorker.ready;
+        // Subscribe to push notifications
+        async function subscribeToPush() {
+            try {
+                if (!serviceWorkerRegistered) {
+                    await registerServiceWorker();
+                }
 
-        // Reuse existing subscription if present, otherwise create one
-        let subscription = await registration.pushManager.getSubscription();
-        if (!subscription) {
-            subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-            });
+                const registration = await navigator.serviceWorker.ready;
+
+                // Reuse existing subscription if present, otherwise create one
+                let subscription = await registration.pushManager.getSubscription();
+                if (!subscription) {
+                    subscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                    });
+                }
+
+                // FIX: now that this goes to our own /api/sheets-proxy (same-origin),
+                // we don't need the text/plain trick that was used to dodge Apps
+                // Script's CORS preflight. Sending proper application/json ensures
+                // Vercel parses req.body correctly on the proxy side.
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'savePushSubscription',
+                        email: currentUserEmail,
+                        subscription: subscription.toJSON()
+                    })
+                });
+
+                const res = await response.json();
+
+                if (res.success) {
+                    pushSubscription = subscription;
+                    console.log('Push subscription saved');
+                    showToast('🔔 Push notifications enabled!', 'success');
+                } else {
+                    console.error('Failed to save subscription:', res.error);
+                    showToast('Failed to save subscription: ' + (res.error || 'Unknown error'), 'error');
+                }
+
+                return subscription;
+            } catch (e) {
+                console.error('Push subscription failed:', e);
+                showToast('Push subscription failed: ' + e.message, 'error');
+                return null;
+            }
         }
-
-        // POST as text/plain to avoid CORS preflight against Apps Script
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-                action: 'savePushSubscription',
-                email: currentUserEmail,
-                subscription: subscription.toJSON()
-            })
-        });
-
-        const res = await response.json();
-
-        if (res.success) {
-            pushSubscription = subscription;
-            console.log('Push subscription saved');
-            showToast('🔔 Push notifications enabled!', 'success');
-        } else {
-            console.error('Failed to save subscription:', res.error);
-            showToast('Failed to save subscription: ' + (res.error || 'Unknown error'), 'error');
-        }
-
-        return subscription;
-    } catch (e) {
-        console.error('Push subscription failed:', e);
-        showToast('Push subscription failed: ' + e.message, 'error');
-        return null;
-    }
-}
 
         // Show browser notification
         function showBrowserNotification(title, body, icon = '🏛️') {
