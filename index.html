@@ -6,7 +6,7 @@
     <title>Legacy Builders Group</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js">
     </script>
     <!-- FIX: html2pdf.js was used in exportToPDF() (html2pdf().set(opt).from(content).save())
@@ -16,33 +16,40 @@
     </script>
     <style>
         /* ============================================
-           DESIGN TOKENS — "Private Ledger" palette
-           Grounded in the subject: a member-run financial
-           institution that real people trust with real money.
-           Navy/charcoal + a single restrained gold accent reads
-           as a private bank statement, not a consumer app.
-           Signature: a hairline gold "ledger rule" under every
-           section heading, echoing a handwritten account book —
-           specific to a savings group's own history, not generic
-           dark-mode-with-accent.
+           DESIGN TOKENS — "Bright Dashboard" palette
+           Matched to reference: white surfaces, light gray page
+           background, a magenta-to-purple gradient banner, and
+           bold simple flat accent colors per data type (orange
+           for primary stats, green for income/savings, red for
+           spending/loans, blue for secondary actions).
            ============================================ */
         :root {
-            --navy: #0F1B2D;          /* deepest background, header, sidebar */
-            --navy-soft: #16263D;     /* card surface on dark contexts */
-            --charcoal: #1A2638;      /* secondary dark surface */
-            --slate: #3A4A5E;         /* muted borders/dividers on dark */
-            --gold: #C9A356;         /* the one accent — treasurer, CTAs, active states */
-            --gold-deep: #A9853F;    /* pressed/hover gold */
-            --gold-soft: #EFE3C8;    /* pale gold tint for light backgrounds */
-            --paper: #F4F2ED;        /* off-white page background */
-            --paper-card: #FFFFFF;   /* card surface on light contexts */
-            --ink: #15202E;          /* near-black navy ink, body text on paper */
-            --ink-soft: #5B6B7E;     /* secondary text */
-            --line: #DCD7CC;         /* hairline border on paper */
-            --sage: #4A7A6B;         /* savings / positive, used sparingly */
-            --sage-deep: #386054;
-            --rust: #A8453A;         /* loans / attention, used sparingly */
-            --rust-soft: #E6C9C4;
+            --grad-start: #E91E8C;   /* gradient banner — magenta */
+            --grad-end: #5B2A9E;     /* gradient banner — purple */
+            --accent: #8B2FC9;       /* purple accent — active states, links */
+            --accent-soft: #F3E8FB;  /* pale purple tint */
+            --orange: #F5A623;       /* primary stat color */
+            --orange-soft: #FDEBC8;
+            --green: #22C55E;        /* income / savings / positive */
+            --green-soft: #DCFCE7;
+            --red: #EF4444;          /* spending / loans / negative */
+            --red-soft: #FEE2E2;
+            --blue: #3B82F6;         /* secondary data / links */
+            --blue-soft: #DBEAFE;
+            --paper: #F7F7FA;        /* page background */
+            --paper-card: #FFFFFF;   /* card surface */
+            --ink: #1E1B2E;          /* body text */
+            --ink-soft: #8B8A99;     /* secondary/muted text */
+            --line: #ECEBF2;         /* hairline border on white */
+            /* Back-compat aliases so any leftover references still resolve sanely */
+            --navy: #1E1B2E;
+            --gold: var(--orange);
+            --gold-deep: #D98E0F;
+            --gold-soft: var(--orange-soft);
+            --sage: var(--green);
+            --sage-deep: #16A34A;
+            --rust: var(--red);
+            --rust-soft: var(--red-soft);
         }
 
         * {
@@ -56,17 +63,8 @@
         .splash-title, .login-box h1, .profile-name, .member-card .member-name,
         .card h2, .header-row-1 h1, .history-modal-header h3, .modal-content h3,
         .balance-card .amount, .sidebar-brand-name {
-            font-family: 'Fraunces', Georgia, serif;
-        }
-
-        /* Signature element: a hairline gold ledger-rule beneath every
-           card heading, with a small serif folio numeral — the visual
-           memory of a handwritten account ledger, rendered in CSS. */
-        .card h2 {
-            counter-increment: ledger-line;
-        }
-        .card {
-            counter-reset: ledger-line;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 700;
         }
 
         body {
@@ -375,9 +373,15 @@
             top: 0;
         }
 
-        .sidebar.active {
-            display: flex;
-            flex-direction: column;
+        /* FIX: .sidebar.active was setting display:flex unconditionally,
+           so the sidebar appeared on phone alongside the bottom tab bar
+           once login added the .active class. The sidebar should only
+           ever render at >=900px — .active alone must not be enough. */
+        @media (min-width: 900px) {
+            .sidebar.active {
+                display: flex;
+                flex-direction: column;
+            }
         }
 
         .sidebar-brand {
