@@ -397,6 +397,26 @@
                 top: 12px;
                 z-index: 10;
             }
+            /* On wide screens the green wallet panel stretching to the full
+               980px container width left the balance looking lost in a
+               half-empty bar. Cap it and lay the balance + loans pill side
+               by side instead of stacked, like a real desktop dashboard
+               card rather than a stretched phone component. */
+            .header {
+                max-width: 640px;
+            }
+            .header-row-2 {
+                display: flex;
+                align-items: baseline;
+                justify-content: space-between;
+                gap: 16px;
+            }
+            .header-row-2 .wallet-balance {
+                font-size: 36px;
+            }
+            .wallet-pill-row {
+                margin-top: 18px;
+            }
         }
         
         @keyframes fadeIn {
@@ -807,6 +827,15 @@
             animation-delay: 0.15s;
         }
 
+        @media (min-width: 900px) {
+            .quick-actions-card {
+                max-width: 640px;
+                justify-content: flex-start;
+                gap: 36px;
+                padding: 16px 20px;
+            }
+        }
+
         .quick-action {
             background: none;
             border: none;
@@ -854,6 +883,7 @@
             .wallet-pill-amount { font-size: 12px; }
             .quick-action-icon { width: 40px; height: 40px; font-size: 16px; }
             .quick-action { font-size: 10px; }
+            .header-row-2 .wallet-balance { font-size: 26px; }
         }
         
         .balance-skeleton {
@@ -1019,6 +1049,22 @@
             -webkit-overflow-scrolling: touch;
             padding: 0 12px 24px;
             display: block;
+        }
+
+        /* Tablet widths (between the mobile bottom-tab layout and the
+           desktop sidebar layout) still use the full-screen takeover, but
+           content shouldn't stretch edge-to-edge at 700-900px — give it
+           a comfortable reading/form width instead. */
+        @media (min-width: 640px) and (max-width: 899px) {
+            .fullscreen-panel.active-panel > *:not(.fullscreen-panel-bar) {
+                max-width: 640px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .fullscreen-panel-bar {
+                padding-left: calc(50% - 320px + 12px);
+                padding-right: calc(50% - 320px + 12px);
+            }
         }
 
         .fullscreen-panel.active-panel.panel-enter {
