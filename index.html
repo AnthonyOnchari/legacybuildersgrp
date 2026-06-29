@@ -73,6 +73,10 @@
             background: var(--paper);
             color: var(--ink);
             min-height: 100vh;
+            overflow-x: hidden;
+        }
+        html {
+            overflow-x: hidden;
         }
 
 
@@ -1007,7 +1011,8 @@
         
         .filter-row { display: flex;
             gap: 8px; }
-        .filter-row select { flex: 1; }
+        .filter-row select { flex: 1;
+            min-width: 0; }
         
         .badge {
             padding: 3px 8px;
@@ -1247,6 +1252,7 @@
             border-radius: 6px;
             font-size: 12px;
             flex: 1;
+            min-width: 0;
         }
         
         @media (max-width: 768px) {
@@ -2999,7 +3005,7 @@
             const modal = document.createElement('div');
             modal.className = 'history-modal';
             modal.innerHTML =
-                `<div class="history-modal-content"><div class="history-modal-header"><h3>📜 Transaction History</h3><button class="close-history-btn" onclick="this.closest('.history-modal').remove()">✕</button></div><div class="history-modal-body"><div class="history-search"><input type="text" id="historySearch" placeholder="Search..."><select id="historyFilterMember"><option value="">All Members</option>${allMembers.map(m => `<option value="${m}">${m}</option>`).join('')}</select><select id="historyFilterType"><option value="">All Types</option><option value="Savings">Savings</option><option value="Loan Taken">Loan Taken</option><option value="Loan Repayment">Loan Repayment</option></select></div><div style="overflow-x: auto;"><table class="history-table"><thead><tr><th onclick="sortHistory('date')">Date ⬍</th><th onclick="sortHistory('member')">Member ⬍</th><th onclick="sortHistory('type')">Type ⬍</th><th onclick="sortHistory('amount')">Amount ⬍</th><th>Message</th></tr></thead><tbody id="historyBody"></tbody></tr></div></div></div>`;
+                `<div class="history-modal-content"><div class="history-modal-header"><h3>📜 Transaction History</h3><button class="close-history-btn" onclick="this.closest('.history-modal').remove()">✕</button></div><div class="history-modal-body"><div class="history-search"><input type="text" id="historySearch" placeholder="Search..."><select id="historyFilterMember"><option value="">All Members</option>${allMembers.map(m => `<option value="${m}">${m}</option>`).join('')}</select><select id="historyFilterType"><option value="">All Types</option><option value="Savings">Savings</option><option value="Loan Taken">Loan Taken</option><option value="Loan Repayment">Loan Repayment</option></select></div><div style="overflow-x: auto; max-width: 100%;"><table class="history-table"><thead><tr><th onclick="sortHistory('date')">Date ⬍</th><th onclick="sortHistory('member')">Member ⬍</th><th onclick="sortHistory('type')">Type ⬍</th><th onclick="sortHistory('amount')">Amount ⬍</th><th>Message</th></tr></thead><tbody id="historyBody"></tbody></table></div></div></div>`;
             document.body.appendChild(modal);
             currentHistoryRecords = [...allRecords];
             renderHistoryTable();
