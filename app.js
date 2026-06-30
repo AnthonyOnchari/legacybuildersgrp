@@ -335,11 +335,43 @@
                     showBalanceLoading(true);
                     updateDashboardGreeting();
                     initMemoriesCarousel();
-                    await loadAllData();
-                    await loadMeetingMinutes();
-                    await loadScheduledMeeting();
-                    await loadMembersList();
-                    activateTab(currentTab);
+                    // FIX (performance — the real "takes forever" cause):
+                    // these 4 fetches have no dependency on each other but
+                    // were run with sequential awaits, meaning the browser
+                    // waited for each full Apps Script round-trip to finish
+                    // before even starting the next one — 4 round-trips
+                    // stacked back-to-back instead of happening at once.
+                    // This only affected the FIRST login of a session; the
+                    // persistent-login path (returning via a saved session)
+                    // already ran these in parallel correctly.
+                    await Promise.all([
+                        loadAllData(),
+                        loadMeetingMinutes(),
+                        loadScheduledMeeting(),
+                        loadMembersList()
+                    ]);
+                    // FIX: activateTab() also calls loadAllData() internally
+                    // (needed for normal tab switches, where fresh data IS
+                    // wanted) — but right here, data was JUST fetched by the
+                    // Promise.all above. Calling activateTab() unconditionally
+                    // triggered a second, fully redundant fetch on every
+                    // single login. Swap the panel/nav state directly
+                    // instead of going through the function that also
+                    // re-fetches.
+                    document.querySelectorAll('.tab, .sidebar-link').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
+                    const activeTabBtn = document.querySelector(`.tab[data-panel="${currentTab}"]`);
+                    if (activeTabBtn) activeTabBtn.classList.add('active');
+                    const activeSidebarBtn = document.querySelector(`.sidebar-link[data-panel="${currentTab}"]`);
+                    if (activeSidebarBtn) activeSidebarBtn.classList.add('active');
+                    const activePanel = document.getElementById(currentTab + 'Panel');
+                    if (activePanel) {
+                        ensureFullscreenBar(activePanel, currentTab);
+                        activePanel.classList.add('active-panel', 'panel-enter');
+                    }
+                    const appContainerEl = document.getElementById('appContainer');
+                    if (appContainerEl) appContainerEl.classList.toggle('dashboard-active', currentTab === 'transactions');
+                    localStorage.setItem('legacy_active_tab', currentTab);
                     showBalanceLoading(false);
                     showToast(`Welcome ${currentUser}!`, 'success');
 
@@ -2188,7 +2220,24 @@
                     loadScheduledMeeting(),
                     loadMembersList()
                 ]);
-                activateTab(currentTab);
+                // FIX: same redundant-fetch issue as the fresh-login path —
+                // activateTab() also calls loadAllData() internally, which
+                // would re-fetch data that was JUST loaded by Promise.all
+                // above. Set panel/nav state directly instead.
+                document.querySelectorAll('.tab, .sidebar-link').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
+                const activeTabBtn2 = document.querySelector(`.tab[data-panel="${currentTab}"]`);
+                if (activeTabBtn2) activeTabBtn2.classList.add('active');
+                const activeSidebarBtn2 = document.querySelector(`.sidebar-link[data-panel="${currentTab}"]`);
+                if (activeSidebarBtn2) activeSidebarBtn2.classList.add('active');
+                const activePanel2 = document.getElementById(currentTab + 'Panel');
+                if (activePanel2) {
+                    ensureFullscreenBar(activePanel2, currentTab);
+                    activePanel2.classList.add('active-panel', 'panel-enter');
+                }
+                const appContainerEl2 = document.getElementById('appContainer');
+                if (appContainerEl2) appContainerEl2.classList.toggle('dashboard-active', currentTab === 'transactions');
+                localStorage.setItem('legacy_active_tab', currentTab);
                 showBalanceLoading(false);
 
                 setTimeout(() => {
