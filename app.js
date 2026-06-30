@@ -2096,6 +2096,14 @@
                 void panel.offsetWidth;
                 panel.classList.add('active-panel', 'panel-enter');
             }
+            // Drives the desktop two-column dashboard grid (see style.css
+            // ".app-container.dashboard-active" rule) — only the Home tab
+            // uses the side-by-side layout; every other tab is a
+            // full-width single view, so this class is removed otherwise.
+            // A JS toggle is used instead of relying solely on the CSS
+            // :has() selector for broader browser compatibility.
+            const appContainer = document.getElementById('appContainer');
+            if (appContainer) appContainer.classList.toggle('dashboard-active', tabId === 'transactions');
             localStorage.setItem('legacy_active_tab', tabId);
             currentTab = tabId;
             loadAllData();

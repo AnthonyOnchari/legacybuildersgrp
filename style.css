@@ -421,17 +421,64 @@
                 position: sticky;
                 top: 12px;
                 z-index: 10;
-            }
-            /* On wide screens the gradient balance card stretching to the
-               full 980px container width left the balance looking lost in
-               a half-empty bar — cap it to a comfortable card width like a
-               real desktop dashboard widget instead of a stretched phone
-               component. */
-            .header {
-                max-width: 420px;
+                align-self: flex-start;
             }
             .header-row-2 .wallet-balance {
                 font-size: 34px;
+            }
+        }
+
+        /* ============================================
+           DESKTOP DASHBOARD — true two-column layout once
+           there's enough real width for it (>=1100px). Below
+           this, the single stacked column (used on phone and
+           tablet) stays, since two columns would feel cramped
+           on a tablet-sized window.
+           The previous desktop pass only widened the outer
+           shell but kept every child (balance card capped at
+           420px, everything else single-column) narrow — this
+           is the actual fix for "wastes the wide screen."
+
+           .sticky-top (balance card + quick actions + snapshot)
+           and .scroll-panels (the tab content, including Home's
+           memories/recent-activity cards) are SIBLINGS directly
+           inside .app-container — so .app-container itself
+           becomes the grid, with .sticky-top as the left column
+           and .scroll-panels as the right column. This only
+           applies while the Home tab is active; full-screen
+           panels (Summary/Loans/etc.) stay full-width since they
+           already work well as single wide views.
+           ============================================ */
+        @media (min-width: 1100px) {
+            .app-container {
+                max-width: 1400px;
+            }
+
+            .app-container.active.dashboard-active {
+                display: grid;
+                grid-template-columns: 380px 1fr;
+                gap: 24px;
+                align-items: start;
+            }
+
+            .app-container.active.dashboard-active .sticky-top {
+                position: sticky;
+                top: 12px;
+            }
+
+            .app-container.active.dashboard-active .scroll-panels {
+                padding-bottom: 32px;
+            }
+
+            .header {
+                max-width: none;
+                width: 100%;
+            }
+
+            .quick-actions-card {
+                max-width: none;
+                width: 100%;
+                justify-content: space-between;
             }
         }
         
@@ -1172,6 +1219,53 @@
             margin-bottom: 14px;
             border: 1px solid var(--line);
             box-shadow: 0 1px 2px rgba(15, 27, 45, 0.04);
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        /* ============================================
+           DESKTOP INTERACTIVITY — real hover feedback for
+           mouse users, scoped to (hover: hover) so it never
+           triggers a phantom "stuck hover" state on touch
+           devices. Cards lift slightly, activity rows and
+           stat tiles highlight, matching what a real desktop
+           dashboard feels like rather than a static phone
+           layout stretched wide.
+           ============================================ */
+        @media (hover: hover) and (min-width: 900px) {
+            .card:hover {
+                box-shadow: 0 6px 20px -6px rgba(20, 33, 61, 0.12);
+            }
+
+            .activity-row {
+                cursor: default;
+                border-radius: 8px;
+                transition: background 0.15s ease;
+                margin: 0 -8px;
+                padding: 10px 8px;
+            }
+
+            .activity-row:hover {
+                background: var(--paper);
+            }
+
+            .dashboard-stat {
+                transition: transform 0.15s ease, box-shadow 0.15s ease;
+                cursor: default;
+            }
+
+            .dashboard-stat:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 14px -4px rgba(20, 33, 61, 0.15);
+            }
+
+            .member-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px -6px rgba(20, 33, 61, 0.14);
+            }
+
+            .meeting-action-row:hover {
+                background: var(--paper);
+            }
         }
         
         .card h2 {
