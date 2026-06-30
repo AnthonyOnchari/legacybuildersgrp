@@ -1957,6 +1957,158 @@
             margin-top: 2px;
         }
 
+        /* ============================================
+           HOME DASHBOARD — greeting + stat tiles + recent
+           activity, replacing the old always-visible Add
+           Transaction form on the main/Home tab.
+           ============================================ */
+        .dashboard-stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .dashboard-stat {
+            background: var(--paper);
+            border-radius: 12px;
+            padding: 12px 6px;
+            text-align: center;
+        }
+
+        .dashboard-stat-value {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--ink);
+            white-space: nowrap;
+        }
+
+        .dashboard-stat-label {
+            font-size: 9px;
+            color: var(--ink-soft);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-top: 3px;
+        }
+
+        .activity-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .activity-row:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--blue-soft);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .activity-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .activity-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ink);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .activity-meta {
+            font-size: 11px;
+            color: var(--ink-soft);
+            margin-top: 1px;
+        }
+
+        .activity-amount {
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .activity-amount.positive { color: var(--green); }
+        .activity-amount.negative { color: var(--red); }
+
+        /* ============================================
+           MEETINGS PAGE — compact tappable rows that each
+           open their own modal, replacing the old stacked
+           always-visible forms.
+           ============================================ */
+        .meeting-action-row {
+            width: 100%;
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 10px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+        }
+
+        .meeting-action-row:last-child {
+            border-bottom: none;
+        }
+
+        .meeting-action-row:active {
+            background: var(--paper);
+        }
+
+        .meeting-action-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: var(--blue-soft);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            flex-shrink: 0;
+        }
+
+        .meeting-action-text {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .meeting-action-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ink);
+        }
+
+        .meeting-action-sub {
+            font-size: 11px;
+            color: var(--ink-soft);
+            margin-top: 2px;
+        }
+
+        .meeting-action-arrow {
+            font-size: 22px;
+            color: var(--ink-soft);
+            flex-shrink: 0;
+        }
+
         .about-values-row {
             display: flex;
             flex-wrap: wrap;
@@ -2314,7 +2466,7 @@
                 <div class="sidebar-brand-tagline">Where Families Build Wealth Together</div>
             </div>
             <div class="sidebar-nav">
-                <button class="sidebar-link" data-panel="transactions"><span class="tab-icon">📋</span><span>Transactions</span></button>
+                <button class="sidebar-link" data-panel="transactions"><span class="tab-icon">🏠</span><span>Home</span></button>
                 <button class="sidebar-link" data-panel="summary"><span class="tab-icon">📊</span><span>Summary</span></button>
                 <button class="sidebar-link" data-panel="loans"><span class="tab-icon">💰</span><span>Loans</span></button>
                 <button class="sidebar-link" data-panel="meetings"><span class="tab-icon">📝</span><span>Meetings</span></button>
@@ -2359,15 +2511,15 @@
         <!-- QUICK ACTIONS — circular icon buttons matching the
              Deposit/Send/Change/Trade row from the reference -->
         <div class="quick-actions-card">
-            <button class="quick-action" onclick="activateTab('transactions')">
+            <button class="quick-action" onclick="openAddTransactionModal('Savings')">
                 <span class="quick-action-icon qa-save">💰</span>
-                <span>Save</span>
+                <span>Deposit</span>
             </button>
-            <button class="quick-action" onclick="document.getElementById('type').value='Loan Taken'; toggleApprovalNotice(); activateTab('transactions');">
+            <button class="quick-action" onclick="openAddTransactionModal('Loan Taken')">
                 <span class="quick-action-icon qa-loan">🏦</span>
                 <span>Loan</span>
             </button>
-            <button class="quick-action" onclick="document.getElementById('type').value='Loan Repayment'; toggleApprovalNotice(); activateTab('transactions');">
+            <button class="quick-action" onclick="openAddTransactionModal('Loan Repayment')">
                 <span class="quick-action-icon qa-repay">🔄</span>
                 <span>Repay</span>
             </button>
@@ -2381,7 +2533,36 @@
         <div class="scroll-panels">
         <div id="transactionsPanel" class="panel active-panel">
             <div class="card">
-                <h2>Add Transaction</h2>
+                <h2 id="dashboardGreeting">👋 Welcome back</h2>
+                <div class="dashboard-stats-row">
+                    <div class="dashboard-stat">
+                        <div class="dashboard-stat-value" id="dashStatSavings">--</div>
+                        <div class="dashboard-stat-label">Your Savings</div>
+                    </div>
+                    <div class="dashboard-stat">
+                        <div class="dashboard-stat-value" id="dashStatLoans">--</div>
+                        <div class="dashboard-stat-label">Your Loans</div>
+                    </div>
+                    <div class="dashboard-stat">
+                        <div class="dashboard-stat-value" id="dashStatNet">--</div>
+                        <div class="dashboard-stat-label">Net Balance</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                    <h2 style="margin-bottom: 0;">🕒 Recent Activity</h2>
+                    <button onclick="openHistoryModal()" style="width: auto; padding: 4px 0; background: none; color: var(--blue); font-size: 12px; font-weight: 600;">See all</button>
+                </div>
+                <div id="recentActivityList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
+            </div>
+        </div>
+
+        <!-- ADD TRANSACTION MODAL — opened from the quick action icons
+             (Deposit / Loan / Repay) instead of living inline on Home. -->
+        <div class="modal" id="addTransactionModal" style="display: none;">
+            <div class="modal-content">
+                <h3 id="addTransactionTitle">💰 New Transaction</h3>
                 <div class="form-grid">
                     <div><label>📅 Date</label><input type="date" id="date"></div>
                     <div><label>👤 Member Selected</label><select id="memberSelect" disabled style="background:#F4F6FB;"><option value="">Loading...</option></select></div>
@@ -2390,7 +2571,10 @@
                     <div><label>Transaction Message</label><input type="text" id="message" placeholder="e.g., Bank/Mpesa Message"></div>
                 </div>
                 <div id="approvalNotice" style="background:#E8EEFF; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">⚠️ Loan requests need approval from ALL other members. 10% interest will be added to the loan.</div>
-                <button id="addBtn">Submit Transaction</button>
+                <div class="modal-buttons">
+                    <button id="addBtn">Submit Transaction</button>
+                    <button class="close-modal" onclick="closeAddTransactionModal()">Cancel</button>
+                </div>
             </div>
         </div>
 
@@ -2404,15 +2588,6 @@
                     </div>
                 </div>
             </div>
-            <div class="card">
-                <h2>📈 Savings Over Time</h2>
-                <div id="savingsTrendSkeleton" class="loading-container"><div class="loading-spinner"></div><div>Loading trend...</div></div>
-                <div id="savingsTrendContent" style="display: none;">
-                    <div class="chart-wrapper" style="background: #ffffff;">
-                        <canvas id="savingsTrendChart"></canvas>
-                    </div>
-                </div>
-            </div>
             <div class="card"><h2>Export Data</h2><button id="exportPdfBtn" class="pdf-btn">📄 Download PDF</button></div>
         </div>
 
@@ -2422,36 +2597,36 @@
         </div>
 
         <div id="meetingsPanel" class="panel fullscreen-panel">
-            <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                    <h2 style="margin:0; border-left: none; padding-left:0;">📝 Meeting Minutes</h2>
-                    <button id="addMeetingBtn" style="width: auto; padding: 8px 16px;">+ Add Meeting</button>
-                </div>
-                <div id="meetingMinutesList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
-            </div>
-
-            <div class="card">
-                <h2>📢 Send Announcement</h2>
-                <div class="form-grid">
-                    <div style="grid-column: span 2;"><label>Title</label><input type="text" id="announcementTitle" placeholder="e.g., Meeting moved to 6pm" maxlength="80"></div>
-                    <div style="grid-column: span 2;"><label>Message</label><textarea id="announcementBody" rows="3" placeholder="Write your announcement here..." maxlength="500"></textarea></div>
-                </div>
-                <button id="sendAnnouncementBtn">📢 Send to All Members</button>
-            </div>
-
-            <div class="card">
-                <h2>📅 Schedule Next Meeting</h2>
-                <div class="form-grid">
-                    <div><label>📅 Next Meeting Date</label><input type="date" id="nextMeetingDate"></div>
-                    <div><label>📋 Meeting Agenda</label><input type="text" id="nextMeetingAgenda" placeholder="What will be discussed?"></div>
-                    <div><label>📍 Venue / Location</label><input type="text" id="nextMeetingVenue" placeholder="e.g., Online / Hall"></div>
-                </div>
-                <button id="scheduleMeetingBtn">📅 Schedule Next Meeting</button>
-            </div>
-
             <div id="upcomingMeetingCard" class="card upcoming-meeting-card" style="display: none;">
                 <h2>⏰ Upcoming Meeting</h2>
                 <div id="upcomingMeetingInfo"></div>
+            </div>
+
+            <div class="card" style="padding: 8px;">
+                <button class="meeting-action-row" onclick="openViewMinutesModal()">
+                    <span class="meeting-action-icon">📝</span>
+                    <span class="meeting-action-text">
+                        <span class="meeting-action-title">Meeting Minutes</span>
+                        <span class="meeting-action-sub">View past minutes &amp; record new ones</span>
+                    </span>
+                    <span class="meeting-action-arrow">›</span>
+                </button>
+                <button class="meeting-action-row" onclick="openScheduleMeetingModal()">
+                    <span class="meeting-action-icon">📅</span>
+                    <span class="meeting-action-text">
+                        <span class="meeting-action-title">Schedule Next Meeting</span>
+                        <span class="meeting-action-sub">Set date, agenda &amp; venue</span>
+                    </span>
+                    <span class="meeting-action-arrow">›</span>
+                </button>
+                <button class="meeting-action-row" onclick="openSendAnnouncementModal()">
+                    <span class="meeting-action-icon">📢</span>
+                    <span class="meeting-action-text">
+                        <span class="meeting-action-title">Send Announcement</span>
+                        <span class="meeting-action-sub">Push a message to all members</span>
+                    </span>
+                    <span class="meeting-action-arrow">›</span>
+                </button>
             </div>
         </div>
 
@@ -2488,7 +2663,6 @@
 
             <div class="about-values-row">
                 <span class="about-value-chip">🤝 Unity</span>
-                <span class="about-value-chip">💪 Empowerment</span>
                 <span class="about-value-chip">🎯 Integrity</span>
                 <span class="about-value-chip">🌟 Legacy</span>
             </div>
@@ -2512,7 +2686,7 @@
 
     <!-- TAB BAR -->
     <div class="tab-bar" id="tabBar" style="display: none;">
-        <button class="tab" data-panel="transactions"><span class="tab-icon">📋</span><span>Transactions</span></button>
+        <button class="tab" data-panel="transactions"><span class="tab-icon">🏠</span><span>Home</span></button>
         <button class="tab" data-panel="summary"><span class="tab-icon">📊</span><span>Summary</span></button>
         <button class="tab" data-panel="loans"><span class="tab-icon">💰</span><span>Loans</span></button>
         <button class="tab" data-panel="meetings"><span class="tab-icon">📝</span><span>Meetings</span></button>
@@ -2561,7 +2735,6 @@
         let userProfileImage = localStorage.getItem('legacy_profile_image') || null;
         let isLoading = false;
         let chartInstance = null;
-        let savingsTrendChartInstance = null;
         let serviceWorkerRegistered = false;
         let pushSubscription = null;
 
@@ -2861,6 +3034,7 @@
                     if (pendingSidebarLink) pendingSidebarLink.style.display = isTreasurer() ? 'flex' : 'none';
 
                     showBalanceLoading(true);
+                    updateDashboardGreeting();
                     await loadAllData();
                     await loadMeetingMinutes();
                     await loadScheduledMeeting();
@@ -2965,6 +3139,69 @@
                 }
             } catch (e) {
                 console.error('Error loading scheduled meeting:', e);
+            }
+        }
+
+        // Builds a modal with the exact field IDs scheduleNextMeeting()
+        // already expects, so that function works completely unchanged.
+        function openScheduleMeetingModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `<div class="modal-content">
+                <h3>📅 Schedule Next Meeting</h3>
+                <div class="form-grid">
+                    <div><label>📅 Next Meeting Date</label><input type="date" id="nextMeetingDate"></div>
+                    <div><label>📋 Meeting Agenda</label><input type="text" id="nextMeetingAgenda" placeholder="What will be discussed?"></div>
+                    <div><label>📍 Venue / Location</label><input type="text" id="nextMeetingVenue" placeholder="e.g., Online / Hall"></div>
+                </div>
+                <div class="modal-buttons">
+                    <button id="scheduleMeetingBtn" onclick="scheduleNextMeetingAndClose()">📅 Schedule</button>
+                    <button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button>
+                </div>
+            </div>`;
+            document.body.appendChild(modal);
+        }
+
+        // Wraps scheduleNextMeeting() to also close its own modal on
+        // success, since that function is shared and shouldn't assume
+        // where its inputs live.
+        async function scheduleNextMeetingAndClose() {
+            await scheduleNextMeeting();
+            // Only close if the call actually succeeded — a failed
+            // attempt should leave the modal open so the date/agenda/venue
+            // aren't lost and the person can retry or fix the error.
+            const dateInput = document.getElementById('nextMeetingDate');
+            if (dateInput && dateInput.value === '') {
+                dateInput.closest('.modal')?.remove();
+            }
+        }
+
+        // Builds a modal with the exact field IDs sendAnnouncement() already
+        // expects, so that function works completely unchanged.
+        function openSendAnnouncementModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `<div class="modal-content">
+                <h3>📢 Send Announcement</h3>
+                <div class="form-grid">
+                    <div style="grid-column: span 2;"><label>Title</label><input type="text" id="announcementTitle" placeholder="e.g., Meeting moved to 6pm" maxlength="80"></div>
+                    <div style="grid-column: span 2;"><label>Message</label><textarea id="announcementBody" rows="3" placeholder="Write your announcement here..." maxlength="500"></textarea></div>
+                </div>
+                <div class="modal-buttons">
+                    <button id="sendAnnouncementBtn" onclick="sendAnnouncementAndClose()">📢 Send to All</button>
+                    <button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button>
+                </div>
+            </div>`;
+            document.body.appendChild(modal);
+        }
+
+        async function sendAnnouncementAndClose() {
+            await sendAnnouncement();
+            const titleInput = document.getElementById('announcementTitle');
+            // sendAnnouncement() clears both fields on success — use that
+            // as the signal to close, same pattern as the scheduling modal.
+            if (titleInput && titleInput.value === '') {
+                titleInput.closest('.modal')?.remove();
             }
         }
 
@@ -3532,6 +3769,25 @@
                 await loadMeetingMinutes(); } else showToast('Error deleting meeting', 'error');
         }
 
+        // Opens a modal containing the actual meeting-minutes list. The list
+        // only renders once this modal (and its #meetingMinutesList target)
+        // exists in the DOM — loadMeetingMinutes() is called fresh each time
+        // so the data is current, not stale from a previous open.
+        function openViewMinutesModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `<div class="modal-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                    <h3 style="margin:0;">📝 Meeting Minutes</h3>
+                    <button onclick="openAddMeetingModal()" style="width:auto; padding:7px 14px; font-size:12px;">+ Add</button>
+                </div>
+                <div id="meetingMinutesList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
+                <div class="modal-buttons"><button class="close-modal" onclick="this.closest('.modal').remove()">Close</button></div>
+            </div>`;
+            document.body.appendChild(modal);
+            loadMeetingMinutes();
+        }
+
         function openAddMeetingModal() {
             const today = new Date().toISOString().split('T')[0];
             const modal = document.createElement('div');
@@ -3549,7 +3805,13 @@
                 notes: document.getElementById('meetingNotes').value, decisions: document.getElementById(
                     'meetingDecisions').value, nextMeeting: document.getElementById('meetingNext').value });
             if (res.success) { showToast('Meeting saved!', 'success');
-                document.querySelector('.modal')?.remove();
+                // FIX: was document.querySelector('.modal')?.remove(), which
+                // always removes the FIRST .modal in document order — wrong
+                // when this Add-Meeting modal is stacked on top of an
+                // already-open View-Minutes modal. Close specifically the
+                // modal that contains this form (identified by its date
+                // input) instead.
+                document.getElementById('meetingDate')?.closest('.modal')?.remove();
                 await loadMeetingMinutes(); } else showToast('Error: ' + res.error, 'error');
         }
 
@@ -3661,168 +3923,6 @@
         }
 
         // ============================================================
-        // SAVINGS TREND LINE CHART (styled like a textbook line graph:
-        // light blue grid, orange line, X markers)
-        // ============================================================
-        function computeSavingsTrend() {
-            // Build a running savings balance per date from allRecords,
-            // sorted chronologically. Savings & Loan Repayment add to the
-            // balance, Loan Taken subtracts — matching appendApprovedTransaction()
-            // in the backend.
-            const sorted = [...allRecords].sort((a, b) => new Date(a.date) - new Date(b.date));
-            let running = 0;
-            const byDate = new Map();
-            sorted.forEach(r => {
-                const amt = Number(r.amount) || 0;
-                if (r.type === 'Savings' || r.type === 'Loan Repayment') running += amt;
-                else if (r.type === 'Loan Taken') running -= amt;
-                byDate.set(r.date, running);
-            });
-            const labels = Array.from(byDate.keys()).map(d => {
-                const dt = new Date(d);
-                return isNaN(dt) ? d : dt.toLocaleDateString('en-KE', { day: 'numeric', month: 'short' });
-            });
-            const values = Array.from(byDate.values());
-            return { labels, values };
-        }
-
-        function renderSavingsTrendChart() {
-            const canvas = document.getElementById('savingsTrendChart');
-            if (!canvas) return;
-
-            const { labels, values } = computeSavingsTrend();
-
-            const skeleton = document.getElementById('savingsTrendSkeleton');
-            const content = document.getElementById('savingsTrendContent');
-
-            if (!values.length) {
-                if (skeleton) skeleton.innerHTML = '<div class="empty-state">No savings history yet</div>';
-                if (content) content.style.display = 'none';
-                return;
-            }
-            if (skeleton) skeleton.style.display = 'none';
-            if (content) content.style.display = 'block';
-
-            if (savingsTrendChartInstance) {
-                savingsTrendChartInstance.destroy();
-                savingsTrendChartInstance = null;
-            }
-
-            const ctx = canvas.getContext('2d');
-
-            // Light blue graph-paper style grid, drawn behind the line via a plugin
-            const gridPaperPlugin = {
-                id: 'gridPaper',
-                beforeDraw(chart) {
-                    const { ctx, chartArea } = chart;
-                    if (!chartArea) return;
-                    ctx.save();
-                    ctx.fillStyle = '#F4F6FB';
-                    ctx.fillRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
-                    ctx.strokeStyle = 'rgba(20, 33, 61, 0.08)';
-                    ctx.lineWidth = 1;
-                    const stepX = (chartArea.right - chartArea.left) / 20;
-                    const stepY = (chartArea.bottom - chartArea.top) / 14;
-                    for (let x = chartArea.left; x <= chartArea.right; x += stepX) {
-                        ctx.beginPath();
-                        ctx.moveTo(x, chartArea.top);
-                        ctx.lineTo(x, chartArea.bottom);
-                        ctx.stroke();
-                    }
-                    for (let y = chartArea.top; y <= chartArea.bottom; y += stepY) {
-                        ctx.beginPath();
-                        ctx.moveTo(chartArea.left, y);
-                        ctx.lineTo(chartArea.right, y);
-                        ctx.stroke();
-                    }
-                    ctx.restore();
-                }
-            };
-
-            savingsTrendChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels,
-                    datasets: [{
-                        label: 'Savings Balance (KES)',
-                        data: values,
-                        borderColor: '#3B6FF2',
-                        backgroundColor: '#3B6FF2',
-                        borderWidth: 3,
-                        pointStyle: 'circle',
-                        pointRadius: 6,
-                        pointBorderColor: '#3B6FF2',
-                        pointBorderWidth: 2,
-                        pointBackgroundColor: '#3B6FF2',
-                        tension: 0.3,
-                        fill: false
-                    }]
-                },
-                plugins: [gridPaperPlugin],
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { display: false },
-                        title: {
-                            display: true,
-                            text: 'Savings Balance Over Time',
-                            font: { size: window.innerWidth < 500 ? 13 : 16, weight: '700' },
-                            color: '#14213D',
-                            padding: { bottom: 12 }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return 'KES ' + context.parsed.y.toLocaleString('en-KE');
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { display: false },
-                            border: { color: '#14213D', width: 2 },
-                            ticks: {
-                                color: '#14213D',
-                                font: { size: window.innerWidth < 500 ? 9 : 11, weight: '600' },
-                                callback: function(value) {
-                                    return value.toLocaleString('en-KE');
-                                }
-                            },
-                            title: {
-                                display: true,
-                                text: 'Savings (KES)',
-                                color: '#14213D',
-                                font: { size: window.innerWidth < 500 ? 10 : 12, weight: '600' }
-                            }
-                        },
-                        x: {
-                            grid: { display: false },
-                            border: { color: '#14213D', width: 2 },
-                            ticks: {
-                                color: '#14213D',
-                                font: { size: window.innerWidth < 500 ? 9 : 11, weight: '600' },
-                                maxRotation: 0
-                            },
-                            title: {
-                                display: true,
-                                text: 'Date',
-                                color: '#14213D',
-                                font: { size: window.innerWidth < 500 ? 10 : 12, weight: '600' }
-                            }
-                        }
-                    },
-                    animation: {
-                        duration: 1000,
-                        easing: 'easeOutQuart'
-                    }
-                }
-            });
-        }
-
-        // ============================================================
         // LOAD ALL DATA
         // ============================================================
         async function loadAllData() {
@@ -3840,8 +3940,9 @@
                 ]);
                 if (recordsRes.success) { allRecords = recordsRes.records || [];
                     applyFilters();
-                    renderSavingsTrendChart();
-                    updateAboutStats(); }
+                    updateAboutStats();
+                    updateDashboardStats();
+                    renderRecentActivity(); }
                 if (membersRes.success && membersRes.members?.length) { allMembers = membersRes.members;
                     updateMemberDropdowns(); }
                 if (summaryRes.success) {
@@ -4049,6 +4150,7 @@
                         'success');
                     document.getElementById('amount').value = '';
                     document.getElementById('message').value = '';
+                    closeAddTransactionModal();
                     await loadAllData(); } else showToast('Error: ' + res.error, 'error');
             } else {
                 const res = await callAPI('submitTransaction', { date, member, type, amount, message,
@@ -4057,6 +4159,7 @@
                     'success');
                     document.getElementById('amount').value = '';
                     document.getElementById('message').value = '';
+                    closeAddTransactionModal();
                     await loadAllData(); } else showToast('Error: ' + (res.error || 'Failed'), 'error');
             }
             hideButtonLoading(btn, orig);
@@ -4065,6 +4168,80 @@
         function toggleApprovalNotice() {
             const notice = document.getElementById('approvalNotice');
             if (notice) notice.style.display = document.getElementById('type').value === 'Loan Taken' ? 'block' : 'none';
+        }
+
+        // ============================================================
+        // ADD TRANSACTION MODAL
+        // Opened from the Home dashboard's quick-action icons
+        // (Deposit / Loan / Repay) instead of a permanently visible
+        // inline form.
+        // ============================================================
+        const TRANSACTION_MODAL_TITLES = {
+            'Savings': '💰 New Deposit',
+            'Loan Taken': '🏦 Request a Loan',
+            'Loan Repayment': '🔄 Repay a Loan'
+        };
+
+        function openAddTransactionModal(type) {
+            const modal = document.getElementById('addTransactionModal');
+            if (!modal) return;
+            document.getElementById('type').value = type;
+            document.getElementById('addTransactionTitle').textContent = TRANSACTION_MODAL_TITLES[type] || '💰 New Transaction';
+            toggleApprovalNotice();
+            if (!document.getElementById('date').value) {
+                document.getElementById('date').value = new Date().toISOString().split('T')[0];
+            }
+            modal.style.display = 'flex';
+        }
+
+        function closeAddTransactionModal() {
+            const modal = document.getElementById('addTransactionModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        // ============================================================
+        // HOME DASHBOARD
+        // ============================================================
+        function updateDashboardGreeting() {
+            const el = document.getElementById('dashboardGreeting');
+            if (!el || !currentUser) return;
+            const hour = new Date().getHours();
+            const timeGreeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+            el.textContent = `👋 ${timeGreeting}, ${currentUser.split(' ')[0]}`;
+        }
+
+        function updateDashboardStats() {
+            const stats = getUserStats(currentUser);
+            const savingsEl = document.getElementById('dashStatSavings');
+            const loansEl = document.getElementById('dashStatLoans');
+            const netEl = document.getElementById('dashStatNet');
+            if (savingsEl) savingsEl.textContent = `KES ${(stats.savings || 0).toLocaleString('en-KE')}`;
+            if (loansEl) loansEl.textContent = `KES ${(stats.loans || 0).toLocaleString('en-KE')}`;
+            if (netEl) netEl.textContent = `KES ${(stats.net || 0).toLocaleString('en-KE')}`;
+        }
+
+        function renderRecentActivity() {
+            const container = document.getElementById('recentActivityList');
+            if (!container) return;
+            if (!allRecords.length) {
+                container.innerHTML = '<div class="empty-state">No transactions yet — tap a quick action above to get started</div>';
+                return;
+            }
+            const recent = [...allRecords]
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 5);
+            const iconFor = (type) => type === 'Savings' ? '💰' : type === 'Loan Taken' ? '🏦' : '🔄';
+            container.innerHTML = recent.map(r => {
+                const sign = r.type === 'Loan Taken' ? '-' : '+';
+                return `<div class="activity-row">
+                    <div class="activity-icon">${iconFor(r.type)}</div>
+                    <div class="activity-info">
+                        <div class="activity-name">${escapeHtml(r.member)}</div>
+                        <div class="activity-meta">${r.type} · ${new Date(r.date).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}</div>
+                    </div>
+                    <div class="activity-amount ${sign === '-' ? 'negative' : 'positive'}">${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</div>
+                </div>`;
+            }).join('');
         }
 
         function applyFilters() {
@@ -4130,11 +4307,10 @@
                 const recentRecords = allRecords.slice(-10).reverse();
                 updateProgress(30, 'Formatting data...');
 
-                // FIX: capture the real on-screen Chart.js charts as images so the
-                // PDF shows the actual financial bar chart and savings trend line
-                // chart, instead of only the hand-built summary bars below.
+                // FIX: capture the real on-screen Chart.js chart as an image so
+                // the PDF shows the actual financial donut chart, instead of
+                // only the hand-built summary bars below.
                 const financialChartImg = chartInstance ? chartInstance.toBase64Image('image/png', 1) : null;
-                const savingsTrendImg = savingsTrendChartInstance ? savingsTrendChartInstance.toBase64Image('image/png', 1) : null;
 
                 const contentHtml = `
                         <div style="max-width: 800px; margin: 0 auto; font-family: Arial, sans-serif; color: #14213D; font-size: 12px; padding: 10px;">
@@ -4171,12 +4347,6 @@
                             <div style="margin: 10px 0; background: white; padding: 10px; border-radius: 8px; border: 1px solid #E7EBF5; text-align: center;">
                                 <h3 style="color: #14213D; margin: 0 0 8px 0; font-size: 12px;">📊 Financial Overview</h3>
                                 <img src="${financialChartImg}" style="max-width: 100%; height: auto;" />
-                            </div>` : ''}
-
-                            ${savingsTrendImg ? `
-                            <div style="margin: 10px 0; background: white; padding: 10px; border-radius: 8px; border: 1px solid #E7EBF5; text-align: center;">
-                                <h3 style="color: #14213D; margin: 0 0 8px 0; font-size: 12px;">📈 Savings Over Time</h3>
-                                <img src="${savingsTrendImg}" style="max-width: 100%; height: auto;" />
                             </div>` : ''}
                             
                             <h3 style="color: #14213D; margin: 10px 0 4px 0; font-size: 12px;">📜 Recent Transactions (Last ${recentRecords.length})</h3>
@@ -4555,6 +4725,7 @@
                 if (pendingSidebarLink) pendingSidebarLink.style.display = isTreasurer() ? 'flex' : 'none';
 
                 showBalanceLoading(true);
+                updateDashboardGreeting();
                 await Promise.all([
                     loadAllData(),
                     loadMeetingMinutes(),
@@ -4584,9 +4755,6 @@
             // Event listeners
             document.getElementById('addBtn').onclick = addRecord;
             document.getElementById('exportPdfBtn').onclick = exportToPDF;
-            document.getElementById('addMeetingBtn').onclick = openAddMeetingModal;
-            document.getElementById('scheduleMeetingBtn').onclick = scheduleNextMeeting;
-            document.getElementById('sendAnnouncementBtn').onclick = sendAnnouncement;
             document.getElementById('loginPassword')?.addEventListener('keypress', (e) => { if (e.key === 'Enter')
                     loginWithPassword(); });
             document.querySelectorAll('.tab, .sidebar-link').forEach(tab => { tab.onclick = () => activateTab(tab.dataset.panel); });
