@@ -155,12 +155,13 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(160deg, var(--navy) 0%, #0A1422 100%);
+            background: linear-gradient(160deg, var(--blue-deep) 0%, #0A1422 100%);
             z-index: 1000;
             display: none;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            overflow-y: auto;
         }
         
         .login-overlay.active {
@@ -168,14 +169,45 @@
         }
         
         .login-box {
-            background: white;
-            border-radius: 10px;
-            padding: 32px 24px;
+            background: var(--white);
+            border-radius: 24px;
+            padding: 0 0 28px;
             max-width: 420px;
             width: 100%;
             text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            box-shadow: 0 30px 70px -15px rgba(0,0,0,0.5);
             animation: fadeInUp 0.4s ease;
+            overflow: hidden;
+            margin: auto;
+        }
+
+        .login-hero {
+            background: linear-gradient(135deg, var(--blue) 0%, var(--blue-deep) 100%);
+            padding: 36px 24px 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-hero::before {
+            content: '';
+            position: absolute;
+            top: -70px;
+            right: -50px;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.16), transparent 70%);
+        }
+
+        .login-hero::after {
+            content: '';
+            position: absolute;
+            bottom: -60px;
+            left: -40px;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1), transparent 70%);
         }
         
         @keyframes fadeInUp {
@@ -184,15 +216,21 @@
         }
         
         .login-box h1 {
-            color: var(--navy);
-            font-size: 28px;
-            margin-bottom: 6px;
+            color: var(--white);
+            font-size: 22px;
+            margin-bottom: 4px;
+            position: relative;
         }
         
         .login-box .subtitle {
-            color: var(--ink-soft);
-            font-size: 13px;
-            margin-bottom: 24px;
+            color: rgba(255,255,255,0.8);
+            font-size: 12px;
+            margin-bottom: 0;
+            position: relative;
+        }
+
+        .login-form-area {
+            padding: 24px 24px 0;
         }
         
         .login-form-group {
@@ -210,24 +248,26 @@
         
         .login-form-group input {
             width: 100%;
-            padding: 12px 14px;
+            padding: 13px 14px;
             border: 2px solid var(--line);
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 14px;
             transition: all 0.2s;
+            background: var(--paper);
         }
         
         .login-form-group input:focus {
             outline: none;
-            border-color: var(--gold);
+            border-color: var(--blue);
+            background: var(--white);
         }
         
         .login-btn {
-            background: var(--gold);
+            background: var(--blue);
             color: white;
             border: none;
             padding: 14px;
-            border-radius: 6px;
+            border-radius: 14px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
@@ -684,14 +724,64 @@
             letter-spacing: -0.5px;
         }
 
+        .wallet-greeting {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 6px;
+        }
+
+        .wallet-scope-wrapper {
+            position: relative;
+            flex-shrink: 0;
+        }
+
         .wallet-chip {
             background: rgba(255,255,255,0.18);
-            padding: 6px 12px;
+            padding: 6px 10px 6px 12px;
             border-radius: 30px;
             font-size: 12px;
             font-weight: 600;
             white-space: nowrap;
-            flex-shrink: 0;
+            border: none;
+            color: var(--white);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .wallet-scope-caret {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .wallet-scope-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 10px 28px -6px rgba(20,33,61,0.3);
+            overflow: hidden;
+            min-width: 120px;
+            z-index: 20;
+        }
+
+        .wallet-scope-menu button {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--ink);
+            font-size: 13px;
+            font-weight: 600;
+            padding: 11px 14px;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .wallet-scope-menu button:hover {
+            background: var(--paper);
         }
 
         .wallet-footer-row {
@@ -2047,6 +2137,53 @@
         .activity-amount.negative { color: var(--red); }
 
         /* ============================================
+           GROUP MEMORIES CAROUSEL — auto-scrolling trip
+           photos (Oloolua Forest etc.), purely visual, no
+           interaction required from the person viewing it.
+           ============================================ */
+        .memories-carousel-wrapper {
+            position: relative;
+            border-radius: 14px;
+            overflow: hidden;
+            aspect-ratio: 16 / 10;
+            background: var(--paper);
+        }
+
+        .memories-carousel {
+            display: flex;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        .memories-carousel img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .memories-dots {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .memories-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--line);
+            transition: background 0.3s, width 0.3s;
+        }
+
+        .memories-dot.active {
+            background: var(--blue);
+            width: 18px;
+            border-radius: 3px;
+        }
+
+        /* ============================================
            MEETINGS PAGE — compact tappable rows that each
            open their own modal, replacing the old stacked
            always-visible forms.
@@ -2388,8 +2525,11 @@
     <!-- LOGIN OVERLAY -->
     <div id="loginOverlay" class="login-overlay">
         <div class="login-box">
-            <h1>🏛️ Legacy Builders Group</h1>
-            <div class="subtitle">Login to access your account</div>
+            <div class="login-hero">
+                <h1>🏛️ Legacy Builders Group</h1>
+                <div class="subtitle" id="loginSubtitle">Welcome back — login to access your account</div>
+            </div>
+            <div class="login-form-area">
 
             <div id="loginForm">
                 <div class="login-form-group">
@@ -2446,6 +2586,8 @@
                     <a onclick="showLoginForm()">Back to Login</a>
                 </div>
             </div>
+
+            </div><!-- /login-form-area -->
         </div>
     </div>
 
@@ -2486,7 +2628,6 @@
                 <span class="user-avatar-small" id="headerAvatar">👤</span>
                 <strong id="loggedInUser"></strong>
             </span>
-            <h1>🏛️ Legacy Builders</h1>
             <div class="action-buttons">
                 <button class="profile-btn" onclick="openProfileModal()" aria-label="Profile">👤</button>
                 <button class="logout-btn" onclick="logout(event)" aria-label="Logout">⎋</button>
@@ -2496,14 +2637,24 @@
         <div class="header">
             <div class="header-row-2">
                 <div>
+                    <div class="wallet-greeting" id="dashboardGreeting">👋 Welcome back</div>
                     <div class="wallet-label">Available balance</div>
                     <div class="wallet-balance" id="totalSavingsTop" data-target="0">KES --</div>
                 </div>
-                <span class="wallet-chip">🧺 Group</span>
+                <div class="wallet-scope-wrapper">
+                    <button class="wallet-chip" id="walletScopeChip" onclick="toggleWalletScopeMenu()">
+                        <span id="walletScopeLabel">🧺 Group</span>
+                        <span class="wallet-scope-caret">▾</span>
+                    </button>
+                    <div class="wallet-scope-menu" id="walletScopeMenu" style="display:none;">
+                        <button onclick="setWalletScope('group')">🧺 Group</button>
+                        <button onclick="setWalletScope('mine')">👤 Mine</button>
+                    </div>
+                </div>
             </div>
             <div class="wallet-footer-row">
                 <span class="wallet-footer-icon">↓</span>
-                <span class="wallet-footer-label">Outstanding Loans</span>
+                <span class="wallet-footer-label" id="walletFooterLabel">Outstanding Loans</span>
                 <span class="wallet-footer-amount" id="outstandingTop" data-target="0">KES --</span>
             </div>
         </div>
@@ -2533,7 +2684,7 @@
         <div class="scroll-panels">
         <div id="transactionsPanel" class="panel active-panel">
             <div class="card">
-                <h2 id="dashboardGreeting">👋 Welcome back</h2>
+                <h2>📊 Your Snapshot</h2>
                 <div class="dashboard-stats-row">
                     <div class="dashboard-stat">
                         <div class="dashboard-stat-value" id="dashStatSavings">--</div>
@@ -2549,6 +2700,15 @@
                     </div>
                 </div>
             </div>
+
+            <div class="card" id="memoriesCard" style="display:none;">
+                <h2>📸 Group Memories</h2>
+                <div class="memories-carousel-wrapper">
+                    <div class="memories-carousel" id="memoriesCarousel"></div>
+                </div>
+                <div class="memories-dots" id="memoriesDots"></div>
+            </div>
+
             <div class="card">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
                     <h2 style="margin-bottom: 0;">🕒 Recent Activity</h2>
@@ -2866,6 +3026,8 @@
             document.getElementById('forgotPasswordForm').style.display = 'none';
             document.getElementById('loginError').style.display = 'none';
             document.getElementById('registerError').style.display = 'none';
+            const sub = document.getElementById('loginSubtitle');
+            if (sub) sub.textContent = 'Join the circle — create your account';
         }
 
         function showLoginForm() {
@@ -2876,6 +3038,8 @@
             document.getElementById('registerError').style.display = 'none';
             document.getElementById('resetError').style.display = 'none';
             document.getElementById('resetSuccess').style.display = 'none';
+            const sub = document.getElementById('loginSubtitle');
+            if (sub) sub.textContent = 'Welcome back — login to access your account';
         }
 
         function showForgotPasswordForm() {
@@ -2885,6 +3049,8 @@
             document.getElementById('loginError').style.display = 'none';
             document.getElementById('resetError').style.display = 'none';
             document.getElementById('resetSuccess').style.display = 'none';
+            const sub = document.getElementById('loginSubtitle');
+            if (sub) sub.textContent = "We'll help you get back in";
         }
 
         async function requestPasswordReset() {
@@ -3035,6 +3201,7 @@
 
                     showBalanceLoading(true);
                     updateDashboardGreeting();
+                    initMemoriesCarousel();
                     await loadAllData();
                     await loadMeetingMinutes();
                     await loadScheduledMeeting();
@@ -3052,7 +3219,7 @@
                     if (refreshInterval) clearInterval(refreshInterval);
                     refreshInterval = setInterval(() => {
                         if (currentUser) {
-                            loadAllData();
+                            loadAllData(true); // silent: background refresh shouldn't blank the balance
                             loadScheduledMeeting();
                             loadMembersList();
                         }
@@ -3925,10 +4092,19 @@
         // ============================================================
         // LOAD ALL DATA
         // ============================================================
-        async function loadAllData() {
+        // FIX (UX): the 30-second background auto-refresh was calling
+        // loadAllData() with no way to distinguish "person just switched
+        // tabs and is waiting" from "quietly refreshing in the
+        // background while they're already looking at the screen." Both
+        // cases triggered showBalanceLoading(true), which blanks the
+        // balance text out — jarring when nothing the person did caused
+        // it. silent=true (used only by the background timer) skips that
+        // visual interruption; the numbers update in place via the
+        // existing count-up animation instead of flashing to blank first.
+        async function loadAllData(silent = false) {
             if (isLoading || !currentUser) return;
             isLoading = true;
-            showBalanceLoading(true);
+            if (!silent) showBalanceLoading(true);
             try {
                 // FIX (performance): was 5 separate Apps Script HTTP round-trips
                 // on every load AND every tab switch — several of which
@@ -3954,13 +4130,21 @@
                     updateMemberDropdowns();
                 }
 
+                // FIX: renderWalletBalance() was previously called before
+                // updateBalanceDisplays() ran, so it rendered using the
+                // PREVIOUS summary instead of the one just fetched. Now
+                // updateBalanceDisplays() (which sets lastGroupSummary AND
+                // re-renders) runs first, and the explicit renderWalletBalance()
+                // call below only matters for the 'mine' scope, which depends
+                // on allRecords rather than dash.summary.
                 if (dash.summary?.success) {
-                    showBalanceLoading(false);
+                    if (!silent) showBalanceLoading(false);
                     updateBalanceDisplays(dash.summary);
                     document.getElementById('summarySkeleton').style.display = 'none';
                     document.getElementById('summaryContent').style.display = 'block';
                     renderChart(dash.summary);
                 }
+                renderWalletBalance();
 
                 const total = allMembers.length || 1;
                 const allLoans = dash.loans || [];
@@ -3976,7 +4160,7 @@
                     updatePendingCount();
                 }
             } catch (e) {
-                showToast('Error loading data', 'error');
+                if (!silent) showToast('Error loading data', 'error');
                 console.error(e);
             } finally {
                 isLoading = false;
@@ -4024,13 +4208,58 @@
             requestAnimationFrame(tick);
         }
 
+        // Mine/Group balance scope toggle. 'group' shows the whole
+        // group's pooled savings/outstanding loans (the original
+        // behavior); 'mine' shows just the logged-in member's own
+        // savings/loans via getUserStats(). lastGroupSummary is cached
+        // so switching scope is instant — no extra fetch needed.
+        let walletScope = 'group';
+        let lastGroupSummary = null;
+
         function updateBalanceDisplays(summary) {
             if (!summary) return;
-            const savings = summary.savings || 0;
-            const outstanding = summary.outstanding || 0;
-            animateCountUp(document.getElementById('totalSavingsTop'), savings);
-            animateCountUp(document.getElementById('outstandingTop'), outstanding);
+            lastGroupSummary = summary;
+            renderWalletBalance();
         }
+
+        function renderWalletBalance() {
+            const labelEl = document.getElementById('walletFooterLabel');
+            if (walletScope === 'mine') {
+                const stats = getUserStats(currentUser);
+                animateCountUp(document.getElementById('totalSavingsTop'), stats.savings || 0);
+                animateCountUp(document.getElementById('outstandingTop'), stats.loans || 0);
+                if (labelEl) labelEl.textContent = 'Your Loans';
+            } else {
+                const savings = lastGroupSummary?.savings || 0;
+                const outstanding = lastGroupSummary?.outstanding || 0;
+                animateCountUp(document.getElementById('totalSavingsTop'), savings);
+                animateCountUp(document.getElementById('outstandingTop'), outstanding);
+                if (labelEl) labelEl.textContent = 'Outstanding Loans';
+            }
+        }
+
+        function toggleWalletScopeMenu() {
+            const menu = document.getElementById('walletScopeMenu');
+            if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function setWalletScope(scope) {
+            walletScope = scope;
+            const label = document.getElementById('walletScopeLabel');
+            if (label) label.textContent = scope === 'mine' ? '👤 Mine' : '🧺 Group';
+            const menu = document.getElementById('walletScopeMenu');
+            if (menu) menu.style.display = 'none';
+            renderWalletBalance();
+        }
+
+        // Close the scope dropdown when tapping anywhere outside it.
+        document.addEventListener('click', (e) => {
+            const wrapper = document.getElementById('walletScopeChip')?.closest('.wallet-scope-wrapper');
+            const menu = document.getElementById('walletScopeMenu');
+            if (wrapper && menu && menu.style.display !== 'none' && !wrapper.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
 
         function renderPendingLoans() {
             const container = document.getElementById('pendingLoans');
@@ -4251,6 +4480,61 @@
                     <div class="activity-amount ${sign === '-' ? 'negative' : 'positive'}">${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</div>
                 </div>`;
             }).join('');
+        }
+
+        // ============================================================
+        // GROUP MEMORIES CAROUSEL
+        // Edit GROUP_MEMORY_PHOTOS below to add real trip photos (e.g.
+        // Oloolua Forest visit). Each entry needs a direct image URL.
+        // Leave the array empty to keep the card hidden until photos
+        // are added — it never shows broken placeholders.
+        // ============================================================
+        const GROUP_MEMORY_PHOTOS = [
+            // { url: 'https://your-image-host.com/oloolua-1.jpg', caption: 'Oloolua Forest, 2025' },
+        ];
+
+        let memoriesIndex = 0;
+        let memoriesInterval = null;
+
+        function initMemoriesCarousel() {
+            const card = document.getElementById('memoriesCard');
+            const track = document.getElementById('memoriesCarousel');
+            const dotsWrap = document.getElementById('memoriesDots');
+            if (!card || !track || !dotsWrap) return;
+
+            if (!GROUP_MEMORY_PHOTOS.length) {
+                card.style.display = 'none';
+                if (memoriesInterval) { clearInterval(memoriesInterval); memoriesInterval = null; }
+                return;
+            }
+
+            card.style.display = 'block';
+            track.innerHTML = GROUP_MEMORY_PHOTOS.map(p =>
+                `<img src="${p.url}" alt="${escapeHtml(p.caption || 'Group memory')}" loading="lazy">`
+            ).join('');
+            dotsWrap.innerHTML = GROUP_MEMORY_PHOTOS.map((_, i) =>
+                `<span class="memories-dot${i === 0 ? ' active' : ''}"></span>`
+            ).join('');
+
+            memoriesIndex = 0;
+            updateMemoriesPosition();
+
+            if (memoriesInterval) clearInterval(memoriesInterval);
+            if (GROUP_MEMORY_PHOTOS.length > 1 &&
+                !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+                memoriesInterval = setInterval(() => {
+                    memoriesIndex = (memoriesIndex + 1) % GROUP_MEMORY_PHOTOS.length;
+                    updateMemoriesPosition();
+                }, 4000);
+            }
+        }
+
+        function updateMemoriesPosition() {
+            const track = document.getElementById('memoriesCarousel');
+            if (track) track.style.transform = `translateX(-${memoriesIndex * 100}%)`;
+            document.querySelectorAll('.memories-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === memoriesIndex);
+            });
         }
 
         function applyFilters() {
@@ -4707,17 +4991,30 @@
         // ============================================================
         document.addEventListener('DOMContentLoaded', async () => {
             const splash = document.getElementById('splashScreen');
-            splash.style.display = 'flex';
-            splash.classList.remove('hidden');
 
-            if (checkPersistentLogin()) {
+            // FIX: splash was shown unconditionally on every page load,
+            // including refreshes while already logged in — meaning every
+            // refresh sat on the splash screen for the full duration of
+            // the profile-image fetch + all dashboard data loading before
+            // disappearing. Now it only appears on a genuinely fresh visit
+            // (no persistent session found); returning users go straight
+            // to the app shell, which already has its own loading
+            // skeletons for the balance/cards instead of a full takeover.
+            const hasPersistentSession = checkPersistentLogin();
+
+            if (!hasPersistentSession) {
+                splash.style.display = 'flex';
+                splash.classList.remove('hidden');
+            } else {
+                splash.style.display = 'none';
+            }
+
+            if (hasPersistentSession) {
                 const profileRes = await callAPI('getProfileImage', { email: currentUserEmail });
                 if (profileRes.success && profileRes.image) {
                     userProfileImage = profileRes.image;
                     localStorage.setItem('legacy_profile_image', userProfileImage);
                 }
-
-                hideSplashScreen();
 
                 document.getElementById('loginOverlay').classList.remove('active');
                 document.getElementById('appContainer').classList.add('active');
@@ -4735,6 +5032,7 @@
 
                 showBalanceLoading(true);
                 updateDashboardGreeting();
+                initMemoriesCarousel();
                 await Promise.all([
                     loadAllData(),
                     loadMeetingMinutes(),
@@ -4751,7 +5049,7 @@
                 if (refreshInterval) clearInterval(refreshInterval);
                 refreshInterval = setInterval(() => {
                     if (currentUser) {
-                        loadAllData();
+                        loadAllData(true); // silent: background refresh shouldn't blank the balance
                         loadScheduledMeeting();
                         loadMembersList();
                     }
