@@ -20,6 +20,8 @@
             pendingLoans = [],
             completedLoans = [],
             pendingTransactions = [],
+            activeLoans = [],
+            loansAwaitingDueDate = [],
             currentUser = null,
             currentUserEmail = null;
         let currentTab = localStorage.getItem('legacy_active_tab') || 'transactions';
@@ -1364,7 +1366,8 @@
                 // together, cutting both the number of round-trips and the
                 // actual Sheets API work in half or more.
                 const dash = await callAPI('getDashboardData', {
-                    includePending: isTreasurer() ? 'true' : 'false'
+                    includePending: isTreasurer() ? 'true' : 'false',
+                    isTreasurer: isTreasurer() ? 'true' : 'false'
                 });
 
                 if (!dash.success) throw new Error(dash.error || 'Failed to load dashboard data');
@@ -1402,6 +1405,17 @@
                 completedLoans = allLoans.filter(l => l.approvals.length >= (total - 1) || l.status === 'completed');
                 renderPendingLoans();
                 renderCompletedLoans();
+
+                // Loan repayment scheduling feature: active loans (with
+                // remaining balance / due date / overdue status) and, for
+                // the treasurer, loans fully approved but still awaiting
+                // a due date to be set.
+                activeLoans = dash.activeLoans || [];
+                renderActiveLoans();
+                if (isTreasurer()) {
+                    loansAwaitingDueDate = dash.loansAwaitingDueDate || [];
+                    renderLoansAwaitingDueDate();
+                }
 
                 if (isTreasurer()) {
                     pendingTransactions = dash.pendingTransactions || [];
@@ -1533,6 +1547,82 @@
             container.innerHTML = completedLoans.map(loan =>
                 `<div class="completed-loan-item"><div><strong>${escapeHtml(loan.member)}</strong> borrowed <strong>KES ${(loan.principal || 0).toLocaleString('en-KE')}</strong></div><div>Interest: KES ${(loan.interest || 0).toLocaleString('en-KE')}</div><div><strong>Total Due: KES ${(loan.totalDue || 0).toLocaleString('en-KE')}</strong></div><div style="font-size:10px;">Approved by: ${escapeHtml(loan.approvals.join(', '))}</div><div>${escapeHtml(loan.message || '')}</div></div>`
                 ).join('');
+        }
+
+        // ============================================================
+        // LOAN REPAYMENT SCHEDULING
+        // ============================================================
+        // Active loans with remaining balance / due date / overdue status
+        // — shows everyone's active loans (own loans highlighted), so the
+        // group can see who owes what and whether anything is overdue.
+        function renderActiveLoans() {
+            const container = document.getElementById('activeLoansList');
+            if (!container) return;
+            const stillOwed = activeLoans.filter(l => l.status !== 'paid_off');
+            if (!stillOwed.length) {
+                container.innerHTML = '<div class="empty-state">No active loans right now</div>';
+                return;
+            }
+            container.innerHTML = stillOwed.map(loan => {
+                const isMine = loan.member === currentUser;
+                const overdueClass = loan.isOverdue ? 'loan-overdue' : '';
+                const progressPct = loan.totalDue > 0 ? Math.min(100, (loan.amountRepaid / loan.totalDue) * 100) : 0;
+                return `<div class="active-loan-item ${overdueClass} ${isMine ? 'own-loan' : ''}">
+                    <div class="active-loan-header">
+                        <strong>${escapeHtml(loan.member)}</strong>
+                        ${loan.isOverdue ? '<span class="overdue-badge">⚠️ Overdue</span>' : ''}
+                    </div>
+                    <div class="active-loan-amounts">
+                        <span>Owed: KES ${loan.remaining.toLocaleString('en-KE')}</span>
+                        <span class="active-loan-total">of KES ${loan.totalDue.toLocaleString('en-KE')}</span>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: ${progressPct}%;"></div></div>
+                    <div class="active-loan-due">📅 Due: ${loan.dueDate || 'Not set'}</div>
+                </div>`;
+            }).join('');
+        }
+
+        // Treasurer-only: loans fully approved by all members but still
+        // waiting for a due date to be set, which is what actually
+        // activates them.
+        function renderLoansAwaitingDueDate() {
+            const container = document.getElementById('awaitingDueDateList');
+            const card = document.getElementById('awaitingDueDateCard');
+            if (!container) return;
+            if (card) card.style.display = isTreasurer() ? 'block' : 'none';
+            if (!isTreasurer()) return;
+            if (!loansAwaitingDueDate.length) {
+                container.innerHTML = '<div class="empty-state">No loans waiting on a due date</div>';
+                return;
+            }
+            container.innerHTML = loansAwaitingDueDate.map(loan => {
+                const interest = Math.round((loan.principal || 0) * 0.10);
+                const totalDue = (loan.principal || 0) + interest;
+                return `<div class="loan-item">
+                    <div><strong>${escapeHtml(loan.member)}</strong> — KES ${(loan.principal || 0).toLocaleString('en-KE')} + 10% = <strong>KES ${totalDue.toLocaleString('en-KE')}</strong></div>
+                    <div style="font-size:12px; margin-top:4px;">${escapeHtml(loan.message || '')}</div>
+                    <div class="form-grid" style="margin-top:10px; margin-bottom:8px;">
+                        <div><label>📅 Repayment Due Date</label><input type="date" id="dueDateInput-${loan.id}"></div>
+                    </div>
+                    <button onclick="submitLoanDueDate('${loan.id}')" style="width:auto; padding:8px 16px;">Set Due Date &amp; Activate</button>
+                </div>`;
+            }).join('');
+        }
+
+        async function submitLoanDueDate(loanId) {
+            const input = document.getElementById(`dueDateInput-${loanId}`);
+            const dueDate = input ? input.value : '';
+            if (!dueDate) {
+                showToast('Please choose a due date', 'error');
+                return;
+            }
+            const res = await callAPI('setLoanDueDate', { loanId, dueDate, setBy: currentUser });
+            if (res.success) {
+                showToast('Loan activated with due date set!', 'success');
+                await loadAllData();
+            } else {
+                showToast(res.error || 'Error setting due date', 'error');
+            }
         }
 
         function renderPendingApprovals() {

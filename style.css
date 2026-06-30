@@ -1406,6 +1406,69 @@
             padding: 12px;
             margin-bottom: 10px;
         }
+
+        /* ============================================
+           ACTIVE LOANS — loan repayment scheduling feature.
+           Shows remaining balance, due date, and overdue
+           status for every active loan.
+           ============================================ */
+        .active-loan-item {
+            background: var(--paper);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--blue);
+        }
+
+        .active-loan-item.own-loan {
+            background: var(--blue-soft);
+        }
+
+        .active-loan-item.loan-overdue {
+            border-left-color: var(--red);
+            background: var(--red-soft);
+        }
+
+        .active-loan-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .overdue-badge {
+            background: var(--red);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 30px;
+        }
+
+        .active-loan-amounts {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .active-loan-amounts span:first-child {
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .active-loan-total {
+            font-size: 11px;
+            color: var(--ink-soft);
+        }
+
+        .active-loan-due {
+            font-size: 11px;
+            color: var(--ink-soft);
+            margin-top: 6px;
+        }
+
         
         .meeting-item {
             background: var(--paper);
