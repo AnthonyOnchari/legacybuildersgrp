@@ -1248,16 +1248,6 @@
                 background: var(--paper);
             }
 
-            .dashboard-stat {
-                transition: transform 0.15s ease, box-shadow 0.15s ease;
-                cursor: default;
-            }
-
-            .dashboard-stat:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 14px -4px rgba(20, 33, 61, 0.15);
-            }
-
             .member-card:hover {
                 transform: translateY(-2px);
                 box-shadow: 0 8px 20px -6px rgba(20, 33, 61, 0.14);
@@ -2125,40 +2115,10 @@
         }
 
         /* ============================================
-           HOME DASHBOARD — greeting + stat tiles + recent
-           activity, replacing the old always-visible Add
-           Transaction form on the main/Home tab.
+           HOME DASHBOARD — greeting + recent activity,
+           replacing the old always-visible Add Transaction
+           form on the main/Home tab.
            ============================================ */
-        .dashboard-stats-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 12px;
-        }
-
-        .dashboard-stat {
-            background: var(--paper);
-            border-radius: 12px;
-            padding: 12px 6px;
-            text-align: center;
-        }
-
-        .dashboard-stat-value {
-            font-size: 14px;
-            font-weight: 800;
-            color: var(--ink);
-            white-space: nowrap;
-        }
-
-        .dashboard-stat-label {
-            font-size: 9px;
-            color: var(--ink-soft);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            margin-top: 3px;
-        }
-
         .activity-row {
             display: flex;
             align-items: center;

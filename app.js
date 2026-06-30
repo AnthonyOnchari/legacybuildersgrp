@@ -1255,7 +1255,6 @@
                 allRecords = dash.records || [];
                 applyFilters();
                 updateAboutStats();
-                updateDashboardStats();
                 renderRecentActivity();
 
                 if (dash.members?.length) {
@@ -1579,16 +1578,6 @@
             const hour = new Date().getHours();
             const timeGreeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
             el.textContent = `👋 ${timeGreeting}, ${currentUser.split(' ')[0]}`;
-        }
-
-        function updateDashboardStats() {
-            const stats = getUserStats(currentUser);
-            const savingsEl = document.getElementById('dashStatSavings');
-            const loansEl = document.getElementById('dashStatLoans');
-            const netEl = document.getElementById('dashStatNet');
-            if (savingsEl) savingsEl.textContent = `KES ${(stats.savings || 0).toLocaleString('en-KE')}`;
-            if (loansEl) loansEl.textContent = `KES ${(stats.loans || 0).toLocaleString('en-KE')}`;
-            if (netEl) netEl.textContent = `KES ${(stats.net || 0).toLocaleString('en-KE')}`;
         }
 
         function renderRecentActivity() {
