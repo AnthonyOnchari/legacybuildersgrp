@@ -1415,10 +1415,21 @@
         // it. silent=true (used only by the background timer) skips that
         // visual interruption; the numbers update in place via the
         // existing count-up animation instead of flashing to blank first.
-        async function loadAllData(silent = false) {
+        // FIX (never want to see the balance "load" from my own taps):
+        // switching to ANY other tab (Loans, Meetings, Summary, etc.)
+        // still calls loadAllData() to keep that tab's own data current
+        // — but it was also re-running the balance shimmer + count-up
+        // animation every time, even though the person isn't even
+        // looking at Home. skipBalanceUI=true updates the underlying
+        // data silently (so it's correct whenever they DO return to
+        // Home) without touching the visible balance card at all. Only
+        // the 30-second background timer and actions that directly
+        // affect the balance (deposits, loans, repayments) are allowed
+        // to visibly update it.
+        async function loadAllData(silent = false, skipBalanceUI = false) {
             if (isLoading || !currentUser) return;
             isLoading = true;
-            if (!silent) showBalanceLoading(true);
+            if (!silent && !skipBalanceUI) showBalanceLoading(true);
             try {
                 // FIX (performance): was 5 separate Apps Script HTTP round-trips
                 // on every load AND every tab switch — several of which
@@ -1462,14 +1473,22 @@
                 // re-renders) runs first, and the explicit renderWalletBalance()
                 // call below only matters for the 'mine' scope, which depends
                 // on allRecords rather than dash.summary.
+                //
+                // skipBalanceUI: still cache the fetched summary (so it's
+                // correct when the person eventually returns to Home) but
+                // skip the actual visible shimmer/count-up/chart re-render.
                 if (dash.summary?.success) {
-                    if (!silent) showBalanceLoading(false);
-                    updateBalanceDisplays(dash.summary);
-                    document.getElementById('summarySkeleton').style.display = 'none';
-                    document.getElementById('summaryContent').style.display = 'block';
-                    renderChart(dash.summary);
+                    if (skipBalanceUI) {
+                        lastGroupSummary = dash.summary;
+                    } else {
+                        if (!silent) showBalanceLoading(false);
+                        updateBalanceDisplays(dash.summary);
+                        document.getElementById('summarySkeleton').style.display = 'none';
+                        document.getElementById('summaryContent').style.display = 'block';
+                        renderChart(dash.summary);
+                    }
                 }
-                renderWalletBalance();
+                if (!skipBalanceUI) renderWalletBalance();
 
                 const total = allMembers.length || 1;
                 const allLoans = dash.loans || [];
@@ -1489,11 +1508,11 @@
                 // wipe the previously-loaded loan data back to empty.
                 if (dash.activeLoans !== undefined) {
                     activeLoans = dash.activeLoans || [];
-                    renderActiveLoans();
+                    if (!skipBalanceUI) renderActiveLoans();
                 }
                 if (isTreasurer() && dash.loansAwaitingDueDate !== undefined) {
                     loansAwaitingDueDate = dash.loansAwaitingDueDate || [];
-                    renderLoansAwaitingDueDate();
+                    if (!skipBalanceUI) renderLoansAwaitingDueDate();
                 }
 
                 if (isTreasurer()) {
@@ -2428,7 +2447,19 @@
             if (appContainer) appContainer.classList.toggle('dashboard-active', tabId === 'transactions');
             localStorage.setItem('legacy_active_tab', tabId);
             currentTab = tabId;
-            loadAllData();
+            // FIX (never want to see the balance "load" from my own
+            // taps): tapping Home itself never refetches — its data
+            // stays whatever it currently is, only ever updated by the
+            // silent 30-second background timer or by an action that
+            // directly changes the balance (deposit/loan/repayment).
+            // Tapping any OTHER tab still refetches so that tab's own
+            // data (loans, meetings, summary, etc.) is current — but
+            // skipBalanceUI=true means that fetch updates everything
+            // EXCEPT the visible Home balance card, so switching tabs
+            // never shows the shimmer/count-up animation either.
+            if (tabId !== 'transactions') {
+                loadAllData(false, true);
+            }
         }
 
         // ============================================================
