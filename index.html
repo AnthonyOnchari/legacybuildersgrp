@@ -834,7 +834,11 @@
             padding: 8px 6px;
             border-radius: 30px;
             box-shadow: 0 8px 28px -6px rgba(20, 33, 61, 0.22);
-            z-index: 100;
+            /* FIX: must stay above .fullscreen-panel (z-index: 500) so the
+               nav remains visible when viewing Summary/Loans/Meetings/
+               Pending/About — it was previously getting fully covered by
+               those full-screen overlays. */
+            z-index: 600;
             border: none;
         }
         
@@ -1847,16 +1851,25 @@
         }
         
         /* ============================================
-           ABOUT US - IMAGE CONTAINER
+           ABOUT US — visual-first redesign. Hero image with
+           an overlaid tagline (not a paragraph), a row of real
+           live stats pulled from actual data instead of just
+           prose, and compact value chips instead of a 4-box
+           grid that ate vertical space for little payoff.
            ============================================ */
+        .about-hero-card {
+            position: relative;
+            border-radius: 18px;
+            overflow: hidden;
+            margin-bottom: 14px;
+            box-shadow: 0 10px 24px -10px rgba(20,33,61,0.25);
+        }
+
         .about-image-wrapper {
             width: 100%;
-            max-height: 400px;
+            height: 200px;
             overflow: hidden;
-            border-radius: 8px;
-            margin: 12px 0;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            background: var(--gold-soft);
+            background: linear-gradient(135deg, var(--blue), var(--blue-deep));
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1865,43 +1878,68 @@
         
         .about-hero-image {
             width: 100%;
-            height: auto;
-            max-height: 400px;
-            object-fit: contain;
+            height: 100%;
+            object-fit: cover;
             display: block;
-            background: var(--gold-soft);
         }
-        
-        .about-values {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            margin: 16px 0 24px;
-        }
-        
-        .about-value {
-            background: var(--paper);
-            padding: 14px 10px;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid var(--line);
-        }
-        
-        .about-value .icon {
-            font-size: 28px;
-            display: block;
-            margin-bottom: 4px;
-        }
-        
-        .about-value .title {
-            font-size: 12px;
+
+        .about-tagline {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: 0;
+            padding: 14px 16px;
+            background: linear-gradient(0deg, rgba(20,33,61,0.78), transparent);
+            color: white;
+            font-size: 14px;
             font-weight: 600;
-            color: var(--navy);
         }
-        
-        .about-value .desc {
+
+        .about-stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .about-stat {
+            background: var(--white);
+            border-radius: 14px;
+            padding: 14px 8px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(20,33,61,0.05);
+        }
+
+        .about-stat-value {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--blue);
+        }
+
+        .about-stat-label {
             font-size: 10px;
             color: var(--ink-soft);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-top: 2px;
+        }
+
+        .about-values-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .about-value-chip {
+            background: var(--blue-soft);
+            color: var(--blue-deep);
+            padding: 7px 13px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
         }
         
         .members-section-title {
@@ -2008,12 +2046,13 @@
         
         .member-count-badge {
             display: inline-block;
-            background: var(--gold);
+            background: var(--blue);
             color: white;
-            padding: 2px 14px;
-            border-radius: 6px;
-            font-size: 12px;
-            margin: 0 auto 8px;
+            padding: 3px 12px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
         }
         
         /* ============================================
@@ -2324,15 +2363,6 @@
         </div>
 
         <div id="summaryPanel" class="panel fullscreen-panel">
-            <div class="card"><h2>Search & Filter</h2>
-                <div class="search-container" style="padding:0;">
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search by member or message">
-                    <div class="filter-row">
-                        <select id="filterMember"><option value="">All Members</option></select>
-                        <select id="filterType"><option value="">All Types</option><option value="Savings">Savings</option><option value="Loan Taken">Loans Taken</option><option value="Loan Repayment">Repayments</option></select>
-                    </div>
-                </div>
-            </div>
             <div class="card">
                 <h2>Financial Summary</h2>
                 <div id="summarySkeleton" class="loading-container"><div class="loading-spinner"></div><div>Loading summary...</div></div>
@@ -2399,50 +2429,41 @@
 
         <!-- About Us / Members Panel -->
         <div id="aboutPanel" class="panel fullscreen-panel">
+            <div class="about-hero-card">
+                <div class="about-image-wrapper">
+                    <img src="https://lh3.googleusercontent.com/d/1cxOVKU7CkgQUaSpB6m_KYVxNKDfBL_yS=s800" 
+                         alt="Legacy Builders Group" 
+                         class="about-hero-image"
+                         onerror="this.style.display='none'">
+                </div>
+                <p class="about-tagline">A savings circle built on trust, not paperwork.</p>
+            </div>
+
+            <div class="about-stats-row">
+                <div class="about-stat">
+                    <div class="about-stat-value" id="aboutStatMembers">--</div>
+                    <div class="about-stat-label">Members</div>
+                </div>
+                <div class="about-stat">
+                    <div class="about-stat-value" id="aboutStatSavings">--</div>
+                    <div class="about-stat-label">Total Saved</div>
+                </div>
+                <div class="about-stat">
+                    <div class="about-stat-value" id="aboutStatTxns">--</div>
+                    <div class="about-stat-label">Transactions</div>
+                </div>
+            </div>
+
+            <div class="about-values-row">
+                <span class="about-value-chip">🤝 Unity</span>
+                <span class="about-value-chip">💪 Empowerment</span>
+                <span class="about-value-chip">🎯 Integrity</span>
+                <span class="about-value-chip">🌟 Legacy</span>
+            </div>
+
             <div class="card">
-                <div class="about-description">
-                    <h2>👥 About Us</h2>
-                    <div class="about-image-wrapper">
-                        <img src="https://lh3.googleusercontent.com/d/1cxOVKU7CkgQUaSpB6m_KYVxNKDfBL_yS=s800" 
-                             alt="Legacy Builders Group" 
-                             class="about-hero-image"
-                             onerror="this.style.display='none'">
-                    </div>
-                    <p>
-                        <strong>Legacy Builders Group</strong> is a community of like-minded individuals committed to
-                        building financial freedom and generational wealth. We believe in the power of collective
-                        saving, responsible lending, and mutual support.
-                    </p>
-                    <p style="margin-top: 8px;">
-                        Our members come together to save, invest, and grow their financial literacy while
-                        supporting each other's goals. We are not just a savings group — we are a family.
-                    </p>
-                </div>
-
-                <div class="about-values">
-                    <div class="about-value">
-                        <span class="icon">🤝</span>
-                        <div class="title">Unity</div>
-                        <div class="desc">Stronger together</div>
-                    </div>
-                    <div class="about-value">
-                        <span class="icon">💪</span>
-                        <div class="title">Empowerment</div>
-                        <div class="desc">Building wealth</div>
-                    </div>
-                    <div class="about-value">
-                        <span class="icon">🎯</span>
-                        <div class="title">Integrity</div>
-                        <div class="desc">Trust & transparency</div>
-                    </div>
-                    <div class="about-value">
-                        <span class="icon">🌟</span>
-                        <div class="title">Legacy</div>
-                        <div class="desc">For generations</div>
-                    </div>
-                </div>
-
-                <div style="text-align: center;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                    <h2 style="margin-bottom: 0;">👥 Members</h2>
                     <span class="member-count-badge" id="memberCountBadge">0 Members</span>
                 </div>
 
@@ -3229,8 +3250,28 @@
                         '<div class="empty-state" style="grid-column: 1 / -1;">No members found. Please register users.</div>';
                     document.getElementById('memberCountBadge').textContent = '0 Members';
                 }
+                updateAboutStats();
             } catch (e) {
                 container.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">Error loading members</div>';
+            }
+        }
+
+        // Populates the About page's stat strip (Members / Total Saved /
+        // Transactions) from real data already loaded elsewhere in the app
+        // — no invented numbers, just a glanceable summary instead of prose.
+        function updateAboutStats() {
+            const membersEl = document.getElementById('aboutStatMembers');
+            const savingsEl = document.getElementById('aboutStatSavings');
+            const txnsEl = document.getElementById('aboutStatTxns');
+            if (membersEl) membersEl.textContent = allMembersData.length || 0;
+            if (txnsEl) txnsEl.textContent = allRecords.length || 0;
+            if (savingsEl) {
+                const totalSaved = allRecords
+                    .filter(r => r.type === 'Savings')
+                    .reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+                savingsEl.textContent = totalSaved >= 1000
+                    ? `${(totalSaved / 1000).toFixed(1)}K`
+                    : totalSaved.toLocaleString('en-KE');
             }
         }
 
@@ -3764,7 +3805,8 @@
                 ]);
                 if (recordsRes.success) { allRecords = recordsRes.records || [];
                     applyFilters();
-                    renderSavingsTrendChart(); }
+                    renderSavingsTrendChart();
+                    updateAboutStats(); }
                 if (membersRes.success && membersRes.members?.length) { allMembers = membersRes.members;
                     updateMemberDropdowns(); }
                 if (summaryRes.success) {
@@ -4505,9 +4547,6 @@
             document.getElementById('addMeetingBtn').onclick = openAddMeetingModal;
             document.getElementById('scheduleMeetingBtn').onclick = scheduleNextMeeting;
             document.getElementById('sendAnnouncementBtn').onclick = sendAnnouncement;
-            document.getElementById('searchInput').oninput = applyFilters;
-            document.getElementById('filterMember').onchange = applyFilters;
-            document.getElementById('filterType').onchange = applyFilters;
             document.getElementById('loginPassword')?.addEventListener('keypress', (e) => { if (e.key === 'Enter')
                     loginWithPassword(); });
             document.querySelectorAll('.tab, .sidebar-link').forEach(tab => { tab.onclick = () => activateTab(tab.dataset.panel); });
