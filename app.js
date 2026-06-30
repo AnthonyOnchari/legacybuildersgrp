@@ -1367,7 +1367,18 @@
                 // actual Sheets API work in half or more.
                 const dash = await callAPI('getDashboardData', {
                     includePending: isTreasurer() ? 'true' : 'false',
-                    isTreasurer: isTreasurer() ? 'true' : 'false'
+                    isTreasurer: isTreasurer() ? 'true' : 'false',
+                    // FIX (performance regression): ActiveLoans/LoansAwaitingDueDate
+                    // were being read on EVERY refresh including the silent
+                    // 30-second background timer, adding 1-2 extra full-sheet
+                    // reads to a call that's already doing 5-6 others. Loan
+                    // balances don't change every 30 seconds — they only
+                    // change when a loan/repayment is actually
+                    // submitted/approved, which already triggers its own
+                    // explicit (non-silent) loadAllData() call. Skipping
+                    // these two reads specifically on silent refreshes
+                    // cuts real, unnecessary backend work.
+                    includeLoanTracking: silent ? 'false' : 'true'
                 });
 
                 if (!dash.success) throw new Error(dash.error || 'Failed to load dashboard data');
@@ -1409,10 +1420,16 @@
                 // Loan repayment scheduling feature: active loans (with
                 // remaining balance / due date / overdue status) and, for
                 // the treasurer, loans fully approved but still awaiting
-                // a due date to be set.
-                activeLoans = dash.activeLoans || [];
-                renderActiveLoans();
-                if (isTreasurer()) {
+                // a due date to be set. On silent background refreshes the
+                // backend intentionally skips these reads (see
+                // includeLoanTracking above) — only update this state when
+                // the backend actually sent it, so a silent refresh doesn't
+                // wipe the previously-loaded loan data back to empty.
+                if (dash.activeLoans !== undefined) {
+                    activeLoans = dash.activeLoans || [];
+                    renderActiveLoans();
+                }
+                if (isTreasurer() && dash.loansAwaitingDueDate !== undefined) {
                     loansAwaitingDueDate = dash.loansAwaitingDueDate || [];
                     renderLoansAwaitingDueDate();
                 }
