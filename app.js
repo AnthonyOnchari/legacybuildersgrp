@@ -923,15 +923,23 @@
                     `;
             }).join('');
 
-            // Lazily fetch real photos in the background for any member
-            // who has one and isn't already cached — this is what keeps
-            // the member list itself fast (no photo bytes in that
-            // response) while still showing real photos shortly after.
+            // FIX (intermittent 502s): these were all firing in the same
+            // instant via forEach — confirmed by Vercel logs showing 4-5
+            // requests landing within ~50ms of each other, which was
+            // triggering Apps Script's own throttling (it returns an HTML
+            // interstitial page instead of JSON when overwhelmed by a
+            // burst, which the proxy correctly reports as a 502). Staggering
+            // each photo fetch by 200ms avoids presenting Google with a
+            // simultaneous burst, even though it makes a multi-photo
+            // member list take a little longer to fully populate.
+            let photoFetchDelay = 0;
             sortedMembers.forEach(member => {
                 if (!member.hasImage || !member.email) return;
                 const emailKey = member.email.toLowerCase();
                 if (memberPhotoCache[emailKey]) return; // already cached
-                loadMemberPhoto(member.email);
+                const email = member.email;
+                setTimeout(() => loadMemberPhoto(email), photoFetchDelay);
+                photoFetchDelay += 200;
             });
         }
 
@@ -1115,12 +1123,27 @@
             if (loans) loans.classList.toggle('is-loading', show);
         }
 
-        async function callAPI(action, data = {}) {
+        // FIX (intermittent 502s): Apps Script occasionally returns an
+        // HTML interstitial page instead of JSON when hit with a burst of
+        // simultaneous requests (confirmed via Vercel logs — the proxy
+        // correctly reports this as a 502 with "Non-JSON response from
+        // Apps Script"). Staggering request bursts (see loadMemberPhoto
+        // call sites) reduces how often this happens, but as a safety
+        // net, callAPI now retries once automatically on a 502 before
+        // giving up — a brief pause then retry is usually enough since
+        // these are transient, not persistent, failures.
+        async function callAPI(action, data = {}, _isRetry = false) {
             try {
                 const params = new URLSearchParams({ action, ...data });
                 const url = `${API_URL}?${params.toString()}`;
                 const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                if (!response.ok) {
+                    if (response.status === 502 && !_isRetry) {
+                        await new Promise(resolve => setTimeout(resolve, 800));
+                        return callAPI(action, data, true);
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                }
                 return await response.json();
             } catch (e) {
                 console.error('API Error:', e);
