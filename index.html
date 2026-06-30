@@ -3930,39 +3930,48 @@
             isLoading = true;
             showBalanceLoading(true);
             try {
-                const [recordsRes, membersRes, summaryRes, loansRes, pendingRes] = await Promise.all([
-                    callAPI('get'),
-                    callAPI('getMembers'),
-                    callAPI('getSummary'),
-                    callAPI('getPendingLoans'),
-                    isTreasurer() ? callAPI('getPendingTransactions') : Promise.resolve({ success: true,
-                        transactions: [] })
-                ]);
-                if (recordsRes.success) { allRecords = recordsRes.records || [];
-                    applyFilters();
-                    updateAboutStats();
-                    updateDashboardStats();
-                    renderRecentActivity(); }
-                if (membersRes.success && membersRes.members?.length) { allMembers = membersRes.members;
-                    updateMemberDropdowns(); }
-                if (summaryRes.success) {
+                // FIX (performance): was 5 separate Apps Script HTTP round-trips
+                // on every load AND every tab switch — several of which
+                // redundantly re-read the same sheets (Transactions read
+                // twice, Users read twice). Now a single combined call does
+                // every read exactly once on the backend and returns it all
+                // together, cutting both the number of round-trips and the
+                // actual Sheets API work in half or more.
+                const dash = await callAPI('getDashboardData', {
+                    includePending: isTreasurer() ? 'true' : 'false'
+                });
+
+                if (!dash.success) throw new Error(dash.error || 'Failed to load dashboard data');
+
+                allRecords = dash.records || [];
+                applyFilters();
+                updateAboutStats();
+                updateDashboardStats();
+                renderRecentActivity();
+
+                if (dash.members?.length) {
+                    allMembers = dash.members;
+                    updateMemberDropdowns();
+                }
+
+                if (dash.summary?.success) {
                     showBalanceLoading(false);
-                    updateBalanceDisplays(summaryRes);
+                    updateBalanceDisplays(dash.summary);
                     document.getElementById('summarySkeleton').style.display = 'none';
                     document.getElementById('summaryContent').style.display = 'block';
-                    renderChart(summaryRes);
+                    renderChart(dash.summary);
                 }
-                if (loansRes.success) {
-                    const total = allMembers.length || 1;
-                    const allLoans = loansRes.loans || [];
-                    pendingLoans = allLoans.filter(l => l.approvals.length < (total - 1) && l.status !== 'completed' && l
-                        .status !== 'rejected');
-                    completedLoans = allLoans.filter(l => l.approvals.length >= (total - 1) || l.status === 'completed');
-                    renderPendingLoans();
-                    renderCompletedLoans();
-                }
-                if (pendingRes.success && isTreasurer()) {
-                    pendingTransactions = pendingRes.transactions || [];
+
+                const total = allMembers.length || 1;
+                const allLoans = dash.loans || [];
+                pendingLoans = allLoans.filter(l => l.approvals.length < (total - 1) && l.status !== 'completed' && l
+                    .status !== 'rejected');
+                completedLoans = allLoans.filter(l => l.approvals.length >= (total - 1) || l.status === 'completed');
+                renderPendingLoans();
+                renderCompletedLoans();
+
+                if (isTreasurer()) {
+                    pendingTransactions = dash.pendingTransactions || [];
                     renderPendingApprovals();
                     updatePendingCount();
                 }
