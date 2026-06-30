@@ -802,16 +802,39 @@
             .member-card .member-stats { display: none; }
         }
         
-        .balance-skeleton {
+        /* BALANCE LOADING STATE — a visible pulsing skeleton bar shaped
+           like the number it's replacing, not a faint full-card overlay.
+           Applied directly to the wallet-balance and outstanding-loans
+           text via a class toggle so it's obvious every time a refresh
+           is happening, not just on first login. */
+        .wallet-balance.is-loading,
+        .wallet-footer-amount.is-loading {
+            color: transparent;
+            position: relative;
+            display: inline-block;
+            min-width: 90px;
+        }
+
+        .wallet-balance.is-loading::after,
+        .wallet-footer-amount.is-loading::after {
+            content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0) 100%);
+            inset: 2px 0;
+            border-radius: 6px;
+            background: linear-gradient(90deg,
+                rgba(255,255,255,0.18) 0%,
+                rgba(255,255,255,0.45) 50%,
+                rgba(255,255,255,0.18) 100%);
             background-size: 200% 100%;
-            animation: shimmerMove 1.5s infinite;
-            border-radius: 14px;
+            animation: shimmerMove 1.2s ease-in-out infinite;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .wallet-balance.is-loading::after,
+            .wallet-footer-amount.is-loading::after {
+                animation: none;
+                background: rgba(255,255,255,0.3);
+            }
         }
         
         @keyframes shimmerMove {
@@ -2331,8 +2354,6 @@
                 <span class="wallet-footer-label">Outstanding Loans</span>
                 <span class="wallet-footer-amount" id="outstandingTop" data-target="0">KES --</span>
             </div>
-            <div class="balance-skeleton" id="savingsSkeleton" style="display: none;"></div>
-            <div class="balance-skeleton" id="loansSkeleton" style="display: none;"></div>
         </div>
 
         <!-- QUICK ACTIONS — circular icon buttons matching the
@@ -3457,10 +3478,10 @@
         }
 
         function showBalanceLoading(show) {
-            const s1 = document.getElementById('savingsSkeleton');
-            const s2 = document.getElementById('loansSkeleton');
-            if (s1) s1.style.display = show ? 'block' : 'none';
-            if (s2) s2.style.display = show ? 'block' : 'none';
+            const savings = document.getElementById('totalSavingsTop');
+            const loans = document.getElementById('outstandingTop');
+            if (savings) savings.classList.toggle('is-loading', show);
+            if (loans) loans.classList.toggle('is-loading', show);
         }
 
         async function callAPI(action, data = {}) {
@@ -3807,6 +3828,7 @@
         async function loadAllData() {
             if (isLoading || !currentUser) return;
             isLoading = true;
+            showBalanceLoading(true);
             try {
                 const [recordsRes, membersRes, summaryRes, loansRes, pendingRes] = await Promise.all([
                     callAPI('get'),
@@ -3823,6 +3845,7 @@
                 if (membersRes.success && membersRes.members?.length) { allMembers = membersRes.members;
                     updateMemberDropdowns(); }
                 if (summaryRes.success) {
+                    showBalanceLoading(false);
                     updateBalanceDisplays(summaryRes);
                     document.getElementById('summarySkeleton').style.display = 'none';
                     document.getElementById('summaryContent').style.display = 'block';
@@ -3847,6 +3870,10 @@
                 console.error(e);
             } finally {
                 isLoading = false;
+                // Safety net: if the summary fetch itself failed or never
+                // resolved (e.g. network error), make sure the shimmer
+                // doesn't get stuck on indefinitely.
+                showBalanceLoading(false);
             }
         }
 
