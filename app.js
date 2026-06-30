@@ -28,6 +28,11 @@
         let userProfileImage = localStorage.getItem('legacy_profile_image') || null;
         let isLoading = false;
         let chartInstance = null;
+        // Per-session cache: email -> photo data URL. Once a member's
+        // photo has been fetched, it's never fetched again for the rest
+        // of this session, even across dashboard refreshes — this is
+        // what makes the "only download each photo once" part work.
+        const memberPhotoCache = {};
         let serviceWorkerRegistered = false;
         let pushSubscription = null;
 
@@ -889,14 +894,22 @@
 
             container.innerHTML = sortedMembers.map(member => {
                 const initial = getInitials(member.name);
-                const image = member.image || null;
-                const memberStats = getUserStats(member.name);
                 const isTreas = member.name === TREASURER_NAME;
+                const memberStats = getUserStats(member.name);
+                const cachedPhoto = memberPhotoCache[member.email?.toLowerCase()];
+                // Show the cached photo immediately if we already have it
+                // from a previous render this session; otherwise show
+                // initials right away (no spinner/wait) and swap in the
+                // real photo once it arrives, only for members who
+                // actually have one (hasImage flag from the backend).
+                const avatarContent = cachedPhoto
+                    ? `<img src="${cachedPhoto}" alt="${escapeHtml(member.name)}">`
+                    : initial;
 
                 return `
                         <div class="member-card" onclick="viewMemberProfile('${escapeHtml(member.name)}', '${escapeHtml(member.email || '')}')">
-                            <div class="member-avatar">
-                                ${image ? `<img src="${image}" alt="${escapeHtml(member.name)}">` : initial}
+                            <div class="member-avatar" id="memberAvatar-${escapeHtml(member.email || '')}">
+                                ${avatarContent}
                             </div>
                             <div class="member-card-info">
                                 <div class="member-name">${escapeHtml(member.name)}</div>
@@ -909,6 +922,38 @@
                         </div>
                     `;
             }).join('');
+
+            // Lazily fetch real photos in the background for any member
+            // who has one and isn't already cached — this is what keeps
+            // the member list itself fast (no photo bytes in that
+            // response) while still showing real photos shortly after.
+            sortedMembers.forEach(member => {
+                if (!member.hasImage || !member.email) return;
+                const emailKey = member.email.toLowerCase();
+                if (memberPhotoCache[emailKey]) return; // already cached
+                loadMemberPhoto(member.email);
+            });
+        }
+
+        // Fetches one member's photo on demand and caches it for the rest
+        // of the session, then swaps it into any visible avatar element
+        // for that member. Never re-fetches a photo already in the cache.
+        async function loadMemberPhoto(email) {
+            try {
+                const res = await callAPI('getProfileImage', { email });
+                if (res.success && res.image) {
+                    memberPhotoCache[email.toLowerCase()] = res.image;
+                    const avatarEl = document.getElementById(`memberAvatar-${email}`);
+                    if (avatarEl) {
+                        avatarEl.innerHTML = `<img src="${res.image}" alt="${escapeHtml(email)}">`;
+                    }
+                }
+            } catch (e) {
+                // Silent failure is fine here — the member just keeps
+                // showing their initials, which is a perfectly normal
+                // fallback state, not an error worth surfacing.
+                console.error('Failed to load photo for', email, e);
+            }
         }
 
         function viewMemberProfile(name, email) {
@@ -921,7 +966,8 @@
             const stats = getUserStats(name);
             const isTreas = name === TREASURER_NAME;
             const initial = getInitials(name);
-            const image = member.image || null;
+            const cachedPhoto = email ? memberPhotoCache[email.toLowerCase()] : null;
+            const avatarId = `profileViewAvatar-${email || name}`;
 
             const overlay = document.createElement('div');
             overlay.className = 'profile-modal-overlay';
@@ -933,8 +979,8 @@
                     <div class="profile-modal">
                         <div class="profile-cover">
                             <div class="profile-avatar-wrapper">
-                                <div class="profile-avatar" style="cursor: default;">
-                                    ${image ? `<img src="${image}" alt="${escapeHtml(name)}">` : initial}
+                                <div class="profile-avatar" id="${avatarId}" style="cursor: default;">
+                                    ${cachedPhoto ? `<img src="${cachedPhoto}" alt="${escapeHtml(name)}">` : initial}
                                 </div>
                             </div>
                         </div>
@@ -974,6 +1020,22 @@
                 `;
 
             document.body.appendChild(overlay);
+
+            // If this member has a photo (per the lightweight hasImage
+            // flag) but it isn't cached yet, fetch it now and swap it
+            // into this modal's avatar once it arrives.
+            if (member.hasImage && email && !cachedPhoto) {
+                const emailKey = email.toLowerCase();
+                callAPI('getProfileImage', { email }).then(res => {
+                    if (res.success && res.image) {
+                        memberPhotoCache[emailKey] = res.image;
+                        const avatarEl = document.getElementById(avatarId);
+                        if (avatarEl) {
+                            avatarEl.innerHTML = `<img src="${res.image}" alt="${escapeHtml(name)}">`;
+                        }
+                    }
+                }).catch(e => console.error('Failed to load photo for', email, e));
+            }
         }
 
         // ============================================================
