@@ -1852,40 +1852,48 @@
                     btn.innerHTML = '⏳ Generating...';
                     updateProgress(90, 'Creating PDF file...');
 
-                    // FIX: was capturing #pdfPreview, which has
-                    // max-height: 90vh; overflow-y: auto (it's a scrolling
-                    // modal box). html2canvas can only see the visible,
-                    // scroll-clipped portion of an overflow:auto element —
-                    // that's what was producing the scrambled/cut-off PDF.
-                    // Fix: capture the inner #pdfReportContent div directly
-                    // (the actual report, with no height cap), and
-                    // temporarily remove the wrapper's scroll constraints
-                    // so nothing clips during the capture regardless of
-                    // current scroll position.
-                    const reportEl = document.getElementById('pdfReportContent') || preview;
-                    const prevMaxHeight = preview.style.maxHeight;
-                    const prevOverflow = preview.style.overflowY;
-                    preview.style.maxHeight = 'none';
-                    preview.style.overflowY = 'visible';
-                    preview.scrollTop = 0;
+                    // FIX (scrambled PDF, take 3): the report content lives
+                    // inside a centered flex overlay (#pdfGenerator, fixed
+                    // position + flex centering) nested inside a scrolling
+                    // box (#pdfPreview). html2canvas has well-documented
+                    // problems correctly measuring elements inside
+                    // fixed-position / flex-centered / overflow:auto
+                    // ancestor chains — at scale:2-3 this is a common cause
+                    // of garbled, duplicated, or misaligned page renders,
+                    // independent of any html2canvas option tuning.
+                    // The robust fix: clone the report content into a
+                    // plain, normally-flowing element appended directly to
+                    // <body>, positioned off-screen (not display:none —
+                    // html2canvas needs it actually rendered/laid out), so
+                    // html2canvas sees a simple element with no weird
+                    // ancestor context at all. Remove the clone afterward.
+                    const reportSource = document.getElementById('pdfReportContent') || preview;
+                    const reportClone = reportSource.cloneNode(true);
 
-                    const actionButtons = preview.querySelectorAll('.pdf-generate-btn, .pdf-close-btn');
-                    actionButtons.forEach(b => { b.style.display = 'none'; });
+                    // Strip the action buttons from the CLONE (the originals
+                    // in the live modal are untouched, so the modal still
+                    // works normally for the user if generation fails).
+                    reportClone.querySelectorAll('.pdf-generate-btn, .pdf-close-btn').forEach(b => b.remove());
+
+                    const captureHost = document.createElement('div');
+                    captureHost.style.position = 'fixed';
+                    captureHost.style.top = '0';
+                    captureHost.style.left = '-9999px';
+                    captureHost.style.width = '800px';
+                    captureHost.style.background = '#ffffff';
+                    captureHost.appendChild(reportClone);
+                    document.body.appendChild(captureHost);
 
                     const opt = {
                         margin: 8,
                         filename: `Legacy_Builders_Report_${new Date().toISOString().split('T')[0]}.pdf`,
                         image: { type: 'jpeg', quality: 0.95 },
                         html2canvas: {
-                            scale: 3,
+                            scale: 2,
                             useCORS: true,
                             logging: false,
                             letterRendering: true,
-                            backgroundColor: '#ffffff',
-                            windowWidth: reportEl.scrollWidth,
-                            width: reportEl.scrollWidth,
-                            height: reportEl.scrollHeight,
-                            windowHeight: reportEl.scrollHeight
+                            backgroundColor: '#ffffff'
                         },
                         jsPDF: {
                             unit: 'mm',
@@ -1895,19 +1903,15 @@
                         pagebreak: { mode: ['css', 'legacy'] }
                     };
 
-                    html2pdf().set(opt).from(reportEl).save().then(() => {
-                        preview.style.maxHeight = prevMaxHeight;
-                        preview.style.overflowY = prevOverflow;
-                        actionButtons.forEach(b => { b.style.display = ''; });
+                    html2pdf().set(opt).from(reportClone).save().then(() => {
+                        captureHost.remove();
                         btn.disabled = false;
                         btn.innerHTML = '📥 Download PDF';
                         document.getElementById('pdfGenerator').classList.remove('active');
                         updateProgress(100, '✅ Done!');
                         showToast('PDF downloaded successfully!', 'success');
                     }).catch((err) => {
-                        preview.style.maxHeight = prevMaxHeight;
-                        preview.style.overflowY = prevOverflow;
-                        actionButtons.forEach(b => { b.style.display = ''; });
+                        captureHost.remove();
                         btn.disabled = false;
                         btn.innerHTML = '📥 Download PDF';
                         showToast('Error generating PDF: ' + err.message, 'error');
