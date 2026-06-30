@@ -2154,6 +2154,45 @@
             margin-bottom: 14px;
         }
 
+        /* Financial Summary stat row — same visual pattern as
+           about-stats-row, with a distinct color for Interest Earned
+           since it's tracked separately from Available Balance (real
+           group money, set aside for eventual division rather than
+           blended into what's lendable). */
+        .summary-stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .summary-stat {
+            background: var(--paper);
+            border-radius: 14px;
+            padding: 14px 8px;
+            text-align: center;
+        }
+
+        .summary-stat-value {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--ink);
+            white-space: nowrap;
+        }
+
+        .summary-stat-interest .summary-stat-value {
+            color: var(--green);
+        }
+
+        .summary-stat-label {
+            font-size: 10px;
+            color: var(--ink-soft);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-top: 3px;
+        }
+
         .about-stat {
             background: var(--white);
             border-radius: 14px;

@@ -418,9 +418,25 @@
                         }
                     }, 30000);
                 } else {
-                    errorEl.textContent = res.error || 'Invalid email or password';
+                    // FIX: a transient server error (e.g. HTTP 502, already
+                    // retried twice by callAPI before giving up) was
+                    // displayed as raw text like "HTTP 502" or fell through
+                    // to "Invalid email or password" — easy to mistake for
+                    // a wrong password when it's actually just Apps Script
+                    // being briefly unavailable. Distinguish the two cases
+                    // clearly so people know to just try again rather than
+                    // doubt their credentials.
+                    const isServerError = res.error && /HTTP \d{3}/.test(res.error);
+                    errorEl.textContent = isServerError
+                        ? 'Server is taking a moment to respond. Please try again in a few seconds.'
+                        : (res.error || 'Invalid email or password');
                     errorEl.style.display = 'block';
-                    document.getElementById('loginPassword').value = '';
+                    // Only clear the password on an actual credentials
+                    // failure — on a server error the person typed it
+                    // correctly, no reason to make them retype it.
+                    if (!isServerError) {
+                        document.getElementById('loginPassword').value = '';
+                    }
                 }
             } catch (e) {
                 errorEl.textContent = 'Error connecting to server';
@@ -1155,15 +1171,27 @@
         // net, callAPI now retries once automatically on a 502 before
         // giving up — a brief pause then retry is usually enough since
         // these are transient, not persistent, failures.
-        async function callAPI(action, data = {}, _isRetry = false) {
+        // FIX (occasional solitary 502s, e.g. on login): a single retry
+        // after a fixed 800ms wasn't always enough — confirmed by a 502
+        // on the LOGIN request itself (no burst of other calls involved
+        // at all, so this isn't the "too many simultaneous requests"
+        // cause we fixed elsewhere; it's just Apps Script's own
+        // occasional transient unavailability). Now retries up to twice
+        // with increasing backoff (800ms, then 1.6s) before giving up —
+        // gives a brief Google-side hiccup more room to clear, while
+        // still failing within ~2.5s total if something is genuinely
+        // broken rather than leaving someone stuck indefinitely.
+        async function callAPI(action, data = {}, _retryCount = 0) {
+            const MAX_RETRIES = 2;
             try {
                 const params = new URLSearchParams({ action, ...data });
                 const url = `${API_URL}?${params.toString()}`;
                 const response = await fetch(url);
                 if (!response.ok) {
-                    if (response.status === 502 && !_isRetry) {
-                        await new Promise(resolve => setTimeout(resolve, 800));
-                        return callAPI(action, data, true);
+                    if (response.status === 502 && _retryCount < MAX_RETRIES) {
+                        const backoffMs = 800 * Math.pow(2, _retryCount); // 800ms, then 1600ms
+                        await new Promise(resolve => setTimeout(resolve, backoffMs));
+                        return callAPI(action, data, _retryCount + 1);
                     }
                     throw new Error(`HTTP ${response.status}`);
                 }
@@ -1277,6 +1305,19 @@
             const loans = summary.loansTaken || 0;
             const repaid = summary.repaid || 0;
             const net = savings - loans + repaid;
+
+            // FIX (Available Balance bug + interest tracking): show the
+            // corrected Available Balance (savings minus outstanding
+            // principal — what's actually free to lend) alongside
+            // Outstanding Principal and Interest Earned, tracked as its
+            // own separate figure rather than hidden inside repayment
+            // totals.
+            const availableEl = document.getElementById('summaryStatAvailable');
+            const outstandingEl = document.getElementById('summaryStatOutstanding');
+            const interestEl = document.getElementById('summaryStatInterest');
+            if (availableEl) availableEl.textContent = `KES ${savings.toLocaleString('en-KE')}`;
+            if (outstandingEl) outstandingEl.textContent = `KES ${(summary.outstanding || 0).toLocaleString('en-KE')}`;
+            if (interestEl) interestEl.textContent = `KES ${(summary.interestEarned || 0).toLocaleString('en-KE')}`;
 
             if (chartInstance) {
                 chartInstance.destroy();
@@ -1768,8 +1809,18 @@
                     closeAddTransactionModal();
                     await loadAllData(); } else showToast('Error: ' + res.error, 'error');
             } else {
+                let loanId = '';
+                if (type === 'Loan Repayment') {
+                    const picker = document.getElementById('repayLoanPicker');
+                    loanId = picker ? picker.value : '';
+                    if (!loanId) {
+                        showToast('Please choose which loan you are repaying', 'error');
+                        hideButtonLoading(btn, orig);
+                        return;
+                    }
+                }
                 const res = await callAPI('submitTransaction', { date, member, type, amount, message,
-                    submittedBy: currentUser });
+                    submittedBy: currentUser, loanId });
                 if (res.success) { showToast(`Transaction submitted! Waiting for ${TREASURER_NAME} approval.`,
                     'success');
                     document.getElementById('amount').value = '';
@@ -1782,7 +1833,40 @@
 
         function toggleApprovalNotice() {
             const notice = document.getElementById('approvalNotice');
-            if (notice) notice.style.display = document.getElementById('type').value === 'Loan Taken' ? 'block' : 'none';
+            const type = document.getElementById('type').value;
+            if (notice) notice.style.display = type === 'Loan Taken' ? 'block' : 'none';
+
+            // Loan repayment scheduling feature: when repaying, show a
+            // dropdown of the member's own ACTIVE loans (not paid off)
+            // so they pick which specific loan they're paying toward —
+            // any amount is allowed, including partial payments.
+            const pickerWrapper = document.getElementById('repayLoanPickerWrapper');
+            const amountHint = document.getElementById('amountHint');
+            if (pickerWrapper) {
+                pickerWrapper.style.display = type === 'Loan Repayment' ? 'block' : 'none';
+                if (type === 'Loan Repayment') {
+                    populateRepayLoanPicker();
+                    if (amountHint) amountHint.textContent = 'You can pay any amount — partial payments are fine.';
+                } else if (amountHint) {
+                    amountHint.textContent = 'For loans: Enter PRINCIPAL amount (10% interest will be added)';
+                }
+            }
+        }
+
+        // Populates the repayment loan picker with the logged-in member's
+        // own active (not yet paid off) loans, showing remaining balance
+        // and due date so they can tell loans apart at a glance.
+        function populateRepayLoanPicker() {
+            const picker = document.getElementById('repayLoanPicker');
+            if (!picker) return;
+            const myLoans = activeLoans.filter(l => l.member === currentUser && l.status !== 'paid_off');
+            if (!myLoans.length) {
+                picker.innerHTML = '<option value="">You have no active loans</option>';
+                return;
+            }
+            picker.innerHTML = myLoans.map(l =>
+                `<option value="${l.loanId}">KES ${l.remaining.toLocaleString('en-KE')} owed (due ${l.dueDate || 'not set'})${l.isOverdue ? ' — OVERDUE' : ''}</option>`
+            ).join('');
         }
 
         // ============================================================
