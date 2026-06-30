@@ -93,6 +93,14 @@
                 btn.innerHTML = 'Create Account'; }
         }
 
+        // Small helper used to stagger groups of requests instead of
+        // firing them all in the same instant — Apps Script can return a
+        // throttling/interstitial HTML page (which surfaces as a 502)
+        // when hit with several simultaneous requests at once.
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
         function getInitials(name) {
             if (!name) return '?';
             return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -351,11 +359,24 @@
                     // This only affected the FIRST login of a session; the
                     // persistent-login path (returning via a saved session)
                     // already ran these in parallel correctly.
+                    //
+                    // FIX (502s on login): running all 4 via Promise.all
+                    // fired them in the exact same instant, which is a
+                    // burst large enough to occasionally overwhelm Apps
+                    // Script (it returns an HTML throttling page instead
+                    // of JSON, which surfaces as a 502 — confirmed via
+                    // Vercel logs). loadAllData() is by far the heaviest
+                    // single call (multiple sheet reads bundled into one
+                    // execution), so it goes first alone; the three
+                    // lighter calls are staggered by 150ms each so Apps
+                    // Script never sees more than one new request landing
+                    // at once.
+                    await loadAllData();
+                    await delay(150);
                     await Promise.all([
-                        loadAllData(),
                         loadMeetingMinutes(),
-                        loadScheduledMeeting(),
-                        loadMembersList()
+                        delay(150).then(() => loadScheduledMeeting()),
+                        delay(300).then(() => loadMembersList())
                     ]);
                     // FIX: activateTab() also calls loadAllData() internally
                     // (needed for normal tab switches, where fresh data IS
@@ -2410,11 +2431,19 @@
                 showBalanceLoading(true);
                 updateDashboardGreeting();
                 initMemoriesCarousel();
+                // FIX (502s on login — same fix as the fresh-login path):
+                // firing all 4 fetches via Promise.all landed them in the
+                // same instant, which is exactly the burst pattern
+                // confirmed (via Vercel logs) to overwhelm Apps Script and
+                // produce intermittent 502s. loadAllData() runs alone
+                // first since it's the heaviest call, then the lighter
+                // three are staggered 150ms apart.
+                await loadAllData();
+                await delay(150);
                 await Promise.all([
-                    loadAllData(),
                     loadMeetingMinutes(),
-                    loadScheduledMeeting(),
-                    loadMembersList()
+                    delay(150).then(() => loadScheduledMeeting()),
+                    delay(300).then(() => loadMembersList())
                 ]);
                 // FIX: same redundant-fetch issue as the fresh-login path —
                 // activateTab() also calls loadAllData() internally, which
