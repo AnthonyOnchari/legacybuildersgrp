@@ -1,0 +1,703 @@
+/**
+ * ============================================================
+ * LEGACY BUILDERS GROUP — BACKEND (Google Apps Script)
+ * ============================================================
+ * Deploy as Web App. Reads/writes the "Legacy Builders Group - Data" Sheet.
+ *
+ * Sheet tabs & columns this script expects (already in your Sheet):
+ *
+ * Transactions:        Date | Member Name | Transaction Type | Amount (KES) |
+ *                       Transaction Message | Balance After | Status | Approved By | Rejection Reason
+ * PendingTransactions: ID | Date | Member | Type | Amount | Message | SubmittedBy | SubmittedAt
+ * ScheduledMeeting:    Date | Agenda | Venue | ScheduledBy   (single data row = row 2)
+ * MeetingMinutes:      ID | Date | RecordedBy | Agenda | Notes | Decisions | NextMeeting
+ * PendingLoans:        ID | Date | Member | Amount | Description | Notes | Approvals
+ * Members:             Name | Role | Email | PIN
+ * Users:               email | name | password | created_at
+ * ============================================================
+ */
+
+const SS = SpreadsheetApp.getActiveSpreadsheet();
+const TREASURER_NAME = "Mrs. Kithinji";
+const LOAN_INTEREST_RATE = 0.10;
+
+function sheet(name) {
+  const s = SS.getSheetByName(name);
+  if (!s) throw new Error("Sheet not found: " + name);
+  return s;
+}
+
+function jsonOut(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function newId() {
+  return Utilities.getUuid();
+}
+
+/** Read a sheet into an array of objects keyed by header row. */
+function readSheet(name) {
+  const s = sheet(name);
+  const range = s.getDataRange().getValues();
+  if (range.length < 2) return [];
+  const headers = range[0].map(h => String(h).trim());
+  const rows = range.slice(1).filter(r => r.some(c => c !== "" && c !== null));
+  return rows.map(r => {
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = r[i]);
+    return obj;
+  });
+}
+
+function findRowIndexById(name, idColName, id) {
+  const s = sheet(name);
+  const data = s.getDataRange().getValues();
+  const headers = data[0].map(h => String(h).trim());
+  const idCol = headers.indexOf(idColName);
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][idCol]) === String(id)) return i + 1; // 1-indexed sheet row
+  }
+  return -1;
+}
+
+function fmtDate(d) {
+  if (!d) return "";
+  if (typeof d === "string") return d;
+  return Utilities.formatDate(new Date(d), Session.getScriptTimeZone() || "Africa/Nairobi", "yyyy-MM-dd");
+}
+
+// ============================================================
+// ENTRY POINT
+// ============================================================
+function doGet(e) {
+  try {
+    const action = e.parameter.action;
+    const p = e.parameter;
+    switch (action) {
+      // ============ AUTH ACTIONS ============
+      case "register": return jsonOut(doRegister(p.email, p.name, p.password));
+      case "login": return jsonOut(doLogin(p.email, p.password));
+      case "changePassword": return jsonOut(doChangePassword(p.email, p.oldPassword, p.newPassword));
+      
+      // ============ EXISTING ACTIONS ============
+      case "getMembers": return jsonOut(getMembers());
+      case "verifyLogin": return jsonOut(verifyLogin(p.name, p.pin));
+      case "changePin": return jsonOut(changePin(p.member, p.oldPin, p.newPin));
+
+      case "get": return jsonOut(getTransactions());
+      case "getSummary": return jsonOut(getSummary());
+
+      case "submitTransaction": return jsonOut(submitTransaction(p));
+      case "getPendingTransactions": return jsonOut(getPendingTransactions());
+      case "approveTransaction": return jsonOut(approveTransaction(p.id, p.approvedBy));
+      case "rejectTransaction": return jsonOut(rejectTransaction(p.id, p.reason));
+
+      case "submitLoan": return jsonOut(submitLoan(p));
+      case "getPendingLoans": return jsonOut(getPendingLoans());
+      case "approveLoan": return jsonOut(approveLoan(p.loanId, p.approver));
+      case "rejectLoan": return jsonOut(rejectLoan(p.loanId));
+      case "cancelLoan": return jsonOut(cancelLoan(p.loanId));
+
+      case "getMeetingMinutes": return jsonOut(getMeetingMinutes());
+      case "saveMeetingMinutes": return jsonOut(saveMeetingMinutes(p));
+      case "deleteMeeting": return jsonOut(deleteMeeting(p.id));
+
+      case "getScheduledMeeting": return jsonOut(getScheduledMeeting());
+      case "scheduleMeeting": return jsonOut(scheduleMeeting(p));
+      case "cancelScheduledMeeting": return jsonOut(cancelScheduledMeeting());
+
+      default: return jsonOut({ success: false, error: "Unknown action: " + action });
+    }
+  } catch (err) {
+    return jsonOut({ success: false, error: err.message });
+  }
+}
+
+// ============================================================
+// ============ USER MANAGEMENT ============
+// ============================================================
+
+/**
+ * REGISTER NEW USER
+ */
+function doRegister(email, name, password) {
+  try {
+    // Validate inputs
+    if (!email || !name || !password) {
+      return { success: false, error: "All fields are required" };
+    }
+    
+    if (password.length < 6) {
+      return { success: false, error: "Password must be at least 6 characters" };
+    }
+    
+    // Get or create Users sheet
+    let sheet = SS.getSheetByName("Users");
+    if (!sheet) {
+      sheet = SS.insertSheet("Users");
+      sheet.appendRow(["email", "name", "password", "created_at"]);
+    }
+    
+    // Check if email already exists
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === email) {
+        return { success: false, error: "Email already registered" };
+      }
+    }
+    
+    // Hash password
+    const hashedPassword = hashPassword(password);
+    
+    // Add user
+    sheet.appendRow([
+      email,
+      name,
+      hashedPassword,
+      new Date().toISOString()
+    ]);
+    
+    // Also add to Members sheet if not exists
+    addUserToMembers(name, email);
+    
+    return { success: true, message: "User registered successfully" };
+    
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * LOGIN USER
+ */
+function doLogin(email, password) {
+  try {
+    // Validate inputs
+    if (!email || !password) {
+      return { success: false, error: "Email and password are required" };
+    }
+    
+    // Get Users sheet
+    const sheet = SS.getSheetByName("Users");
+    if (!sheet) {
+      // Create the sheet with headers if it doesn't exist
+      const newSheet = SS.insertSheet("Users");
+      newSheet.appendRow(["email", "name", "password", "created_at"]);
+      return { success: false, error: "No users registered. Please register first." };
+    }
+    
+    const data = sheet.getDataRange().getValues();
+    
+    // Check if there are any users (data rows)
+    if (data.length <= 1) {
+      return { success: false, error: "No users registered. Please register first." };
+    }
+    
+    // Find user by email
+    for (let i = 1; i < data.length; i++) {
+      const storedEmail = String(data[i][0]).trim();
+      if (storedEmail === email) {
+        const storedPassword = data[i][2];
+        const name = data[i][1];
+        
+        // Verify password
+        if (verifyPassword(password, storedPassword)) {
+          return { 
+            success: true, 
+            name: name,
+            email: email,
+            message: "Login successful" 
+          };
+        } else {
+          return { success: false, error: "Invalid password" };
+        }
+      }
+    }
+    
+    return { success: false, error: "Email not found. Please register first." };
+    
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * CHANGE PASSWORD
+ */
+function doChangePassword(email, oldPassword, newPassword) {
+  try {
+    // Validate inputs
+    if (!email || !oldPassword || !newPassword) {
+      return { success: false, error: "All fields are required" };
+    }
+    
+    if (newPassword.length < 6) {
+      return { success: false, error: "New password must be at least 6 characters" };
+    }
+    
+    // Get Users sheet
+    const sheet = SS.getSheetByName("Users");
+    if (!sheet) {
+      return { success: false, error: "No users found" };
+    }
+    
+    const data = sheet.getDataRange().getValues();
+    let userRow = -1;
+    let currentPassword = "";
+    
+    // Find user by email
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === email) {
+        userRow = i + 1; // Convert to 1-based row index
+        currentPassword = data[i][2];
+        break;
+      }
+    }
+    
+    if (userRow === -1) {
+      return { success: false, error: "User not found" };
+    }
+    
+    // Verify old password
+    if (!verifyPassword(oldPassword, currentPassword)) {
+      return { success: false, error: "Current password is incorrect" };
+    }
+    
+    // Update password
+    const newHashedPassword = hashPassword(newPassword);
+    sheet.getRange(userRow, 3).setValue(newHashedPassword);
+    
+    return { success: true, message: "Password changed successfully" };
+    
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+// ============================================================
+// ============ PASSWORD HASHING ============
+// ============================================================
+
+function hashPassword(password) {
+  // Simple hash using SHA-256
+  const digest = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    password
+  );
+  return Utilities.base64Encode(digest);
+}
+
+function verifyPassword(inputPassword, storedHash) {
+  const inputHash = hashPassword(inputPassword);
+  return inputHash === storedHash;
+}
+
+// ============================================================
+// ============ ADD USER TO MEMBERS ============
+// ============================================================
+
+function addUserToMembers(name, email) {
+  try {
+    let sheet = SS.getSheetByName("Members");
+    
+    // Create Members sheet if it doesn't exist
+    if (!sheet) {
+      sheet = SS.insertSheet("Members");
+      sheet.appendRow(["Name", "Role", "Email", "PIN"]);
+    }
+    
+    // Check if member already exists
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]) === name) {
+        return; // Member already exists
+      }
+    }
+    
+    // Add member with default PIN
+    const defaultPin = "1234";
+    sheet.appendRow([name, "Member", email, defaultPin]);
+    
+  } catch (e) {
+    console.error("Error adding user to members:", e);
+  }
+}
+
+// ============================================================
+// ============ SYNC MEMBERS TO USERS ============
+// ============================================================
+
+/**
+ * Sync members to Users sheet with default passwords
+ * Run this once to create user accounts for all members
+ */
+function syncMembersToUsers() {
+  try {
+    // Get or create Users sheet
+    let usersSheet = SS.getSheetByName("Users");
+    if (!usersSheet) {
+      usersSheet = SS.insertSheet("Users");
+      usersSheet.appendRow(["email", "name", "password", "created_at"]);
+    }
+    
+    // Get members from Members sheet
+    const membersSheet = SS.getSheetByName("Members");
+    if (!membersSheet) {
+      Logger.log("❌ Members sheet not found!");
+      return;
+    }
+    
+    const membersData = membersSheet.getDataRange().getValues();
+    
+    // Skip header row
+    let addedCount = 0;
+    let skippedCount = 0;
+    
+    for (let i = 1; i < membersData.length; i++) {
+      const name = String(membersData[i][0]).trim();
+      const email = String(membersData[i][2]).trim(); // Email is in column C
+      
+      if (name && email) {
+        // Check if user already exists
+        const usersData = usersSheet.getDataRange().getValues();
+        let exists = false;
+        for (let j = 1; j < usersData.length; j++) {
+          if (String(usersData[j][0]) === email) {
+            exists = true;
+            break;
+          }
+        }
+        
+        if (!exists) {
+          // Create a default password
+          const defaultPassword = "legacy123";
+          const hashedPassword = hashPassword(defaultPassword);
+          
+          usersSheet.appendRow([
+            email,
+            name,
+            hashedPassword,
+            new Date().toISOString()
+          ]);
+          addedCount++;
+          
+          Logger.log(`✅ Added user: ${name} (${email})`);
+        } else {
+          skippedCount++;
+        }
+      }
+    }
+    
+    Logger.log(`✅ Added ${addedCount} new users to Users sheet`);
+    Logger.log(`⏭️ Skipped ${skippedCount} existing users`);
+    Logger.log("🔑 Default password for all users: legacy123");
+    Logger.log("📧 Users can change their password after login");
+    
+    return { 
+      success: true, 
+      added: addedCount, 
+      skipped: skippedCount,
+      message: `Added ${addedCount} users. Default password: legacy123`
+    };
+    
+  } catch (e) {
+    Logger.log("❌ Error: " + e.toString());
+    return { success: false, error: e.toString() };
+  }
+}
+
+// ============================================================
+// ============ GENERATE HASHED PASSWORDS ============
+// ============================================================
+
+/**
+ * Generate hashed passwords for given PINs
+ * Run this to get hashed values for manual entry
+ */
+function generateHashedPasswords() {
+  const passwords = ["1234", "5678", "9012", "3456"]; // Their PINs
+  Logger.log("=== Hashed Passwords ===");
+  passwords.forEach(pwd => {
+    const hashed = hashPassword(pwd);
+    Logger.log(`PIN: ${pwd} -> Hashed: ${hashed}`);
+  });
+  Logger.log("=== Copy these values to the Users sheet ===");
+}
+
+// ============================================================
+// ============ EXISTING MEMBERS / AUTH ============
+// ============================================================
+
+function getMembers() {
+  const members = readSheet("Members").map(m => String(m["Name"]).trim());
+  return { success: true, members };
+}
+
+function verifyLogin(name, pin) {
+  const rows = readSheet("Members");
+  const match = rows.find(r => String(r["Name"]).trim() === String(name).trim());
+  if (!match) return { success: false, error: "Member not found" };
+  if (String(match["PIN"]).trim() !== String(pin).trim()) {
+    return { success: false, error: "Invalid PIN" };
+  }
+  return { success: true };
+}
+
+function changePin(member, oldPin, newPin) {
+  const rowIdx = findRowIndexById("Members", "Name", member);
+  if (rowIdx === -1) return { success: false, error: "Member not found" };
+  const s = sheet("Members");
+  const headers = s.getRange(1, 1, 1, s.getLastColumn()).getValues()[0].map(h => String(h).trim());
+  const pinCol = headers.indexOf("PIN") + 1;
+  const currentPin = String(s.getRange(rowIdx, pinCol).getValue()).trim();
+  if (currentPin !== String(oldPin).trim()) {
+    return { success: false, error: "Current PIN is incorrect" };
+  }
+  s.getRange(rowIdx, pinCol).setValue(String(newPin).trim());
+  return { success: true };
+}
+
+// ============================================================
+// TRANSACTIONS (approved/ledger)
+// ============================================================
+function getTransactions() {
+  const rows = readSheet("Transactions");
+  const records = rows.map(r => ({
+    date: fmtDate(r["Date"]),
+    member: r["Member Name"],
+    type: r["Transaction Type"],
+    amount: Number(r["Amount (KES)"]) || 0,
+    message: r["Transaction Message"] || "",
+    balanceAfter: Number(r["Balance After"]) || 0,
+    status: r["Status"] || "",
+    approvedBy: r["Approved By"] || ""
+  }));
+  return { success: true, records };
+}
+
+function getSummary() {
+  const rows = readSheet("Transactions");
+  let savings = 0, loansTaken = 0, repaid = 0;
+  rows.forEach(r => {
+    const amt = Number(r["Amount (KES)"]) || 0;
+    const type = r["Transaction Type"];
+    if (type === "Savings") savings += amt;
+    else if (type === "Loan Taken") loansTaken += amt;
+    else if (type === "Loan Repayment") repaid += amt;
+  });
+  const outstanding = Math.max(0, loansTaken - repaid);
+  return { success: true, savings, loansTaken, repaid, outstanding };
+}
+
+/** Appends a fully-approved record straight to Transactions with running balance. */
+function appendApprovedTransaction(date, member, type, amount, message, approvedBy) {
+  const s = sheet("Transactions");
+  const data = s.getDataRange().getValues();
+  let lastBalance = 0;
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (data[i][5] !== "" && data[i][5] !== null) { lastBalance = Number(data[i][5]); break; }
+  }
+  let newBalance = lastBalance;
+  if (type === "Savings" || type === "Loan Repayment") newBalance += Number(amount);
+  else if (type === "Loan Taken") newBalance -= Number(amount);
+  s.appendRow([fmtDate(date), member, type, Number(amount), message || "", newBalance, "Approved", approvedBy || ""]);
+}
+
+// ============================================================
+// PENDING TRANSACTIONS (Savings / Loan Repayment — need treasurer approval)
+// ============================================================
+function submitTransaction(p) {
+  const s = sheet("PendingTransactions");
+  const id = newId();
+  s.appendRow([id, fmtDate(p.date), p.member, p.type, Number(p.amount), p.message || "", p.submittedBy || p.member, new Date()]);
+  return { success: true, id };
+}
+
+function getPendingTransactions() {
+  const rows = readSheet("PendingTransactions");
+  const transactions = rows.map(r => ({
+    id: r["ID"],
+    date: fmtDate(r["Date"]),
+    member: r["Member"],
+    type: r["Type"],
+    amount: Number(r["Amount"]) || 0,
+    message: r["Message"] || "",
+    submittedBy: r["SubmittedBy"] || r["Member"]
+  }));
+  return { success: true, transactions };
+}
+
+function approveTransaction(id, approvedBy) {
+  const rowIdx = findRowIndexById("PendingTransactions", "ID", id);
+  if (rowIdx === -1) return { success: false, error: "Pending transaction not found" };
+  const s = sheet("PendingTransactions");
+  const row = s.getRange(rowIdx, 1, 1, s.getLastColumn()).getValues()[0];
+  const [, date, member, type, amount, message] = row;
+  appendApprovedTransaction(date, member, type, amount, message, approvedBy);
+  s.deleteRow(rowIdx);
+  return { success: true };
+}
+
+function rejectTransaction(id, reason) {
+  const rowIdx = findRowIndexById("PendingTransactions", "ID", id);
+  if (rowIdx === -1) return { success: false, error: "Pending transaction not found" };
+  sheet("PendingTransactions").deleteRow(rowIdx);
+  return { success: true };
+}
+
+// ============================================================
+// LOANS (need approval from ALL other members)
+// ============================================================
+function submitLoan(p) {
+  const s = sheet("PendingLoans");
+  const id = newId();
+  // Approvals column stores comma-separated names of who has approved so far. Starts empty.
+  s.appendRow([id, fmtDate(p.date), p.member, Number(p.amount), p.message || "", p.notes || "", ""]);
+  return { success: true, id };
+}
+
+function getPendingLoans() {
+  const rows = readSheet("PendingLoans");
+  const totalMembers = readSheet("Members").length;
+  const loans = rows.map(r => {
+    const principal = Number(r["Amount"]) || 0;
+    const interest = Math.round(principal * LOAN_INTEREST_RATE);
+    const totalDue = principal + interest;
+    const approvalsStr = String(r["Approvals"] || "").trim();
+    const approvals = approvalsStr ? approvalsStr.split(",").map(a => a.trim()).filter(Boolean) : [];
+    return {
+      id: r["ID"],
+      date: fmtDate(r["Date"]),
+      member: r["Member"],
+      principal,
+      interest,
+      totalDue,
+      message: r["Description"] || "",
+      approvals,
+      status: approvals.length >= (totalMembers - 1) ? "completed" : "pending"
+    };
+  });
+  return { success: true, loans };
+}
+
+function approveLoan(loanId, approver) {
+  const rowIdx = findRowIndexById("PendingLoans", "ID", loanId);
+  if (rowIdx === -1) return { success: false, error: "Loan not found" };
+  const s = sheet("PendingLoans");
+  const headers = s.getRange(1, 1, 1, s.getLastColumn()).getValues()[0].map(h => String(h).trim());
+  const approvalsCol = headers.indexOf("Approvals") + 1;
+  const memberCol = headers.indexOf("Member") + 1;
+  const dateCol = headers.indexOf("Date") + 1;
+  const amountCol = headers.indexOf("Amount") + 1;
+  const descCol = headers.indexOf("Description") + 1;
+
+  const row = s.getRange(rowIdx, 1, 1, s.getLastColumn()).getValues()[0];
+  const member = row[memberCol - 1];
+  if (String(member).trim() === String(approver).trim()) {
+    return { success: false, error: "You cannot approve your own loan request" };
+  }
+
+  let approvalsStr = String(row[approvalsCol - 1] || "").trim();
+  let approvals = approvalsStr ? approvalsStr.split(",").map(a => a.trim()).filter(Boolean) : [];
+  if (approvals.includes(approver)) {
+    return { success: false, error: "You already approved this loan" };
+  }
+  approvals.push(approver);
+  s.getRange(rowIdx, approvalsCol).setValue(approvals.join(","));
+
+  const totalMembers = readSheet("Members").length;
+  const needed = totalMembers - 1;
+
+  if (approvals.length >= needed) {
+    // Fully approved: move principal into Transactions as "Loan Taken", remove from PendingLoans
+    const date = row[dateCol - 1];
+    const principal = Number(row[amountCol - 1]);
+    const desc = row[descCol - 1];
+    appendApprovedTransaction(date, member, "Loan Taken", principal, desc, approvals.join(", "));
+    s.deleteRow(rowIdx);
+  }
+
+  return { success: true, approvals: approvals.length };
+}
+
+function rejectLoan(loanId) {
+  const rowIdx = findRowIndexById("PendingLoans", "ID", loanId);
+  if (rowIdx === -1) return { success: false, error: "Loan not found" };
+  sheet("PendingLoans").deleteRow(rowIdx);
+  return { success: true };
+}
+
+function cancelLoan(loanId) {
+  const rowIdx = findRowIndexById("PendingLoans", "ID", loanId);
+  if (rowIdx === -1) return { success: false, error: "Loan not found" };
+  sheet("PendingLoans").deleteRow(rowIdx);
+  return { success: true };
+}
+
+// ============================================================
+// MEETING MINUTES
+// ============================================================
+function getMeetingMinutes() {
+  const rows = readSheet("MeetingMinutes");
+  const meetings = rows.map(r => ({
+    id: r["ID"],
+    date: fmtDate(r["Date"]),
+    recordedBy: r["RecordedBy"],
+    agenda: r["Agenda"] || "",
+    notes: r["Notes"] || "",
+    decisions: r["Decisions"] || "",
+    nextMeeting: r["NextMeeting"] ? fmtDate(r["NextMeeting"]) : ""
+  }));
+  return { success: true, meetings };
+}
+
+function saveMeetingMinutes(p) {
+  const s = sheet("MeetingMinutes");
+  const id = newId();
+  s.appendRow([id, fmtDate(p.date), p.recordedBy, p.agenda, p.notes || "", p.decisions || "", p.nextMeeting ? fmtDate(p.nextMeeting) : ""]);
+  return { success: true, id };
+}
+
+function deleteMeeting(id) {
+  const rowIdx = findRowIndexById("MeetingMinutes", "ID", id);
+  if (rowIdx === -1) return { success: false, error: "Meeting not found" };
+  sheet("MeetingMinutes").deleteRow(rowIdx);
+  return { success: true };
+}
+
+// ============================================================
+// SCHEDULED MEETING (singleton — always row 2)
+// ============================================================
+function getScheduledMeeting() {
+  const s = sheet("ScheduledMeeting");
+  const data = s.getDataRange().getValues();
+  if (data.length < 2 || !data[1][0]) return { success: true, meeting: null };
+  const row = data[1];
+  return {
+    success: true,
+    meeting: {
+      date: fmtDate(row[0]),
+      agenda: row[1] || "",
+      venue: row[2] || "",
+      scheduledBy: row[3] || ""
+    }
+  };
+}
+
+function scheduleMeeting(p) {
+  const s = sheet("ScheduledMeeting");
+  // Clear existing data rows, then write fresh singleton row.
+  const lastRow = s.getLastRow();
+  if (lastRow > 1) s.getRange(2, 1, lastRow - 1, 4).clearContent();
+  s.getRange(2, 1, 1, 4).setValues([[fmtDate(p.date), p.agenda || "", p.venue || "", p.scheduledBy || ""]]);
+  return { success: true };
+}
+
+function cancelScheduledMeeting() {
+  const s = sheet("ScheduledMeeting");
+  const lastRow = s.getLastRow();
+  if (lastRow > 1) s.getRange(2, 1, lastRow - 1, 4).clearContent();
+  return { success: true };
+}
+
