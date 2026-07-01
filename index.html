@@ -252,7 +252,12 @@
                     </div>
                 </div>
             </div>
-            <div class="card"><h2>Export Data</h2><button id="exportPdfBtn" class="pdf-btn">📄 Download PDF</button></div>
+            <div class="card"><h2>Export Data</h2>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button id="exportPdfBtn" class="pdf-btn">📄 Download PDF</button>
+                    <button id="exportCsvBtn" class="csv-btn" onclick="exportToCSV()">📊 Download CSV / Excel</button>
+                </div>
+            </div>
         </div>
 
         <div id="loansPanel" class="panel fullscreen-panel">

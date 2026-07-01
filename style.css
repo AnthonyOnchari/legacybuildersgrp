@@ -2618,6 +2618,13 @@
         .pdf-btn:hover {
             background: var(--gold-deep);
         }
+        .csv-btn {
+            background: var(--green);
+            width: auto;
+        }
+        .csv-btn:hover {
+            background: #167a52;
+        }
 
         /* ============================================
            PDF GENERATION CONTAINER

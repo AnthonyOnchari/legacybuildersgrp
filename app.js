@@ -2187,6 +2187,83 @@
         // ============================================================
         // EXPORT PDF
         // ============================================================
+        // ============================================================
+        // CSV / EXCEL EXPORT
+        // Generates a proper UTF-8 CSV with BOM (the BOM is what makes
+        // Excel open it correctly with special characters like KES
+        // amounts and Kenyan names, rather than showing garbled text).
+        // All data comes from allRecords (already in memory), so no
+        // extra network call is needed — just download instantly.
+        // ============================================================
+        function exportToCSV() {
+            if (!allRecords.length) {
+                showToast('No transactions to export yet', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('exportCsvBtn');
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ Preparing...'; }
+
+            try {
+                const columns = ['Date', 'Member', 'Type', 'Amount (KES)', 'Message', 'Balance After'];
+
+                // Build rows from allRecords which may or may not have
+                // balanceAfter depending on when the data was fetched.
+                const rows = [...allRecords]
+                    .sort((a, b) => new Date(a.date) - new Date(b.date))
+                    .map(r => [
+                        r.date || '',
+                        r.member || '',
+                        r.type || '',
+                        r.amount || 0,
+                        r.message || '',
+                        r.balanceAfter || ''
+                    ]);
+
+                // Escape a CSV cell — wrap in quotes if it contains a
+                // comma, quote, or newline; double any existing quotes.
+                const escapeCell = (val) => {
+                    const str = String(val);
+                    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                        return `"${str.replace(/"/g, '""')}"`;
+                    }
+                    return str;
+                };
+
+                const csvLines = [
+                    // Add group name and export date as header context
+                    // so the spreadsheet is self-describing when shared.
+                    `Legacy Builders Group — Transaction Export`,
+                    `Exported: ${new Date().toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' })}`,
+                    `Total records: ${rows.length}`,
+                    '',
+                    columns.map(escapeCell).join(','),
+                    ...rows.map(row => row.map(escapeCell).join(','))
+                ];
+
+                // UTF-8 BOM (\uFEFF) makes Excel auto-detect encoding
+                // correctly on Windows without the user needing to use
+                // the "Import" wizard and manually select UTF-8.
+                const csvContent = '\uFEFF' + csvLines.join('\r\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Legacy_Builders_Transactions_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showToast(`Exported ${rows.length} transactions`, 'success');
+            } catch (e) {
+                showToast('Error generating CSV: ' + e.message, 'error');
+                console.error(e);
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = '📊 Download CSV / Excel'; }
+            }
+        }
+
         function exportToPDF() {
             if (!allRecords.length) {
                 showToast('No data to export', 'error');
