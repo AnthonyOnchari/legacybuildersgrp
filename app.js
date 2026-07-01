@@ -1256,6 +1256,61 @@
             loadMeetingMinutes();
         }
 
+        // ============================================================
+        // AUDIT TRAIL — chronological activity feed (logins, profile
+        // changes, password resets, submissions, approvals, rejections,
+        // loan due-date setting), visible to everyone, opened from the
+        // Meetings page.
+        // ============================================================
+        function openAuditLogModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `<div class="modal-content">
+                <h3 style="margin-bottom:14px;">📋 Activity Log</h3>
+                <div id="auditLogList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
+                <div class="modal-buttons"><button class="close-modal" onclick="this.closest('.modal').remove()">Close</button></div>
+            </div>`;
+            document.body.appendChild(modal);
+            loadAuditLog();
+        }
+
+        async function loadAuditLog() {
+            const container = document.getElementById('auditLogList');
+            if (!container) return;
+            const res = await callAPI('getAuditLog', { limit: 50 });
+            if (!res.success || !res.entries?.length) {
+                container.innerHTML = '<div class="empty-state">No activity recorded yet</div>';
+                return;
+            }
+            container.innerHTML = res.entries.map(e => {
+                const when = e.timestamp ? new Date(e.timestamp) : null;
+                const whenStr = when && !isNaN(when)
+                    ? when.toLocaleString('en-KE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                    : '';
+                return `<div class="audit-log-row">
+                    <div class="audit-log-icon">${auditIconFor(e.action)}</div>
+                    <div class="audit-log-info">
+                        <div class="audit-log-line"><strong>${escapeHtml(e.actor)}</strong> ${escapeHtml(e.action)}</div>
+                        ${e.details ? `<div class="audit-log-details">${escapeHtml(e.details)}</div>` : ''}
+                        <div class="audit-log-time">${whenStr}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function auditIconFor(action) {
+            const a = (action || '').toLowerCase();
+            if (a.includes('logged in')) return '🔑';
+            if (a.includes('joined')) return '👋';
+            if (a.includes('password')) return '🔒';
+            if (a.includes('photo')) return '🖼️';
+            if (a.includes('approved')) return '✅';
+            if (a.includes('rejected')) return '❌';
+            if (a.includes('requested') || a.includes('submitted')) return '📤';
+            if (a.includes('due date')) return '📅';
+            return '📋';
+        }
+
         function openAddMeetingModal() {
             const today = new Date().toISOString().split('T')[0];
             const modal = document.createElement('div');
