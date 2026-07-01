@@ -20,6 +20,7 @@
             pendingLoans = [],
             completedLoans = [],
             pendingTransactions = [],
+            pendingEditsMap = {},
             activeLoans = [],
             loansAwaitingDueDate = [],
             currentUser = null,
@@ -554,6 +555,63 @@
 
         // Builds a modal with the exact field IDs sendAnnouncement() already
         // expects, so that function works completely unchanged.
+        // ============================================================
+        // TRANSACTION EDITING
+        // ============================================================
+        function openEditTransactionModal(rowKey, type, currentAmount, currentMessage) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>✏️ Request Edit</h3>
+                    <p style="font-size:12px; color:var(--ink-soft); margin-bottom:14px;">
+                        Editing a <strong>${escapeHtml(type)}</strong> transaction.
+                        The original will be removed and sent back to the treasurer for re-approval.
+                    </p>
+                    <div class="form-grid">
+                        <div style="grid-column:span 2;">
+                            <label>New Amount (KES)</label>
+                            <input type="number" id="editTxnAmount" value="${currentAmount}" min="1">
+                        </div>
+                        <div style="grid-column:span 2;">
+                            <label>Updated Message</label>
+                            <input type="text" id="editTxnMessage" value="${escapeHtml(currentMessage)}" placeholder="e.g., Bank/Mpesa Message">
+                        </div>
+                    </div>
+                    <div class="modal-buttons">
+                        <button onclick="submitTransactionEdit(${JSON.stringify(rowKey)})">Submit Edit Request</button>
+                        <button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+        }
+
+        async function submitTransactionEdit(rowKey) {
+            const newAmount = document.getElementById('editTxnAmount')?.value;
+            const newMessage = document.getElementById('editTxnMessage')?.value || '';
+            if (!newAmount || Number(newAmount) <= 0) {
+                showToast('Please enter a valid amount', 'error');
+                return;
+            }
+            const res = await callAPI('requestTransactionEdit', {
+                rowKey,
+                member: currentUser,
+                requestedBy: currentUser,
+                newAmount: Number(newAmount),
+                newMessage
+            });
+            if (res.success) {
+                showToast('Edit request submitted! Awaiting treasurer approval.', 'success');
+                document.querySelector('.modal .close-modal')?.closest('.modal')?.remove();
+                // Close the history modal too since the row has been pulled
+                // back to pending — refreshing it now would be confusing.
+                document.querySelector('.history-modal')?.remove();
+                await loadAllData(false, true);
+            } else {
+                showToast(res.error || 'Error submitting edit request', 'error');
+            }
+        }
+
         function openSendAnnouncementModal() {
             const modal = document.createElement('div');
             modal.className = 'modal';
@@ -1094,7 +1152,7 @@
             const modal = document.createElement('div');
             modal.className = 'history-modal';
             modal.innerHTML =
-                `<div class="history-modal-content"><div class="history-modal-header"><h3>📜 Transaction History</h3><button class="close-history-btn" onclick="this.closest('.history-modal').remove()">✕</button></div><div class="history-modal-body"><div class="history-search"><input type="text" id="historySearch" placeholder="Search..."><select id="historyFilterMember"><option value="">All Members</option>${allMembers.map(m => `<option value="${m}">${m}</option>`).join('')}</select><select id="historyFilterType"><option value="">All Types</option><option value="Savings">Savings</option><option value="Loan Taken">Loan Taken</option><option value="Loan Repayment">Loan Repayment</option></select></div><div style="overflow-x: auto; max-width: 100%;"><table class="history-table"><thead><tr><th onclick="sortHistory('date')">Date ⬍</th><th onclick="sortHistory('member')">Member ⬍</th><th onclick="sortHistory('type')">Type ⬍</th><th onclick="sortHistory('amount')">Amount ⬍</th><th>Message</th></tr></thead><tbody id="historyBody"></tbody></table></div></div></div>`;
+                `<div class="history-modal-content"><div class="history-modal-header"><h3>📜 Transaction History</h3><button class="close-history-btn" onclick="this.closest('.history-modal').remove()">✕</button></div><div class="history-modal-body"><div class="history-search"><input type="text" id="historySearch" placeholder="Search..."><select id="historyFilterMember"><option value="">All Members</option>${allMembers.map(m => `<option value="${m}">${m}</option>`).join('')}</select><select id="historyFilterType"><option value="">All Types</option><option value="Savings">Savings</option><option value="Loan Taken">Loan Taken</option><option value="Loan Repayment">Loan Repayment</option></select></div><div style="overflow-x: auto; max-width: 100%;"><table class="history-table"><thead><tr><th onclick="sortHistory('date')">Date ⬍</th><th onclick="sortHistory('member')">Member ⬍</th><th onclick="sortHistory('type')">Type ⬍</th><th onclick="sortHistory('amount')">Amount ⬍</th><th>Message</th><th></th></tr></thead><tbody id="historyBody"></tbody></table></div></div></div>`;
             document.body.appendChild(modal);
             currentHistoryRecords = [...allRecords];
             renderHistoryTable();
@@ -1122,13 +1180,28 @@
             if (!tbody) return;
             const records = filtered || currentHistoryRecords;
             if (!records.length) { tbody.innerHTML =
-                '<tr><td colspan="5" class="empty-state">No transactions found</td></tr>'; return; }
+                '<tr><td colspan="6" class="empty-state">No transactions found</td></tr>'; return; }
             tbody.innerHTML = records.map(r => {
                 let cls = r.type === 'Savings' ? 'badge-savings' : (r.type === 'Loan Taken' ? 'badge-loan' :
                     'badge-repayment');
                 let sign = r.type === 'Loan Repayment' ? '+' : (r.type === 'Savings' ? '+' : '-');
                 let msg = createMessageWithReadMore(r.message || '-', 50);
-                return `<tr><td style="white-space: nowrap;">${new Date(r.date).toLocaleDateString('en-KE')}</td><td><strong>${escapeHtml(r.member)}</strong></td><td><span class="badge ${cls}">${r.type}</span></td><td style="white-space: nowrap;">${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td><td class="message-cell">${msg}</td></tr>`;
+                // Build a row key the backend uses to locate this exact
+                // transaction (date|member|type|amount). Only show the
+                // Edit button for the logged-in member's own rows.
+                const rowKey = `${r.date}|${r.member}|${r.type}|${r.amount}`;
+                const isOwn = r.member === currentUser;
+                const editBtn = isOwn
+                    ? `<button class="edit-txn-btn" onclick="openEditTransactionModal(${JSON.stringify(rowKey)}, ${JSON.stringify(r.type)}, ${r.amount}, ${JSON.stringify(r.message || '')})">✏️ Edit</button>`
+                    : '';
+                return `<tr>
+                    <td style="white-space: nowrap;">${new Date(r.date).toLocaleDateString('en-KE')}</td>
+                    <td><strong>${escapeHtml(r.member)}</strong></td>
+                    <td><span class="badge ${cls}">${r.type}</span></td>
+                    <td style="white-space: nowrap;">${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td>
+                    <td class="message-cell">${msg}</td>
+                    <td>${editBtn}</td>
+                </tr>`;
             }).join('');
         }
 
@@ -1572,6 +1645,7 @@
 
                 if (isTreasurer()) {
                     pendingTransactions = dash.pendingTransactions || [];
+                    pendingEditsMap = dash.pendingEditsMap || {};
                     renderPendingApprovals();
                     updatePendingCount();
                 }
@@ -1783,9 +1857,31 @@
             if (!container) return;
             if (!pendingTransactions.length) { container.innerHTML = '<div class="empty-state">No pending approvals</div>';
                 return; }
-            container.innerHTML = pendingTransactions.map(t =>
-                `<div class="pending-item"><div><strong>📅 ${t.date}</strong></div><div>👤 <strong>Submitted by:</strong> ${escapeHtml(t.submittedBy || t.member)}</div><div>💰 <strong>Type:</strong> ${t.type}</div><div>💵 <strong>Amount:</strong> KES ${(t.amount || 0).toLocaleString('en-KE')}</div><div>💬 <strong>Message:</strong> ${escapeHtml(t.message || '-')}</div><div style="margin-top: 10px; display: flex; gap: 8px;"><button class="approve-btn" onclick="approveTransaction('${t.id}')">✅ Approve</button><button class="reject-btn" onclick="rejectTransaction('${t.id}')">❌ Reject</button></div></div>`
-                ).join('');
+            container.innerHTML = pendingTransactions.map(t => {
+                // Check if this pending transaction is actually an edit
+                // request — identified by looking up member+type+amount
+                // in the pendingEditsMap sent from the backend.
+                const editKey = `${t.member}|${t.type}|${t.amount}`;
+                const editInfo = pendingEditsMap[editKey];
+                const editBadge = editInfo
+                    ? `<div style="background:var(--blue-soft);color:var(--blue);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;margin-bottom:8px;display:inline-block;">✏️ EDIT REQUEST — was KES ${editInfo.originalAmount.toLocaleString('en-KE')}: "${escapeHtml(editInfo.originalMessage)}"</div><br>`
+                    : '';
+                const rejectFn = editInfo
+                    ? `rejectTransactionEdit('${editInfo.editId}', '${currentUser}')`
+                    : `rejectTransaction('${t.id}')`;
+                return `<div class="pending-item">
+                    ${editBadge}
+                    <div><strong>📅 ${t.date}</strong></div>
+                    <div>👤 <strong>Submitted by:</strong> ${escapeHtml(t.submittedBy || t.member)}</div>
+                    <div>💰 <strong>Type:</strong> ${t.type}</div>
+                    <div>💵 <strong>Amount:</strong> KES ${(t.amount || 0).toLocaleString('en-KE')}</div>
+                    <div>💬 <strong>Message:</strong> ${escapeHtml(t.message || '-')}</div>
+                    <div style="margin-top: 10px; display: flex; gap: 8px;">
+                        <button class="approve-btn" onclick="approveTransaction('${t.id}')">✅ Approve</button>
+                        <button class="reject-btn" onclick="${rejectFn}">❌ Reject</button>
+                    </div>
+                </div>`;
+            }).join('');
         }
 
         function updatePendingCount() {
@@ -1820,6 +1916,20 @@
             if (res.success) { showToast('Transaction rejected', 'success');
                 await loadAllData(); } else { showToast(res.error || 'Error', 'error'); }
             hideButtonLoading(btn, orig);
+        }
+
+        async function rejectTransactionEdit(editId, rejectedBy) {
+            const btn = event?.target;
+            const orig = btn?.innerHTML;
+            if (btn) showButtonLoading(btn, 'Rejecting...');
+            const res = await callAPI('rejectTransactionEdit', { editId, rejectedBy: currentUser });
+            if (res.success) {
+                showToast('Edit request rejected — original transaction restored', 'success');
+                await loadAllData();
+            } else {
+                showToast(res.error || 'Error rejecting edit', 'error');
+            }
+            if (btn) hideButtonLoading(btn, orig);
         }
 
         function updateMemberDropdowns() {
