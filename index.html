@@ -34,8 +34,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            animation: zoomIntoVault 1s ease-in forwards;
+            animation: zoomIntoVault 0.8s ease-in forwards;
             animation-delay: 2.2s;
+            pointer-events: none;
         }
 
         @keyframes zoomIntoVault {
@@ -43,96 +44,13 @@
                 opacity: 1;
                 transform: scale(1);
             }
-            40% {
+            60% {
                 opacity: 1;
-                transform: scale(1.05);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(30);
-            }
-        }
-
-        /* Vault doors effect */
-        .vault-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 99;
-            pointer-events: none;
-            display: flex;
-            opacity: 0;
-            animation: vaultReveal 0.8s ease-out forwards;
-            animation-delay: 3s;
-        }
-
-        @keyframes vaultReveal {
-            0% {
-                opacity: 1;
+                transform: scale(8);
             }
             100% {
                 opacity: 0;
-            }
-        }
-
-        .vault-door {
-            flex: 1;
-            height: 100%;
-            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
-            transition: transform 0.8s ease-out;
-        }
-
-        .vault-door.left {
-            transform: translateX(0);
-            animation: openLeft 0.8s ease-out forwards;
-            animation-delay: 3s;
-            border-right: 3px solid #ffd966;
-        }
-
-        @keyframes openLeft {
-            to {
-                transform: translateX(-100%);
-            }
-        }
-
-        .vault-door.right {
-            transform: translateX(0);
-            animation: openRight 0.8s ease-out forwards;
-            animation-delay: 3s;
-            border-left: 3px solid #ffd966;
-        }
-
-        @keyframes openRight {
-            to {
-                transform: translateX(100%);
-            }
-        }
-
-        .vault-circle {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            border: 6px solid #ffd966;
-            opacity: 0;
-            animation: vaultCircleAppear 0.6s ease forwards;
-            animation-delay: 3.2s;
-            box-shadow: 0 0 40px rgba(255, 217, 102, 0.4), inset 0 0 40px rgba(255, 217, 102, 0.2);
-        }
-
-        @keyframes vaultCircleAppear {
-            0% {
-                opacity: 1;
-                transform: translate(-50%, -50%) scale(1);
-            }
-            100% {
-                opacity: 0;
-                transform: translate(-50%, -50%) scale(3);
+                transform: scale(50);
             }
         }
 
@@ -262,16 +180,16 @@
             width: 100%;
             height: 100%;
             background: white;
-            z-index: 98;
+            z-index: 99;
             pointer-events: none;
             opacity: 0;
-            animation: flashBurst 0.3s ease-out forwards;
-            animation-delay: 3.6s;
+            animation: flashBurst 0.4s ease-out forwards;
+            animation-delay: 2.8s;
         }
 
         @keyframes flashBurst {
             0% {
-                opacity: 0.8;
+                opacity: 1;
             }
             100% {
                 opacity: 0;
@@ -290,18 +208,18 @@
             z-index: 1;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
             animation: slideUp 0.5s ease-out;
-            animation-delay: 3.8s;
+            animation-delay: 3s;
             animation-fill-mode: backwards;
         }
 
         @keyframes slideUp {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(30px) scale(0.9);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0) scale(1);
             }
         }
 
@@ -669,13 +587,6 @@
             </div>
             <div class="intro-text">LEGACY BUILDERS GROUP</div>
         </div>
-    </div>
-
-    <!-- Vault doors that open -->
-    <div class="vault-overlay">
-        <div class="vault-door left"></div>
-        <div class="vault-door right"></div>
-        <div class="vault-circle"></div>
     </div>
 
     <!-- Light flash -->
