@@ -3,387 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Legacy Builders Group</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js">
-    </script>
-    <!-- FIX: html2pdf.js was used in exportToPDF() (html2pdf().set(opt).from(content).save())
-         but was never actually loaded, causing "html2pdf is not defined" when clicking
-         Download PDF. -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
-    </script>
-    <link rel="stylesheet" href="style.css">
+    <title>Legacy Builders Group · Maintenance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 1.5rem;
+            overflow: hidden;
+        }
+
+        .card {
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 2.5rem;
+            padding: 2.5rem 2rem;
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            box-shadow:
+                0 25px 50px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Colorful top accent bar */
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 20%;
+            right: 20%;
+            height: 4px;
+            border-radius: 0 0 10px 10px;
+            background: linear-gradient(90deg, #f59e0b, #10b981, #3b82f6, #ef4444, #a855f7);
+            background-size: 200% 100%;
+            animation: rainbowSlide 3s linear infinite;
+        }
+
+        @keyframes rainbowSlide {
+            0% {
+                background-position: 0% 50%;
+            }
+            100% {
+                background-position: 200% 50%;
+            }
+        }
+
+        .emoji {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounce 1.5s ease-in-out infinite;
+            display: inline-block;
+        }
+
+        @keyframes bounce {
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-12px);
+            }
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.4rem;
+            letter-spacing: -0.3px;
+        }
+
+        .sub {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+
+        .status-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .pill {
+            padding: 0.35rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .pill-yellow {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .pill-green {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .pill-blue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .loader-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1rem 0 1.5rem;
+        }
+
+        .bar {
+            width: 8px;
+            height: 28px;
+            border-radius: 8px;
+            animation: loaderBar 1s infinite ease-in-out;
+        }
+
+        .bar:nth-child(1) {
+            background: #f59e0b;
+            animation-delay: 0s;
+        }
+        .bar:nth-child(2) {
+            background: #10b981;
+            animation-delay: 0.15s;
+        }
+        .bar:nth-child(3) {
+            background: #3b82f6;
+            animation-delay: 0.3s;
+        }
+        .bar:nth-child(4) {
+            background: #ef4444;
+            animation-delay: 0.45s;
+        }
+
+        @keyframes loaderBar {
+            0%,
+            100% {
+                height: 28px;
+            }
+            50% {
+                height: 12px;
+            }
+        }
+
+        .time-badge {
+            display: inline-block;
+            background: #1e293b;
+            color: #ffd966;
+            padding: 0.5rem 1.4rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+        }
+
+        .contact {
+            margin-top: 1.5rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .contact strong {
+            color: #1e293b;
+        }
+
+        .brand {
+            margin-top: 0.8rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+        }
+
+        @media (max-width: 400px) {
+            .card {
+                padding: 2rem 1.5rem;
+                border-radius: 2rem;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .emoji {
+                font-size: 3rem;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="card">
+        <div class="emoji">🛠️</div>
+        <h1>We'll be right back</h1>
+        <p class="sub">Legacy Builders Group is getting a quick refresh</p>
 
-    <!-- SPLASH SCREEN -->
-    <div id="splashScreen">
-        <div class="splash-logo">🏛️</div>
-        <div class="splash-title">Legacy Builders Group</div>
-        <div class="splash-subtitle">Where Families Build Wealth Together</div>
-        <div class="splash-loader"></div>
+        <div class="status-pills">
+            <span class="pill pill-yellow">💰 Savings</span>
+            <span class="pill pill-green">💸 Loans</span>
+            <span class="pill pill-blue">📊 Reports</span>
+        </div>
+
+        <div class="loader-row">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+
+        <div class="time-badge">⏳ Back by 10:00 PM EAT</div>
+
+        <div class="contact">
+            📞 Questions? Call <strong>Mrs. Kithinji</strong>
+        </div>
+
+        <div class="brand">🏛️ Stronger Together · Richer Forever</div>
     </div>
-
-    <!-- LOGIN OVERLAY -->
-    <div id="loginOverlay" class="login-overlay">
-        <div class="login-box">
-            <div class="login-hero">
-                <h1>🏛️ Legacy Builders Group</h1>
-                <div class="subtitle" id="loginSubtitle">Welcome back — login to access your account</div>
-            </div>
-            <div class="login-form-area">
-
-            <div id="loginForm">
-                <div class="login-form-group">
-                    <label>📧 Email Address</label>
-                    <input type="email" id="loginEmail" placeholder="Enter your email" autocomplete="email">
-                </div>
-                <div class="login-form-group">
-                    <label>🔒 Password</label>
-                    <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password">
-                </div>
-                <button class="login-btn" id="loginBtn" onclick="loginWithPassword()">Login</button>
-                <div id="loginError" class="error-message">Invalid email or password. Please try again.</div>
-                <div class="forgot-password-link">
-                    <a onclick="showForgotPasswordForm()">Forgot Password?</a>
-                </div>
-                <div class="register-link">
-                    Don't have an account? <a onclick="showRegisterForm()">Register here</a>
-                </div>
-            </div>
-
-            <div id="registerForm" style="display: none;">
-                <div class="login-form-group">
-                    <label>📧 Email Address</label>
-                    <input type="email" id="registerEmail" placeholder="Enter your email">
-                </div>
-                <div class="login-form-group">
-                    <label>👤 Full Name</label>
-                    <input type="text" id="registerName" placeholder="Enter your full name">
-                </div>
-                <div class="login-form-group">
-                    <label>🔒 Password</label>
-                    <input type="password" id="registerPassword" placeholder="Create a password (min 6 characters)">
-                </div>
-                <div class="login-form-group">
-                    <label>🔒 Confirm Password</label>
-                    <input type="password" id="registerConfirmPassword" placeholder="Confirm your password">
-                </div>
-                <button class="login-btn" onclick="registerUser()">Create Account</button>
-                <div id="registerError" class="error-message"></div>
-                <div class="register-link">
-                    Already have an account? <a onclick="showLoginForm()">Login here</a>
-                </div>
-            </div>
-
-            <div id="forgotPasswordForm" style="display: none;">
-                <div class="login-form-group">
-                    <label>📧 Email Address</label>
-                    <input type="email" id="resetEmail" placeholder="Enter your email">
-                </div>
-                <button class="login-btn" onclick="requestPasswordReset()">Send Reset Link</button>
-                <div id="resetError" class="error-message"></div>
-                <div id="resetSuccess" class="success-message"></div>
-                <div class="register-link">
-                    <a onclick="showLoginForm()">Back to Login</a>
-                </div>
-            </div>
-
-            </div><!-- /login-form-area -->
-        </div>
-    </div>
-
-    <!-- NOTIFICATION PROMPT -->
-    <div class="notification-prompt" id="notificationPrompt">
-        <span>🔔 Get real-time alerts</span>
-        <button onclick="requestNotificationPermission()">Enable Notifications</button>
-        <button class="dismiss-btn" onclick="dismissNotificationPrompt()">✕</button>
-    </div>
-
-    <!-- APP SHELL: sidebar (desktop/tablet) + main content -->
-    <div class="app-shell">
-        <!-- SIDEBAR — mirrors the bottom tab bar's data-panel targets so the
-             existing activateTab() JS drives both without any logic changes. -->
-        <nav class="sidebar" id="sidebarNav">
-            <div class="sidebar-brand">
-                <div class="sidebar-brand-name">🏛️ Legacy Builders</div>
-                <div class="sidebar-brand-tagline">Where Families Build Wealth Together</div>
-            </div>
-            <div class="sidebar-nav">
-                <button class="sidebar-link" data-panel="transactions"><span class="tab-icon">🏠</span><span>Home</span></button>
-                <button class="sidebar-link" data-panel="summary"><span class="tab-icon">📊</span><span>Summary</span></button>
-                <button class="sidebar-link" data-panel="loans"><span class="tab-icon">💰</span><span>Loans</span></button>
-                <button class="sidebar-link" data-panel="meetings"><span class="tab-icon">📝</span><span>Meetings</span></button>
-                <button class="sidebar-link" data-panel="about"><span class="tab-icon">👥</span><span>About Us</span></button>
-                <button class="sidebar-link" data-panel="pending" id="pendingSidebarLink" style="display: none;"><span class="tab-icon">⏳</span><span>Pending</span><span id="pendingCountSidebar" class="pending-count"></span></button>
-            </div>
-            <div class="sidebar-foot">
-                <button onclick="logout(event)">Logout</button>
-            </div>
-        </nav>
-
-    <!-- APP CONTAINER -->
-    <div class="app-container" id="appContainer">
-        <div class="sticky-top">
-        <div class="header-row-1">
-            <span class="user-name-badge" onclick="openProfileModal()">
-                <span class="user-avatar-small" id="headerAvatar">👤</span>
-                <strong id="loggedInUser"></strong>
-            </span>
-            <div class="action-buttons">
-                <button class="profile-btn" onclick="openProfileModal()" aria-label="Profile">👤</button>
-                <button class="logout-btn" onclick="logout(event)" aria-label="Logout">⎋</button>
-            </div>
-        </div>
-
-        <div class="header">
-            <div class="header-row-2">
-                <div>
-                    <div class="wallet-greeting" id="dashboardGreeting">👋 Welcome back</div>
-                    <div class="wallet-label">Available balance</div>
-                    <div class="wallet-balance" id="totalSavingsTop" data-target="0">KES --</div>
-                </div>
-                <div class="wallet-scope-wrapper">
-                    <button class="wallet-chip" id="walletScopeChip" onclick="toggleWalletScopeMenu()">
-                        <span id="walletScopeLabel">🧺 Group</span>
-                        <span class="wallet-scope-caret">▾</span>
-                    </button>
-                    <div class="wallet-scope-menu" id="walletScopeMenu" style="display:none;">
-                        <button onclick="setWalletScope('group')">🧺 Group</button>
-                        <button onclick="setWalletScope('mine')">👤 Mine</button>
-                    </div>
-                </div>
-            </div>
-            <div class="wallet-footer-row">
-                <span class="wallet-footer-icon">↓</span>
-                <span class="wallet-footer-label" id="walletFooterLabel">Outstanding Loans</span>
-                <span class="wallet-footer-amount" id="outstandingTop" data-target="0">KES --</span>
-            </div>
-        </div>
-
-        <!-- QUICK ACTIONS — circular icon buttons matching the
-             Deposit/Send/Change/Trade row from the reference -->
-        <div class="quick-actions-card">
-            <button class="quick-action" onclick="openAddTransactionModal('Savings')">
-                <span class="quick-action-icon qa-save">💰</span>
-                <span>Deposit</span>
-            </button>
-            <button class="quick-action" onclick="openAddTransactionModal('Loan Taken')">
-                <span class="quick-action-icon qa-loan">🏦</span>
-                <span>Loan</span>
-            </button>
-            <button class="quick-action" onclick="openAddTransactionModal('Loan Repayment')">
-                <span class="quick-action-icon qa-repay">🔄</span>
-                <span>Repay</span>
-            </button>
-            <button class="quick-action" onclick="openHistoryModal()">
-                <span class="quick-action-icon qa-history">📜</span>
-                <span>History</span>
-            </button>
-        </div>
-        </div><!-- /sticky-top -->
-
-        <div class="scroll-panels">
-        <div id="transactionsPanel" class="panel active-panel">
-            <div class="card" id="memoriesCard" style="display:none;">
-                <h2>📸 Group Memories</h2>
-                <div class="memories-carousel-wrapper">
-                    <div class="memories-carousel" id="memoriesCarousel"></div>
-                </div>
-                <div class="memories-dots" id="memoriesDots"></div>
-            </div>
-
-            <div class="card">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                    <h2 style="margin-bottom: 0;">🕒 Recent Activity</h2>
-                    <button onclick="openHistoryModal()" style="width: auto; padding: 4px 0; background: none; color: var(--blue); font-size: 12px; font-weight: 600;">See all</button>
-                </div>
-                <div id="recentActivityList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
-            </div>
-        </div>
-
-        <!-- ADD TRANSACTION MODAL — opened from the quick action icons
-             (Deposit / Loan / Repay) instead of living inline on Home. -->
-        <div class="modal" id="addTransactionModal" style="display: none;">
-            <div class="modal-content">
-                <h3 id="addTransactionTitle">💰 New Transaction</h3>
-                <div class="form-grid">
-                    <div><label>📅 Date</label><input type="date" id="date"></div>
-                    <div><label>👤 Member Selected</label><select id="memberSelect" disabled style="background:#F4F6FB;"><option value="">Loading...</option></select></div>
-                    <div><label>Choose Transaction Type</label><select id="type" onchange="toggleApprovalNotice()"><option value="Savings">Savings (Deposit)</option><option value="Loan Taken">Loan Request (Needs ALL Members to Approve)</option><option value="Loan Repayment">Loan Repayment</option></select></div>
-                    <div id="repayLoanPickerWrapper" style="display:none; grid-column: span 2;">
-                        <label>💳 Which loan are you repaying?</label>
-                        <select id="repayLoanPicker"><option value="">Loading your loans...</option></select>
-                    </div>
-                    <div><label>Amount (KES)</label><input type="number" id="amount" placeholder="0"><small id="amountHint" style="font-size:10px; color:#7C8AA5; display:block; margin-top:4px;">For loans: Enter PRINCIPAL amount (10% interest will be added)</small></div>
-                    <div><label>Transaction Message</label><input type="text" id="message" placeholder="e.g., Bank/Mpesa Message"></div>
-                </div>
-                <div id="approvalNotice" style="background:#E8EEFF; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">⚠️ Loan requests need approval from ALL other members. 10% interest will be added to the loan.</div>
-                <div class="modal-buttons">
-                    <button id="addBtn">Submit Transaction</button>
-                    <button class="close-modal" onclick="closeAddTransactionModal()">Cancel</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="summaryPanel" class="panel fullscreen-panel">
-            <div class="card">
-                <h2>Financial Summary</h2>
-                <div id="summarySkeleton" class="loading-container"><div class="loading-spinner"></div><div>Loading summary...</div></div>
-                <div id="summaryContent" style="display: none;">
-                    <div class="summary-stats-row">
-                        <div class="summary-stat">
-                            <div class="summary-stat-value" id="summaryStatAvailable">--</div>
-                            <div class="summary-stat-label">Available Balance</div>
-                        </div>
-                        <div class="summary-stat">
-                            <div class="summary-stat-value" id="summaryStatOutstanding">--</div>
-                            <div class="summary-stat-label">Outstanding Principal</div>
-                        </div>
-                        <div class="summary-stat summary-stat-interest">
-                            <div class="summary-stat-value" id="summaryStatInterest">--</div>
-                            <div class="summary-stat-label">Interest Earned</div>
-                        </div>
-                    </div>
-                    <div class="chart-wrapper">
-                        <canvas id="financialChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="card"><h2>Export Data</h2>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <button id="exportPdfBtn" class="pdf-btn">📄 Download PDF</button>
-                    <button id="exportCsvBtn" class="csv-btn" onclick="exportToCSV()">📊 Download CSV / Excel</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="loansPanel" class="panel fullscreen-panel">
-            <div class="card" id="awaitingDueDateCard" style="display:none;"><h2>📅 Awaiting Due Date</h2><div id="awaitingDueDateList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
-            <div class="card"><h2>💳 Active Loans</h2><div id="activeLoansList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
-            <div class="card"><h2>Pending Loan Approvals</h2><div id="pendingLoans" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
-            <div class="card"><h2>Completed Loans</h2><div id="completedLoans" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
-        </div>
-
-        <div id="meetingsPanel" class="panel fullscreen-panel">
-            <div id="upcomingMeetingCard" class="card upcoming-meeting-card" style="display: none;">
-                <h2>⏰ Upcoming Meeting</h2>
-                <div id="upcomingMeetingInfo"></div>
-            </div>
-
-            <div class="card" style="padding: 8px;">
-                <button class="meeting-action-row" onclick="openViewMinutesModal()">
-                    <span class="meeting-action-icon">📝</span>
-                    <span class="meeting-action-text">
-                        <span class="meeting-action-title">Meeting Minutes</span>
-                        <span class="meeting-action-sub">View past minutes &amp; record new ones</span>
-                    </span>
-                    <span class="meeting-action-arrow">›</span>
-                </button>
-                <button class="meeting-action-row" onclick="openScheduleMeetingModal()">
-                    <span class="meeting-action-icon">📅</span>
-                    <span class="meeting-action-text">
-                        <span class="meeting-action-title">Schedule Next Meeting</span>
-                        <span class="meeting-action-sub">Set date, agenda &amp; venue</span>
-                    </span>
-                    <span class="meeting-action-arrow">›</span>
-                </button>
-                <button class="meeting-action-row" onclick="openSendAnnouncementModal()">
-                    <span class="meeting-action-icon">📢</span>
-                    <span class="meeting-action-text">
-                        <span class="meeting-action-title">Send Announcement</span>
-                        <span class="meeting-action-sub">Push a message to all members</span>
-                    </span>
-                    <span class="meeting-action-arrow">›</span>
-                </button>
-                <button class="meeting-action-row" onclick="openAuditLogModal()">
-                    <span class="meeting-action-icon">📋</span>
-                    <span class="meeting-action-text">
-                        <span class="meeting-action-title">Activity Log</span>
-                        <span class="meeting-action-sub">See who did what, and when</span>
-                    </span>
-                    <span class="meeting-action-arrow">›</span>
-                </button>
-            </div>
-        </div>
-
-        <div id="pendingPanel" class="panel fullscreen-panel">
-            <div class="card"><h2>⏳ Pending Approvals</h2><div id="pendingApprovalsList" class="loading-container"><div class="loading-spinner"></div><div>Loading pending approvals...</div></div></div>
-        </div>
-
-        <!-- About Us / Members Panel -->
-        <div id="aboutPanel" class="panel fullscreen-panel">
-            <div class="about-hero-card">
-                <div class="about-image-wrapper">
-                    <img src="https://lh3.googleusercontent.com/d/1cxOVKU7CkgQUaSpB6m_KYVxNKDfBL_yS=s800" 
-                         alt="Legacy Builders Group" 
-                         class="about-hero-image"
-                         onerror="this.style.display='none'">
-                </div>
-                <p class="about-tagline">A savings circle built on trust, not paperwork.</p>
-            </div>
-
-            <div class="about-stats-row">
-                <div class="about-stat">
-                    <div class="about-stat-value" id="aboutStatMembers">--</div>
-                    <div class="about-stat-label">Members</div>
-                </div>
-                <div class="about-stat">
-                    <div class="about-stat-value" id="aboutStatSavings">--</div>
-                    <div class="about-stat-label">Total Saved</div>
-                </div>
-                <div class="about-stat">
-                    <div class="about-stat-value" id="aboutStatTxns">--</div>
-                    <div class="about-stat-label">Transactions</div>
-                </div>
-            </div>
-
-            <div class="about-values-row">
-                <span class="about-value-chip">🤝 Unity</span>
-                <span class="about-value-chip">🎯 Integrity</span>
-                <span class="about-value-chip">🌟 Legacy</span>
-            </div>
-
-            <div class="card">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                    <h2 style="margin-bottom: 0;">👥 Members</h2>
-                    <span class="member-count-badge" id="memberCountBadge">0 Members</span>
-                </div>
-
-                <div class="members-grid-wrapper">
-                    <div id="membersList" class="members-grid">
-                        <div class="loading-container" style="grid-column: 1 / -1;"><div class="loading-spinner"></div><div>Loading members...</div></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        </div><!-- /scroll-panels -->
-    </div>
-    </div><!-- /app-shell -->
-
-    <!-- TAB BAR -->
-    <div class="tab-bar" id="tabBar" style="display: none;">
-        <button class="tab" data-panel="transactions"><span class="tab-icon">🏠</span><span>Home</span></button>
-        <button class="tab" data-panel="summary"><span class="tab-icon">📊</span><span>Summary</span></button>
-        <button class="tab" data-panel="loans"><span class="tab-icon">💰</span><span>Loans</span></button>
-        <button class="tab" data-panel="meetings"><span class="tab-icon">📝</span><span>Meetings</span></button>
-        <button class="tab" data-panel="about"><span class="tab-icon">👥</span><span>About Us</span></button>
-        <button class="tab" data-panel="pending" id="pendingTab" style="display: none;"><span class="tab-icon">⏳</span><span>Pending<span id="pendingCount" class="pending-count"></span></span></button>
-    </div>
-
-    <!-- PDF GENERATOR CONTAINER -->
-    <div id="pdfGenerator">
-        <div class="pdf-preview" id="pdfPreview">
-            <div style="text-align: center; padding: 40px;">
-                <div style="width: 40px; height: 40px; border: 3px solid #E7EBF5; border-top-color: #3B6FF2; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;"></div>
-                <p style="color: #7C8AA5;">Generating PDF...</p>
-            </div>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
-
 </body>
 </html>
