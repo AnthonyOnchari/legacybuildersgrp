@@ -2721,3 +2721,84 @@
             font-size: 11px;
             margin-top: 4px;
         }
+        /* ============================================
+   OTP VERIFICATION STYLES
+   ============================================ */
+.otp-hint-line {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.otp-hint-line span {
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.otp-inputs {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.otp-box {
+    width: 44px;
+    height: 52px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 600;
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    background: var(--white);
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.otp-box:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 4px var(--blue-soft);
+    transform: translateY(-2px);
+}
+
+.otp-box::placeholder {
+    color: var(--line);
+}
+
+.otp-link-btn {
+    background: none;
+    border: none;
+    color: var(--blue);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 10px 0;
+    width: 100%;
+    text-align: center;
+}
+
+.otp-link-btn:hover {
+    color: var(--blue-deep);
+    text-decoration: underline;
+}
+
+.otp-link-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    text-decoration: none;
+}
+
+@media (max-width: 480px) {
+    .otp-box {
+        width: 38px;
+        height: 46px;
+        font-size: 20px;
+        border-radius: 10px;
+    }
+    
+    .otp-inputs {
+        gap: 6px;
+    }
+}
