@@ -370,12 +370,62 @@ async function completeLogin(name, email) {
     }, 30000);
 }
 
+// ============================================================
+// SHOW/HIDE DEVELOPER PORTAL
+// ============================================================
 function showHideDeveloperPortal() {
-    const isDev = isDeveloper();
-    document.getElementById('developerTab').style.display = isDev ? 'flex' : 'none';
-    document.getElementById('developerSidebarLink').style.display = isDev ? 'flex' : 'none';
-    document.getElementById('developerPanel').style.display = isDev ? 'block' : 'none';
-    if (isDev) loadDeveloperPortal();
+    // Check if current user is developer
+    const isDev = currentUserEmail === 'info.onchari@gmail.com' || 
+                  currentUserRole === 'developer' ||
+                  localStorage.getItem('legacy_current_role') === 'developer';
+    
+    console.log('🔍 Checking developer status:', {
+        email: currentUserEmail,
+        role: currentUserRole,
+        storedRole: localStorage.getItem('legacy_current_role'),
+        isDev: isDev
+    });
+    
+    const devTab = document.getElementById('developerTab');
+    const devSidebar = document.getElementById('developerSidebarLink');
+    const devPanel = document.getElementById('developerPanel');
+    
+    if (isDev) {
+        // Show developer elements
+        if (devTab) {
+            devTab.style.display = 'flex';
+            devTab.style.visibility = 'visible';
+            console.log('✅ Developer tab shown');
+        }
+        if (devSidebar) {
+            devSidebar.style.display = 'flex';
+            devSidebar.style.visibility = 'visible';
+            console.log('✅ Developer sidebar shown');
+        }
+        if (devPanel) {
+            devPanel.style.display = 'block';
+            devPanel.style.visibility = 'visible';
+            console.log('✅ Developer panel shown');
+            // Load developer content
+            if (typeof loadDeveloperPortal === 'function') {
+                setTimeout(loadDeveloperPortal, 500);
+            }
+        }
+    } else {
+        // Hide developer elements
+        if (devTab) {
+            devTab.style.display = 'none';
+            console.log('❌ Developer tab hidden');
+        }
+        if (devSidebar) {
+            devSidebar.style.display = 'none';
+            console.log('❌ Developer sidebar hidden');
+        }
+        if (devPanel) {
+            devPanel.style.display = 'none';
+            console.log('❌ Developer panel hidden');
+        }
+    }
 }
 
 function showHidePendingTab() {
@@ -1717,6 +1767,26 @@ function filterHistory() {
 }
 
 function sortHistory(column) { renderHistoryTable(); }
+
+// ============================================================
+// TOGGLE READ MORE FUNCTION - FIXED
+// ============================================================
+function toggleReadMore(id, full, truncated) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const btn = el.nextElementSibling;
+    if (!btn) return;
+    
+    if (el.classList.contains('truncated')) {
+        el.classList.remove('truncated');
+        el.innerHTML = full;
+        btn.innerHTML = 'Read less';
+    } else {
+        el.classList.add('truncated');
+        el.innerHTML = truncated;
+        btn.innerHTML = 'Read more';
+    }
+}
 
 function renderHistoryTable(filtered = null) {
     const tbody = document.getElementById('historyBody');
