@@ -7,13 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js">
-    </script>
-    <!-- FIX: html2pdf.js was used in exportToPDF() (html2pdf().set(opt).from(content).save())
-         but was never actually loaded, causing "html2pdf is not defined" when clicking
-         Download PDF. -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -45,7 +40,7 @@
                     <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password">
                 </div>
                 <button class="login-btn" id="loginBtn" onclick="loginWithPassword()">Login</button>
-                <div id="loginError" class="error-message">Invalid email or password. Please try again.</div>
+                <div id="loginError" class="error-message"></div>
                 <div class="forgot-password-link">
                     <a onclick="showForgotPasswordForm()">Forgot Password?</a>
                 </div>
@@ -54,16 +49,16 @@
                 </div>
             </div>
 
-            <!-- EMAIL OTP VERIFICATION FORM (shown after a correct password) -->
+            <!-- OTP FORM -->
             <div id="otpForm" style="display: none;">
                 <div class="otp-hint-line">We sent a 6-digit code to <span id="otpEmailHint"></span></div>
                 <div class="otp-inputs">
-                    <input class="otp-box" inputmode="numeric" maxlength="1" autocomplete="one-time-code" id="otp1">
-                    <input class="otp-box" inputmode="numeric" maxlength="1" id="otp2">
-                    <input class="otp-box" inputmode="numeric" maxlength="1" id="otp3">
-                    <input class="otp-box" inputmode="numeric" maxlength="1" id="otp4">
-                    <input class="otp-box" inputmode="numeric" maxlength="1" id="otp5">
-                    <input class="otp-box" inputmode="numeric" maxlength="1" id="otp6">
+                    <input class="otp-box" inputmode="numeric" maxlength="1" autocomplete="one-time-code">
+                    <input class="otp-box" inputmode="numeric" maxlength="1">
+                    <input class="otp-box" inputmode="numeric" maxlength="1">
+                    <input class="otp-box" inputmode="numeric" maxlength="1">
+                    <input class="otp-box" inputmode="numeric" maxlength="1">
+                    <input class="otp-box" inputmode="numeric" maxlength="1">
                 </div>
                 <div id="otpError" class="error-message" style="display: none;"></div>
                 <button class="login-btn" id="otpVerifyBtn" onclick="verifyOtpAndLogin()">Verify &amp; Login</button>
@@ -108,7 +103,7 @@
                 </div>
             </div>
 
-            </div><!-- /login-form-area -->
+            </div>
         </div>
     </div>
 
@@ -119,10 +114,8 @@
         <button class="dismiss-btn" onclick="dismissNotificationPrompt()">✕</button>
     </div>
 
-    <!-- APP SHELL: sidebar (desktop/tablet) + main content -->
+    <!-- APP SHELL -->
     <div class="app-shell">
-        <!-- SIDEBAR — mirrors the bottom tab bar's data-panel targets so the
-             existing activateTab() JS drives both without any logic changes. -->
         <nav class="sidebar" id="sidebarNav">
             <div class="sidebar-brand">
                 <div class="sidebar-brand-name">🏛️ Legacy Builders</div>
@@ -135,13 +128,13 @@
                 <button class="sidebar-link" data-panel="meetings"><span class="tab-icon">📝</span><span>Meetings</span></button>
                 <button class="sidebar-link" data-panel="about"><span class="tab-icon">👥</span><span>About Us</span></button>
                 <button class="sidebar-link" data-panel="pending" id="pendingSidebarLink" style="display: none;"><span class="tab-icon">⏳</span><span>Pending</span><span id="pendingCountSidebar" class="pending-count"></span></button>
+                <button class="sidebar-link" data-panel="developer" id="developerSidebarLink" style="display: none;"><span class="tab-icon">🛠️</span><span>Dev Portal</span></button>
             </div>
             <div class="sidebar-foot">
                 <button onclick="logout(event)">Logout</button>
             </div>
         </nav>
 
-    <!-- APP CONTAINER -->
     <div class="app-container" id="appContainer">
         <div class="sticky-top">
         <div class="header-row-1">
@@ -180,29 +173,24 @@
             </div>
         </div>
 
-        <!-- QUICK ACTIONS — circular icon buttons matching the
-             Deposit/Send/Change/Trade row from the reference -->
         <div class="quick-actions-card">
             <button class="quick-action" onclick="openAddTransactionModal('Savings')">
-                <span class="quick-action-icon qa-save">💰</span>
-                <span>Deposit</span>
+                <span class="quick-action-icon qa-save">💰</span><span>Deposit</span>
             </button>
             <button class="quick-action" onclick="openAddTransactionModal('Loan Taken')">
-                <span class="quick-action-icon qa-loan">🏦</span>
-                <span>Loan</span>
+                <span class="quick-action-icon qa-loan">🏦</span><span>Loan</span>
             </button>
             <button class="quick-action" onclick="openAddTransactionModal('Loan Repayment')">
-                <span class="quick-action-icon qa-repay">🔄</span>
-                <span>Repay</span>
+                <span class="quick-action-icon qa-repay">🔄</span><span>Repay</span>
             </button>
             <button class="quick-action" onclick="openHistoryModal()">
-                <span class="quick-action-icon qa-history">📜</span>
-                <span>History</span>
+                <span class="quick-action-icon qa-history">📜</span><span>History</span>
             </button>
         </div>
-        </div><!-- /sticky-top -->
+        </div>
 
         <div class="scroll-panels">
+        <!-- Home Panel -->
         <div id="transactionsPanel" class="panel active-panel">
             <div class="card" id="memoriesCard" style="display:none;">
                 <h2>📸 Group Memories</h2>
@@ -211,7 +199,6 @@
                 </div>
                 <div class="memories-dots" id="memoriesDots"></div>
             </div>
-
             <div class="card">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
                     <h2 style="margin-bottom: 0;">🕒 Recent Activity</h2>
@@ -221,23 +208,22 @@
             </div>
         </div>
 
-        <!-- ADD TRANSACTION MODAL — opened from the quick action icons
-             (Deposit / Loan / Repay) instead of living inline on Home. -->
+        <!-- Add Transaction Modal -->
         <div class="modal" id="addTransactionModal" style="display: none;">
             <div class="modal-content">
                 <h3 id="addTransactionTitle">💰 New Transaction</h3>
                 <div class="form-grid">
                     <div><label>📅 Date</label><input type="date" id="date"></div>
                     <div><label>👤 Member Selected</label><select id="memberSelect" disabled style="background:#F4F6FB;"><option value="">Loading...</option></select></div>
-                    <div><label>Choose Transaction Type</label><select id="type" onchange="toggleApprovalNotice()"><option value="Savings">Savings (Deposit)</option><option value="Loan Taken">Loan Request (Needs ALL Members to Approve)</option><option value="Loan Repayment">Loan Repayment</option></select></div>
+                    <div><label>Choose Transaction Type</label><select id="type" onchange="toggleApprovalNotice()"><option value="Savings">Savings (Deposit)</option><option value="Loan Taken">Loan Request</option><option value="Loan Repayment">Loan Repayment</option></select></div>
                     <div id="repayLoanPickerWrapper" style="display:none; grid-column: span 2;">
                         <label>💳 Which loan are you repaying?</label>
                         <select id="repayLoanPicker"><option value="">Loading your loans...</option></select>
                     </div>
-                    <div><label>Amount (KES)</label><input type="number" id="amount" placeholder="0"><small id="amountHint" style="font-size:10px; color:#7C8AA5; display:block; margin-top:4px;">For loans: Enter PRINCIPAL amount (10% interest will be added)</small></div>
+                    <div><label>Amount (KES)</label><input type="number" id="amount" placeholder="0"><small id="amountHint" style="font-size:10px; color:#7C8AA5; display:block; margin-top:4px;">For loans: Enter PRINCIPAL amount (10% interest added)</small></div>
                     <div><label>Transaction Message</label><input type="text" id="message" placeholder="e.g., Bank/Mpesa Message"></div>
                 </div>
-                <div id="approvalNotice" style="background:#E8EEFF; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">⚠️ Loan requests need approval from ALL other members. 10% interest will be added to the loan.</div>
+                <div id="approvalNotice" style="background:#E8EEFF; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">⚠️ Loan requests need approval from ALL other members. 10% interest will be added.</div>
                 <div class="modal-buttons">
                     <button id="addBtn">Submit Transaction</button>
                     <button class="close-modal" onclick="closeAddTransactionModal()">Cancel</button>
@@ -245,28 +231,18 @@
             </div>
         </div>
 
+        <!-- Summary Panel -->
         <div id="summaryPanel" class="panel fullscreen-panel">
             <div class="card">
                 <h2>Financial Summary</h2>
                 <div id="summarySkeleton" class="loading-container"><div class="loading-spinner"></div><div>Loading summary...</div></div>
                 <div id="summaryContent" style="display: none;">
                     <div class="summary-stats-row">
-                        <div class="summary-stat">
-                            <div class="summary-stat-value" id="summaryStatAvailable">--</div>
-                            <div class="summary-stat-label">Available Balance</div>
-                        </div>
-                        <div class="summary-stat">
-                            <div class="summary-stat-value" id="summaryStatOutstanding">--</div>
-                            <div class="summary-stat-label">Outstanding Principal</div>
-                        </div>
-                        <div class="summary-stat summary-stat-interest">
-                            <div class="summary-stat-value" id="summaryStatInterest">--</div>
-                            <div class="summary-stat-label">Interest Earned</div>
-                        </div>
+                        <div class="summary-stat"><div class="summary-stat-value" id="summaryStatAvailable">--</div><div class="summary-stat-label">Available Balance</div></div>
+                        <div class="summary-stat"><div class="summary-stat-value" id="summaryStatOutstanding">--</div><div class="summary-stat-label">Outstanding Principal</div></div>
+                        <div class="summary-stat summary-stat-interest"><div class="summary-stat-value" id="summaryStatInterest">--</div><div class="summary-stat-label">Interest Earned</div></div>
                     </div>
-                    <div class="chart-wrapper">
-                        <canvas id="financialChart"></canvas>
-                    </div>
+                    <div class="chart-wrapper"><canvas id="financialChart"></canvas></div>
                 </div>
             </div>
             <div class="card"><h2>Export Data</h2>
@@ -277,6 +253,7 @@
             </div>
         </div>
 
+        <!-- Loans Panel -->
         <div id="loansPanel" class="panel fullscreen-panel">
             <div class="card" id="awaitingDueDateCard" style="display:none;"><h2>📅 Awaiting Due Date</h2><div id="awaitingDueDateList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
             <div class="card"><h2>💳 Active Loans</h2><div id="activeLoansList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
@@ -284,91 +261,65 @@
             <div class="card"><h2>Completed Loans</h2><div id="completedLoans" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
         </div>
 
+        <!-- Meetings Panel -->
         <div id="meetingsPanel" class="panel fullscreen-panel">
             <div id="upcomingMeetingCard" class="card upcoming-meeting-card" style="display: none;">
                 <h2>⏰ Upcoming Meeting</h2>
                 <div id="upcomingMeetingInfo"></div>
             </div>
-
             <div class="card" style="padding: 8px;">
                 <button class="meeting-action-row" onclick="openViewMinutesModal()">
                     <span class="meeting-action-icon">📝</span>
-                    <span class="meeting-action-text">
-                        <span class="meeting-action-title">Meeting Minutes</span>
-                        <span class="meeting-action-sub">View past minutes &amp; record new ones</span>
-                    </span>
+                    <span class="meeting-action-text"><span class="meeting-action-title">Meeting Minutes</span><span class="meeting-action-sub">View past minutes &amp; record new ones</span></span>
                     <span class="meeting-action-arrow">›</span>
                 </button>
                 <button class="meeting-action-row" onclick="openScheduleMeetingModal()">
                     <span class="meeting-action-icon">📅</span>
-                    <span class="meeting-action-text">
-                        <span class="meeting-action-title">Schedule Next Meeting</span>
-                        <span class="meeting-action-sub">Set date, agenda &amp; venue</span>
-                    </span>
+                    <span class="meeting-action-text"><span class="meeting-action-title">Schedule Next Meeting</span><span class="meeting-action-sub">Set date, agenda &amp; venue</span></span>
                     <span class="meeting-action-arrow">›</span>
                 </button>
                 <button class="meeting-action-row" onclick="openSendAnnouncementModal()">
                     <span class="meeting-action-icon">📢</span>
-                    <span class="meeting-action-text">
-                        <span class="meeting-action-title">Send Announcement</span>
-                        <span class="meeting-action-sub">Push a message to all members</span>
-                    </span>
+                    <span class="meeting-action-text"><span class="meeting-action-title">Send Announcement</span><span class="meeting-action-sub">Push a message to all members</span></span>
                     <span class="meeting-action-arrow">›</span>
                 </button>
                 <button class="meeting-action-row" onclick="openAuditLogModal()">
                     <span class="meeting-action-icon">📋</span>
-                    <span class="meeting-action-text">
-                        <span class="meeting-action-title">Activity Log</span>
-                        <span class="meeting-action-sub">See who did what, and when</span>
-                    </span>
+                    <span class="meeting-action-text"><span class="meeting-action-title">Activity Log</span><span class="meeting-action-sub">See who did what, and when</span></span>
                     <span class="meeting-action-arrow">›</span>
                 </button>
             </div>
         </div>
 
+        <!-- Pending Panel -->
         <div id="pendingPanel" class="panel fullscreen-panel">
             <div class="card"><h2>⏳ Pending Approvals</h2><div id="pendingApprovalsList" class="loading-container"><div class="loading-spinner"></div><div>Loading pending approvals...</div></div></div>
+            <div class="card"><h2>📝 Pending Registrations</h2><div id="pendingRegistrationsList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
         </div>
 
-        <!-- About Us / Members Panel -->
+        <!-- About Panel -->
         <div id="aboutPanel" class="panel fullscreen-panel">
             <div class="about-hero-card">
                 <div class="about-image-wrapper">
-                    <img src="https://lh3.googleusercontent.com/d/1cxOVKU7CkgQUaSpB6m_KYVxNKDfBL_yS=s800" 
-                         alt="Legacy Builders Group" 
-                         class="about-hero-image"
-                         onerror="this.style.display='none'">
+                    <img src="https://lh3.googleusercontent.com/d/1cxOVKU7CkgQUaSpB6m_KYVxNKDfBL_yS=s800" alt="Legacy Builders Group" class="about-hero-image" onerror="this.style.display='none'">
                 </div>
                 <p class="about-tagline">A savings circle built on trust, not paperwork.</p>
             </div>
-
             <div class="about-stats-row">
-                <div class="about-stat">
-                    <div class="about-stat-value" id="aboutStatMembers">--</div>
-                    <div class="about-stat-label">Members</div>
-                </div>
-                <div class="about-stat">
-                    <div class="about-stat-value" id="aboutStatSavings">--</div>
-                    <div class="about-stat-label">Total Saved</div>
-                </div>
-                <div class="about-stat">
-                    <div class="about-stat-value" id="aboutStatTxns">--</div>
-                    <div class="about-stat-label">Transactions</div>
-                </div>
+                <div class="about-stat"><div class="about-stat-value" id="aboutStatMembers">--</div><div class="about-stat-label">Members</div></div>
+                <div class="about-stat"><div class="about-stat-value" id="aboutStatSavings">--</div><div class="about-stat-label">Total Saved</div></div>
+                <div class="about-stat"><div class="about-stat-value" id="aboutStatTxns">--</div><div class="about-stat-label">Transactions</div></div>
             </div>
-
             <div class="about-values-row">
                 <span class="about-value-chip">🤝 Unity</span>
                 <span class="about-value-chip">🎯 Integrity</span>
                 <span class="about-value-chip">🌟 Legacy</span>
             </div>
-
             <div class="card">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
                     <h2 style="margin-bottom: 0;">👥 Members</h2>
                     <span class="member-count-badge" id="memberCountBadge">0 Members</span>
                 </div>
-
                 <div class="members-grid-wrapper">
                     <div id="membersList" class="members-grid">
                         <div class="loading-container" style="grid-column: 1 / -1;"><div class="loading-spinner"></div><div>Loading members...</div></div>
@@ -376,9 +327,41 @@
                 </div>
             </div>
         </div>
-        </div><!-- /scroll-panels -->
+
+        <!-- Developer Portal Panel -->
+        <div id="developerPanel" class="panel fullscreen-panel" style="display: none;">
+            <div class="card" style="background: linear-gradient(135deg, #14213D, #1E3FC4); color: white; border: none;">
+                <h2 style="color: white; border-bottom-color: rgba(255,255,255,0.2);">🛠️ Developer Portal</h2>
+                <p style="color: rgba(255,255,255,0.8);">Full system control and monitoring</p>
+            </div>
+            <div class="card">
+                <h3>📊 System Statistics</h3>
+                <div id="systemStats" class="loading-container"><div class="loading-spinner"></div><div>Loading stats...</div></div>
+            </div>
+            <div class="card">
+                <h3>👥 User Management</h3>
+                <div id="allUsersList" class="loading-container"><div class="loading-spinner"></div><div>Loading users...</div></div>
+            </div>
+            <div class="card">
+                <h3>📝 Pending Registrations</h3>
+                <div id="devPendingRegistrations" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
+            </div>
+            <div class="card">
+                <h3>📋 Full Audit Log</h3>
+                <div id="devAuditLog" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
+            </div>
+            <div class="card">
+                <h3>⚡ Developer Actions</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="refreshAllData()" style="background: #3B6FF2; color: white; width: auto; padding: 10px 20px;">🔄 Refresh All Data</button>
+                    <button onclick="exportSystemData()" style="background: #1FA971; color: white; width: auto; padding: 10px 20px;">📥 Export All Data</button>
+                    <button onclick="clearSystemCache()" style="background: #FF9800; color: white; width: auto; padding: 10px 20px;">🗑️ Clear Cache</button>
+                </div>
+            </div>
+        </div>
+        </div>
     </div>
-    </div><!-- /app-shell -->
+    </div>
 
     <!-- TAB BAR -->
     <div class="tab-bar" id="tabBar" style="display: none;">
@@ -388,6 +371,7 @@
         <button class="tab" data-panel="meetings"><span class="tab-icon">📝</span><span>Meetings</span></button>
         <button class="tab" data-panel="about"><span class="tab-icon">👥</span><span>About Us</span></button>
         <button class="tab" data-panel="pending" id="pendingTab" style="display: none;"><span class="tab-icon">⏳</span><span>Pending<span id="pendingCount" class="pending-count"></span></span></button>
+        <button class="tab" data-panel="developer" id="developerTab" style="display: none;"><span class="tab-icon">🛠️</span><span>Dev</span></button>
     </div>
 
     <!-- PDF GENERATOR CONTAINER -->
@@ -401,6 +385,5 @@
     </div>
 
     <script src="app.js"></script>
-
 </body>
 </html>
