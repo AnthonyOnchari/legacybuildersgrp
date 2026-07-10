@@ -173,6 +173,8 @@
             document.getElementById('loginForm').style.display = 'none';
             document.getElementById('registerForm').style.display = 'block';
             document.getElementById('forgotPasswordForm').style.display = 'none';
+            const otpFormEl = document.getElementById('otpForm');
+            if (otpFormEl) otpFormEl.style.display = 'none';
             document.getElementById('loginError').style.display = 'none';
             document.getElementById('registerError').style.display = 'none';
             const sub = document.getElementById('loginSubtitle');
@@ -183,6 +185,8 @@
             document.getElementById('loginForm').style.display = 'block';
             document.getElementById('registerForm').style.display = 'none';
             document.getElementById('forgotPasswordForm').style.display = 'none';
+            const otpFormEl = document.getElementById('otpForm');
+            if (otpFormEl) otpFormEl.style.display = 'none';
             document.getElementById('loginError').style.display = 'none';
             document.getElementById('registerError').style.display = 'none';
             document.getElementById('resetError').style.display = 'none';
@@ -195,6 +199,8 @@
             document.getElementById('loginForm').style.display = 'none';
             document.getElementById('registerForm').style.display = 'none';
             document.getElementById('forgotPasswordForm').style.display = 'block';
+            const otpFormEl = document.getElementById('otpForm');
+            if (otpFormEl) otpFormEl.style.display = 'none';
             document.getElementById('loginError').style.display = 'none';
             document.getElementById('resetError').style.display = 'none';
             document.getElementById('resetSuccess').style.display = 'none';
@@ -302,6 +308,20 @@
             showRegisterLoading(false);
         }
 
+        // ============================================================
+        // LOGIN + EMAIL OTP
+        // ------------------------------------------------------------
+        // Two-step login: loginWithPassword() checks the password; on
+        // success the backend emails a 6-digit code and returns
+        // { status:'otp_sent', token, emailHint } instead of logging in.
+        // verifyOtpAndLogin() confirms the code, then completeLogin()
+        // (your original post-login sequence, unchanged) runs.
+        // ============================================================
+        let pendingLoginToken = null;   // signed "passed password" token from phase 1
+        let pendingLoginEmail = null;
+        let otpResendTimer = null;
+
+        // Phase 1: email + password.
         async function loginWithPassword() {
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
@@ -319,105 +339,16 @@
 
             try {
                 const res = await callAPI('login', { email, password });
-                if (res.success) {
-                    currentUser = res.name;
-                    currentUserEmail = email;
-                    localStorage.setItem('legacy_current_user', currentUser);
-                    localStorage.setItem('legacy_current_email', email);
 
-                    const profileRes = await callAPI('getProfileImage', { email });
-                    if (profileRes.success && profileRes.image) {
-                        userProfileImage = profileRes.image;
-                        localStorage.setItem('legacy_profile_image', userProfileImage);
-                    } else {
-                        userProfileImage = null;
-                        localStorage.removeItem('legacy_profile_image');
-                    }
-
-                    document.getElementById('loginOverlay').classList.remove('active');
-                    document.getElementById('appContainer').classList.add('active');
-                    document.getElementById('tabBar').style.display = 'flex';
-                    document.getElementById('sidebarNav')?.classList.add('active');
-                    document.getElementById('loggedInUser').innerText = currentUser;
-                    document.getElementById('date').value = new Date().toISOString().split('T')[0];
-
-                    updateHeaderAvatar();
-
-                    const pendingTab = document.getElementById('pendingTab');
-                    if (pendingTab) pendingTab.style.display = isTreasurer() ? 'flex' : 'none';
-                    const pendingSidebarLink = document.getElementById('pendingSidebarLink');
-                    if (pendingSidebarLink) pendingSidebarLink.style.display = isTreasurer() ? 'flex' : 'none';
-
-                    showBalanceLoading(true);
-                    updateDashboardGreeting();
-                    initMemoriesCarousel();
-                    // FIX (performance — the real "takes forever" cause):
-                    // these 4 fetches have no dependency on each other but
-                    // were run with sequential awaits, meaning the browser
-                    // waited for each full Apps Script round-trip to finish
-                    // before even starting the next one — 4 round-trips
-                    // stacked back-to-back instead of happening at once.
-                    // This only affected the FIRST login of a session; the
-                    // persistent-login path (returning via a saved session)
-                    // already ran these in parallel correctly.
-                    //
-                    // FIX (502s on login): running all 4 via Promise.all
-                    // fired them in the exact same instant, which is a
-                    // burst large enough to occasionally overwhelm Apps
-                    // Script (it returns an HTML throttling page instead
-                    // of JSON, which surfaces as a 502 — confirmed via
-                    // Vercel logs). loadAllData() is by far the heaviest
-                    // single call (multiple sheet reads bundled into one
-                    // execution), so it goes first alone; the three
-                    // lighter calls are staggered by 150ms each so Apps
-                    // Script never sees more than one new request landing
-                    // at once.
-                    await loadAllData();
-                    await delay(150);
-                    await Promise.all([
-                        loadMeetingMinutes(),
-                        delay(150).then(() => loadScheduledMeeting()),
-                        delay(300).then(() => loadMembersList())
-                    ]);
-                    // FIX: activateTab() also calls loadAllData() internally
-                    // (needed for normal tab switches, where fresh data IS
-                    // wanted) — but right here, data was JUST fetched by the
-                    // Promise.all above. Calling activateTab() unconditionally
-                    // triggered a second, fully redundant fetch on every
-                    // single login. Swap the panel/nav state directly
-                    // instead of going through the function that also
-                    // re-fetches.
-                    document.querySelectorAll('.tab, .sidebar-link').forEach(t => t.classList.remove('active'));
-                    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
-                    const activeTabBtn = document.querySelector(`.tab[data-panel="${currentTab}"]`);
-                    if (activeTabBtn) activeTabBtn.classList.add('active');
-                    const activeSidebarBtn = document.querySelector(`.sidebar-link[data-panel="${currentTab}"]`);
-                    if (activeSidebarBtn) activeSidebarBtn.classList.add('active');
-                    const activePanel = document.getElementById(currentTab + 'Panel');
-                    if (activePanel) {
-                        ensureFullscreenBar(activePanel, currentTab);
-                        activePanel.classList.add('active-panel', 'panel-enter');
-                    }
-                    const appContainerEl = document.getElementById('appContainer');
-                    if (appContainerEl) appContainerEl.classList.toggle('dashboard-active', currentTab === 'transactions');
-                    localStorage.setItem('legacy_active_tab', currentTab);
-                    showBalanceLoading(false);
-                    showToast(`Welcome ${currentUser}!`, 'success');
-
-                    // Initialize push notifications
-                    setTimeout(() => {
-                        checkAndShowNotificationPrompt();
-                        registerServiceWorker();
-                    }, 3000);
-
-                    if (refreshInterval) clearInterval(refreshInterval);
-                    refreshInterval = setInterval(() => {
-                        if (currentUser) {
-                            loadAllData(true); // silent: background refresh shouldn't blank the balance
-                            loadScheduledMeeting();
-                            loadMembersList();
-                        }
-                    }, 30000);
+                if (res.success && res.status === 'otp_sent') {
+                    // Password correct — a code is on its way. Not logged in yet.
+                    pendingLoginToken = res.token;
+                    pendingLoginEmail = email;
+                    showOtpScreen(res.emailHint);
+                } else if (res.success) {
+                    // Fallback for a backend without OTP (shouldn't happen once
+                    // the OTP backend is live) — log in the old way.
+                    await completeLogin(res.name, email);
                 } else {
                     // FIX: a transient server error (e.g. HTTP 502, already
                     // retried twice by callAPI before giving up) was
@@ -445,6 +376,221 @@
             }
 
             showLoginLoading(false);
+        }
+
+        // Phase 2: verify the emailed code, then log in for real.
+        async function verifyOtpAndLogin() {
+            const err = document.getElementById('otpError');
+            if (err) err.style.display = 'none';
+
+            const code = getOtpValue();
+            if (code.length !== 6) {
+                if (err) { err.textContent = 'Enter all 6 digits.'; err.style.display = 'block'; }
+                return;
+            }
+
+            const btn = document.getElementById('otpVerifyBtn');
+            const orig = btn ? btn.innerHTML : '';
+            if (btn) showButtonLoading(btn, 'Verifying...');
+
+            try {
+                const res = await callAPI('verifyOtp', { token: pendingLoginToken, code });
+
+                if (res.success) {
+                    if (otpResendTimer) clearInterval(otpResendTimer);
+                    document.getElementById('otpForm').style.display = 'none';
+                    const savedEmail = res.email || pendingLoginEmail;
+                    pendingLoginToken = null;
+                    pendingLoginEmail = null;
+                    await completeLogin(res.name, savedEmail);
+                } else {
+                    let msg = res.error || 'Verification failed.';
+                    if (typeof res.remaining === 'number') {
+                        msg += ' ' + res.remaining + ' attempt' + (res.remaining === 1 ? '' : 's') + ' left.';
+                    }
+                    if (err) { err.textContent = msg; err.style.display = 'block'; }
+                    clearOtpBoxes();
+                    focusFirstOtpBox();
+                }
+            } catch (e) {
+                if (err) { err.textContent = 'Error connecting to server'; err.style.display = 'block'; }
+            }
+
+            if (btn) hideButtonLoading(btn, orig);
+        }
+
+        // Resend a fresh code (throttled 60s by the backend + this button).
+        async function resendOtpCode() {
+            const err = document.getElementById('otpError');
+            if (err) err.style.display = 'none';
+
+            const res = await callAPI('resendOtp', { token: pendingLoginToken });
+            if (res.success) {
+                showToast('New code sent', 'success');
+                const hint = document.getElementById('otpEmailHint');
+                if (hint && res.emailHint) hint.textContent = res.emailHint;
+                clearOtpBoxes();
+                focusFirstOtpBox();
+                startOtpResendCountdown();
+            } else {
+                if (err) { err.textContent = res.error || 'Could not resend code.'; err.style.display = 'block'; }
+            }
+        }
+
+        // Show the code-entry screen (hides the login/register/forgot forms).
+        function showOtpScreen(emailHint) {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('forgotPasswordForm').style.display = 'none';
+            const otpForm = document.getElementById('otpForm');
+            if (otpForm) otpForm.style.display = 'block';
+
+            const hint = document.getElementById('otpEmailHint');
+            if (hint) hint.textContent = emailHint || pendingLoginEmail || '';
+            const err = document.getElementById('otpError');
+            if (err) err.style.display = 'none';
+
+            clearOtpBoxes();
+            const sub = document.getElementById('loginSubtitle');
+            if (sub) sub.textContent = 'Enter the code we emailed you';
+
+            startOtpResendCountdown();
+            setTimeout(focusFirstOtpBox, 100);
+        }
+
+        function backToLoginFromOtp() {
+            pendingLoginToken = null;
+            pendingLoginEmail = null;
+            if (otpResendTimer) clearInterval(otpResendTimer);
+            clearOtpBoxes();
+            const otpForm = document.getElementById('otpForm');
+            if (otpForm) otpForm.style.display = 'none';
+            showLoginForm();
+        }
+
+        // ---- 6-box code input ----
+        function otpBoxes() { return Array.from(document.querySelectorAll('.otp-box')); }
+        function getOtpValue() { return otpBoxes().map(b => b.value).join(''); }
+        function clearOtpBoxes() { otpBoxes().forEach(b => b.value = ''); }
+        function focusFirstOtpBox() { const b = otpBoxes()[0]; if (b) b.focus(); }
+
+        function initOtpBoxes() {
+            const boxes = otpBoxes();
+            boxes.forEach((box, i) => {
+                box.addEventListener('input', () => {
+                    box.value = box.value.replace(/\D/g, '').slice(0, 1);
+                    if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
+                    if (getOtpValue().length === 6) verifyOtpAndLogin();
+                });
+                box.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !box.value && i > 0) boxes[i - 1].focus();
+                });
+                box.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const digits = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+                    digits.split('').forEach((d, k) => { if (boxes[k]) boxes[k].value = d; });
+                    if (digits.length === 6) verifyOtpAndLogin();
+                    else if (boxes[digits.length]) boxes[digits.length].focus();
+                });
+            });
+        }
+        // Activate the boxes once the page is ready (independent of the
+        // main DOMContentLoaded handler below — a second listener is fine).
+        document.addEventListener('DOMContentLoaded', initOtpBoxes);
+
+        function startOtpResendCountdown() {
+            const btn = document.getElementById('otpResendBtn');
+            if (!btn) return;
+            let left = 60;
+            btn.disabled = true;
+            if (otpResendTimer) clearInterval(otpResendTimer);
+            const tick = () => {
+                btn.textContent = left > 0 ? `Resend code in ${left}s` : 'Resend code';
+                if (left <= 0) { btn.disabled = false; clearInterval(otpResendTimer); }
+                left--;
+            };
+            tick();
+            otpResendTimer = setInterval(tick, 1000);
+        }
+
+        // completeLogin(name, email): your ORIGINAL post-login sequence,
+        // lifted unchanged. Called by verifyOtpAndLogin() after the code
+        // is confirmed.
+        async function completeLogin(name, email) {
+            currentUser = name;
+            currentUserEmail = email;
+            localStorage.setItem('legacy_current_user', currentUser);
+            localStorage.setItem('legacy_current_email', email);
+
+            const profileRes = await callAPI('getProfileImage', { email });
+            if (profileRes.success && profileRes.image) {
+                userProfileImage = profileRes.image;
+                localStorage.setItem('legacy_profile_image', userProfileImage);
+            } else {
+                userProfileImage = null;
+                localStorage.removeItem('legacy_profile_image');
+            }
+
+            document.getElementById('loginOverlay').classList.remove('active');
+            document.getElementById('appContainer').classList.add('active');
+            document.getElementById('tabBar').style.display = 'flex';
+            document.getElementById('sidebarNav')?.classList.add('active');
+            document.getElementById('loggedInUser').innerText = currentUser;
+            document.getElementById('date').value = new Date().toISOString().split('T')[0];
+
+            updateHeaderAvatar();
+
+            const pendingTab = document.getElementById('pendingTab');
+            if (pendingTab) pendingTab.style.display = isTreasurer() ? 'flex' : 'none';
+            const pendingSidebarLink = document.getElementById('pendingSidebarLink');
+            if (pendingSidebarLink) pendingSidebarLink.style.display = isTreasurer() ? 'flex' : 'none';
+
+            showBalanceLoading(true);
+            updateDashboardGreeting();
+            initMemoriesCarousel();
+            // FIX (performance / 502s on login): loadAllData() (the heaviest
+            // call) runs alone first, then the three lighter calls are
+            // staggered 150ms apart so Apps Script never sees a burst.
+            await loadAllData();
+            await delay(150);
+            await Promise.all([
+                loadMeetingMinutes(),
+                delay(150).then(() => loadScheduledMeeting()),
+                delay(300).then(() => loadMembersList())
+            ]);
+            // Set panel/nav state directly instead of activateTab() (which
+            // would trigger a second, redundant fetch of data just loaded).
+            document.querySelectorAll('.tab, .sidebar-link').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
+            const activeTabBtn = document.querySelector(`.tab[data-panel="${currentTab}"]`);
+            if (activeTabBtn) activeTabBtn.classList.add('active');
+            const activeSidebarBtn = document.querySelector(`.sidebar-link[data-panel="${currentTab}"]`);
+            if (activeSidebarBtn) activeSidebarBtn.classList.add('active');
+            const activePanel = document.getElementById(currentTab + 'Panel');
+            if (activePanel) {
+                ensureFullscreenBar(activePanel, currentTab);
+                activePanel.classList.add('active-panel', 'panel-enter');
+            }
+            const appContainerEl = document.getElementById('appContainer');
+            if (appContainerEl) appContainerEl.classList.toggle('dashboard-active', currentTab === 'transactions');
+            localStorage.setItem('legacy_active_tab', currentTab);
+            showBalanceLoading(false);
+            showToast(`Welcome ${currentUser}!`, 'success');
+
+            // Initialize push notifications
+            setTimeout(() => {
+                checkAndShowNotificationPrompt();
+                registerServiceWorker();
+            }, 3000);
+
+            if (refreshInterval) clearInterval(refreshInterval);
+            refreshInterval = setInterval(() => {
+                if (currentUser) {
+                    loadAllData(true); // silent: background refresh shouldn't blank the balance
+                    loadScheduledMeeting();
+                    loadMembersList();
+                }
+            }, 30000);
         }
 
         // ============================================================
@@ -2860,6 +3006,9 @@
         window.cancelScheduledMeeting = cancelScheduledMeeting;
         window.sendAnnouncement = sendAnnouncement;
         window.loginWithPassword = loginWithPassword;
+        window.verifyOtpAndLogin = verifyOtpAndLogin;
+        window.resendOtpCode = resendOtpCode;
+        window.backToLoginFromOtp = backToLoginFromOtp;
         window.registerUser = registerUser;
         window.showRegisterForm = showRegisterForm;
         window.showLoginForm = showLoginForm;

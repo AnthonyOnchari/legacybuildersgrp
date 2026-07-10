@@ -54,6 +54,23 @@
                 </div>
             </div>
 
+            <!-- EMAIL OTP VERIFICATION FORM (shown after a correct password) -->
+            <div id="otpForm" style="display: none;">
+                <div class="otp-hint-line">We sent a 6-digit code to <span id="otpEmailHint"></span></div>
+                <div class="otp-inputs">
+                    <input class="otp-box" inputmode="numeric" maxlength="1" autocomplete="one-time-code">
+                    <input class="otp-box" inputmode="numeric" maxlength="1">
+                    <input class="otp-box" inputmode="numeric" maxlength="1">
+                    <input class="otp-box" inputmode="numeric" maxlength="1">
+                    <input class="otp-box" inputmode="numeric" maxlength="1">
+                    <input class="otp-box" inputmode="numeric" maxlength="1">
+                </div>
+                <div id="otpError" class="error-message" style="display: none;"></div>
+                <button class="login-btn" id="otpVerifyBtn" onclick="verifyOtpAndLogin()">Verify &amp; Login</button>
+                <button class="otp-link-btn" id="otpResendBtn" onclick="resendOtpCode()">Resend code</button>
+                <button class="otp-link-btn" onclick="backToLoginFromOtp()">← Back to login</button>
+            </div>
+
             <div id="registerForm" style="display: none;">
                 <div class="login-form-group">
                     <label>📧 Email Address</label>
