@@ -2,7 +2,7 @@
 // Place this file at: /api/sheets-proxy.js in your Vercel project root
 // Vercel auto-detects anything in /api as a serverless function — no extra config needed.
 
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznZgXvVZDQyr0baE8s8eBas8ui8TUsIuSN7ZYwolCFJLF7jy9iV9FMVsmob1qR6AN2/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzUPzKl7waH8Nmv4SeWREHV-OYoRWQWfqPod-KnbDtTaHzS1g3mC_UoK6z3chdeNr-8/exec";
 
 export default async function handler(req, res) {
   // Allow your front-end origin (or "*" while testing)
