@@ -26,26 +26,15 @@
         <div class="login-box">
             <div class="login-hero">
                 <h1>🏛️ Legacy Builders Group</h1>
-                <div class="subtitle" id="loginSubtitle">Welcome back — login to access your account</div>
+                <div class="subtitle" id="loginSubtitle">Welcome back — sign in with your Google account</div>
             </div>
             <div class="login-form-area">
 
             <div id="loginForm">
-                <div class="login-form-group">
-                    <label>📧 Email Address</label>
-                    <input type="email" id="loginEmail" placeholder="Enter your email" autocomplete="email">
-                </div>
-                <div class="login-form-group">
-                    <label>🔒 Password</label>
-                    <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password">
-                </div>
-                <button class="login-btn" id="loginBtn" onclick="loginWithPassword()">Login</button>
+                <button class="login-btn" id="loginBtn" onclick="loginWithGoogle()">Continue with Google</button>
                 <div id="loginError" class="error-message"></div>
-                <div class="forgot-password-link">
-                    <a onclick="showForgotPasswordForm()">Forgot Password?</a>
-                </div>
                 <div class="register-link">
-                    Don't have an account? <a onclick="showRegisterForm()">Register here</a>
+                    Use your Gmail account. New accounts are sent for approval.
                 </div>
             </div>
 
@@ -355,7 +344,7 @@
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button onclick="refreshAllData()" style="background: #3B6FF2; color: white; width: auto; padding: 10px 20px;">🔄 Refresh All Data</button>
                     <button onclick="exportSystemData()" style="background: #1FA971; color: white; width: auto; padding: 10px 20px;">📥 Export All Data</button>
-                    <button onclick="clearSystemCache()" style="background: #FF9800; color: white; width: auto; padding: 10px 20px;">🗑️ Clear Cache</button>
+                    <button onclick="clearSystemCache()" style="background: #FF9800; color: white; width: auto; padding: 10px 20px;">🔄 Reload App</button>
                 </div>
             </div>
         </div>
@@ -384,6 +373,9 @@
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

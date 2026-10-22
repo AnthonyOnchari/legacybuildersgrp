@@ -1,7 +1,6 @@
 // ============================================================
 // CONFIGURATION
 // ============================================================
-const API_URL = "/api/sheets-proxy";
 const TREASURER_NAME = "Mrs. Kithinji";
 const VAPID_PUBLIC_KEY = 'BB4N47xyKjLw-K29lXDolpcht45pVZcqV4m-Iw-8tJBk8g21yE66KVJmxbNOIDEIRBun-JDACI0lK4MRIvVwYH0';
 
@@ -10,7 +9,7 @@ let pendingTransactions = [], pendingEditsMap = {}, activeLoans = [], loansAwait
 let currentUser = null, currentUserEmail = null, currentUserRole = null;
 let currentTab = localStorage.getItem('legacy_active_tab') || 'transactions';
 let countdownInterval = null, refreshInterval = null;
-let userProfileImage = localStorage.getItem('legacy_profile_image') || null;
+let userProfileImage = null;
 let isLoading = false, chartInstance = null;
 const memberPhotoCache = {};
 let serviceWorkerRegistered = false, pushSubscription = null;
@@ -58,20 +57,23 @@ function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 // API CALL
 // ============================================================
 async function callAPI(action, data = {}, _retryCount = 0) {
-    const MAX_RETRIES = 2;
     try {
-        const params = new URLSearchParams({ action, ...data });
-        const url = `${API_URL}?${params.toString()}`;
-        const response = await fetch(url);
-        if (!response.ok) {
-            if (response.status === 502 && _retryCount < MAX_RETRIES) {
-                const backoffMs = 800 * Math.pow(2, _retryCount);
-                await new Promise(resolve => setTimeout(resolve, backoffMs));
-                return callAPI(action, data, _retryCount + 1);
-            }
-            throw new Error(`HTTP ${response.status}`);
+        const firebaseUser = window.firebaseAuth && window.firebaseAuth.currentUser;
+        if (!firebaseUser) throw new Error('Please sign in with Google first.');
+        const idToken = await firebaseUser.getIdToken();
+        const response = await fetch(window.FIREBASE_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({ action, ...data })
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || `Firebase request failed (${response.status})`);
         }
-        return await response.json();
+        return result;
     } catch (e) {
         console.error('API Error:', e);
         return { success: false, error: e.message };
@@ -93,16 +95,11 @@ function hideSplashScreen() {
 let pendingLoginToken = null, pendingLoginEmail = null, otpResendTimer = null;
 
 function checkPersistentLogin() {
-    const saved = localStorage.getItem('legacy_current_user');
-    const savedEmail = localStorage.getItem('legacy_current_email');
-    const savedRole = localStorage.getItem('legacy_current_role');
-    if (saved && savedEmail) {
-        currentUser = saved;
-        currentUserEmail = savedEmail;
-        currentUserRole = savedRole || 'member';
-        return true;
-    }
-    return false;
+    const user = window.firebaseAuth && window.firebaseAuth.currentUser;
+    if (!user) return false;
+    currentUser = user.displayName || user.email.split('@')[0];
+    currentUserEmail = user.email;
+    return true;
 }
 
 function showLoginForm() {
@@ -203,38 +200,34 @@ function startOtpResendCountdown() {
     otpResendTimer = setInterval(tick, 1000);
 }
 
-async function loginWithPassword() {
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
+async function loginWithGoogle() {
     const errorEl = document.getElementById('loginError');
     errorEl.style.display = 'none';
-    if (!email || !password) {
-        errorEl.textContent = 'Please enter email and password';
-        errorEl.style.display = 'block';
-        return;
-    }
     const btn = document.getElementById('loginBtn');
     const orig = btn.innerHTML;
-    showButtonLoading(btn, 'Logging in...');
+    showButtonLoading(btn, 'Opening Google sign-in...');
     try {
-        const res = await callAPI('login', { email, password });
-        if (res.success && res.status === 'otp_sent') {
-            pendingLoginToken = res.token;
-            pendingLoginEmail = email;
-            if (res.name) localStorage.setItem('legacy_temp_name', res.name);
-            if (res.role) localStorage.setItem('legacy_temp_role', res.role);
-            showOtpScreen(res.emailHint);
-        } else if (res.success) {
-            await completeLogin(res.name, email);
-        } else {
-            errorEl.textContent = res.error || 'Invalid email or password';
+        const credential = await window.firebaseAuth.signInWithPopup(window.firebaseGoogleProvider);
+        const res = await callAPI('bootstrapProfile');
+        if (res.status !== 'approved') {
+            await window.firebaseAuth.signOut();
+            errorEl.textContent = res.status === 'pending'
+                ? 'Your registration is awaiting approval. Please contact the treasurer.'
+                : (res.error || 'This account is not approved. Please contact the treasurer.');
             errorEl.style.display = 'block';
+            return;
         }
+        currentUserRole = res.role || 'member';
+        await completeLogin(res.name || credential.user.displayName, credential.user.email);
     } catch (e) {
-        errorEl.textContent = 'Error connecting to server';
+        if (window.firebaseAuth && window.firebaseAuth.currentUser) {
+            await window.firebaseAuth.signOut();
+        }
+        errorEl.textContent = e.message || 'Google sign-in failed.';
         errorEl.style.display = 'block';
+    } finally {
+        hideButtonLoading(btn, orig);
     }
-    hideButtonLoading(btn, orig);
 }
 
 async function verifyOtpAndLogin() {
@@ -306,6 +299,7 @@ async function completeLogin(name, email) {
     }
     currentUser = name;
     currentUserEmail = email;
+    userProfileImage = null;
     localStorage.setItem('legacy_current_user', currentUser);
     localStorage.setItem('legacy_current_email', email);
     localStorage.setItem('legacy_current_role', currentUserRole || 'member');
@@ -313,7 +307,7 @@ async function completeLogin(name, email) {
     const profileRes = await callAPI('getProfileImage', { email });
     if (profileRes.success && profileRes.image) {
         userProfileImage = profileRes.image;
-        localStorage.setItem('legacy_profile_image', userProfileImage);
+        localStorage.setItem(`legacy_profile_image_${email.toLowerCase()}`, userProfileImage);
     }
 
     document.getElementById('loginOverlay').classList.remove('active');
@@ -766,10 +760,8 @@ function exportSystemData() {
 }
 
 function clearSystemCache() {
-    if (!confirm('Clear all system caches?')) return;
-    localStorage.clear();
-    showToast('🗑️ Cache cleared! Refreshing...', 'success');
-    setTimeout(() => location.reload(), 2000);
+    if (!confirm('Reload the app? Your account and saved records will not be cleared.')) return;
+    location.reload();
 }
 
 function auditIconFor(action) {
@@ -1881,7 +1873,7 @@ function openProfileModal() {
                 </div>
                 <div class="profile-divider"></div>
                 <div class="profile-actions">
-                    <button class="btn-change-pwd" onclick="openChangePasswordModal(); document.querySelector('.profile-modal-overlay')?.remove();">🔐 Change Password</button>
+                    <span class="profile-email">Sign-in and password settings are managed by Google.</span>
                     <button class="btn-close" onclick="this.closest('.profile-modal-overlay').remove()">Close</button>
                 </div>
                 <div class="upload-progress" id="uploadProgress"><span id="uploadStatus">Uploading...</span><div class="progress-bar"><div class="progress-fill" id="uploadProgressFill"></div></div></div>
@@ -1893,7 +1885,7 @@ function openProfileModal() {
 }
 
 function getProfileImage() {
-    return userProfileImage || localStorage.getItem('legacy_profile_image') || null;
+    return userProfileImage || localStorage.getItem(`legacy_profile_image_${(currentUserEmail || '').toLowerCase()}`) || null;
 }
 
 async function saveProfileImageToServer(imageData) {
@@ -1901,7 +1893,7 @@ async function saveProfileImageToServer(imageData) {
         const res = await callAPI('saveProfileImage', { email: currentUserEmail, image: imageData });
         if (res.success) {
             userProfileImage = imageData;
-            localStorage.setItem('legacy_profile_image', imageData);
+            localStorage.setItem(`legacy_profile_image_${currentUserEmail.toLowerCase()}`, imageData);
             updateHeaderAvatar();
             loadMembersList();
             return true;
@@ -1966,41 +1958,11 @@ async function handleProfileImageUpload(event) {
 // CHANGE PASSWORD
 // ============================================================
 function openChangePasswordModal() {
-    document.querySelectorAll('.modal').forEach(el => el.remove());
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `<div class="modal-content">
-        <h3>🔐 Change Password</h3>
-        <div style="margin-bottom:16px;"><label>Current Password</label><input type="password" id="currentPassword" class="pin-input-field" placeholder="Enter current password"></div>
-        <div style="margin-bottom:16px;"><label>New Password (min 6 characters)</label><input type="password" id="newPassword" class="pin-input-field" placeholder="Enter new password"></div>
-        <div style="margin-bottom:16px;"><label>Confirm New Password</label><input type="password" id="confirmPassword" class="pin-input-field" placeholder="Confirm new password"></div>
-        <div class="modal-buttons"><button onclick="changePassword()">Change Password</button><button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button></div>
-    </div>`;
-    document.body.appendChild(modal);
+    showToast('Password settings for Google sign-in are managed by Google.', 'info');
 }
 
 async function changePassword() {
-    const cur = document.getElementById('currentPassword').value;
-    const newPwd = document.getElementById('newPassword').value;
-    const confirm = document.getElementById('confirmPassword').value;
-    if (!cur || !newPwd || !confirm) { showToast('Please fill all fields', 'error'); return; }
-    if (newPwd.length < 6) { showToast('New password must be at least 6 characters', 'error'); return; }
-    if (newPwd !== confirm) { showToast('New passwords do not match', 'error'); return; }
-    if (cur === newPwd) { showToast('New password must be different', 'error'); return; }
-    const btn = event.target;
-    const orig = btn.innerHTML;
-    showButtonLoading(btn, 'Changing...');
-    try {
-        const res = await callAPI('changePassword', { email: currentUserEmail, oldPassword: cur, newPassword: newPwd });
-        if (res.success) {
-            showToast('Password changed! Please login again.', 'success');
-            document.querySelector('.modal')?.remove();
-            setTimeout(() => logout(), 2000);
-        } else {
-            showToast(res.error || 'Failed', 'error');
-        }
-    } catch (e) { showToast('Error changing password', 'error'); }
-    hideButtonLoading(btn, orig);
+    openChangePasswordModal();
 }
 
 // ============================================================
@@ -2265,17 +2227,12 @@ async function subscribeToPush() {
                 applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
             });
         }
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'savePushSubscription', email: currentUserEmail, subscription: subscription.toJSON() })
-        });
-        const res = await response.json();
+        const res = await callAPI('savePushSubscription', { subscription: subscription.toJSON() });
         if (res.success) {
             pushSubscription = subscription;
             showToast('🔔 Push notifications enabled!', 'success');
         } else {
-            showToast('Failed to save subscription', 'error');
+            showToast(res.error || 'Failed to save subscription', 'error');
         }
         return subscription;
     } catch (e) {
@@ -2361,8 +2318,9 @@ function updateMemoriesPosition() {
 // ============================================================
 // LOGOUT
 // ============================================================
-function logout(event) {
+async function logout(event) {
     if (event) { event.stopPropagation(); event.preventDefault(); }
+    if (window.firebaseAuth) await window.firebaseAuth.signOut();
     if (countdownInterval) clearInterval(countdownInterval);
     localStorage.removeItem('legacy_current_user');
     localStorage.removeItem('legacy_current_email');
@@ -2376,7 +2334,6 @@ function logout(event) {
     document.getElementById('tabBar').style.display = 'none';
     document.getElementById('sidebarNav')?.classList.remove('active');
     document.getElementById('loginOverlay').classList.add('active');
-    document.getElementById('loginPassword').value = '';
     document.getElementById('loginError').style.display = 'none';
     showToast('Logged out', 'success');
     document.getElementById('splashScreen').style.display = 'flex';
@@ -2387,17 +2344,54 @@ function logout(event) {
 // ============================================================
 // DOM READY
 // ============================================================
-document.addEventListener('DOMContentLoaded', async () => {
+const initializeApp = async () => {
     const splash = document.getElementById('splashScreen');
+    if (!window.firebaseAuth) {
+        throw window.firebaseInitializationError || new Error('Firebase could not be initialized. Check your connection and reload.');
+    }
+    await new Promise((resolve, reject) => {
+        let unsubscribe = () => {};
+        unsubscribe = window.firebaseAuth.onAuthStateChanged(
+            () => {
+                unsubscribe();
+                resolve();
+            },
+            error => {
+                unsubscribe();
+                reject(error);
+            }
+        );
+    });
     const hasPersistentSession = checkPersistentLogin();
     splash.style.display = 'flex';
     splash.classList.remove('hidden');
 
     if (hasPersistentSession) {
+        const account = await callAPI('bootstrapProfile');
+        if (!account.success || account.status !== 'approved') {
+            await window.firebaseAuth.signOut();
+            localStorage.removeItem('legacy_current_user');
+            localStorage.removeItem('legacy_current_email');
+            localStorage.removeItem('legacy_current_role');
+            document.getElementById('loginOverlay').classList.add('active');
+            const errorEl = document.getElementById('loginError');
+            errorEl.textContent = account.status === 'pending'
+                ? 'Your registration is awaiting approval. Please contact the treasurer.'
+                : (account.error || 'This account is not approved. Please contact the treasurer.');
+            errorEl.style.display = 'block';
+            hideSplashScreen();
+            return;
+        }
+        currentUser = account.name || currentUser;
+        currentUserEmail = account.email || currentUserEmail;
+        currentUserRole = account.role || 'member';
+        localStorage.setItem('legacy_current_user', currentUser);
+        localStorage.setItem('legacy_current_email', currentUserEmail);
+        localStorage.setItem('legacy_current_role', currentUserRole);
         const profileRes = await callAPI('getProfileImage', { email: currentUserEmail });
         if (profileRes.success && profileRes.image) {
             userProfileImage = profileRes.image;
-            localStorage.setItem('legacy_profile_image', userProfileImage);
+            localStorage.setItem(`legacy_profile_image_${currentUserEmail.toLowerCase()}`, userProfileImage);
         }
         document.getElementById('loginOverlay').classList.remove('active');
         document.getElementById('appContainer').classList.add('active');
@@ -2450,8 +2444,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('addBtn').onclick = addRecord;
     document.getElementById('exportPdfBtn').onclick = exportToPDF;
-    document.getElementById('loginPassword')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') loginWithPassword(); });
     document.querySelectorAll('.tab, .sidebar-link').forEach(tab => { tab.onclick = () => activateTab(tab.dataset.panel); });
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    initializeApp().catch(error => {
+        console.error('App initialization failed:', error);
+        const splash = document.getElementById('splashScreen');
+        if (splash) {
+            splash.classList.add('hidden');
+            splash.style.display = 'none';
+        }
+        const loginOverlay = document.getElementById('loginOverlay');
+        if (loginOverlay) loginOverlay.classList.add('active');
+        const errorEl = document.getElementById('loginError');
+        if (errorEl) {
+            errorEl.textContent = error.message || 'Could not connect to Firebase. Please reload and try again.';
+            errorEl.style.display = 'block';
+        }
+    });
 });
 
 // ============================================================
@@ -2466,7 +2477,7 @@ window.deleteMeeting = deleteMeeting;
 window.scheduleNextMeeting = scheduleNextMeeting;
 window.cancelScheduledMeeting = cancelScheduledMeeting;
 window.sendAnnouncement = sendAnnouncement;
-window.loginWithPassword = loginWithPassword;
+window.loginWithGoogle = loginWithGoogle;
 window.verifyOtpAndLogin = verifyOtpAndLogin;
 window.resendOtpCode = resendOtpCode;
 window.backToLoginFromOtp = backToLoginFromOtp;
