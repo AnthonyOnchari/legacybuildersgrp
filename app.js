@@ -207,7 +207,14 @@ async function loginWithGoogle() {
     const orig = btn.innerHTML;
     showButtonLoading(btn, 'Opening Google sign-in...');
     try {
-        const credential = await window.firebaseAuth.signInWithPopup(window.firebaseGoogleProvider);
+        let credential;
+        try {
+            credential = await window.firebaseAuth.signInWithPopup(window.firebaseGoogleProvider);
+        } catch (error) {
+            if (error.code !== 'auth/popup-blocked') throw error;
+            await window.firebaseAuth.signInWithRedirect(window.firebaseGoogleProvider);
+            return;
+        }
         const res = await callAPI('bootstrapProfile');
         if (res.status !== 'approved') {
             await window.firebaseAuth.signOut();
