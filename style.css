@@ -2558,3 +2558,169 @@ body.finance-ui .notification-prompt button:not(.dismiss-btn) { background: #3D6
         color: #fff;
     }
 }
+
+/* Social-style sign-in page */
+body.finance-ui .login-overlay {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    overflow-y: auto;
+    background: #F0F2F5;
+}
+body.finance-ui .login-overlay.active {
+    display: grid;
+}
+body.finance-ui .login-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 396px;
+    align-items: center;
+    gap: clamp(40px, 7vw, 100px);
+    width: min(100%, 980px);
+    margin: auto;
+}
+body.finance-ui .login-copy {
+    max-width: 500px;
+    padding-bottom: 20px;
+}
+body.finance-ui .login-copy-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 17px;
+}
+body.finance-ui .login-copy .login-mark {
+    width: 58px;
+    height: 58px;
+    flex: 0 0 58px;
+    border-radius: 14px;
+    background: #3D63DD;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 700;
+}
+body.finance-ui .login-copy h1 {
+    margin: 0;
+    color: #3D63DD;
+    font-size: clamp(36px, 5vw, 54px);
+    font-weight: 700;
+    letter-spacing: -2.5px;
+    line-height: 1.05;
+}
+body.finance-ui .login-copy p {
+    max-width: 440px;
+    margin: 0 0 0 72px;
+    color: #25282B;
+    font-size: clamp(20px, 2.2vw, 27px);
+    font-weight: 400;
+    letter-spacing: -.55px;
+    line-height: 1.35;
+}
+body.finance-ui .login-box {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0 0 20px;
+    overflow: visible;
+    border: 0;
+    border-radius: 9px;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0,0,0,.13);
+    text-align: center;
+}
+body.finance-ui .login-hero {
+    padding: 25px 24px 0;
+    background: #fff;
+    text-align: left;
+}
+body.finance-ui .login-hero h2 {
+    margin-bottom: 5px;
+    color: #1C1E21;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -.25px;
+}
+body.finance-ui .login-box .subtitle {
+    margin: 0;
+    color: #606770;
+    font-size: 14px;
+    line-height: 1.4;
+}
+body.finance-ui .login-form-area { padding: 20px 24px 0; }
+body.finance-ui .login-btn {
+    min-height: 48px;
+    margin-top: 0;
+    border-radius: 6px;
+    background: #3D63DD;
+    font-size: 16px;
+    font-weight: 700;
+}
+body.finance-ui .login-btn:hover { background: #3158C7; }
+body.finance-ui .login-box .register-link {
+    margin-top: 13px;
+    font-size: 13px;
+}
+body.finance-ui .login-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 19px 0;
+    color: #8A8D91;
+    font-size: 11px;
+    font-weight: 600;
+}
+body.finance-ui .login-divider::before,
+body.finance-ui .login-divider::after {
+    height: 1px;
+    flex: 1;
+    background: #DADDE1;
+    content: "";
+}
+body.finance-ui .login-create-btn {
+    width: auto;
+    min-height: 45px;
+    padding: 0 20px;
+    border-radius: 6px;
+    background: #42B72A;
+    font-size: 15px;
+    font-weight: 700;
+}
+body.finance-ui .login-create-btn:hover { background: #36A420; }
+@media (max-width: 700px) {
+    body.finance-ui .login-overlay {
+        align-items: start;
+        padding: 35px 20px 28px;
+    }
+    body.finance-ui .login-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 26px;
+        width: min(100%, 396px);
+    }
+    body.finance-ui .login-copy {
+        padding: 0;
+        text-align: center;
+    }
+    body.finance-ui .login-copy-brand { justify-content: center; margin-bottom: 10px; }
+    body.finance-ui .login-copy .login-mark {
+        width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+        border-radius: 12px;
+        font-size: 14px;
+    }
+    body.finance-ui .login-copy h1 {
+        font-size: clamp(32px, 9vw, 42px);
+        letter-spacing: -1.8px;
+    }
+    body.finance-ui .login-copy p {
+        max-width: 360px;
+        margin: 0 auto;
+        color: #606770;
+        font-size: 17px;
+    }
+}
+@media (max-width: 400px) {
+    body.finance-ui .login-overlay { padding-right: 14px; padding-left: 14px; }
+    body.finance-ui .login-form-area { padding-right: 18px; padding-left: 18px; }
+    body.finance-ui .login-hero { padding-right: 18px; padding-left: 18px; }
+}
