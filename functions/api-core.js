@@ -3,13 +3,8 @@ const { getAuth } = require("firebase-admin/auth");
 const { getFirestore } = require("firebase-admin/firestore");
 const crypto = require("node:crypto");
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
-    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-    : null;
-const firebaseApp = getApps()[0] || initializeApp(
-    serviceAccount ? { credential: cert(serviceAccount) } : {}
-);
-const db = getFirestore(firebaseApp);
+let db;
+let firebaseAuth;
 const DEVELOPER_EMAILS = new Set(["info.onchari@gmail.com"]);
 const LOAN_INTEREST_RATE = 0.1;
 const TREASURER_DEFAULT = "Mrs. Kithinji";
@@ -33,6 +28,37 @@ const publicUser = (user) => ({
     approved_by: user.approved_by || "",
     approved_at: user.approved_at || ""
 });
+
+function initializeFirebaseAdmin() {
+    if (db && firebaseAuth) return;
+
+    let serviceAccount;
+    if (process.env.VERCEL) {
+        const serializedAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
+        if (!serializedAccount) {
+            throw new Error("Firebase Admin configuration error: FIREBASE_SERVICE_ACCOUNT is missing in Vercel.");
+        }
+        try {
+            serviceAccount = JSON.parse(serializedAccount);
+        } catch {
+            throw new Error("Firebase Admin configuration error: FIREBASE_SERVICE_ACCOUNT must contain the full service-account JSON file contents.");
+        }
+        if (!serviceAccount.project_id || !serviceAccount.client_email || !serviceAccount.private_key) {
+            throw new Error("Firebase Admin configuration error: FIREBASE_SERVICE_ACCOUNT is missing required service-account fields. Use the complete JSON key file.");
+        }
+    }
+
+    try {
+        const app = getApps()[0] || initializeApp(
+            serviceAccount ? { credential: cert(serviceAccount) } : {}
+        );
+        db = getFirestore(app);
+        firebaseAuth = getAuth(app);
+    } catch (error) {
+        console.error("Firebase Admin initialization failed:", error);
+        throw new Error("Firebase Admin could not initialize. Verify the service-account key and Firestore permissions.");
+    }
+}
 
 async function audit(actor, action, details = "") {
     await db.collection("auditLog").add({
@@ -710,20 +736,14 @@ async function handleApiRequest(req, res) {
         return res.end();
     }
     if (req.method !== "POST") return sendJson(res, 405, { success: false, error: "Method not allowed" });
-    if (process.env.VERCEL && !serviceAccount) {
-        return sendJson(res, 500, {
-            success: false,
-            error: "Firebase Admin credentials are missing. Configure FIREBASE_SERVICE_ACCOUNT in Vercel."
-        });
-    }
-
     try {
+        initializeFirebaseAdmin();
         const action = req.body && req.body.action;
         const params = req.body && typeof req.body === "object" ? req.body : {};
         const header = getRequestHeader(req, "authorization");
         const tokenMatch = header.match(/^Bearer\s+(.+)$/i);
         if (!tokenMatch) throw new Error("Authentication required");
-        const decoded = await getAuth().verifyIdToken(tokenMatch[1]);
+        const decoded = await firebaseAuth.verifyIdToken(tokenMatch[1]);
         const email = emailKey(decoded.email);
         if (!email || !decoded.email_verified) throw new Error("A verified Google account is required");
         let profile = await profileFor(email);
@@ -756,6 +776,9 @@ async function handleApiRequest(req, res) {
         return sendJson(res, 200, result);
     } catch (error) {
         const message = error && error.message ? error.message : "Unexpected Firebase API error";
+        if (message.startsWith("Firebase Admin")) {
+            return sendJson(res, 500, { success: false, error: message });
+        }
         const unauthenticated = message.includes("Authentication") || message.includes("verified Google");
         if (!unauthenticated) console.error("Firebase API request failed:", error);
         return sendJson(res, unauthenticated ? 401 : 200, { success: false, error: message });

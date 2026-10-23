@@ -69,7 +69,13 @@ async function callAPI(action, data = {}, _retryCount = 0) {
             },
             body: JSON.stringify({ action, ...data })
         });
-        const result = await response.json();
+        const responseBody = await response.text();
+        let result;
+        try {
+            result = JSON.parse(responseBody);
+        } catch {
+            throw new Error(`The API returned an invalid response (HTTP ${response.status}). Please check the server deployment.`);
+        }
         if (!response.ok || !result.success) {
             throw new Error(result.error || `Firebase request failed (${response.status})`);
         }
