@@ -26,6 +26,8 @@ npm --prefix functions run import -- --source "C:\path\to\Legacy Builders Group 
 
 The command is a **dry run** and prints collection counts only. To add missing records, rerun with `--commit`. To merge multiple exports, pass `--source` once for each file. It only creates documents; it does not update or delete existing Firestore documents, and existing documents are preserved. Keep the original workbook and Sheet as backups until Firebase data is verified.
 
+The balances shown by the app are calculated from the imported `Transactions` and `ActiveLoans` records. A newly created Firestore database starts empty, so import and verify the legacy workbook before members rely on the displayed balances.
+
 For `--commit`, authenticate the local Firebase Admin SDK with Google Application Default Credentials (for example, `gcloud auth application-default login`) or set `GOOGLE_APPLICATION_CREDENTIALS` to a service-account file stored outside this repository. Do not upload or commit that file.
 
 Legacy `Users` rows are matched by Gmail address. Password columns are deliberately excluded; users sign in with Google using the same email. Existing users without a status are imported as approved, and the configured developer email retains developer role. A new account not included in the import becomes a pending registration at first Google sign-in.

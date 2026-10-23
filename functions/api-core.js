@@ -127,11 +127,7 @@ async function sendPush(title, body, recipient = null, sender = null, data = {})
     return selected.length - failures.length;
 }
 
-async function getSummaryData() {
-    const [transactions, activeLoans] = await Promise.all([
-        rows("transactions"),
-        rows("activeLoans")
-    ]);
+function summarizeData(transactions, activeLoans) {
     let savingsIn = 0;
     let loansTaken = 0;
     let repaid = 0;
@@ -156,13 +152,21 @@ async function getSummaryData() {
     };
 }
 
+async function getSummaryData() {
+    const [transactions, activeLoans] = await Promise.all([
+        rows("transactions"),
+        rows("activeLoans")
+    ]);
+    return summarizeData(transactions, activeLoans);
+}
+
 async function getDashboard(user, params) {
     const collections = ["transactions", "users", "pendingLoans", "activeLoans"];
     if (isAdmin(user)) collections.push("pendingTransactions", "pendingEdits", "loansAwaitingDueDate");
     const values = await Promise.all(collections.map(rows));
     const data = Object.fromEntries(collections.map((name, index) => [name, values[index]]));
     const allTransactions = data.transactions || [];
-    const summary = await getSummaryData();
+    const summary = summarizeData(allTransactions, data.activeLoans || []);
     const members = (data.users || [])
         .filter((item) => item.status === "approved" && item.name)
         .map((item) => item.name);

@@ -305,6 +305,23 @@ async function resendOtpCode() {
 // ============================================================
 // COMPLETE LOGIN
 // ============================================================
+function activateCurrentTab() {
+    document.querySelectorAll('.tab, .sidebar-link').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
+    const activeTabBtn = document.querySelector(`.tab[data-panel="${currentTab}"]`);
+    if (activeTabBtn) activeTabBtn.classList.add('active');
+    const activeSidebarBtn = document.querySelector(`.sidebar-link[data-panel="${currentTab}"]`);
+    if (activeSidebarBtn) activeSidebarBtn.classList.add('active');
+    const activePanel = document.getElementById(currentTab + 'Panel');
+    if (activePanel) {
+        ensureFullscreenBar(activePanel, currentTab);
+        activePanel.classList.add('active-panel', 'panel-enter');
+    }
+    const appContainerEl = document.getElementById('appContainer');
+    if (appContainerEl) appContainerEl.classList.toggle('dashboard-active', currentTab === 'transactions');
+    localStorage.setItem('legacy_active_tab', currentTab);
+}
+
 async function completeLogin(name, email) {
     if (!name || name.trim() === '') {
         name = email ? email.split('@')[0] : 'Member';
@@ -316,12 +333,6 @@ async function completeLogin(name, email) {
     localStorage.setItem('legacy_current_user', currentUser);
     localStorage.setItem('legacy_current_email', email);
     localStorage.setItem('legacy_current_role', currentUserRole || 'member');
-
-    const profileRes = await callAPI('getProfileImage', { email });
-    if (profileRes.success && profileRes.image) {
-        userProfileImage = profileRes.image;
-        localStorage.setItem(`legacy_profile_image_${email.toLowerCase()}`, userProfileImage);
-    }
 
     document.getElementById('loginOverlay').classList.remove('active');
     document.getElementById('appContainer').classList.add('active');
@@ -337,28 +348,22 @@ async function completeLogin(name, email) {
 
     showBalanceLoading(true);
     initMemoriesCarousel();
-    await loadAllData();
-    await delay(150);
+    activateCurrentTab();
+    const profileImageLoad = callAPI('getProfileImage', { email }).then(profileRes => {
+        if (profileRes.success && profileRes.image) {
+            userProfileImage = profileRes.image;
+            localStorage.setItem(`legacy_profile_image_${email.toLowerCase()}`, userProfileImage);
+            updateHeaderAvatar();
+        }
+    });
     await Promise.all([
+        loadAllData(),
+        profileImageLoad,
         loadMeetingMinutes(),
-        delay(150).then(() => loadScheduledMeeting()),
-        delay(300).then(() => loadMembersList())
+        loadScheduledMeeting(),
+        loadMembersList()
     ]);
 
-    document.querySelectorAll('.tab, .sidebar-link').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
-    const activeTabBtn = document.querySelector(`.tab[data-panel="${currentTab}"]`);
-    if (activeTabBtn) activeTabBtn.classList.add('active');
-    const activeSidebarBtn = document.querySelector(`.sidebar-link[data-panel="${currentTab}"]`);
-    if (activeSidebarBtn) activeSidebarBtn.classList.add('active');
-    const activePanel = document.getElementById(currentTab + 'Panel');
-    if (activePanel) {
-        ensureFullscreenBar(activePanel, currentTab);
-        activePanel.classList.add('active-panel', 'panel-enter');
-    }
-    const appContainerEl = document.getElementById('appContainer');
-    if (appContainerEl) appContainerEl.classList.toggle('dashboard-active', currentTab === 'transactions');
-    localStorage.setItem('legacy_active_tab', currentTab);
     showBalanceLoading(false);
     showToast(`Welcome ${currentUser}!`, 'success');
 
@@ -2401,11 +2406,13 @@ const initializeApp = async () => {
         localStorage.setItem('legacy_current_user', currentUser);
         localStorage.setItem('legacy_current_email', currentUserEmail);
         localStorage.setItem('legacy_current_role', currentUserRole);
-        const profileRes = await callAPI('getProfileImage', { email: currentUserEmail });
-        if (profileRes.success && profileRes.image) {
-            userProfileImage = profileRes.image;
-            localStorage.setItem(`legacy_profile_image_${currentUserEmail.toLowerCase()}`, userProfileImage);
-        }
+        const profileImageLoad = callAPI('getProfileImage', { email: currentUserEmail }).then(profileRes => {
+            if (profileRes.success && profileRes.image) {
+                userProfileImage = profileRes.image;
+                localStorage.setItem(`legacy_profile_image_${currentUserEmail.toLowerCase()}`, userProfileImage);
+                updateHeaderAvatar();
+            }
+        });
         document.getElementById('loginOverlay').classList.remove('active');
         document.getElementById('appContainer').classList.add('active');
         document.getElementById('tabBar').style.display = 'flex';
@@ -2419,27 +2426,14 @@ const initializeApp = async () => {
         showBalanceLoading(true);
         updateDashboardGreeting();
         initMemoriesCarousel();
-        await loadAllData();
-        await delay(150);
+        activateCurrentTab();
         await Promise.all([
+            loadAllData(),
+            profileImageLoad,
             loadMeetingMinutes(),
-            delay(150).then(() => loadScheduledMeeting()),
-            delay(300).then(() => loadMembersList())
+            loadScheduledMeeting(),
+            loadMembersList()
         ]);
-        document.querySelectorAll('.tab, .sidebar-link').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
-        const activeTabBtn2 = document.querySelector(`.tab[data-panel="${currentTab}"]`);
-        if (activeTabBtn2) activeTabBtn2.classList.add('active');
-        const activeSidebarBtn2 = document.querySelector(`.sidebar-link[data-panel="${currentTab}"]`);
-        if (activeSidebarBtn2) activeSidebarBtn2.classList.add('active');
-        const activePanel2 = document.getElementById(currentTab + 'Panel');
-        if (activePanel2) {
-            ensureFullscreenBar(activePanel2, currentTab);
-            activePanel2.classList.add('active-panel', 'panel-enter');
-        }
-        const appContainerEl2 = document.getElementById('appContainer');
-        if (appContainerEl2) appContainerEl2.classList.toggle('dashboard-active', currentTab === 'transactions');
-        localStorage.setItem('legacy_active_tab', currentTab);
         showBalanceLoading(false);
         setTimeout(() => checkAndShowNotificationPrompt(), 3000);
         if (refreshInterval) clearInterval(refreshInterval);
