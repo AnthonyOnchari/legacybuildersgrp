@@ -8,6 +8,7 @@ let firebaseAuth;
 const DEVELOPER_EMAILS = new Set(["info.onchari@gmail.com"]);
 const LOAN_INTEREST_RATE = 0.1;
 const TREASURER_DEFAULT = "Mrs. Kithinji";
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || "qopne8fk";
 const PUSH_API_URL = process.env.PUSH_API_URL || "https://legacybuildersgroup.vercel.app/api/send-push";
 
 const emailKey = (email) => String(email || "").trim().toLowerCase();
@@ -28,6 +29,16 @@ const publicUser = (user) => ({
     approved_by: user.approved_by || "",
     approved_at: user.approved_at || ""
 });
+const isCloudinaryImageUrl = (value) => {
+    try {
+        const url = new URL(String(value || ""));
+        return url.protocol === "https:"
+            && url.hostname === "res.cloudinary.com"
+            && url.pathname.startsWith(`/${CLOUDINARY_CLOUD_NAME}/image/upload/`);
+    } catch {
+        return false;
+    }
+};
 
 function initializeFirebaseAdmin() {
     if (db && firebaseAuth) return;
@@ -240,20 +251,93 @@ async function handleAction(action, params, user) {
             return { success: true, name, email: user.email, role: user.profile.role || "member", status: user.profile.status };
         case "getProfileImage": {
             const snapshot = await db.collection("profileImages").doc(safeDocId(user.email)).get();
-            return { success: true, image: snapshot.exists ? snapshot.data().image || null : null };
+            return {
+                success: true,
+                image: snapshot.exists ? snapshot.data().image || null : null,
+                publicId: snapshot.exists ? snapshot.data().publicId || null : null
+            };
         }
         case "saveProfileImage": {
             if (emailKey(params.email) !== user.email) throw new Error("You can only update your own profile photo.");
-            if (typeof params.image !== "string" || !params.image.startsWith("data:image/") || params.image.length > 48000) {
-                throw new Error("Image must be a compressed image smaller than 48 KB.");
+            const image = String(params.image || "");
+            const publicId = String(params.publicId || "");
+            const legacyImage = image.startsWith("data:image/") && image.length <= 48000;
+            const cloudinaryImage = isCloudinaryImageUrl(image)
+                && publicId.startsWith("legacy-builders/profiles/")
+                && publicId.length <= 255;
+            if (!legacyImage && !cloudinaryImage) {
+                throw new Error("Choose a valid profile photo uploaded to Cloudinary.");
             }
             await db.collection("profileImages").doc(safeDocId(user.email)).set({
                 email: user.email,
                 name,
-                image: params.image,
+                image,
+                publicId: cloudinaryImage ? publicId : "",
                 updated_at: nowIso()
             }, { merge: true });
             return { success: true };
+        }
+        case "getGroupMemories": {
+            const snapshot = await db.collection("groupMemories")
+                .orderBy("created_at", "desc")
+                .limit(50)
+                .get();
+            return {
+                success: true,
+                memories: snapshot.docs
+                    .map((doc) => ({ id: doc.id, ...doc.data() }))
+                    .filter((item) => isCloudinaryImageUrl(item.image))
+            };
+        }
+        case "saveGroupMemory": {
+            const image = String(params.image || "");
+            const publicId = String(params.publicId || "");
+            const caption = String(params.caption || "").trim();
+            if (!isCloudinaryImageUrl(image) || !publicId.startsWith("legacy-builders/memories/") || publicId.length > 255) {
+                throw new Error("Choose a valid photo uploaded to Cloudinary.");
+            }
+            if (caption.length > 200) throw new Error("Memory captions must be 200 characters or fewer.");
+            const id = crypto.randomUUID();
+            const memory = {
+                id,
+                image,
+                publicId,
+                caption,
+                member: name,
+                email: user.email,
+                created_at: nowIso()
+            };
+            await recordRef("groupMemories", id).create(memory);
+            return { success: true, memory };
+        }
+        case "getGroupMessages": {
+            const [messageSnapshot, requestSnapshot] = await Promise.all([
+                db.collection("groupMessages").orderBy("created_at", "desc").limit(100).get(),
+                db.collection("registrationRequests").where("status", "==", "pending").limit(50).get()
+            ]);
+            const messages = messageSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            const joinRequests = requestSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            messages.sort((a, b) => String(a.created_at || "").localeCompare(String(b.created_at || "")));
+            joinRequests.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+            return {
+                success: true,
+                messages,
+                joinRequests
+            };
+        }
+        case "sendGroupMessage": {
+            const message = String(params.message || "").trim();
+            if (!message || message.length > 1000) throw new Error("Messages must be 1-1,000 characters.");
+            const id = crypto.randomUUID();
+            const item = {
+                id,
+                message,
+                member: name,
+                email: user.email,
+                created_at: nowIso()
+            };
+            await recordRef("groupMessages", id).create(item);
+            return { success: true, message: item };
         }
         case "getMembersWithImages": {
             const members = await rows("users");
@@ -265,7 +349,8 @@ async function handleAction(action, params, user) {
                     name: item.name || "",
                     email: item.email || "",
                     role: item.role || "member",
-                    image: byEmail.get(emailKey(item.email)) || null
+                    image: byEmail.get(emailKey(item.email)) || null,
+                    hasImage: Boolean(byEmail.get(emailKey(item.email)))
                 }))
             };
         }
@@ -507,7 +592,15 @@ async function handleAction(action, params, user) {
             if (["getPendingRegistrations", "getPendingTransactions", "getLoansAwaitingDueDate"].includes(action)) requireAdmin(user);
             if (["getDeveloperAuditLog", "getAllUsersFull", "getSystemStats", "getSubscriptions"].includes(action)) requireDeveloper(user);
             if (action === "getPendingRegistrations") {
-                return { success: true, registrations: (await rows("users")).filter((item) => item.status === "pending").map(publicUser) };
+                const [users, joinRequests] = await Promise.all([
+                    rows("users"),
+                    rows("registrationRequests")
+                ]);
+                return {
+                    success: true,
+                    registrations: users.filter((item) => item.status === "pending").map(publicUser),
+                    joinRequests: joinRequests.filter((item) => item.status === "pending")
+                };
             }
             if (action === "getPendingTransactions") return { success: true, transactions: await rows("pendingTransactions") };
             if (action === "getPendingLoans") return { success: true, loans: await rows("pendingLoans") };
@@ -525,15 +618,20 @@ async function handleAction(action, params, user) {
             }
             if (action === "getAllUsersFull") return { success: true, users: (await rows("users")).map(publicUser) };
             if (action === "getSystemStats") {
-                const [users, registrations, pendingTransactions, pendingLoans, activeLoans, subscriptions, summary] = await Promise.all([
-                    rows("users"), rows("users"), rows("pendingTransactions"), rows("pendingLoans"),
+                const [users, joinRequests, pendingTransactions, pendingLoans, activeLoans, subscriptions, summary] = await Promise.all([
+                    rows("users"), rows("registrationRequests"), rows("pendingTransactions"), rows("pendingLoans"),
                     rows("activeLoans"), rows("subscriptions"), getSummaryData()
                 ]);
+                const pendingUserEmails = new Set(users
+                    .filter((item) => item.status === "pending")
+                    .map((item) => emailKey(item.email)));
                 return {
                     success: true,
                     stats: {
                         totalUsers: users.length,
-                        pendingRegistrations: registrations.filter((item) => item.status === "pending").length,
+                        pendingRegistrations: pendingUserEmails.size + joinRequests.filter((item) =>
+                            item.status === "pending" && !pendingUserEmails.has(emailKey(item.email))
+                        ).length,
                         pendingTransactions: pendingTransactions.length,
                         pendingLoans: pendingLoans.length,
                         activeLoans: activeLoans.filter((item) => item.status !== "paid_off").length,
@@ -555,9 +653,31 @@ async function handleAction(action, params, user) {
             requireAdmin(user);
             const email = emailKey(params.email);
             const ref = db.collection("users").doc(safeDocId(email));
-            const snapshot = await ref.get();
-            if (!snapshot.exists) throw new Error("Registration not found.");
-            await ref.update({ status: "approved", approved_by: name, approved_at: nowIso() });
+            const requestRef = db.collection("registrationRequests").doc(safeDocId(email));
+            const [snapshot, requestSnapshot] = await Promise.all([ref.get(), requestRef.get()]);
+            if (snapshot.exists) {
+                const updates = { status: "approved", approved_by: name, approved_at: nowIso() };
+                await Promise.all([
+                    ref.update(updates),
+                    ...(requestSnapshot.exists && requestSnapshot.data().status === "pending"
+                        ? [requestRef.update(updates)]
+                        : [])
+                ]);
+            } else if (requestSnapshot.exists && requestSnapshot.data().status === "pending") {
+                const request = requestSnapshot.data();
+                await ref.create({
+                    email,
+                    name: request.name,
+                    role: "member",
+                    status: "approved",
+                    created_at: request.created_at || nowIso(),
+                    approved_by: name,
+                    approved_at: nowIso()
+                });
+                await requestRef.update({ status: "approved", approved_by: name, approved_at: nowIso() });
+            } else {
+                throw new Error("Registration request not found.");
+            }
             await audit(name, "Approved registration", email);
             return { success: true };
         }
@@ -565,9 +685,21 @@ async function handleAction(action, params, user) {
             requireAdmin(user);
             const email = emailKey(params.email);
             const ref = db.collection("users").doc(safeDocId(email));
-            const snapshot = await ref.get();
-            if (!snapshot.exists) throw new Error("Registration not found.");
-            await ref.update({ status: "rejected", rejected_by: name, rejected_at: nowIso() });
+            const requestRef = db.collection("registrationRequests").doc(safeDocId(email));
+            const [snapshot, requestSnapshot] = await Promise.all([ref.get(), requestRef.get()]);
+            if (snapshot.exists) {
+                const updates = { status: "rejected", rejected_by: name, rejected_at: nowIso() };
+                await Promise.all([
+                    ref.update(updates),
+                    ...(requestSnapshot.exists && requestSnapshot.data().status === "pending"
+                        ? [requestRef.update(updates)]
+                        : [])
+                ]);
+            } else if (requestSnapshot.exists && requestSnapshot.data().status === "pending") {
+                await requestRef.update({ status: "rejected", rejected_by: name, rejected_at: nowIso() });
+            } else {
+                throw new Error("Registration request not found.");
+            }
             await audit(name, "Rejected registration", email);
             return { success: true };
         }
@@ -723,6 +855,47 @@ function getRequestHeader(req, name) {
     return Array.isArray(value) ? value[0] || "" : value || "";
 }
 
+async function submitJoinRequest(params) {
+    const name = String(params.name || "").trim();
+    const email = emailKey(params.email);
+    if (name.length < 2 || name.length > 80) throw new Error("Enter a name between 2 and 80 characters.");
+    if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new Error("Enter a valid email address.");
+    }
+
+    const userRef = db.collection("users").doc(safeDocId(email));
+    const requestRef = db.collection("registrationRequests").doc(safeDocId(email));
+    let alreadySubmitted = false;
+    await db.runTransaction(async (transaction) => {
+        const [userSnapshot, requestSnapshot] = await Promise.all([
+            transaction.get(userRef),
+            transaction.get(requestRef)
+        ]);
+        if (userSnapshot.exists) {
+            const status = userSnapshot.data().status;
+            throw new Error(status === "approved"
+                ? "This email already has an approved account. Please sign in with Google."
+                : "A registration for this email is already being reviewed.");
+        }
+        if (requestSnapshot.exists && requestSnapshot.data().status === "pending") {
+            alreadySubmitted = true;
+            return;
+        }
+        transaction.set(requestRef, {
+            email,
+            name,
+            status: "pending",
+            created_at: nowIso()
+        });
+    });
+    return {
+        success: true,
+        status: "pending",
+        alreadySubmitted,
+        message: "Your request has been sent to the group for review."
+    };
+}
+
 async function handleApiRequest(req, res) {
     const origin = getRequestHeader(req, "origin");
     const allowedOrigins = new Set([
@@ -744,6 +917,9 @@ async function handleApiRequest(req, res) {
         initializeFirebaseAdmin();
         const action = req.body && req.body.action;
         const params = req.body && typeof req.body === "object" ? req.body : {};
+        if (action === "submitJoinRequest") {
+            return sendJson(res, 200, await submitJoinRequest(params));
+        }
         const header = getRequestHeader(req, "authorization");
         const tokenMatch = header.match(/^Bearer\s+(.+)$/i);
         if (!tokenMatch) throw new Error("Authentication required");

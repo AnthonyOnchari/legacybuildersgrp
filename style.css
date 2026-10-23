@@ -2698,3 +2698,199 @@ body.finance-ui .login-box .register-link {
     body.finance-ui .login-form-area { padding-right: 18px; padding-left: 18px; }
     body.finance-ui .login-hero { padding-right: 18px; padding-left: 18px; }
 }
+
+body.finance-ui .login-create-btn {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid #D9DFEA;
+    border-radius: 8px;
+    background: #fff;
+    color: #263B67;
+    font-size: 14px;
+    font-weight: 700;
+}
+body.finance-ui .login-create-btn:hover { background: #F5F7FB; }
+body.finance-ui .memory-heading,
+body.finance-ui .group-chat-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+body.finance-ui .memory-heading h2,
+body.finance-ui .group-chat-heading h2 { flex: 1; }
+body.finance-ui .memory-heading button,
+body.finance-ui .group-refresh-btn {
+    width: auto;
+    min-height: 36px;
+    padding: 8px 13px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+body.finance-ui .memory-composer {
+    display: grid;
+    gap: 9px;
+    margin: 14px 0;
+    padding: 16px;
+    border: 1px solid #E2E8F3;
+    border-radius: 15px;
+    background: #F6F8FD;
+}
+body.finance-ui .memory-composer input[type="file"] { padding: 9px; }
+body.finance-ui .memory-composer label span { color: #858A90; font-weight: 400; }
+body.finance-ui .memory-composer-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 9px;
+}
+body.finance-ui .memory-composer-actions button { width: auto; padding: 9px 15px; }
+body.finance-ui .memory-composer-actions .memory-cancel-btn {
+    border: 1px solid #D9DFEA;
+    background: #fff;
+    color: #4A5568;
+}
+body.finance-ui .memory-upload-status {
+    min-height: 18px;
+    color: #5B6470;
+    font-size: 12px;
+}
+body.finance-ui .memory-empty-state {
+    padding: 18px;
+    border-radius: 14px;
+    background: #F6F8FD;
+    color: #727A85;
+    font-size: 13px;
+    text-align: center;
+}
+body.finance-ui .memories-carousel-wrapper { aspect-ratio: 16 / 9; }
+body.finance-ui .memory-slide {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    flex: 0 0 100%;
+    margin: 0;
+}
+body.finance-ui .memory-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+body.finance-ui .memory-slide figcaption {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: 28px 16px 13px;
+    background: linear-gradient(transparent, rgba(0,0,0,.68));
+    color: #fff;
+    font-size: 13px;
+}
+body.finance-ui .group-chat-heading { align-items: center; }
+body.finance-ui .group-chat-heading p {
+    margin: 4px 0 0;
+    color: #747B84;
+    font-size: 12px;
+}
+body.finance-ui .group-inbox-requests {
+    display: grid;
+    gap: 10px;
+    margin: 15px 0;
+}
+body.finance-ui .group-request-feed {
+    padding: 14px;
+    border: 1px solid #E1E8F6;
+    border-radius: 15px;
+    background: #F5F8FF;
+}
+body.finance-ui .group-request-feed h3 {
+    margin: 0 0 9px;
+    font-size: 14px;
+}
+body.finance-ui .group-request-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+    padding: 9px 0;
+    border-top: 1px solid #E4EAF5;
+    font-size: 12px;
+}
+body.finance-ui .group-request-item span,
+body.finance-ui .group-request-item time { color: #747B84; }
+body.finance-ui .group-messages {
+    display: flex;
+    max-height: min(55vh, 520px);
+    min-height: 180px;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    padding: 14px 0;
+}
+body.finance-ui .group-message {
+    max-width: min(88%, 700px);
+    align-self: flex-start;
+    padding: 11px 14px;
+    border: 1px solid #E7E9EE;
+    border-radius: 15px 15px 15px 5px;
+    background: #F4F5F7;
+}
+body.finance-ui .group-message.own-message {
+    align-self: flex-end;
+    border-color: #D8E2FF;
+    border-radius: 15px 15px 5px 15px;
+    background: #EAF0FF;
+}
+body.finance-ui .group-message-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+    color: #343A40;
+    font-size: 11px;
+}
+body.finance-ui .group-message-meta time { color: #858A90; font-size: 10px; }
+body.finance-ui .group-message p {
+    margin: 5px 0 0;
+    color: #25292D;
+    font-size: 13px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+body.finance-ui .group-message-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 10px;
+    padding-top: 13px;
+    border-top: 1px solid #E8EAEC;
+}
+body.finance-ui .group-message-form textarea {
+    min-height: 48px;
+    max-height: 140px;
+    resize: vertical;
+}
+body.finance-ui .group-message-form button {
+    width: auto;
+    min-width: 78px;
+    min-height: 44px;
+}
+body.finance-ui .group-message-form button:disabled { cursor: wait; }
+body.finance-ui .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+@media (max-width: 560px) {
+    body.finance-ui .memory-heading { flex-direction: column; }
+    body.finance-ui .memory-heading button { width: 100%; }
+    body.finance-ui .group-chat-heading { align-items: flex-start; }
+    body.finance-ui .group-message { max-width: 96%; }
+    body.finance-ui .group-message-form { grid-template-columns: minmax(0, 1fr) auto; }
+}

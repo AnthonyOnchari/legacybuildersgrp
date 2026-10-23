@@ -11,6 +11,10 @@ window.firebaseConfig = {
 };
 
 window.FIREBASE_API_URL = "/api";
+window.cloudinaryConfig = {
+    cloudName: "qopne8fk",
+    uploadPreset: "legacybuilders_unsigned"
+};
 
 if (!window.firebase) {
     window.firebaseInitializationError = new Error("Firebase SDK did not load. Check your internet connection and try again.");

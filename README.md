@@ -15,6 +15,14 @@ The web app config is in `firebase-config.js`. Its API key identifies the public
 
 The Vercel API allows `https://legacybuildersgroup.vercel.app` and localhost on port 3000 by default. Set the non-secret `ALLOWED_ORIGINS` environment variable in Vercel if the site uses another origin.
 
+## Cloudinary photos and group inbox
+
+Profile photos and shared group memories use direct unsigned Cloudinary uploads. Configure an unsigned upload preset named `legacybuilders_unsigned` in the `qopne8fk` Cloudinary account. Allow JPG, PNG, and WebP uploads, set the preset's maximum file size to 5 MB, and verify it honors the upload `folder` parameter. The app expects uploads under `legacy-builders/profiles/` and `legacy-builders/memories/`; it also checks the image size in the browser. The cloud name and preset name are public frontend settings in `firebase-config.js`; do not add a Cloudinary API secret there. `CLOUDINARY_CLOUD_NAME` is an optional Vercel environment variable if the backend should validate a different cloud name.
+
+Approved members can post memories and use the group inbox. Join requests contain only a name and email address and are visible to approved members; administrators can approve or reject them from Pending. Never request or send passwords in group messages.
+
+If a Cloudinary API secret was shared in a screenshot or message, rotate it in the Cloudinary dashboard. This integration does not need that secret.
+
 ## Non-destructive legacy data import
 
 The importer supports Excel exports with the existing tab names. Run it from the repository root after authenticating Firebase Admin SDK access for the target project:

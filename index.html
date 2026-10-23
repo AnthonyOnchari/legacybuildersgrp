@@ -45,6 +45,8 @@
                         <div class="register-link">
                             Sign in securely with your Google account.
                         </div>
+                        <div class="login-divider" aria-hidden="true"><span>OR</span></div>
+                        <button class="login-create-btn" type="button" onclick="showRegisterForm()">Request to join</button>
                     </div>
 
                     <!-- OTP FORM -->
@@ -73,15 +75,10 @@
                             <label>👤 Full Name</label>
                             <input type="text" id="registerName" placeholder="Enter your full name">
                         </div>
-                        <div class="login-form-group">
-                            <label>🔒 Password</label>
-                            <input type="password" id="registerPassword" placeholder="Create a password (min 6 characters)">
+                        <div class="register-link">
+                            The group will review your request. Sign in with Google after approval.
                         </div>
-                        <div class="login-form-group">
-                            <label>🔒 Confirm Password</label>
-                            <input type="password" id="registerConfirmPassword" placeholder="Confirm your password">
-                        </div>
-                        <button class="login-btn" onclick="registerUser()">Create Account</button>
+                        <button class="login-btn" onclick="registerUser(this)">Send request</button>
                         <div id="registerError" class="error-message"></div>
                         <div class="register-link">
                             Already have an account? <a onclick="showLoginForm()">Login here</a>
@@ -124,6 +121,7 @@
                 <button class="sidebar-link" data-panel="summary"><span class="tab-icon" aria-hidden="true">◷</span><span>Summary</span></button>
                 <button class="sidebar-link" data-panel="loans"><span class="tab-icon" aria-hidden="true">↗</span><span>Loans</span></button>
                 <button class="sidebar-link" data-panel="meetings"><span class="tab-icon" aria-hidden="true">▤</span><span>Meetings</span></button>
+                <button class="sidebar-link" data-panel="groupChat"><span class="tab-icon" aria-hidden="true">✉</span><span>Group inbox</span></button>
                 <button class="sidebar-link" data-panel="about"><span class="tab-icon" aria-hidden="true">◎</span><span>About Us</span></button>
                 <button class="sidebar-link" data-panel="pending" id="pendingSidebarLink" style="display: none;"><span class="tab-icon" aria-hidden="true">•</span><span>Pending</span><span id="pendingCountSidebar" class="pending-count"></span></button>
                 <button class="sidebar-link" data-panel="developer" id="developerSidebarLink" style="display: none;"><span class="tab-icon" aria-hidden="true">⚙</span><span>Dev Portal</span></button>
@@ -191,7 +189,22 @@
         <!-- Home Panel -->
         <div id="transactionsPanel" class="panel active-panel">
             <div class="card" id="memoriesCard" style="display:none;">
-                <h2>📸 Group Memories</h2>
+                <div class="memory-heading">
+                    <h2>Group memories</h2>
+                    <button type="button" class="memory-share-btn" onclick="toggleMemoryComposer()">Share a memory</button>
+                </div>
+                <div class="memory-composer" id="memoryComposer" style="display:none;">
+                    <label for="memoryPhotoInput">Photo</label>
+                    <input type="file" id="memoryPhotoInput" accept="image/jpeg,image/png,image/webp">
+                    <label for="memoryCaptionInput">Caption <span>(optional)</span></label>
+                    <input type="text" id="memoryCaptionInput" maxlength="200" placeholder="Add a caption to this memory">
+                    <div class="memory-composer-actions">
+                        <button type="button" class="memory-cancel-btn" onclick="toggleMemoryComposer(false)">Cancel</button>
+                        <button type="button" id="memorySubmitBtn" onclick="postGroupMemory()">Post photo</button>
+                    </div>
+                    <div class="memory-upload-status" id="memoryUploadStatus" role="status"></div>
+                </div>
+                <div class="memory-empty-state" id="memoryEmptyState">Share a group photo to start your memories.</div>
                 <div class="memories-carousel-wrapper">
                     <div class="memories-carousel" id="memoriesCarousel"></div>
                 </div>
@@ -289,6 +302,28 @@
             </div>
         </div>
 
+        <!-- Group Inbox -->
+        <div id="groupChatPanel" class="panel fullscreen-panel">
+            <div class="card">
+                <div class="group-chat-heading">
+                    <div>
+                        <h2>Group inbox</h2>
+                        <p>Share updates and discuss requests with approved members.</p>
+                    </div>
+                    <button type="button" class="group-refresh-btn" onclick="loadGroupMessages()">Refresh</button>
+                </div>
+                <div class="group-inbox-requests" id="groupInboxRequests"></div>
+                <div class="group-messages" id="groupMessages" aria-live="polite">
+                    <div class="empty-state">Loading group conversation...</div>
+                </div>
+                <form class="group-message-form" onsubmit="sendGroupMessage(event)">
+                    <label class="sr-only" for="groupMessageInput">Message to the group</label>
+                    <textarea id="groupMessageInput" maxlength="1000" rows="2" placeholder="Write a message to everyone..."></textarea>
+                    <button type="submit" id="groupMessageSendBtn">Send</button>
+                </form>
+            </div>
+        </div>
+
         <!-- Pending Panel -->
         <div id="pendingPanel" class="panel fullscreen-panel">
             <div class="card"><h2>⏳ Pending Approvals</h2><div id="pendingApprovalsList" class="loading-container"><div class="loading-spinner"></div><div>Loading pending approvals...</div></div></div>
@@ -367,6 +402,7 @@
         <button class="tab" data-panel="summary"><span class="tab-icon" aria-hidden="true">◷</span><span>Summary</span></button>
         <button class="tab" data-panel="loans"><span class="tab-icon" aria-hidden="true">↗</span><span>Loans</span></button>
         <button class="tab" data-panel="meetings"><span class="tab-icon" aria-hidden="true">▤</span><span>Meetings</span></button>
+        <button class="tab" data-panel="groupChat"><span class="tab-icon" aria-hidden="true">✉</span><span>Inbox</span></button>
         <button class="tab" data-panel="about"><span class="tab-icon" aria-hidden="true">◎</span><span>About</span></button>
         <button class="tab" data-panel="pending" id="pendingTab" style="display: none;"><span class="tab-icon" aria-hidden="true">•</span><span>Pending<span id="pendingCount" class="pending-count"></span></span></button>
         <button class="tab" data-panel="developer" id="developerTab" style="display: none;"><span class="tab-icon" aria-hidden="true">⚙</span><span>Dev</span></button>

@@ -347,7 +347,6 @@ async function completeLogin(name, email) {
     showHidePendingTab();
 
     showBalanceLoading(true);
-    initMemoriesCarousel();
     activateCurrentTab();
     const profileImageLoad = callAPI('getProfileImage', { email }).then(profileRes => {
         if (profileRes.success && profileRes.image) {
@@ -356,6 +355,8 @@ async function completeLogin(name, email) {
             updateHeaderAvatar();
         }
     });
+    loadGroupMemories();
+    loadGroupMessages();
     await Promise.all([
         loadAllData(),
         profileImageLoad,
@@ -376,6 +377,8 @@ async function completeLogin(name, email) {
     refreshInterval = setInterval(() => {
         if (currentUser) {
             loadAllData(true);
+            loadGroupMessages();
+            loadGroupMemories();
             loadScheduledMeeting();
             loadMembersList();
         }
@@ -437,14 +440,35 @@ function showHidePendingTab() {
 // ============================================================
 // REGISTRATION
 // ============================================================
-async function registerUser() {
+async function submitJoinRequest(name, email) {
+    let response;
+    try {
+        response = await fetch(window.FIREBASE_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'submitJoinRequest', name, email })
+        });
+    } catch (error) {
+        throw new Error(`Could not send your request: ${error.message}`);
+    }
+    let result;
+    try {
+        result = await response.json();
+    } catch {
+        throw new Error(`The server returned an invalid response (HTTP ${response.status}).`);
+    }
+    if (!response.ok || !result.success) {
+        throw new Error(result.error || `Request failed (HTTP ${response.status}).`);
+    }
+    return result;
+}
+
+async function registerUser(button) {
     const email = document.getElementById('registerEmail').value.trim();
     const name = document.getElementById('registerName').value.trim();
-    const password = document.getElementById('registerPassword').value;
-    const confirmPassword = document.getElementById('registerConfirmPassword').value;
     const errorEl = document.getElementById('registerError');
     errorEl.style.display = 'none';
-    if (!email || !name || !password || !confirmPassword) {
+    if (!email || !name) {
         errorEl.textContent = 'Please fill all fields';
         errorEl.style.display = 'block';
         return;
@@ -454,42 +478,21 @@ async function registerUser() {
         errorEl.style.display = 'block';
         return;
     }
-    if (password.length < 6) {
-        errorEl.textContent = 'Password must be at least 6 characters';
-        errorEl.style.display = 'block';
-        return;
-    }
-    if (password !== confirmPassword) {
-        errorEl.textContent = 'Passwords do not match';
-        errorEl.style.display = 'block';
-        return;
-    }
-    const btn = event.target;
+    const btn = button || document.querySelector('#registerForm .login-btn');
     const orig = btn.innerHTML;
-    showButtonLoading(btn, 'Creating account...');
+    showButtonLoading(btn, 'Sending request...');
     try {
-        const res = await callAPI('register', { email, name, password });
-        if (res.success) {
-            if (res.status === 'pending') {
-                showToast('Registration submitted! Waiting for approval.', 'success');
-            } else {
-                showToast('Account created successfully! Please login.', 'success');
-            }
-            showLoginForm();
-            document.getElementById('loginEmail').value = email;
-            document.getElementById('registerEmail').value = '';
-            document.getElementById('registerName').value = '';
-            document.getElementById('registerPassword').value = '';
-            document.getElementById('registerConfirmPassword').value = '';
-        } else {
-            errorEl.textContent = res.error || 'Registration failed';
-            errorEl.style.display = 'block';
-        }
+        await submitJoinRequest(name, email);
+        showToast('Your request was sent to the group for review.', 'success');
+        showLoginForm();
+        document.getElementById('registerEmail').value = '';
+        document.getElementById('registerName').value = '';
     } catch (e) {
-        errorEl.textContent = 'Error connecting to server';
+        errorEl.textContent = e.message || 'Could not send your request.';
         errorEl.style.display = 'block';
+    } finally {
+        hideButtonLoading(btn, orig);
     }
-    hideButtonLoading(btn, orig);
 }
 
 // ============================================================
@@ -634,18 +637,21 @@ async function loadDevPendingRegistrations() {
     try {
         const res = await callAPI('getPendingRegistrations', { email: currentUserEmail });
         if (res.success && res.registrations) {
-            if (res.registrations.length === 0) {
+            const registrations = [...res.registrations, ...(res.joinRequests || []).filter(request =>
+                !res.registrations.some(registration => registration.email.toLowerCase() === request.email.toLowerCase())
+            )];
+            if (registrations.length === 0) {
                 container.innerHTML = '<div class="empty-state">No pending registrations</div>';
                 return;
             }
-            container.innerHTML = res.registrations.map(reg => `
+            container.innerHTML = registrations.map(reg => `
                 <div class="pending-item" style="background: #FFF8E1; border-left: 4px solid #FF9800;">
                     <div><strong>👤 ${escapeHtml(reg.name)}</strong></div>
                     <div>📧 ${escapeHtml(reg.email)}</div>
-                    <div>📅 ${new Date(reg.created_at).toLocaleDateString()}</div>
+                    <div>📅 ${reg.created_at ? new Date(reg.created_at).toLocaleDateString() : ''}</div>
                     <div style="margin-top: 10px; display: flex; gap: 8px;">
-                        <button class="approve-btn" onclick="approveRegistration('${reg.email}')">✅ Approve</button>
-                        <button class="reject-btn" onclick="rejectRegistration('${reg.email}')">❌ Reject</button>
+                        <button class="approve-btn" onclick="approveRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')">✅ Approve</button>
+                        <button class="reject-btn" onclick="rejectRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')">❌ Reject</button>
                     </div>
                 </div>
             `).join('');
@@ -710,14 +716,17 @@ async function deleteUser(email) {
 }
 
 async function approveRegistration(email) {
-    if (!confirm(`Approve ${email}?`)) return;
     try {
+        email = decodeURIComponent(email);
+        if (!confirm(`Approve ${email}?`)) return;
         const res = await callAPI('approveRegistration', { email, approvedBy: currentUser });
         if (res.success) {
             showToast(`✅ ${email} approved!`, 'success');
             await loadDevPendingRegistrations();
             await loadPendingRegistrations();
             await loadAllUsersFull();
+            await loadGroupMessages();
+            if (isDeveloper()) await loadSystemStats();
         } else {
             showToast(res.error || 'Error approving', 'error');
         }
@@ -727,14 +736,17 @@ async function approveRegistration(email) {
 }
 
 async function rejectRegistration(email) {
-    if (!confirm(`Reject ${email}?`)) return;
     try {
+        email = decodeURIComponent(email);
+        if (!confirm(`Reject ${email}?`)) return;
         const res = await callAPI('rejectRegistration', { email, rejectedBy: currentUser });
         if (res.success) {
             showToast(`❌ ${email} rejected`, 'success');
             await loadDevPendingRegistrations();
             await loadPendingRegistrations();
             await loadAllUsersFull();
+            await loadGroupMessages();
+            if (isDeveloper()) await loadSystemStats();
         } else {
             showToast(res.error || 'Error rejecting', 'error');
         }
@@ -791,18 +803,21 @@ async function loadPendingRegistrations() {
     try {
         const res = await callAPI('getPendingRegistrations', { email: currentUserEmail });
         if (res.success && res.registrations) {
-            if (res.registrations.length === 0) {
+            const registrations = [...res.registrations, ...(res.joinRequests || []).filter(request =>
+                !res.registrations.some(registration => registration.email.toLowerCase() === request.email.toLowerCase())
+            )];
+            if (registrations.length === 0) {
                 container.innerHTML = '<div class="empty-state">No pending registrations</div>';
                 return;
             }
-            container.innerHTML = res.registrations.map(reg => `
+            container.innerHTML = registrations.map(reg => `
                 <div class="pending-item" style="background: #FFF8E1; border-left: 4px solid #FF9800;">
                     <div><strong>👤 ${escapeHtml(reg.name)}</strong></div>
                     <div>📧 ${escapeHtml(reg.email)}</div>
-                    <div>📅 ${new Date(reg.created_at).toLocaleDateString()}</div>
+                    <div>📅 ${reg.created_at ? new Date(reg.created_at).toLocaleDateString() : ''}</div>
                     <div style="margin-top: 10px; display: flex; gap: 8px;">
-                        <button class="approve-btn" onclick="approveRegistration('${reg.email}')">✅ Approve</button>
-                        <button class="reject-btn" onclick="rejectRegistration('${reg.email}')">❌ Reject</button>
+                        <button class="approve-btn" onclick="approveRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')">✅ Approve</button>
+                        <button class="reject-btn" onclick="rejectRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')">❌ Reject</button>
                     </div>
                 </div>
             `).join('');
@@ -1620,6 +1635,7 @@ function renderMembersList(members) {
         const initial = getInitials(member.name);
         const isTreas = member.name === TREASURER_NAME;
         const memberStats = getUserStats(member.name);
+        if (member.image && member.email) memberPhotoCache[member.email.toLowerCase()] = member.image;
         const cachedPhoto = memberPhotoCache[member.email?.toLowerCase()];
         const avatarContent = cachedPhoto ? `<img src="${cachedPhoto}" alt="${escapeHtml(member.name)}">` : initial;
         return `<div class="member-card" onclick="viewMemberProfile('${escapeHtml(member.name)}', '${escapeHtml(member.email || '')}')">
@@ -1893,21 +1909,60 @@ function getProfileImage() {
     return userProfileImage || localStorage.getItem(`legacy_profile_image_${(currentUserEmail || '').toLowerCase()}`) || null;
 }
 
+const MAX_CLOUDINARY_IMAGE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_CLOUDINARY_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+async function uploadBlobToCloudinary(blob, filename, folder) {
+    const config = window.cloudinaryConfig || {};
+    if (!config.cloudName || !config.uploadPreset) throw new Error('Cloudinary upload preset is not configured.');
+    if (!ALLOWED_CLOUDINARY_IMAGE_TYPES.has(blob.type)) throw new Error('Choose a JPG, PNG, or WebP image.');
+    if (blob.size > MAX_CLOUDINARY_IMAGE_SIZE) throw new Error('Choose an image smaller than 5 MB.');
+
+    const formData = new FormData();
+    formData.append('file', blob, filename);
+    formData.append('upload_preset', config.uploadPreset);
+    formData.append('folder', `legacy-builders/${folder}`);
+    let response;
+    try {
+        response = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(config.cloudName)}/image/upload`, {
+            method: 'POST',
+            body: formData
+        });
+    } catch (error) {
+        throw new Error(`Could not reach Cloudinary: ${error.message}`);
+    }
+    let result;
+    try {
+        result = await response.json();
+    } catch {
+        throw new Error(`Cloudinary returned an invalid response (HTTP ${response.status}).`);
+    }
+    if (!response.ok || !result.secure_url || !result.public_id) {
+        throw new Error(result.error?.message || `Cloudinary upload failed (HTTP ${response.status}).`);
+    }
+    if (!result.public_id.startsWith(`legacy-builders/${folder}/`)) {
+        throw new Error('Cloudinary preset did not save the photo in the expected folder.');
+    }
+    return { image: result.secure_url, publicId: result.public_id };
+}
+
 async function saveProfileImageToServer(imageData) {
     try {
-        const res = await callAPI('saveProfileImage', { email: currentUserEmail, image: imageData });
-        if (res.success) {
-            userProfileImage = imageData;
-            localStorage.setItem(`legacy_profile_image_${currentUserEmail.toLowerCase()}`, imageData);
-            updateHeaderAvatar();
-            loadMembersList();
-            return true;
-        } else {
-            showToast(res.error || 'Failed to save profile photo', 'error');
-            return false;
-        }
-    } catch (e) {
-        showToast('Error saving profile photo: ' + e.message, 'error');
+        const blob = await (await fetch(imageData)).blob();
+        const uploaded = await uploadBlobToCloudinary(blob, 'profile.jpg', 'profiles');
+        const res = await callAPI('saveProfileImage', {
+            email: currentUserEmail,
+            image: uploaded.image,
+            publicId: uploaded.publicId
+        });
+        if (!res.success) throw new Error(res.error || 'Failed to save profile photo.');
+        userProfileImage = uploaded.image;
+        localStorage.setItem(`legacy_profile_image_${currentUserEmail.toLowerCase()}`, userProfileImage);
+        updateHeaderAvatar();
+        loadMembersList();
+        return true;
+    } catch (error) {
+        showToast(error.message || 'Error saving profile photo.', 'error');
         return false;
     }
 }
@@ -1942,7 +1997,7 @@ async function handleProfileImageUpload(event) {
             const success = await saveProfileImageToServer(compressedData);
             if (success) {
                 const avatar = document.getElementById('profileAvatar');
-                if (avatar) avatar.innerHTML = `<img src="${compressedData}" alt="${currentUser}"><div class="avatar-overlay"><span class="camera-icon">📷</span><span>Change Photo</span></div>`;
+                if (avatar) avatar.innerHTML = `<img src="${getProfileImage()}" alt="${escapeHtml(currentUser)}"><div class="avatar-overlay"><span class="camera-icon">📷</span><span>Change Photo</span></div>`;
                 progressFill.style.width = '100%';
                 statusEl.textContent = '✅ Done!';
                 setTimeout(() => { progressEl.classList.remove('active'); progressFill.style.width = '0%'; }, 1500);
@@ -2253,6 +2308,7 @@ const PANEL_TITLES = {
     loans: '💰 Loans',
     meetings: '📝 Meetings',
     pending: '⏳ Pending Approvals',
+    groupChat: '✉ Group Inbox',
     about: '👥 About Us',
     developer: '🛠️ Developer Portal'
 };
@@ -2290,21 +2346,45 @@ function activateTab(tabId) {
 // ============================================================
 // MEMORIES CAROUSEL
 // ============================================================
-const GROUP_MEMORY_PHOTOS = [];
+let GROUP_MEMORY_PHOTOS = [];
 let memoriesIndex = 0, memoriesInterval = null;
+
+async function loadGroupMemories() {
+    const res = await callAPI('getGroupMemories');
+    if (!res.success || !Array.isArray(res.memories)) {
+        const card = document.getElementById('memoriesCard');
+        const track = document.getElementById('memoriesCarousel');
+        const dots = document.getElementById('memoriesDots');
+        const empty = document.getElementById('memoryEmptyState');
+        if (card) card.style.display = 'block';
+        if (track) track.parentElement.style.display = 'none';
+        if (dots) dots.innerHTML = '';
+        if (empty) {
+            empty.style.display = 'block';
+            empty.textContent = res.error || 'Group memories could not be loaded.';
+        }
+        return;
+    }
+    GROUP_MEMORY_PHOTOS = res.memories;
+    initMemoriesCarousel();
+}
 
 function initMemoriesCarousel() {
     const card = document.getElementById('memoriesCard');
     const track = document.getElementById('memoriesCarousel');
     const dotsWrap = document.getElementById('memoriesDots');
-    if (!card || !track || !dotsWrap) return;
-    if (!GROUP_MEMORY_PHOTOS.length) {
-        card.style.display = 'none';
-        if (memoriesInterval) { clearInterval(memoriesInterval); memoriesInterval = null; }
-        return;
-    }
+    const emptyState = document.getElementById('memoryEmptyState');
+    if (!card || !track || !dotsWrap || !emptyState) return;
     card.style.display = 'block';
-    track.innerHTML = GROUP_MEMORY_PHOTOS.map(p => `<img src="${p.url}" alt="${escapeHtml(p.caption || 'Group memory')}" loading="lazy">`).join('');
+    if (!GROUP_MEMORY_PHOTOS.length) emptyState.textContent = 'Share a group photo to start your memories.';
+    emptyState.style.display = GROUP_MEMORY_PHOTOS.length ? 'none' : 'block';
+    track.parentElement.style.display = GROUP_MEMORY_PHOTOS.length ? 'block' : 'none';
+    track.innerHTML = GROUP_MEMORY_PHOTOS.map(photo => `
+        <figure class="memory-slide">
+            <img src="${escapeHtml(photo.image)}" alt="Group memory" loading="lazy">
+            ${photo.caption ? `<figcaption>${escapeHtml(photo.caption)}</figcaption>` : ''}
+        </figure>
+    `).join('');
     dotsWrap.innerHTML = GROUP_MEMORY_PHOTOS.map((_, i) => `<span class="memories-dot${i === 0 ? ' active' : ''}"></span>`).join('');
     memoriesIndex = 0; updateMemoriesPosition();
     if (memoriesInterval) clearInterval(memoriesInterval);
@@ -2313,10 +2393,122 @@ function initMemoriesCarousel() {
     }
 }
 
+function toggleMemoryComposer(forceOpen) {
+    const composer = document.getElementById('memoryComposer');
+    if (!composer) return;
+    const open = typeof forceOpen === 'boolean' ? forceOpen : composer.style.display === 'none';
+    composer.style.display = open ? 'block' : 'none';
+    if (!open) {
+        document.getElementById('memoryPhotoInput').value = '';
+        document.getElementById('memoryCaptionInput').value = '';
+        document.getElementById('memoryUploadStatus').textContent = '';
+    }
+}
+
+async function postGroupMemory() {
+    const input = document.getElementById('memoryPhotoInput');
+    const captionInput = document.getElementById('memoryCaptionInput');
+    const status = document.getElementById('memoryUploadStatus');
+    const button = document.getElementById('memorySubmitBtn');
+    const file = input.files && input.files[0];
+    if (!file) {
+        status.textContent = 'Choose a photo to share.';
+        return;
+    }
+    button.disabled = true;
+    status.textContent = 'Uploading photo...';
+    try {
+        const uploaded = await uploadBlobToCloudinary(file, file.name, 'memories');
+        status.textContent = 'Saving memory...';
+        const res = await callAPI('saveGroupMemory', {
+            image: uploaded.image,
+            publicId: uploaded.publicId,
+            caption: captionInput.value.trim()
+        });
+        if (!res.success) throw new Error(res.error || 'Could not save this memory.');
+        GROUP_MEMORY_PHOTOS.unshift(res.memory);
+        GROUP_MEMORY_PHOTOS = GROUP_MEMORY_PHOTOS.slice(0, 50);
+        initMemoriesCarousel();
+        toggleMemoryComposer(false);
+        showToast('Memory shared with the group.', 'success');
+    } catch (error) {
+        status.textContent = error.message;
+        showToast(error.message, 'error');
+    } finally {
+        button.disabled = false;
+    }
+}
+
 function updateMemoriesPosition() {
     const track = document.getElementById('memoriesCarousel');
     if (track) track.style.transform = `translateX(-${memoriesIndex * 100}%)`;
     document.querySelectorAll('.memories-dot').forEach((dot, i) => dot.classList.toggle('active', i === memoriesIndex));
+}
+
+async function loadGroupMessages() {
+    const container = document.getElementById('groupMessages');
+    if (!container) return;
+    const res = await callAPI('getGroupMessages');
+    if (!res.success) {
+        const requestContainer = document.getElementById('groupInboxRequests');
+        if (requestContainer) requestContainer.innerHTML = '';
+        container.innerHTML = `<div class="empty-state">${escapeHtml(res.error || 'Could not load group messages.')}</div>`;
+        return;
+    }
+
+    const requests = Array.isArray(res.joinRequests) ? res.joinRequests : [];
+    const requestContainer = document.getElementById('groupInboxRequests');
+    requestContainer.innerHTML = requests.length ? `
+        <section class="group-request-feed">
+            <h3>Requests to join</h3>
+            ${requests.map(request => `
+                <article class="group-request-item">
+                    <strong>${escapeHtml(request.name)}</strong>
+                    <span>${escapeHtml(request.email)}</span>
+                    <time>${request.created_at ? new Date(request.created_at).toLocaleDateString() : ''}</time>
+                </article>
+            `).join('')}
+        </section>
+    ` : '';
+
+    const messages = Array.isArray(res.messages) ? res.messages : [];
+    if (!messages.length) {
+        container.innerHTML = '<div class="empty-state">No messages yet. Start the group conversation.</div>';
+        return;
+    }
+    container.innerHTML = messages.map(message => `
+        <article class="group-message${message.email === currentUserEmail ? ' own-message' : ''}">
+            <div class="group-message-meta">
+                <strong>${escapeHtml(message.member || 'Group member')}</strong>
+                <time>${message.created_at ? new Date(message.created_at).toLocaleString() : ''}</time>
+            </div>
+            <p>${escapeHtml(message.message)}</p>
+        </article>
+    `).join('');
+    container.scrollTop = container.scrollHeight;
+}
+
+async function sendGroupMessage(event) {
+    event.preventDefault();
+    const input = document.getElementById('groupMessageInput');
+    const button = document.getElementById('groupMessageSendBtn');
+    const message = input.value.trim();
+    if (!message) return;
+    if (message.length > 1000) {
+        showToast('Messages must be 1,000 characters or fewer.', 'error');
+        return;
+    }
+    button.disabled = true;
+    try {
+        const res = await callAPI('sendGroupMessage', { message });
+        if (!res.success) throw new Error(res.error || 'Could not send the message.');
+        input.value = '';
+        await loadGroupMessages();
+    } catch (error) {
+        showToast(error.message, 'error');
+    } finally {
+        button.disabled = false;
+    }
 }
 
 // ============================================================
