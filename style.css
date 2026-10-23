@@ -2660,32 +2660,6 @@ body.finance-ui .login-box .register-link {
     margin-top: 13px;
     font-size: 13px;
 }
-body.finance-ui .login-divider {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 19px 0;
-    color: #8A8D91;
-    font-size: 11px;
-    font-weight: 600;
-}
-body.finance-ui .login-divider::before,
-body.finance-ui .login-divider::after {
-    height: 1px;
-    flex: 1;
-    background: #DADDE1;
-    content: "";
-}
-body.finance-ui .login-create-btn {
-    width: auto;
-    min-height: 45px;
-    padding: 0 20px;
-    border-radius: 6px;
-    background: #42B72A;
-    font-size: 15px;
-    font-weight: 700;
-}
-body.finance-ui .login-create-btn:hover { background: #36A420; }
 @media (max-width: 700px) {
     body.finance-ui .login-overlay {
         align-items: start;
