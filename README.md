@@ -1,18 +1,19 @@
 # Legacy Builders Group
 
-The app uses Firebase Authentication (Google sign-in), Cloud Firestore, and a Firebase HTTPS function. The old Apps Script proxy is removed; the Google Sheet and the supplied Excel workbook are not modified by the app or importer.
+The app uses Firebase Authentication (Google sign-in), Cloud Firestore, and a Vercel serverless API backed by the Firebase Admin SDK. The old Apps Script proxy is removed; the Google Sheet and the supplied Excel workbook are not modified by the app or importer.
 
-## Firebase setup
+## Deployment setup
 
 1. In Firebase project `legacy-builders-group`, confirm Google is enabled under Authentication → Sign-in method.
 2. Add the deployed website hostname under Authentication → Settings → Authorized domains.
 3. Create a Cloud Firestore database in Native mode.
-4. Install Firebase CLI, sign in with an account authorized for this project, and run `firebase deploy --only firestore:rules,functions`.
-5. Firebase Functions deployment may require a billing plan that supports Cloud Functions. Deploy the function, then import and verify the data **before publishing this frontend or allowing members to sign in**. Import first so existing Gmail accounts receive migrated roles and approvals instead of starting as pending registrations.
+4. In Google Cloud IAM, create a service account for the app and grant it the **Cloud Datastore User** role for Firestore access. Create a JSON key and store it securely; never commit or share the key. Firebase Authentication ID tokens are verified against Google's signing certificates.
+5. In Vercel Project Settings → Environment Variables, add `FIREBASE_SERVICE_ACCOUNT` with the full service-account JSON as its value for Production and Preview. Redeploy after adding it. The Vercel `/api` endpoint uses this credential to verify Firebase ID tokens and access Firestore.
+6. Deploy Firestore rules with `firebase deploy --only firestore:rules --project legacy-builders-group`. Import and verify legacy data **before allowing members to sign in** so existing Gmail accounts receive migrated roles and approvals instead of starting as pending registrations.
 
 The web app config is in `firebase-config.js`. Its API key identifies the public web app; restrict it to the website's authorized referrers in Google Cloud. Never put service-account credentials in frontend files or commit them to this repository.
 
-The HTTPS function allows `https://legacybuildersgroup.vercel.app` and localhost on port 3000 by default. Set the non-secret `ALLOWED_ORIGINS` environment variable in the Functions deployment if the site uses another origin.
+The Vercel API allows `https://legacybuildersgroup.vercel.app` and localhost on port 3000 by default. Set the non-secret `ALLOWED_ORIGINS` environment variable in Vercel if the site uses another origin.
 
 ## Non-destructive legacy data import
 
@@ -29,4 +30,4 @@ For `--commit`, authenticate the local Firebase Admin SDK with Google Applicatio
 
 Legacy `Users` rows are matched by Gmail address. Password columns are deliberately excluded; users sign in with Google using the same email. Existing users without a status are imported as approved, and the configured developer email retains developer role. A new account not included in the import becomes a pending registration at first Google sign-in.
 
-Cloud Functions derive identity and roles from verified Firebase ID tokens and Firestore profiles. Browser clients are denied direct Firestore reads and writes by `firestore.rules`.
+The Vercel API derives identity and roles from verified Firebase ID tokens and Firestore profiles. Browser clients are denied direct Firestore reads and writes by `firestore.rules`.

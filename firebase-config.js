@@ -10,7 +10,7 @@ window.firebaseConfig = {
     measurementId: "G-XWVK9P2F6K"
 };
 
-window.FIREBASE_API_URL = "https://us-central1-legacy-builders-group.cloudfunctions.net/api";
+window.FIREBASE_API_URL = "/api";
 
 if (!window.firebase) {
     window.firebaseInitializationError = new Error("Firebase SDK did not load. Check your internet connection and try again.");
