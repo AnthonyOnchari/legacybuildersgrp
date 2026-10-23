@@ -13,6 +13,7 @@ let userProfileImage = null;
 let isLoading = false, chartInstance = null;
 const memberPhotoCache = {};
 let serviceWorkerRegistered = false, pushSubscription = null;
+const countUpFrames = new WeakMap();
 
 // ============================================================
 // UTILITY FUNCTIONS
@@ -580,16 +581,24 @@ async function loadSystemStats() {
             const s = res.stats;
             container.innerHTML = `
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
-                    <div class="summary-stat" style="background: #E8EEFF;"><div class="summary-stat-value">${s.totalUsers}</div><div class="summary-stat-label">Total Users</div></div>
-                    <div class="summary-stat" style="background: #FFF8E1;"><div class="summary-stat-value">${s.pendingRegistrations}</div><div class="summary-stat-label">Pending Registrations</div></div>
-                    <div class="summary-stat" style="background: #E1F7EC;"><div class="summary-stat-value">${s.pendingTransactions}</div><div class="summary-stat-label">Pending Transactions</div></div>
-                    <div class="summary-stat" style="background: #FBE2E2;"><div class="summary-stat-value">${s.pendingLoans}</div><div class="summary-stat-label">Pending Loans</div></div>
-                    <div class="summary-stat" style="background: #E8EEFF;"><div class="summary-stat-value">${s.activeLoans}</div><div class="summary-stat-label">Active Loans</div></div>
-                    <div class="summary-stat" style="background: #E1F7EC;"><div class="summary-stat-value">KES ${(s.totalSavings || 0).toLocaleString()}</div><div class="summary-stat-label">Total Savings</div></div>
-                    <div class="summary-stat" style="background: #FBE2E2;"><div class="summary-stat-value">KES ${(s.outstandingLoans || 0).toLocaleString()}</div><div class="summary-stat-label">Outstanding Loans</div></div>
-                    <div class="summary-stat" style="background: #E8EEFF;"><div class="summary-stat-value">${s.pushSubscriptions}</div><div class="summary-stat-label">Push Subscriptions</div></div>
+                    <div class="summary-stat"><div class="summary-stat-value" id="devStatUsers" data-target="0">0</div><div class="summary-stat-label">Total Users</div></div>
+                    <div class="summary-stat"><div class="summary-stat-value" id="devStatRegistrations" data-target="0">0</div><div class="summary-stat-label">Pending Registrations</div></div>
+                    <div class="summary-stat"><div class="summary-stat-value" id="devStatTransactions" data-target="0">0</div><div class="summary-stat-label">Pending Transactions</div></div>
+                    <div class="summary-stat"><div class="summary-stat-value" id="devStatLoans" data-target="0">0</div><div class="summary-stat-label">Pending Loans</div></div>
+                    <div class="summary-stat"><div class="summary-stat-value" id="devStatActiveLoans" data-target="0">0</div><div class="summary-stat-label">Active Loans</div></div>
+                    <div class="summary-stat"><div class="summary-stat-value" id="devStatSavings" data-target="0">KES 0</div><div class="summary-stat-label">Total Savings</div></div>
+                    <div class="summary-stat"><div class="summary-stat-value" id="devStatOutstanding" data-target="0">KES 0</div><div class="summary-stat-label">Outstanding Loans</div></div>
+                    <div class="summary-stat"><div class="summary-stat-value" id="devStatSubscriptions" data-target="0">0</div><div class="summary-stat-label">Push Subscriptions</div></div>
                 </div>
             `;
+            animateCountUp(document.getElementById('devStatUsers'), s.totalUsers, '');
+            animateCountUp(document.getElementById('devStatRegistrations'), s.pendingRegistrations, '');
+            animateCountUp(document.getElementById('devStatTransactions'), s.pendingTransactions, '');
+            animateCountUp(document.getElementById('devStatLoans'), s.pendingLoans, '');
+            animateCountUp(document.getElementById('devStatActiveLoans'), s.activeLoans, '');
+            animateCountUp(document.getElementById('devStatSavings'), s.totalSavings || 0);
+            animateCountUp(document.getElementById('devStatOutstanding'), s.outstandingLoans || 0);
+            animateCountUp(document.getElementById('devStatSubscriptions'), s.pushSubscriptions, '');
         }
     } catch (e) {
         container.innerHTML = '<div class="empty-state">Error loading stats</div>';
@@ -933,24 +942,37 @@ function renderWalletBalance() {
 function animateCountUp(el, newValue, prefix = 'KES ') {
     if (!el) return;
     const prevTarget = Number(el.getAttribute('data-target') || 0);
-    const target = Number(newValue) || 0;
+    const value = Number(newValue);
+    const target = Number.isFinite(value) ? value : 0;
+    const from = Number.isFinite(prevTarget) ? prevTarget : 0;
     el.setAttribute('data-target', target);
+    const activeFrame = countUpFrames.get(el);
+    if (activeFrame) cancelAnimationFrame(activeFrame);
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        el.innerHTML = `${prefix}${target.toLocaleString('en-KE')}`;
+        countUpFrames.delete(el);
+        el.textContent = `${prefix}${target.toLocaleString('en-KE')}`;
         return;
     }
-    const duration = 700;
+    if (from === target) {
+        countUpFrames.delete(el);
+        el.textContent = `${prefix}${target.toLocaleString('en-KE')}`;
+        return;
+    }
+    const duration = 1050;
     const start = performance.now();
-    const from = isFinite(prevTarget) ? prevTarget : 0;
     function tick(now) {
         const elapsed = now - start;
         const progress = Math.min(elapsed / duration, 1);
         const eased = 1 - Math.pow(1 - progress, 4);
         const current = Math.round(from + (target - from) * eased);
-        el.innerHTML = `${prefix}${current.toLocaleString('en-KE')}`;
-        if (progress < 1) requestAnimationFrame(tick);
+        el.textContent = `${prefix}${current.toLocaleString('en-KE')}`;
+        if (progress < 1) {
+            countUpFrames.set(el, requestAnimationFrame(tick));
+        } else {
+            countUpFrames.delete(el);
+        }
     }
-    requestAnimationFrame(tick);
+    countUpFrames.set(el, requestAnimationFrame(tick));
 }
 
 function toggleWalletScopeMenu() {
@@ -961,6 +983,9 @@ function toggleWalletScopeMenu() {
 function setWalletScope(scope) {
     walletScope = scope;
     document.getElementById('walletScopeLabel').textContent = scope === 'mine' ? '👤 Mine' : '🧺 Group';
+    document.getElementById('walletBalanceLabel').textContent = scope === 'mine'
+        ? 'Your savings balance'
+        : 'Available group balance';
     document.getElementById('walletScopeMenu').style.display = 'none';
     renderWalletBalance();
 }
@@ -1723,11 +1748,11 @@ function updateAboutStats() {
     const membersEl = document.getElementById('aboutStatMembers');
     const savingsEl = document.getElementById('aboutStatSavings');
     const txnsEl = document.getElementById('aboutStatTxns');
-    if (membersEl) membersEl.textContent = allMembersData.length || 0;
-    if (txnsEl) txnsEl.textContent = allRecords.length || 0;
+    if (membersEl) animateCountUp(membersEl, allMembersData.length, '');
+    if (txnsEl) animateCountUp(txnsEl, allRecords.length, '');
     if (savingsEl) {
         const totalSaved = allRecords.filter(r => r.type === 'Savings').reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
-        savingsEl.textContent = totalSaved >= 1000 ? `${(totalSaved / 1000).toFixed(1)}K` : totalSaved.toLocaleString('en-KE');
+        animateCountUp(savingsEl, totalSaved);
     }
 }
 
@@ -2036,9 +2061,9 @@ function renderChart(summary) {
     const repaid = summary.repaid || 0;
     const net = savings - loans + repaid;
 
-    document.getElementById('summaryStatAvailable').textContent = `KES ${savings.toLocaleString('en-KE')}`;
-    document.getElementById('summaryStatOutstanding').textContent = `KES ${(summary.outstanding || 0).toLocaleString('en-KE')}`;
-    document.getElementById('summaryStatInterest').textContent = `KES ${(summary.interestEarned || 0).toLocaleString('en-KE')}`;
+    animateCountUp(document.getElementById('summaryStatAvailable'), savings);
+    animateCountUp(document.getElementById('summaryStatOutstanding'), summary.outstanding || 0);
+    animateCountUp(document.getElementById('summaryStatInterest'), summary.interestEarned || 0);
 
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
     const ctx = canvas.getContext('2d');
