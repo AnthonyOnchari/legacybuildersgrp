@@ -391,13 +391,6 @@ function showHideDeveloperPortal() {
                   currentUserRole === 'developer' ||
                   localStorage.getItem('legacy_current_role') === 'developer';
     
-    console.log('🔍 Checking developer status:', {
-        email: currentUserEmail,
-        role: currentUserRole,
-        storedRole: localStorage.getItem('legacy_current_role'),
-        isDev: isDev
-    });
-    
     const devTab = document.getElementById('developerTab');
     const devSidebar = document.getElementById('developerSidebarLink');
     const devPanel = document.getElementById('developerPanel');
@@ -407,17 +400,14 @@ function showHideDeveloperPortal() {
         if (devTab) {
             devTab.style.display = 'flex';
             devTab.style.visibility = 'visible';
-            console.log('✅ Developer tab shown');
         }
         if (devSidebar) {
             devSidebar.style.display = 'flex';
             devSidebar.style.visibility = 'visible';
-            console.log('✅ Developer sidebar shown');
         }
         if (devPanel) {
             devPanel.style.display = 'block';
             devPanel.style.visibility = 'visible';
-            console.log('✅ Developer panel shown');
             // Load developer content
             if (typeof loadDeveloperPortal === 'function') {
                 setTimeout(loadDeveloperPortal, 500);
@@ -427,15 +417,12 @@ function showHideDeveloperPortal() {
         // Hide developer elements
         if (devTab) {
             devTab.style.display = 'none';
-            console.log('❌ Developer tab hidden');
         }
         if (devSidebar) {
             devSidebar.style.display = 'none';
-            console.log('❌ Developer sidebar hidden');
         }
         if (devPanel) {
             devPanel.style.display = 'none';
-            console.log('❌ Developer panel hidden');
         }
     }
 }
@@ -2217,7 +2204,6 @@ async function registerServiceWorker() {
     try {
         if ('serviceWorker' in navigator) {
             const registration = await navigator.serviceWorker.register('/service-worker.js');
-            console.log('Service Worker registered');
             serviceWorkerRegistered = true;
             return registration;
         }
