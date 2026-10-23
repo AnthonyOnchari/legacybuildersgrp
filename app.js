@@ -555,7 +555,7 @@ function updateDashboardGreeting() {
     if (!el || !currentUser) return;
     const hour = new Date().getHours();
     const timeGreeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-    el.textContent = `👋 ${timeGreeting}, ${currentUser.split(' ')[0]}`;
+    el.textContent = `${timeGreeting}, ${currentUser.split(' ')[0]}`;
 }
 
 // ============================================================

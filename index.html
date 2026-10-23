@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#18392F">
     <title>Legacy Builders Group</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,7 +26,7 @@
     <div id="loginOverlay" class="login-overlay">
         <div class="login-box">
             <div class="login-hero">
-                <h1>🏛️ Legacy Builders Group</h1>
+                <h1><span class="login-mark" aria-hidden="true">LB</span> Legacy Builders Group</h1>
                 <div class="subtitle" id="loginSubtitle">Welcome back — sign in with your Google account</div>
             </div>
             <div class="login-form-area">
@@ -105,19 +106,19 @@
 
     <!-- APP SHELL -->
     <div class="app-shell">
-        <nav class="sidebar" id="sidebarNav">
+        <nav class="sidebar" id="sidebarNav" aria-label="Main navigation">
             <div class="sidebar-brand">
-                <div class="sidebar-brand-name">🏛️ Legacy Builders</div>
+                <div class="sidebar-brand-name"><span class="brand-mark" aria-hidden="true">LB</span><span>Legacy Builders</span></div>
                 <div class="sidebar-brand-tagline">Where Families Build Wealth Together</div>
             </div>
             <div class="sidebar-nav">
-                <button class="sidebar-link" data-panel="transactions"><span class="tab-icon">🏠</span><span>Home</span></button>
-                <button class="sidebar-link" data-panel="summary"><span class="tab-icon">📊</span><span>Summary</span></button>
-                <button class="sidebar-link" data-panel="loans"><span class="tab-icon">💰</span><span>Loans</span></button>
-                <button class="sidebar-link" data-panel="meetings"><span class="tab-icon">📝</span><span>Meetings</span></button>
-                <button class="sidebar-link" data-panel="about"><span class="tab-icon">👥</span><span>About Us</span></button>
-                <button class="sidebar-link" data-panel="pending" id="pendingSidebarLink" style="display: none;"><span class="tab-icon">⏳</span><span>Pending</span><span id="pendingCountSidebar" class="pending-count"></span></button>
-                <button class="sidebar-link" data-panel="developer" id="developerSidebarLink" style="display: none;"><span class="tab-icon">🛠️</span><span>Dev Portal</span></button>
+                <button class="sidebar-link" data-panel="transactions"><span class="tab-icon" aria-hidden="true">⌂</span><span>Home</span></button>
+                <button class="sidebar-link" data-panel="summary"><span class="tab-icon" aria-hidden="true">◷</span><span>Summary</span></button>
+                <button class="sidebar-link" data-panel="loans"><span class="tab-icon" aria-hidden="true">↗</span><span>Loans</span></button>
+                <button class="sidebar-link" data-panel="meetings"><span class="tab-icon" aria-hidden="true">▤</span><span>Meetings</span></button>
+                <button class="sidebar-link" data-panel="about"><span class="tab-icon" aria-hidden="true">◎</span><span>About Us</span></button>
+                <button class="sidebar-link" data-panel="pending" id="pendingSidebarLink" style="display: none;"><span class="tab-icon" aria-hidden="true">•</span><span>Pending</span><span id="pendingCountSidebar" class="pending-count"></span></button>
+                <button class="sidebar-link" data-panel="developer" id="developerSidebarLink" style="display: none;"><span class="tab-icon" aria-hidden="true">⚙</span><span>Dev Portal</span></button>
             </div>
             <div class="sidebar-foot">
                 <button onclick="logout(event)">Logout</button>
@@ -140,18 +141,18 @@
         <div class="header">
             <div class="header-row-2">
                 <div>
-                    <div class="wallet-greeting" id="dashboardGreeting">👋 Welcome back</div>
+                    <div class="wallet-greeting" id="dashboardGreeting">Welcome back</div>
                     <div class="wallet-label">Available balance</div>
                     <div class="wallet-balance" id="totalSavingsTop" data-target="0">KES --</div>
                 </div>
                 <div class="wallet-scope-wrapper">
                     <button class="wallet-chip" id="walletScopeChip" onclick="toggleWalletScopeMenu()">
-                        <span id="walletScopeLabel">🧺 Group</span>
+                        <span id="walletScopeLabel">Group</span>
                         <span class="wallet-scope-caret">▾</span>
                     </button>
                     <div class="wallet-scope-menu" id="walletScopeMenu" style="display:none;">
-                        <button onclick="setWalletScope('group')">🧺 Group</button>
-                        <button onclick="setWalletScope('mine')">👤 Mine</button>
+                        <button onclick="setWalletScope('group')">Group</button>
+                        <button onclick="setWalletScope('mine')">Mine</button>
                     </div>
                 </div>
             </div>
@@ -164,16 +165,16 @@
 
         <div class="quick-actions-card">
             <button class="quick-action" onclick="openAddTransactionModal('Savings')">
-                <span class="quick-action-icon qa-save">💰</span><span>Deposit</span>
+                <span class="quick-action-icon qa-save" aria-hidden="true">+</span><span>Deposit</span>
             </button>
             <button class="quick-action" onclick="openAddTransactionModal('Loan Taken')">
-                <span class="quick-action-icon qa-loan">🏦</span><span>Loan</span>
+                <span class="quick-action-icon qa-loan" aria-hidden="true">↗</span><span>Loan</span>
             </button>
             <button class="quick-action" onclick="openAddTransactionModal('Loan Repayment')">
-                <span class="quick-action-icon qa-repay">🔄</span><span>Repay</span>
+                <span class="quick-action-icon qa-repay" aria-hidden="true">↙</span><span>Repay</span>
             </button>
             <button class="quick-action" onclick="openHistoryModal()">
-                <span class="quick-action-icon qa-history">📜</span><span>History</span>
+                <span class="quick-action-icon qa-history" aria-hidden="true">≡</span><span>History</span>
             </button>
         </div>
         </div>
@@ -190,7 +191,7 @@
             </div>
             <div class="card">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                    <h2 style="margin-bottom: 0;">🕒 Recent Activity</h2>
+                    <h2 style="margin-bottom: 0;">Recent activity</h2>
                     <button onclick="openHistoryModal()" style="width: auto; padding: 4px 0; background: none; color: var(--blue); font-size: 12px; font-weight: 600;">See all</button>
                 </div>
                 <div id="recentActivityList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
@@ -300,9 +301,9 @@
                 <div class="about-stat"><div class="about-stat-value" id="aboutStatTxns">--</div><div class="about-stat-label">Transactions</div></div>
             </div>
             <div class="about-values-row">
-                <span class="about-value-chip">🤝 Unity</span>
-                <span class="about-value-chip">🎯 Integrity</span>
-                <span class="about-value-chip">🌟 Legacy</span>
+                <span class="about-value-chip">Unity</span>
+                <span class="about-value-chip">Integrity</span>
+                <span class="about-value-chip">Legacy</span>
             </div>
             <div class="card">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
@@ -319,9 +320,9 @@
 
         <!-- Developer Portal Panel -->
         <div id="developerPanel" class="panel fullscreen-panel">
-            <div class="card" style="background: linear-gradient(135deg, #14213D, #1E3FC4); color: white; border: none;">
-                <h2 style="color: white; border-bottom-color: rgba(255,255,255,0.2);">🛠️ Developer Portal</h2>
-                <p style="color: rgba(255,255,255,0.8);">Full system control and monitoring</p>
+            <div class="card developer-hero-card">
+                <h2>Developer portal</h2>
+                <p>Full system control and monitoring</p>
             </div>
             <div class="card">
                 <h3>📊 System Statistics</h3>
@@ -341,10 +342,10 @@
             </div>
             <div class="card">
                 <h3>⚡ Developer Actions</h3>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button onclick="refreshAllData()" style="background: #3B6FF2; color: white; width: auto; padding: 10px 20px;">🔄 Refresh All Data</button>
-                    <button onclick="exportSystemData()" style="background: #1FA971; color: white; width: auto; padding: 10px 20px;">📥 Export All Data</button>
-                    <button onclick="clearSystemCache()" style="background: #FF9800; color: white; width: auto; padding: 10px 20px;">🔄 Reload App</button>
+                <div class="developer-actions">
+                    <button class="dev-refresh-btn" onclick="refreshAllData()">Refresh data</button>
+                    <button class="dev-export-btn" onclick="exportSystemData()">Export data</button>
+                    <button class="dev-reload-btn" onclick="clearSystemCache()">Reload app</button>
                 </div>
             </div>
         </div>
@@ -353,14 +354,14 @@
     </div>
 
     <!-- TAB BAR -->
-    <div class="tab-bar" id="tabBar" style="display: none;">
-        <button class="tab" data-panel="transactions"><span class="tab-icon">🏠</span><span>Home</span></button>
-        <button class="tab" data-panel="summary"><span class="tab-icon">📊</span><span>Summary</span></button>
-        <button class="tab" data-panel="loans"><span class="tab-icon">💰</span><span>Loans</span></button>
-        <button class="tab" data-panel="meetings"><span class="tab-icon">📝</span><span>Meetings</span></button>
-        <button class="tab" data-panel="about"><span class="tab-icon">👥</span><span>About Us</span></button>
-        <button class="tab" data-panel="pending" id="pendingTab" style="display: none;"><span class="tab-icon">⏳</span><span>Pending<span id="pendingCount" class="pending-count"></span></span></button>
-        <button class="tab" data-panel="developer" id="developerTab" style="display: none;"><span class="tab-icon">🛠️</span><span>Dev</span></button>
+    <div class="tab-bar" id="tabBar" style="display: none;" aria-label="App navigation">
+        <button class="tab" data-panel="transactions"><span class="tab-icon" aria-hidden="true">⌂</span><span>Home</span></button>
+        <button class="tab" data-panel="summary"><span class="tab-icon" aria-hidden="true">◷</span><span>Summary</span></button>
+        <button class="tab" data-panel="loans"><span class="tab-icon" aria-hidden="true">↗</span><span>Loans</span></button>
+        <button class="tab" data-panel="meetings"><span class="tab-icon" aria-hidden="true">▤</span><span>Meetings</span></button>
+        <button class="tab" data-panel="about"><span class="tab-icon" aria-hidden="true">◎</span><span>About</span></button>
+        <button class="tab" data-panel="pending" id="pendingTab" style="display: none;"><span class="tab-icon" aria-hidden="true">•</span><span>Pending<span id="pendingCount" class="pending-count"></span></span></button>
+        <button class="tab" data-panel="developer" id="developerTab" style="display: none;"><span class="tab-icon" aria-hidden="true">⚙</span><span>Dev</span></button>
     </div>
 
     <!-- PDF GENERATOR CONTAINER -->
