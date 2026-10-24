@@ -4432,13 +4432,13 @@ body.finance-ui .tab.active .tab-icon { background: #E2F0E2; color: #1B684B; }
         position: absolute;
         z-index: 2;
         inset: 0;
-        justify-content: flex-end;
+        justify-content: flex-start;
         width: auto;
         max-width: none;
         max-height: none;
         margin: 0;
         padding:
-            max(76px, calc(env(safe-area-inset-top) + 64px))
+            max(76px, calc(40vh - 90px), calc(env(safe-area-inset-top) + 64px))
             max(22px, env(safe-area-inset-right))
             max(26px, env(safe-area-inset-bottom))
             max(22px, env(safe-area-inset-left));
@@ -4504,7 +4504,7 @@ body.finance-ui .tab.active .tab-icon { background: #E2F0E2; color: #1B684B; }
     }
     body.finance-ui .login-box {
         padding:
-            max(76px, calc(env(safe-area-inset-top) + 64px))
+            max(76px, calc(40vh - 90px), calc(env(safe-area-inset-top) + 64px))
             max(22px, env(safe-area-inset-right))
             max(26px, env(safe-area-inset-bottom))
             max(22px, env(safe-area-inset-left));
@@ -4534,7 +4534,7 @@ body.finance-ui .tab.active .tab-icon { background: #E2F0E2; color: #1B684B; }
     body.finance-ui .login-copy { height: 100%; }
     body.finance-ui .login-box {
         padding:
-            max(66px, calc(env(safe-area-inset-top) + 56px))
+            max(76px, calc(40vh - 90px), calc(env(safe-area-inset-top) + 64px))
             max(22px, env(safe-area-inset-right))
             max(18px, env(safe-area-inset-bottom))
             max(22px, env(safe-area-inset-left));
