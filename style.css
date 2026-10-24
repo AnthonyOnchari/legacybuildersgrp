@@ -4146,6 +4146,17 @@ body.finance-ui .login-divider {
     font-weight: 700;
     letter-spacing: .12em;
 }
+body.finance-ui .login-divider--signup {
+    letter-spacing: 0;
+    line-height: 1.5;
+}
+body.finance-ui .login-divider--signup::before,
+body.finance-ui .login-divider--signup::after { display: none; }
+body.finance-ui .login-divider--signup span {
+    display: block;
+    padding: 0;
+    background: transparent;
+}
 body.finance-ui .login-divider::before,
 body.finance-ui .login-divider::after { background: rgba(57, 93, 70, .18); }
 body.finance-ui .login-divider span { background: #F4F7F0; color: #748278; }
@@ -4164,6 +4175,20 @@ body.finance-ui .login-create-btn:hover {
     transform: translateY(-1px);
     border-color: rgba(35, 116, 93, .42);
     background: rgba(255,255,255,.88);
+}
+body.finance-ui .login-box {
+    transition:
+        transform .38s cubic-bezier(.2,.75,.2,1),
+        background-color .3s ease,
+        box-shadow .3s ease;
+}
+body.finance-ui .login-box.auth-transition .login-hero,
+body.finance-ui .login-box.auth-transition .login-form-area > div[style*="display: block"] {
+    animation: authContentEnter .34s cubic-bezier(.2,.75,.2,1) both;
+}
+@keyframes authContentEnter {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 body.finance-ui .register-link a,
 body.finance-ui .forgot-password-link a { color: #23745D; }
@@ -4479,6 +4504,13 @@ body.finance-ui .tab.active .tab-icon { background: #E2F0E2; color: #1B684B; }
         padding-top: 12px;
     }
     body.finance-ui .login-divider { margin: 10px 0 8px; color: #fff; }
+    body.finance-ui .login-divider--signup {
+        margin-top: 12px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, .58);
+    }
     body.finance-ui .login-divider::before,
     body.finance-ui .login-divider::after { background: rgba(255, 255, 255, .75); }
     body.finance-ui .login-divider span { background: transparent; color: #fff; }
@@ -4506,6 +4538,20 @@ body.finance-ui .tab.active .tab-icon { background: #E2F0E2; color: #1B684B; }
         overflow-y: auto;
         backdrop-filter: blur(18px) saturate(1.12);
         -webkit-backdrop-filter: blur(18px) saturate(1.12);
+    }
+    body.finance-ui .login-box {
+        transition:
+            transform .38s cubic-bezier(.2,.75,.2,1),
+            background-color .3s ease,
+            box-shadow .3s ease;
+    }
+    body.finance-ui .login-box.auth-transition .login-hero,
+    body.finance-ui .login-box.auth-transition .login-form-area > div[style*="display: block"] {
+        animation: authContentEnter .34s cubic-bezier(.2,.75,.2,1) both;
+    }
+    @keyframes authContentEnter {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     body.finance-ui .login-box.is-registering .login-secure-label {
         position: static;

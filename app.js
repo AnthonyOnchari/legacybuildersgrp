@@ -100,6 +100,19 @@ function hideSplashScreen() {
 // LOGIN FUNCTIONS
 // ============================================================
 let pendingLoginToken = null, pendingLoginEmail = null, otpResendTimer = null;
+let authTransitionTimer = null;
+
+function animateAuthTransition() {
+    const loginBox = document.querySelector('.login-box');
+    if (authTransitionTimer) clearTimeout(authTransitionTimer);
+    loginBox.classList.remove('auth-transition');
+    void loginBox.offsetWidth;
+    loginBox.classList.add('auth-transition');
+    authTransitionTimer = setTimeout(() => {
+        loginBox.classList.remove('auth-transition');
+        authTransitionTimer = null;
+    }, 420);
+}
 
 function checkPersistentLogin() {
     const user = window.firebaseAuth && window.firebaseAuth.currentUser;
@@ -121,6 +134,7 @@ function showLoginForm() {
     document.getElementById('resetSuccess').style.display = 'none';
     document.getElementById('loginSubtitle').textContent = 'Welcome back — login to access your account';
     document.querySelector('.login-box').classList.remove('is-registering');
+    animateAuthTransition();
 }
 
 function showRegisterForm() {
@@ -133,6 +147,7 @@ function showRegisterForm() {
     document.getElementById('registerError').style.display = 'none';
     document.getElementById('loginSubtitle').textContent = 'Request approval to join the group.';
     document.querySelector('.login-box').classList.add('is-registering');
+    animateAuthTransition();
 }
 
 function showForgotPasswordForm() {
@@ -146,6 +161,7 @@ function showForgotPasswordForm() {
     document.getElementById('resetSuccess').style.display = 'none';
     document.getElementById('loginSubtitle').textContent = "We'll help you get back in";
     document.querySelector('.login-box').classList.remove('is-registering');
+    animateAuthTransition();
 }
 
 function showOtpScreen(emailHint) {
@@ -158,6 +174,7 @@ function showOtpScreen(emailHint) {
     document.getElementById('otpError').style.display = 'none';
     document.getElementById('loginSubtitle').textContent = 'Enter the code we emailed you';
     document.querySelector('.login-box').classList.remove('is-registering');
+    animateAuthTransition();
     clearOtpBoxes();
     startOtpResendCountdown();
     setTimeout(focusFirstOtpBox, 100);
