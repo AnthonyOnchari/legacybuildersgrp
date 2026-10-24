@@ -16,9 +16,8 @@ self.addEventListener('push', function(event) {
     console.log('Push notification received:', event);
     
     let data = {
-        title: '🏛️ Legacy Builders Group',
+        title: 'Legacy Builders Group',
         body: 'You have a new notification',
-        icon: '🏛️',
         data: {}
     };
     
@@ -28,7 +27,6 @@ self.addEventListener('push', function(event) {
             data = {
                 title: parsed.title || data.title,
                 body: parsed.body || data.body,
-                icon: '🏛️',
                 data: parsed.data || {},
                 timestamp: parsed.timestamp || new Date().toISOString()
             };
@@ -39,19 +37,17 @@ self.addEventListener('push', function(event) {
     
     const options = {
         body: data.body,
-        icon: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ctext y=".9em" font-size="90"%3E🏛️%3C/text%3E%3C/svg%3E',
-        badge: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ctext y=".9em" font-size="90"%3E🏛️%3C/text%3E%3C/svg%3E',
         vibrate: [200, 100, 200],
         data: data.data || {},
         requireInteraction: true,
         actions: [
             {
                 action: 'open',
-                title: '📱 Open App'
+                title: 'Open App'
             },
             {
                 action: 'close',
-                title: '❌ Dismiss'
+                title: 'Dismiss'
             }
         ]
     };

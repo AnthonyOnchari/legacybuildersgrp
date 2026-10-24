@@ -521,7 +521,7 @@ async function requestPasswordReset() {
     try {
         const res = await callAPI('resetPassword', { email });
         if (res.success) {
-            successEl.textContent = '✅ Password reset successfully! Check your email.';
+            successEl.textContent = 'Password reset successfully! Check your email.';
             successEl.style.display = 'block';
             showToast('Password reset sent to your email', 'success');
             setTimeout(() => showLoginForm(), 3000);
@@ -627,7 +627,7 @@ async function loadAllUsersFull() {
                                             <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Treasurer</option>
                                             <option value="developer" ${user.role === 'developer' ? 'selected' : ''}>Developer</option>
                                         </select>
-                                        <button onclick="deleteUser('${user.email}')" style="background: #E5484D; color: white; width: auto; padding: 4px 10px; font-size: 11px; margin-top: 4px;">🗑️</button>
+                                        <button aria-label="Delete user" onclick="deleteUser('${user.email}')" style="background: #E5484D; color: white; width: auto; padding: 4px 10px; font-size: 11px; margin-top: 4px;">Delete</button>
                                     ` : '<em>You</em>'}</td>
                                 </tr>
                             `).join('')}
@@ -655,12 +655,12 @@ async function loadDevPendingRegistrations() {
             }
             container.innerHTML = registrations.map(reg => `
                 <div class="pending-item" style="background: #FFF8E1; border-left: 4px solid #FF9800;">
-                    <div><strong>👤 ${escapeHtml(reg.name)}</strong></div>
-                    <div>📧 ${escapeHtml(reg.email)}</div>
-                    <div>📅 ${reg.created_at ? new Date(reg.created_at).toLocaleDateString() : ''}</div>
+                    <div><strong> ${escapeHtml(reg.name)}</strong></div>
+                    <div> ${escapeHtml(reg.email)}</div>
+                    <div> ${reg.created_at ? new Date(reg.created_at).toLocaleDateString() : ''}</div>
                     <div style="margin-top: 10px; display: flex; gap: 8px;">
-                        <button class="approve-btn" onclick="approveRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')">✅ Approve</button>
-                        <button class="reject-btn" onclick="rejectRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')">❌ Reject</button>
+                        <button class="approve-btn" onclick="approveRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')"> Approve</button>
+                        <button class="reject-btn" onclick="rejectRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')"> Reject</button>
                     </div>
                 </div>
             `).join('');
@@ -696,7 +696,7 @@ async function updateUserRole(email, role) {
     try {
         const res = await callAPI('updateUserRole', { email, role, requesterEmail: currentUserEmail });
         if (res.success) {
-            showToast(`✅ Role updated for ${email}`, 'success');
+            showToast(`Role updated for ${email}`, 'success');
             await loadAllUsersFull();
             await loadSystemStats();
         } else {
@@ -708,12 +708,12 @@ async function updateUserRole(email, role) {
 }
 
 async function deleteUser(email) {
-    if (!confirm(`⚠️ Delete user ${email}? This action cannot be undone!`)) return;
+    if (!confirm(`Delete user ${email}? This action cannot be undone!`)) return;
     if (!confirm(`Are you absolutely sure?`)) return;
     try {
         const res = await callAPI('deleteUser', { email, requesterEmail: currentUserEmail });
         if (res.success) {
-            showToast(`✅ ${email} deleted successfully`, 'success');
+            showToast(` ${email} deleted successfully`, 'success');
             await loadAllUsersFull();
             await loadSystemStats();
         } else {
@@ -730,7 +730,7 @@ async function approveRegistration(email) {
         if (!confirm(`Approve ${email}?`)) return;
         const res = await callAPI('approveRegistration', { email, approvedBy: currentUser });
         if (res.success) {
-            showToast(`✅ ${email} approved!`, 'success');
+            showToast(` ${email} approved!`, 'success');
             await loadDevPendingRegistrations();
             await loadPendingRegistrations();
             await loadAllUsersFull();
@@ -750,7 +750,7 @@ async function rejectRegistration(email) {
         if (!confirm(`Reject ${email}?`)) return;
         const res = await callAPI('rejectRegistration', { email, rejectedBy: currentUser });
         if (res.success) {
-            showToast(`❌ ${email} rejected`, 'success');
+            showToast(` ${email} rejected`, 'success');
             await loadDevPendingRegistrations();
             await loadPendingRegistrations();
             await loadAllUsersFull();
@@ -765,11 +765,11 @@ async function rejectRegistration(email) {
 }
 
 async function refreshAllData() {
-    showToast('🔄 Refreshing all data...', 'success');
+    showToast('Refreshing all data...', 'success');
     try {
         const res = await callAPI('refreshAllData', { email: currentUserEmail });
         if (res.success) {
-            showToast('✅ All data refreshed!', 'success');
+            showToast('All data refreshed!', 'success');
             await loadSystemStats();
             await loadAllUsersFull();
             await loadDevPendingRegistrations();
@@ -782,7 +782,7 @@ async function refreshAllData() {
 }
 
 function exportSystemData() {
-    showToast('📥 Export feature coming soon', 'info');
+    showToast('Export feature coming soon', 'info');
 }
 
 function clearSystemCache() {
@@ -792,15 +792,15 @@ function clearSystemCache() {
 
 function auditIconFor(action) {
     const a = (action || '').toLowerCase();
-    if (a.includes('logged in')) return '🔑';
-    if (a.includes('joined')) return '👋';
-    if (a.includes('password')) return '🔒';
-    if (a.includes('photo')) return '🖼️';
-    if (a.includes('approved')) return '✅';
-    if (a.includes('rejected')) return '❌';
-    if (a.includes('requested') || a.includes('submitted')) return '📤';
-    if (a.includes('due date')) return '📅';
-    return '📋';
+    if (a.includes('logged in')) return 'IN';
+    if (a.includes('joined')) return 'JO';
+    if (a.includes('password')) return 'PW';
+    if (a.includes('photo')) return 'PH';
+    if (a.includes('approved')) return 'OK';
+    if (a.includes('rejected')) return 'NO';
+    if (a.includes('requested') || a.includes('submitted')) return 'RQ';
+    if (a.includes('due date')) return 'DT';
+    return 'LG';
 }
 
 // ============================================================
@@ -821,12 +821,12 @@ async function loadPendingRegistrations() {
             }
             container.innerHTML = registrations.map(reg => `
                 <div class="pending-item" style="background: #FFF8E1; border-left: 4px solid #FF9800;">
-                    <div><strong>👤 ${escapeHtml(reg.name)}</strong></div>
-                    <div>📧 ${escapeHtml(reg.email)}</div>
-                    <div>📅 ${reg.created_at ? new Date(reg.created_at).toLocaleDateString() : ''}</div>
+                    <div><strong> ${escapeHtml(reg.name)}</strong></div>
+                    <div> ${escapeHtml(reg.email)}</div>
+                    <div> ${reg.created_at ? new Date(reg.created_at).toLocaleDateString() : ''}</div>
                     <div style="margin-top: 10px; display: flex; gap: 8px;">
-                        <button class="approve-btn" onclick="approveRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')">✅ Approve</button>
-                        <button class="reject-btn" onclick="rejectRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')">❌ Reject</button>
+                        <button class="approve-btn" onclick="approveRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')"> Approve</button>
+                        <button class="reject-btn" onclick="rejectRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')"> Reject</button>
                     </div>
                 </div>
             `).join('');
@@ -982,7 +982,7 @@ function toggleWalletScopeMenu() {
 
 function setWalletScope(scope) {
     walletScope = scope;
-    document.getElementById('walletScopeLabel').textContent = scope === 'mine' ? '👤 Mine' : '🧺 Group';
+    document.getElementById('walletScopeLabel').textContent = scope === 'mine' ? 'Mine' : 'Group';
     document.getElementById('walletBalanceLabel').textContent = scope === 'mine'
         ? 'Your savings balance'
         : 'Available group balance';
@@ -1031,7 +1031,7 @@ function renderRecentActivity() {
         return;
     }
     const recent = [...allRecords].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
-    const iconFor = (type) => type === 'Savings' ? '💰' : type === 'Loan Taken' ? '🏦' : '🔄';
+    const iconFor = (type) => type === 'Savings' ? 'S' : type === 'Loan Taken' ? 'L' : 'R';
     container.innerHTML = recent.map(r => {
         const sign = r.type === 'Loan Taken' ? '-' : '+';
         return `<div class="activity-row">
@@ -1061,7 +1061,7 @@ function renderPendingLoans() {
             <div style="font-size:11px; margin-top:5px;">Approvals: ${loan.approvals.length}/${totalNeeded}</div>
             <div class="progress-bar"><div class="progress-fill" style="width: ${Math.min(percent, 100)}%;"></div></div>
             ${showButtons ? `<div style="margin-top:8px; display:flex; gap:8px;"><button class="approve-btn" onclick="approveLoan('${loan.id}')">Approve</button><button class="reject-btn" onclick="rejectLoan('${loan.id}')">Reject</button></div>` : ''}
-            ${isRequester && loan.status === 'pending' ? `<div style="margin-top:8px;"><button class="cancel-btn" onclick="cancelLoanRequest('${loan.id}')">❌ Cancel Request</button></div>` : ''}
+            ${isRequester && loan.status === 'pending' ? `<div style="margin-top:8px;"><button class="cancel-btn" onclick="cancelLoanRequest('${loan.id}')"> Cancel Request</button></div>` : ''}
         </div>`;
     }).join('');
 }
@@ -1090,10 +1090,10 @@ function renderActiveLoans() {
         const overdueClass = loan.isOverdue ? 'loan-overdue' : '';
         const progressPct = loan.totalDue > 0 ? Math.min(100, (loan.amountRepaid / loan.totalDue) * 100) : 0;
         return `<div class="active-loan-item ${overdueClass} ${isMine ? 'own-loan' : ''}">
-            <div class="active-loan-header"><strong>${escapeHtml(loan.member)}</strong>${loan.isOverdue ? '<span class="overdue-badge">⚠️ Overdue</span>' : ''}</div>
+            <div class="active-loan-header"><strong>${escapeHtml(loan.member)}</strong>${loan.isOverdue ? '<span class="overdue-badge"> Overdue</span>' : ''}</div>
             <div class="active-loan-amounts"><span>Owed: KES ${loan.remaining.toLocaleString('en-KE')}</span><span class="active-loan-total">of KES ${loan.totalDue.toLocaleString('en-KE')}</span></div>
             <div class="progress-bar"><div class="progress-fill" style="width: ${progressPct}%;"></div></div>
-            <div class="active-loan-due">📅 Due: ${loan.dueDate || 'Not set'}</div>
+            <div class="active-loan-due"> Due: ${loan.dueDate || 'Not set'}</div>
         </div>`;
     }).join('');
 }
@@ -1115,7 +1115,7 @@ function renderLoansAwaitingDueDate() {
             <div><strong>${escapeHtml(loan.member)}</strong> — KES ${(loan.principal || 0).toLocaleString('en-KE')} + 10% = <strong>KES ${totalDue.toLocaleString('en-KE')}</strong></div>
             <div style="font-size:12px; margin-top:4px;">${escapeHtml(loan.message || '')}</div>
             <div class="form-grid" style="margin-top:10px; margin-bottom:8px;">
-                <div><label>📅 Repayment Due Date</label><input type="date" id="dueDateInput-${loan.id}"></div>
+                <div><label> Repayment Due Date</label><input type="date" id="dueDateInput-${loan.id}"></div>
             </div>
             <button onclick="submitLoanDueDate('${loan.id}')" style="width:auto; padding:8px 16px;">Set Due Date &amp; Activate</button>
         </div>`;
@@ -1129,18 +1129,18 @@ function renderPendingApprovals() {
     container.innerHTML = pendingTransactions.map(t => {
         const editKey = `${t.member}|${t.type}|${t.amount}`;
         const editInfo = pendingEditsMap[editKey];
-        const editBadge = editInfo ? `<div style="background:var(--blue-soft);color:var(--blue);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;margin-bottom:8px;display:inline-block;">✏️ EDIT REQUEST — was KES ${editInfo.originalAmount.toLocaleString('en-KE')}</div><br>` : '';
+        const editBadge = editInfo ? `<div style="background:var(--blue-soft);color:var(--blue);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;margin-bottom:8px;display:inline-block;"> EDIT REQUEST — was KES ${editInfo.originalAmount.toLocaleString('en-KE')}</div><br>` : '';
         const rejectFn = editInfo ? `rejectTransactionEdit('${editInfo.editId}', '${currentUser}')` : `rejectTransaction('${t.id}')`;
         return `<div class="pending-item">
             ${editBadge}
-            <div><strong>📅 ${t.date}</strong></div>
-            <div>👤 <strong>Submitted by:</strong> ${escapeHtml(t.submittedBy || t.member)}</div>
-            <div>💰 <strong>Type:</strong> ${t.type}</div>
-            <div>💵 <strong>Amount:</strong> KES ${(t.amount || 0).toLocaleString('en-KE')}</div>
-            <div>💬 <strong>Message:</strong> ${escapeHtml(t.message || '-')}</div>
+            <div><strong> ${t.date}</strong></div>
+            <div> <strong>Submitted by:</strong> ${escapeHtml(t.submittedBy || t.member)}</div>
+            <div> <strong>Type:</strong> ${t.type}</div>
+            <div> <strong>Amount:</strong> KES ${(t.amount || 0).toLocaleString('en-KE')}</div>
+            <div> <strong>Message:</strong> ${escapeHtml(t.message || '-')}</div>
             <div style="margin-top: 10px; display: flex; gap: 8px;">
-                <button class="approve-btn" onclick="approveTransaction('${t.id}')">✅ Approve</button>
-                <button class="reject-btn" onclick="${rejectFn}">❌ Reject</button>
+                <button class="approve-btn" onclick="approveTransaction('${t.id}')"> Approve</button>
+                <button class="reject-btn" onclick="${rejectFn}"> Reject</button>
             </div>
         </div>`;
     }).join('');
@@ -1168,7 +1168,7 @@ function openAddTransactionModal(type) {
     if (!modal) return;
     document.getElementById('type').value = type;
     document.getElementById('addTransactionTitle').textContent = 
-        type === 'Savings' ? '💰 New Deposit' : type === 'Loan Taken' ? '🏦 Request a Loan' : '🔄 Repay a Loan';
+        type === 'Savings' ? 'New Deposit' : type === 'Loan Taken' ? 'Request a Loan' : 'Repay a Loan';
     toggleApprovalNotice();
     if (!document.getElementById('date').value) {
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
@@ -1357,14 +1357,14 @@ async function loadMeetingMinutes() {
         }
         container.innerHTML = meetings.slice().reverse().map(meeting => {
             let countdownHtml = '';
-            if (meeting.nextMeeting) countdownHtml = `<div class="countdown-timer" data-date="${meeting.nextMeeting}">📅 Loading countdown...</div>`;
+            if (meeting.nextMeeting) countdownHtml = `<div class="countdown-timer" data-date="${meeting.nextMeeting}"> Loading countdown...</div>`;
             return `<div class="meeting-item">
-                <div class="meeting-header"><span class="meeting-date">📅 ${escapeHtml(meeting.date)}</span><span class="meeting-author">by ${escapeHtml(meeting.recordedBy)}</span></div>
-                <div class="meeting-section"><div class="meeting-section-title">📋 Agenda:</div><div class="meeting-section-content">${escapeHtml(meeting.agenda)}</div></div>
-                <div class="meeting-section"><div class="meeting-section-title">📝 Notes:</div><div class="meeting-section-content">${escapeHtml(meeting.notes || 'No notes')}</div></div>
-                <div class="meeting-section"><div class="meeting-section-title">✅ Decisions:</div><div class="meeting-section-content">${escapeHtml(meeting.decisions || 'None')}</div></div>
-                ${meeting.nextMeeting ? `<div class="meeting-section"><div class="meeting-section-title">📅 Next Meeting:</div><div class="meeting-section-content">${escapeHtml(meeting.nextMeeting)}</div>${countdownHtml}</div>` : ''}
-                ${isTreasurer() || isDeveloper() ? `<button class="delete-meeting-btn" onclick="deleteMeeting('${meeting.id}')">🗑️ Delete Meeting</button>` : ''}
+                <div class="meeting-header"><span class="meeting-date"> ${escapeHtml(meeting.date)}</span><span class="meeting-author">by ${escapeHtml(meeting.recordedBy)}</span></div>
+                <div class="meeting-section"><div class="meeting-section-title"> Agenda:</div><div class="meeting-section-content">${escapeHtml(meeting.agenda)}</div></div>
+                <div class="meeting-section"><div class="meeting-section-title"> Notes:</div><div class="meeting-section-content">${escapeHtml(meeting.notes || 'No notes')}</div></div>
+                <div class="meeting-section"><div class="meeting-section-title"> Decisions:</div><div class="meeting-section-content">${escapeHtml(meeting.decisions || 'None')}</div></div>
+                ${meeting.nextMeeting ? `<div class="meeting-section"><div class="meeting-section-title"> Next Meeting:</div><div class="meeting-section-content">${escapeHtml(meeting.nextMeeting)}</div>${countdownHtml}</div>` : ''}
+                ${isTreasurer() || isDeveloper() ? `<button class="delete-meeting-btn" onclick="deleteMeeting('${meeting.id}')"> Delete Meeting</button>` : ''}
             </div>`;
         }).join('');
         updateCountdowns();
@@ -1377,7 +1377,7 @@ function openViewMinutesModal() {
     modal.className = 'modal';
     modal.innerHTML = `<div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-            <h3 style="margin:0;">📝 Meeting Minutes</h3>
+            <h3 style="margin:0;"> Meeting Minutes</h3>
             <button onclick="openAddMeetingModal()" style="width:auto; padding:7px 14px; font-size:12px;">+ Add</button>
         </div>
         <div id="meetingMinutesList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
@@ -1392,7 +1392,7 @@ function openAddMeetingModal() {
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.innerHTML = `<div class="modal-content">
-        <h3>📝 Add Meeting Minutes</h3>
+        <h3> Add Meeting Minutes</h3>
         <div class="form-grid">
             <div><label>Meeting Date</label><input type="date" id="meetingDate" value="${today}"></div>
             <div><label>Recorded By</label><input type="text" id="meetingRecordedBy" value="${currentUser}" readonly></div>
@@ -1444,12 +1444,12 @@ async function loadScheduledMeeting() {
             card.style.display = 'block';
             info.innerHTML = `
                 <div class="meeting-item" style="border-left-color: #3B6FF2; background: #F4F6FB;">
-                    <div class="meeting-header"><span class="meeting-date">📅 ${escapeHtml(res.meeting.date)}</span></div>
-                    <div class="meeting-section"><div class="meeting-section-title">📋 Agenda:</div><div class="meeting-section-content">${escapeHtml(res.meeting.agenda || 'Not set')}</div></div>
-                    <div class="meeting-section"><div class="meeting-section-title">📍 Venue:</div><div class="meeting-section-content">${escapeHtml(res.meeting.venue || 'Not set')}</div></div>
-                    <div class="countdown-timer" data-date="${res.meeting.date}">📅 Loading countdown...</div>
-                    <div class="meeting-section" style="margin-top: 10px;"><div class="meeting-section-title">📅 Scheduled by:</div><div class="meeting-section-content">${escapeHtml(res.meeting.scheduledBy || 'Unknown')}</div></div>
-                    ${isTreasurer() || isDeveloper() ? `<button class="delete-meeting-btn" onclick="cancelScheduledMeeting()" style="margin-top: 10px;">🗑️ Cancel Schedule</button>` : ''}
+                    <div class="meeting-header"><span class="meeting-date"> ${escapeHtml(res.meeting.date)}</span></div>
+                    <div class="meeting-section"><div class="meeting-section-title"> Agenda:</div><div class="meeting-section-content">${escapeHtml(res.meeting.agenda || 'Not set')}</div></div>
+                    <div class="meeting-section"><div class="meeting-section-title"> Venue:</div><div class="meeting-section-content">${escapeHtml(res.meeting.venue || 'Not set')}</div></div>
+                    <div class="countdown-timer" data-date="${res.meeting.date}"> Loading countdown...</div>
+                    <div class="meeting-section" style="margin-top: 10px;"><div class="meeting-section-title"> Scheduled by:</div><div class="meeting-section-content">${escapeHtml(res.meeting.scheduledBy || 'Unknown')}</div></div>
+                    ${isTreasurer() || isDeveloper() ? `<button class="delete-meeting-btn" onclick="cancelScheduledMeeting()" style="margin-top: 10px;"> Cancel Schedule</button>` : ''}
                 </div>
             `;
             updateCountdowns();
@@ -1466,14 +1466,14 @@ function openScheduleMeetingModal() {
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.innerHTML = `<div class="modal-content">
-        <h3>📅 Schedule Next Meeting</h3>
+        <h3> Schedule Next Meeting</h3>
         <div class="form-grid">
-            <div><label>📅 Next Meeting Date</label><input type="date" id="nextMeetingDate"></div>
-            <div><label>📋 Meeting Agenda</label><input type="text" id="nextMeetingAgenda" placeholder="What will be discussed?"></div>
-            <div><label>📍 Venue / Location</label><input type="text" id="nextMeetingVenue" placeholder="e.g., Online / Hall"></div>
+            <div><label> Next Meeting Date</label><input type="date" id="nextMeetingDate"></div>
+            <div><label> Meeting Agenda</label><input type="text" id="nextMeetingAgenda" placeholder="What will be discussed?"></div>
+            <div><label> Venue / Location</label><input type="text" id="nextMeetingVenue" placeholder="e.g., Online / Hall"></div>
         </div>
         <div class="modal-buttons">
-            <button id="scheduleMeetingBtn" onclick="scheduleNextMeetingAndClose()">📅 Schedule</button>
+            <button id="scheduleMeetingBtn" onclick="scheduleNextMeetingAndClose()"> Schedule</button>
             <button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button>
         </div>
     </div>`;
@@ -1522,14 +1522,14 @@ function updateCountdowns() {
     els.forEach(el => {
         const target = new Date(el.getAttribute('data-date'));
         const diff = target - now;
-        if (diff <= 0) { el.innerHTML = '🎉 Meeting is today!'; el.classList.add('urgent'); }
+        if (diff <= 0) { el.innerHTML = 'Meeting is today!'; el.classList.add('urgent'); }
         else {
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
             const hours = Math.floor((diff % 86400000) / (1000 * 60 * 60));
             const mins = Math.floor((diff % 3600000) / (1000 * 60));
-            if (days > 0) el.innerHTML = `📅 Countdown: ${days}d ${hours}h`;
-            else if (hours > 0) { el.innerHTML = `⏰ Countdown: ${hours}h ${mins}m`; el.classList.add('urgent'); }
-            else { el.innerHTML = `⏰ Countdown: ${mins}m`; el.classList.add('urgent'); }
+            if (days > 0) el.innerHTML = `Countdown: ${days}d ${hours}h`;
+            else if (hours > 0) { el.innerHTML = `Countdown: ${hours}h ${mins}m`; el.classList.add('urgent'); }
+            else { el.innerHTML = `Countdown: ${mins}m`; el.classList.add('urgent'); }
         }
     });
 }
@@ -1547,13 +1547,13 @@ function openSendAnnouncementModal() {
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.innerHTML = `<div class="modal-content">
-        <h3>📢 Send Announcement</h3>
+        <h3> Send Announcement</h3>
         <div class="form-grid">
             <div style="grid-column: span 2;"><label>Title</label><input type="text" id="announcementTitle" placeholder="e.g., Meeting moved to 6pm" maxlength="80"></div>
             <div style="grid-column: span 2;"><label>Message</label><textarea id="announcementBody" rows="3" placeholder="Write your announcement here..." maxlength="500"></textarea></div>
         </div>
         <div class="modal-buttons">
-            <button id="sendAnnouncementBtn" onclick="sendAnnouncementAndClose()">📢 Send to All</button>
+            <button id="sendAnnouncementBtn" onclick="sendAnnouncementAndClose()"> Send to All</button>
             <button class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button>
         </div>
     </div>`;
@@ -1575,7 +1575,7 @@ async function sendAnnouncement() {
     const btn = document.getElementById('sendAnnouncementBtn');
     const originalText = btn.innerHTML;
     showButtonLoading(btn, 'Sending...');
-    const title = titleInput ? `📢 ${titleInput}` : `📢 Announcement from ${currentUser}`;
+    const title = titleInput ? ` ${titleInput}` : `Announcement from ${currentUser}`;
     const body = `${bodyInput} — sent by ${currentUser}`;
     const res = await callAPI('sendPushNotification', { title, body, sender: currentUser });
     if (res.success) {
@@ -1596,7 +1596,7 @@ function openAuditLogModal() {
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.innerHTML = `<div class="modal-content">
-        <h3 style="margin-bottom:14px;">📋 Activity Log</h3>
+        <h3 style="margin-bottom:14px;"> Activity Log</h3>
         <div id="auditLogList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
         <div class="modal-buttons"><button class="close-modal" onclick="this.closest('.modal').remove()">Close</button></div>
     </div>`;
@@ -1667,11 +1667,11 @@ function renderMembersList(members) {
             <div class="member-avatar" id="memberAvatar-${escapeHtml(member.email || '')}">${avatarContent}</div>
             <div class="member-card-info">
                 <div class="member-name">${escapeHtml(member.name)}</div>
-                <div class="member-role ${isTreas ? 'treasurer' : ''}">${isTreas ? '👑 Treasurer' : 'Member'}</div>
+                <div class="member-role ${isTreas ? 'treasurer' : ''}">${isTreas ? 'Treasurer' : 'Member'}</div>
             </div>
             <div class="member-stats">
-                <span>💰 KES ${(memberStats.savings || 0).toLocaleString()}</span>
-                <span>🏦 KES ${(memberStats.loans || 0).toLocaleString()}</span>
+                <span> KES ${(memberStats.savings || 0).toLocaleString()}</span>
+                <span> KES ${(memberStats.loans || 0).toLocaleString()}</span>
             </div>
         </div>`;
     }).join('');
@@ -1719,7 +1719,7 @@ function viewMemberProfile(name, email) {
             <div class="profile-body">
                 <div class="profile-name">${escapeHtml(name)}</div>
                 <div class="profile-email">${escapeHtml(email || 'No email')}</div>
-                <span class="profile-role ${isTreas ? 'treasurer' : ''}">${isTreas ? '👑 Treasurer' : '👤 Member'}</span>
+                <span class="profile-role ${isTreas ? 'treasurer' : ''}">${isTreas ? 'Treasurer' : 'Member'}</span>
                 <div class="profile-divider"></div>
                 <div class="profile-stats-grid">
                     <div class="profile-stat-card savings"><div class="stat-number">KES ${(stats.savings || 0).toLocaleString()}</div><div class="stat-label">Total Savings</div></div>
@@ -1767,7 +1767,7 @@ function openHistoryModal() {
     modal.innerHTML = `
         <div class="history-modal-content">
             <div class="history-modal-header">
-                <h3>📜 Transaction History</h3>
+                <h3> Transaction History</h3>
                 <button class="close-history-btn" onclick="this.closest('.history-modal').remove()">✕</button>
             </div>
             <div class="history-modal-body">
@@ -1837,7 +1837,7 @@ function renderHistoryTable(filtered = null) {
         let msg = r.message || '-';
         const rowKey = `${r.date}|${r.member}|${r.type}|${r.amount}`;
         const isOwn = r.member === currentUser;
-        const editBtn = isOwn ? `<button class="edit-txn-btn" onclick="openEditTransactionModal(${JSON.stringify(rowKey)}, ${JSON.stringify(r.type)}, ${r.amount}, ${JSON.stringify(r.message || '')})">✏️ Edit</button>` : '';
+        const editBtn = isOwn ? `<button class="edit-txn-btn" onclick="openEditTransactionModal(${JSON.stringify(rowKey)}, ${JSON.stringify(r.type)}, ${r.amount}, ${JSON.stringify(r.message || '')})"> Edit</button>` : '';
         return `<tr>
             <td style="white-space: nowrap;">${new Date(r.date).toLocaleDateString('en-KE')}</td>
             <td><strong>${escapeHtml(r.member)}</strong></td>
@@ -1854,7 +1854,7 @@ function openEditTransactionModal(rowKey, type, currentAmount, currentMessage) {
     modal.className = 'modal';
     modal.innerHTML = `
         <div class="modal-content">
-            <h3>✏️ Request Edit</h3>
+            <h3> Request Edit</h3>
             <p style="font-size:12px; color:var(--ink-soft); margin-bottom:14px;">Editing a <strong>${escapeHtml(type)}</strong> transaction.</p>
             <div class="form-grid">
                 <div style="grid-column:span 2;"><label>New Amount (KES)</label><input type="number" id="editTxnAmount" value="${currentAmount}" min="1"></div>
@@ -1902,14 +1902,14 @@ function openProfileModal() {
                 <div class="profile-avatar-wrapper">
                     <div class="profile-avatar" id="profileAvatar" onclick="document.getElementById('profileFileInput').click()">
                         ${profileImage ? `<img src="${profileImage}" alt="${currentUser}">` : initial}
-                        <div class="avatar-overlay"><span class="camera-icon">📷</span><span>Change Photo</span></div>
+                        <div class="avatar-overlay"><span class="camera-icon"></span><span>Change Photo</span></div>
                     </div>
                 </div>
             </div>
             <div class="profile-body">
                 <div class="profile-name">${escapeHtml(currentUser)}</div>
                 <div class="profile-email">${escapeHtml(currentUserEmail)}</div>
-                <span class="profile-role ${isTreas ? 'treasurer' : ''} ${isDev ? 'developer' : ''}">${isDev ? '🛠️ Developer' : isTreas ? '👑 Treasurer' : '👤 Member'}</span>
+                <span class="profile-role ${isTreas ? 'treasurer' : ''} ${isDev ? 'developer' : ''}">${isDev ? 'Developer' : isTreas ? 'Treasurer' : 'Member'}</span>
                 <div class="profile-divider"></div>
                 <div class="profile-stats-grid">
                     <div class="profile-stat-card savings"><div class="stat-number">KES ${userStats.savings.toLocaleString()}</div><div class="stat-label">Total Savings</div></div>
@@ -2022,13 +2022,13 @@ async function handleProfileImageUpload(event) {
             const success = await saveProfileImageToServer(compressedData);
             if (success) {
                 const avatar = document.getElementById('profileAvatar');
-                if (avatar) avatar.innerHTML = `<img src="${getProfileImage()}" alt="${escapeHtml(currentUser)}"><div class="avatar-overlay"><span class="camera-icon">📷</span><span>Change Photo</span></div>`;
+                if (avatar) avatar.innerHTML = `<img src="${getProfileImage()}" alt="${escapeHtml(currentUser)}"><div class="avatar-overlay"><span class="camera-icon"></span><span>Change Photo</span></div>`;
                 progressFill.style.width = '100%';
-                statusEl.textContent = '✅ Done!';
+                statusEl.textContent = 'Done!';
                 setTimeout(() => { progressEl.classList.remove('active'); progressFill.style.width = '0%'; }, 1500);
                 showToast('Profile photo updated!', 'success');
             } else {
-                statusEl.textContent = '❌ Failed to save';
+                statusEl.textContent = 'Failed to save';
                 showToast('Failed to save profile photo.', 'error');
             }
         };
@@ -2132,7 +2132,7 @@ function renderChart(summary) {
 function exportToCSV() {
     if (!allRecords.length) { showToast('No transactions to export', 'error'); return; }
     const btn = document.getElementById('exportCsvBtn');
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ Preparing...'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Preparing...'; }
     try {
         const columns = ['Date', 'Member', 'Type', 'Amount (KES)', 'Message', 'Balance After'];
         const rows = [...allRecords].sort((a, b) => new Date(a.date) - new Date(b.date)).map(r => [
@@ -2159,7 +2159,7 @@ function exportToCSV() {
         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
         showToast(`Exported ${rows.length} transactions`, 'success');
     } catch (e) { showToast('Error generating CSV', 'error'); }
-    if (btn) { btn.disabled = false; btn.textContent = '📊 Download CSV / Excel'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Download CSV / Excel'; }
 }
 
 function exportToPDF() {
@@ -2186,7 +2186,7 @@ function exportToPDF() {
         const financialChartImg = chartInstance ? chartInstance.toBase64Image('image/png', 1) : null;
         const contentHtml = `
             <div id="pdfReportContent" style="max-width:800px;margin:0 auto;font-family:Arial,sans-serif;color:#14213D;font-size:12px;padding:10px;">
-                <h1 style="text-align:center;border-bottom:2px solid #3B6FF2;padding-bottom:8px;">🏛️ Legacy Builders Group</h1>
+                <h1 style="text-align:center;border-bottom:2px solid #3B6FF2;padding-bottom:8px;"> Legacy Builders Group</h1>
                 <h2 style="text-align:center;font-weight:400;margin-top:0;font-size:15px;">Financial Report</h2>
                 <p style="text-align:center;color:#7C8AA5;font-size:10px;">${new Date().toLocaleDateString()}</p>
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin:10px 0;background:#F4F6FB;padding:10px;border-radius:8px;">
@@ -2195,8 +2195,8 @@ function exportToPDF() {
                     <div style="text-align:center;"><div style="font-size:8px;color:#7C8AA5;">Repaid</div><div style="font-size:13px;font-weight:700;color:#1E3FC4;">KES ${repaid.toLocaleString()}</div></div>
                     <div style="text-align:center;"><div style="font-size:8px;color:#7C8AA5;">Net</div><div style="font-size:13px;font-weight:700;">KES ${net.toLocaleString()}</div></div>
                 </div>
-                ${financialChartImg ? `<div style="margin:10px 0;background:white;padding:10px;border-radius:8px;border:1px solid #E7EBF5;text-align:center;"><h3 style="margin:0 0 8px 0;font-size:12px;">📊 Financial Overview</h3><img src="${financialChartImg}" style="max-width:100%;height:auto;" /></div>` : ''}
-                <h3 style="margin:10px 0 4px 0;font-size:12px;">📜 Recent Transactions</h3>
+                ${financialChartImg ? `<div style="margin:10px 0;background:white;padding:10px;border-radius:8px;border:1px solid #E7EBF5;text-align:center;"><h3 style="margin:0 0 8px 0;font-size:12px;"> Financial Overview</h3><img src="${financialChartImg}" style="max-width:100%;height:auto;" /></div>` : ''}
+                <h3 style="margin:10px 0 4px 0;font-size:12px;"> Recent Transactions</h3>
                 <table style="width:100%;border-collapse:collapse;font-size:9px;margin-top:4px;">
                     <thead><tr style="background:#3B6FF2;color:white;"><th style="padding:3px 5px;text-align:left;">Date</th><th style="padding:3px 5px;text-align:left;">Member</th><th style="padding:3px 5px;text-align:left;">Type</th><th style="padding:3px 5px;text-align:right;">Amount</th></tr></thead>
                     <tbody>${recentRecords.map(r => `<tr style="border-bottom:1px solid #E7EBF5;"><td style="padding:3px 5px;">${new Date(r.date).toLocaleDateString('en-KE')}</td><td style="padding:3px 5px;font-weight:500;">${escapeHtml(r.member)}</td><td style="padding:3px 5px;">${r.type}</td><td style="padding:3px 5px;text-align:right;">${r.type === 'Loan Repayment' ? '+' : (r.type === 'Savings' ? '+' : '-')} KES ${(r.amount || 0).toLocaleString('en-KE')}</td></tr>`).join('')}</tbody>
@@ -2206,14 +2206,14 @@ function exportToPDF() {
                     <div style="text-align:center;"><div style="font-size:8px;color:#7C8AA5;">Total Transactions</div><div style="font-size:13px;font-weight:700;">${allRecords.length}</div></div>
                 </div>
                 <p style="text-align:center;color:#7C8AA5;font-size:9px;margin-top:12px;border-top:1px solid #E7EBF5;padding-top:10px;">Legacy Builders Group — Building Wealth Together</p>
-                <button class="pdf-generate-btn" id="pdfGenerateBtn" style="background:#3B6FF2;color:#14213D;border:none;padding:10px 20px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;width:100%;margin-top:12px;">📥 Download PDF</button>
+                <button class="pdf-generate-btn" id="pdfGenerateBtn" style="background:#3B6FF2;color:#14213D;border:none;padding:10px 20px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;width:100%;margin-top:12px;"> Download PDF</button>
                 <button class="pdf-close-btn" onclick="document.getElementById('pdfGenerator').classList.remove('active')" style="position:absolute;top:8px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:#7C8AA5;width:auto;">✕</button>
             </div>
         `;
         preview.innerHTML = contentHtml;
         document.getElementById('pdfGenerateBtn').addEventListener('click', function() {
             const btn = this;
-            btn.disabled = true; btn.innerHTML = '⏳ Generating...';
+            btn.disabled = true; btn.innerHTML = 'Generating...';
             const reportSource = document.getElementById('pdfReportContent') || preview;
             const reportClone = reportSource.cloneNode(true);
             reportClone.querySelectorAll('.pdf-generate-btn, .pdf-close-btn').forEach(b => b.remove());
@@ -2235,12 +2235,12 @@ function exportToPDF() {
             };
             html2pdf().set(opt).from(reportClone).save().then(() => {
                 captureHost.remove();
-                btn.disabled = false; btn.innerHTML = '📥 Download PDF';
+                btn.disabled = false; btn.innerHTML = 'Download PDF';
                 document.getElementById('pdfGenerator').classList.remove('active');
                 showToast('PDF downloaded!', 'success');
             }).catch((err) => {
                 captureHost.remove();
-                btn.disabled = false; btn.innerHTML = '📥 Download PDF';
+                btn.disabled = false; btn.innerHTML = 'Download PDF';
                 showToast('Error generating PDF', 'error');
             });
         });
@@ -2270,12 +2270,12 @@ async function requestNotificationPermission() {
     try {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-            showToast('✅ Notifications enabled!', 'success');
+            showToast('Notifications enabled!', 'success');
             document.getElementById('notificationPrompt').classList.remove('active');
             await registerServiceWorker();
             await subscribeToPush();
         } else {
-            showToast('❌ Notification permission denied', 'error');
+            showToast('Notification permission denied', 'error');
         }
     } catch (e) { showToast('Error enabling notifications', 'error'); }
 }
@@ -2314,7 +2314,7 @@ async function subscribeToPush() {
         const res = await callAPI('savePushSubscription', { subscription: subscription.toJSON() });
         if (res.success) {
             pushSubscription = subscription;
-            showToast('🔔 Push notifications enabled!', 'success');
+            showToast('Push notifications enabled!', 'success');
         } else {
             showToast(res.error || 'Failed to save subscription', 'error');
         }
@@ -2329,13 +2329,13 @@ async function subscribeToPush() {
 // TAB ACTIVATION
 // ============================================================
 const PANEL_TITLES = {
-    summary: '📊 Summary',
-    loans: '💰 Loans',
-    meetings: '📝 Meetings',
-    pending: '⏳ Pending Approvals',
-    groupChat: '✉ Group Inbox',
-    about: '👥 About Us',
-    developer: '🛠️ Developer Portal'
+    summary: 'Summary',
+    loans: 'Loans',
+    meetings: 'Meetings',
+    pending: 'Pending Approvals',
+    groupChat: 'Group Inbox',
+    about: 'About Us',
+    developer: 'Developer Portal'
 };
 
 function ensureFullscreenBar(panel, tabId) {
@@ -2410,7 +2410,7 @@ function initMemoriesCarousel() {
             ${photo.caption ? `<figcaption>${escapeHtml(photo.caption)}</figcaption>` : ''}
         </figure>
     `).join('');
-    dotsWrap.innerHTML = GROUP_MEMORY_PHOTOS.map((_, i) => `<span class="memories-dot${i === 0 ? ' active' : ''}"></span>`).join('');
+    dotsWrap.innerHTML = GROUP_MEMORY_PHOTOS.map((_, i) => `<span class="memories-dot${i === 0 ? 'active' : ''}"></span>`).join('');
     memoriesIndex = 0; updateMemoriesPosition();
     if (memoriesInterval) clearInterval(memoriesInterval);
     if (GROUP_MEMORY_PHOTOS.length > 1 && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
@@ -2502,7 +2502,7 @@ async function loadGroupMessages() {
         return;
     }
     container.innerHTML = messages.map(message => `
-        <article class="group-message${message.email === currentUserEmail ? ' own-message' : ''}">
+        <article class="group-message${message.email === currentUserEmail ? 'own-message' : ''}">
             <div class="group-message-meta">
                 <strong>${escapeHtml(message.member || 'Group member')}</strong>
                 <time>${message.created_at ? new Date(message.created_at).toLocaleString() : ''}</time>

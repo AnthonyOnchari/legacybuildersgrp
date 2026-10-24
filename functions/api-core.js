@@ -375,7 +375,7 @@ async function handleAction(action, params, user) {
             });
             await audit(name, `Submitted ${type}`, `KES ${amount.toLocaleString()} — awaiting approval`);
             await sendPush(
-                `📊 New Transaction from ${name}`,
+                `New Transaction from ${name}`,
                 `${name} submitted a ${type} of KES ${amount.toLocaleString()}. Please approve.`,
                 await emailForName(await getTreasurerName()),
                 name,
@@ -434,7 +434,7 @@ async function handleAction(action, params, user) {
                 }
             });
             await audit(name, transaction.editId ? "Approved transaction edit" : `Approved ${transaction.type}`, `${transaction.member}'s KES ${asNumber(transaction.amount).toLocaleString()}`);
-            await sendPush("✅ Transaction Approved", `Your ${transaction.type} of KES ${asNumber(transaction.amount).toLocaleString()} has been approved by ${name}.`, transaction.member, name, { type: "transaction_approved" });
+            await sendPush("Transaction Approved", `Your ${transaction.type} of KES ${asNumber(transaction.amount).toLocaleString()} has been approved by ${name}.`, transaction.member, name, { type: "transaction_approved" });
             return { success: true };
         }
         case "rejectTransaction": {
@@ -445,7 +445,7 @@ async function handleAction(action, params, user) {
             const transaction = snapshot.data();
             await ref.delete();
             await audit(name, `Rejected ${transaction.type}`, `${transaction.member}'s KES ${asNumber(transaction.amount).toLocaleString()}`);
-            await sendPush("❌ Transaction Rejected", `Your ${transaction.type} transaction was rejected.`, transaction.member, name, { type: "transaction_rejected" });
+            await sendPush("Transaction Rejected", `Your ${transaction.type} transaction was rejected.`, transaction.member, name, { type: "transaction_rejected" });
             return { success: true };
         }
         case "submitLoan": {
@@ -461,7 +461,7 @@ async function handleAction(action, params, user) {
             });
             await audit(name, "Requested a loan", `KES ${amount.toLocaleString()} — needs member approval`);
             await sendPush(
-                `💰 New Loan Request from ${name}`,
+                `New Loan Request from ${name}`,
                 `${name} has requested a loan of KES ${amount.toLocaleString()}. Please approve.`,
                 null,
                 name,
@@ -498,14 +498,14 @@ async function handleAction(action, params, user) {
             await audit(name, "Approved a loan vote", `${approvalCount} approval(s)`);
             if (completedLoan) {
                 await sendPush(
-                    "✅ Loan Fully Approved!",
+                    "Loan Fully Approved!",
                     `Your loan of KES ${asNumber(completedLoan.amount).toLocaleString()} has been approved by all members. The treasurer will set a repayment due date.`,
                     completedLoan.member,
                     name,
                     { type: "loan_fully_approved", loanId: id, amount: asNumber(completedLoan.amount) }
                 );
                 await sendPush(
-                    "📅 Set Loan Due Date",
+                    "Set Loan Due Date",
                     `${completedLoan.member}'s loan has been fully approved and needs a due date.`,
                     await getTreasurerName(),
                     name,
@@ -515,7 +515,7 @@ async function handleAction(action, params, user) {
                 const loan = await ref.get();
                 const member = loan.exists ? loan.data().member : "";
                 await sendPush(
-                    "📋 Loan Approval Update",
+                    "Loan Approval Update",
                     `${name} approved ${member}'s loan. ${Math.max(0, Math.max(1, (await rows("users")).filter((item) => item.status === "approved").length - 1) - approvalCount)} more approval(s) needed.`,
                     member,
                     name,
@@ -532,7 +532,7 @@ async function handleAction(action, params, user) {
             const loan = snapshot.data();
             await ref.delete();
             await audit(name, "Rejected a loan request", `${loan.member}'s loan request`);
-            await sendPush("❌ Loan Request Rejected", `Your loan request has been rejected by ${name}.`, loan.member, name, { type: "loan_rejected", loanId: params.loanId });
+            await sendPush("Loan Request Rejected", `Your loan request has been rejected by ${name}.`, loan.member, name, { type: "loan_rejected", loanId: params.loanId });
             return { success: true };
         }
         case "cancelLoan": {
@@ -542,7 +542,7 @@ async function handleAction(action, params, user) {
             if (snapshot.data().member !== name && !isAdmin(user)) throw new Error("You can only cancel your own loan request.");
             const loan = snapshot.data();
             await ref.delete();
-            await sendPush("❌ Loan Request Cancelled", `${name} cancelled a loan request of KES ${asNumber(loan.amount).toLocaleString()}.`, null, name, { type: "loan_cancelled", loanId: params.loanId });
+            await sendPush("Loan Request Cancelled", `${name} cancelled a loan request of KES ${asNumber(loan.amount).toLocaleString()}.`, null, name, { type: "loan_cancelled", loanId: params.loanId });
             return { success: true };
         }
         case "setLoanDueDate": {
@@ -573,7 +573,7 @@ async function handleAction(action, params, user) {
                 tx.delete(awaitingRef);
             });
             await audit(name, "Activated loan with due date", `${loanId} — due ${dueDate}`);
-            await sendPush("📅 Loan Activated", `Your loan is active. Repayment due: ${dueDate}.`, loanMember, name, { type: "loan_due_date_set", loanId, dueDate });
+            await sendPush("Loan Activated", `Your loan is active. Repayment due: ${dueDate}.`, loanMember, name, { type: "loan_due_date_set", loanId, dueDate });
             return { success: true };
         }
         case "getPendingRegistrations":
@@ -764,13 +764,13 @@ async function handleAction(action, params, user) {
                 date: params.date || "", agenda: String(params.agenda || ""),
                 venue: String(params.venue || ""), scheduledBy: name
             });
-            await sendPush("📅 New Meeting Scheduled", `A meeting has been scheduled for ${params.date || ""}.`, null, name, { type: "meeting_scheduled", date: params.date || "", agenda: params.agenda || "", venue: params.venue || "" });
+            await sendPush("New Meeting Scheduled", `A meeting has been scheduled for ${params.date || ""}.`, null, name, { type: "meeting_scheduled", date: params.date || "", agenda: params.agenda || "", venue: params.venue || "" });
             return { success: true };
         }
         case "cancelScheduledMeeting":
             requireAdmin(user);
             await db.collection("scheduledMeeting").doc("current").delete();
-            await sendPush("❌ Meeting Cancelled", "The scheduled meeting has been cancelled.", null, name, { type: "meeting_cancelled" });
+            await sendPush("Meeting Cancelled", "The scheduled meeting has been cancelled.", null, name, { type: "meeting_cancelled" });
             return { success: true };
         case "savePushSubscription": {
             const subscription = params.subscription;

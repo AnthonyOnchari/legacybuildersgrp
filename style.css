@@ -3860,15 +3860,17 @@ body.finance-ui .login-overlay {
     justify-content: center;
     padding: clamp(12px, 2vw, 24px);
     background:
-        radial-gradient(ellipse at 80% 8%, rgba(218, 237, 224, .75), transparent 35rem),
-        #F4F7F3;
+        linear-gradient(135deg, rgba(4, 20, 26, .62), rgba(6, 37, 42, .42)),
+        url("Assets/image.png") center / cover no-repeat,
+        #082831;
 }
 body.finance-ui .login-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(360px, .9fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, .9fr);
     grid-template-rows: minmax(0, 1fr);
-    width: min(1040px, calc(100vw - 48px));
-    height: min(600px, calc(100dvh - 36px));
+    gap: 0;
+    width: min(728px, calc(100vw - 48px));
+    height: min(420px, calc(100dvh - 36px));
     min-height: 0;
     overflow: hidden;
     border: 1px solid rgba(29, 70, 55, .08);
@@ -3884,12 +3886,15 @@ body.finance-ui .login-layout {
 body.finance-ui .login-copy {
     position: relative;
     display: flex;
+    width: 100%;
+    max-width: none;
     height: 100%;
     min-height: 0;
     flex-direction: column;
     align-items: stretch;
     overflow: hidden;
     padding: 0;
+    margin: 0;
     background:
         radial-gradient(circle at 90% 20%, rgba(204, 233, 210, .24), transparent 16rem),
         linear-gradient(145deg, #286F55 0%, #174C3C 62%, #103A30 100%);
@@ -3981,88 +3986,184 @@ body.finance-ui .login-illustration {
     display: none;
 }
 body.finance-ui .login-box {
+    position: relative;
+    isolation: isolate;
+    align-self: stretch;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    width: 100%;
+    max-width: none;
+    margin: 0;
     padding: clamp(28px, 3.5vw, 52px);
     border: 0;
     border-radius: 0;
-    background: #fff;
+    background:
+        radial-gradient(ellipse at 100% 0%, rgba(207, 231, 208, .8), transparent 52%),
+        radial-gradient(ellipse at 0% 100%, rgba(231, 222, 194, .42), transparent 48%),
+        linear-gradient(145deg, #F2F7F0 0%, #FBFCF9 55%, #EFF5ED 100%);
     box-shadow: none;
     text-align: left;
+    overflow: hidden;
+    font-family: 'Manrope', 'DM Sans', sans-serif;
+}
+body.finance-ui .login-box::before,
+body.finance-ui .login-box::after {
+    position: absolute;
+    z-index: -1;
+    content: "";
+    pointer-events: none;
+}
+body.finance-ui .login-box::before {
+    top: 8%;
+    right: -82px;
+    width: 210px;
+    height: 210px;
+    border: 1px solid rgba(35, 116, 93, .12);
+    border-radius: 50%;
+    box-shadow:
+        0 0 0 22px rgba(35, 116, 93, .035),
+        0 0 0 46px rgba(35, 116, 93, .025);
+}
+body.finance-ui .login-box::after {
+    left: -60px;
+    bottom: -100px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(216, 232, 214, .4), transparent 70%);
+}
+body.finance-ui .login-hero,
+body.finance-ui .login-form-area {
+    position: relative;
+    z-index: 1;
 }
 body.finance-ui .login-hero {
     padding: 0;
     background: transparent;
 }
+body.finance-ui .login-hero h2,
+body.finance-ui .login-secure-label,
+body.finance-ui .login-box .subtitle,
+body.finance-ui .login-box .login-btn,
+body.finance-ui .login-box .login-create-btn,
+body.finance-ui .login-divider {
+    font-family: 'Manrope', 'DM Sans', sans-serif;
+}
 body.finance-ui .login-secure-label {
-    display: block;
-    margin-bottom: 17px;
-    color: #23745D;
-    font-size: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    width: fit-content;
+    margin-bottom: 16px;
+    padding: 6px 14px 6px 7px;
+    border: 1px solid rgba(35, 82, 60, .12);
+    border-radius: 999px;
+    background: linear-gradient(135deg, #173E31 0%, #286B4D 100%);
+    color: #fff;
+    box-shadow: 0 7px 18px rgba(24, 67, 47, .18), inset 0 1px 0 rgba(255,255,255,.16);
+    font-size: 11px;
     font-weight: 800;
-    letter-spacing: .19em;
+    letter-spacing: .16em;
+}
+body.finance-ui .login-secure-mark {
+    display: grid;
+    place-items: center;
+    width: 27px;
+    height: 27px;
+    border: 1px solid rgba(242, 220, 157, .48);
+    border-radius: 50%;
+    background: linear-gradient(145deg, #E9D49A 0%, #B9904D 100%);
+    color: #193D30;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.48);
+}
+@media (max-width: 700px) {
+    body.finance-ui .login-secure-label { margin-bottom: 8px; }
 }
 body.finance-ui .login-hero h2 {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     color: #18392F;
-    font-size: clamp(25px, 2.3vw, 32px);
+    font-size: clamp(28px, 2.5vw, 35px);
     font-weight: 700;
-    letter-spacing: -.05em;
+    letter-spacing: -.055em;
+    line-height: 1.12;
 }
 body.finance-ui .login-box .subtitle {
-    color: #77847C;
+    max-width: 310px;
+    color: #68786E;
     font-size: 14px;
-    line-height: 1.6;
+    font-weight: 500;
+    line-height: 1.65;
 }
 body.finance-ui .login-form-area {
     width: 100%;
-    max-width: 420px;
-    padding: 30px 0 0;
+    max-width: 390px;
+    padding: 25px 0 0;
 }
 body.finance-ui .login-btn {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 11px;
-    min-height: 54px;
-    border: 1px solid #E0E8E1;
-    border-radius: 14px;
-    background: #fff;
-    color: #203B30;
-    box-shadow: 0 5px 16px rgba(25, 58, 42, .06);
+    min-height: 56px;
+    border: 1px solid #1B5B41;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #26704E 0%, #174B36 100%);
+    color: #fff;
+    box-shadow: 0 9px 20px rgba(25, 73, 49, .2), inset 0 1px 0 rgba(255,255,255,.17);
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
     transition: background .2s ease, border-color .2s ease, transform .2s ease, box-shadow .2s ease;
 }
 body.finance-ui .login-btn:hover {
     transform: translateY(-2px);
-    border-color: #BCD4C2;
-    background: #FAFCFA;
-    box-shadow: 0 9px 22px rgba(25, 58, 42, .1);
+    border-color: #174B36;
+    background: linear-gradient(135deg, #2D8059 0%, #1A573E 100%);
+    box-shadow: 0 12px 24px rgba(25, 73, 49, .25), inset 0 1px 0 rgba(255,255,255,.17);
 }
-body.finance-ui .google-mark { width: 20px; height: 20px; flex: 0 0 20px; }
+body.finance-ui .google-mark {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    padding: 2px;
+    border-radius: 50%;
+    background: #fff;
+}
 body.finance-ui .login-box .register-link {
     margin-top: 18px;
     color: #77847C;
     font-size: 12px;
     line-height: 1.55;
 }
-body.finance-ui .login-divider { margin: 22px 0 16px; }
+body.finance-ui .login-divider {
+    margin: 18px 0 14px;
+    color: #87948A;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .12em;
+}
 body.finance-ui .login-divider::before,
-body.finance-ui .login-divider::after { background: #E9EEE9; }
-body.finance-ui .login-divider span { background: #fff; color: #93A097; }
+body.finance-ui .login-divider::after { background: rgba(57, 93, 70, .18); }
+body.finance-ui .login-divider span { background: #F4F7F0; color: #748278; }
 body.finance-ui .login-create-btn {
-    min-height: 50px;
-    border-color: #DDE7DE;
-    border-radius: 14px;
-    color: #23745D;
+    min-height: 52px;
+    border: 1px solid rgba(35, 116, 93, .24);
+    border-radius: 13px;
+    background: rgba(255,255,255,.58);
+    color: #1D674A;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(28, 68, 45, .04);
     transition: background .2s ease, border-color .2s ease, transform .2s ease;
 }
 body.finance-ui .login-create-btn:hover {
     transform: translateY(-1px);
-    border-color: #B9D3BF;
-    background: #F5FAF5;
+    border-color: rgba(35, 116, 93, .42);
+    background: rgba(255,255,255,.88);
 }
 body.finance-ui .register-link a,
 body.finance-ui .forgot-password-link a { color: #23745D; }
@@ -4296,43 +4397,122 @@ body.finance-ui .tab.active .tab-icon { background: #E2F0E2; color: #1B684B; }
 }
 @media (max-width: 700px) {
     body.finance-ui .login-overlay {
-        align-items: flex-start;
-        padding: 14px;
+        align-items: stretch;
+        justify-content: stretch;
+        padding: 0;
+        overflow: hidden;
     }
     body.finance-ui .login-layout {
         grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: auto auto;
-        width: min(520px, calc(100vw - 28px));
-        height: auto;
-        min-height: 0;
-        margin: auto;
-        border-radius: 24px;
+        grid-template-rows: minmax(0, 1fr);
+        gap: 0;
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 100vh;
+        min-height: 100dvh;
+        margin: 0;
+        overflow: hidden;
+        border: 0;
+        border-radius: 0;
     }
     body.finance-ui .login-copy {
-        height: clamp(140px, 24vh, 190px);
+        grid-column: 1;
+        grid-row: 1;
+        height: 100%;
         min-height: 0;
         padding: 0;
     }
-    body.finance-ui .login-photo { object-position: center 100%; }
-    body.finance-ui .login-box { padding: 22px 24px 24px; }
-    body.finance-ui .login-form-area { padding-top: 14px; }
-    body.finance-ui .login-secure-label { margin-bottom: 8px; }
-    body.finance-ui .login-hero h2 { font-size: 23px; }
-    body.finance-ui .login-box .subtitle { font-size: 12px; }
-    body.finance-ui .login-divider { margin: 13px 0 10px; }
+    body.finance-ui .login-photo {
+        object-fit: cover;
+        object-position: center;
+    }
+    body.finance-ui .login-box {
+        position: absolute;
+        z-index: 2;
+        inset: 0;
+        justify-content: flex-end;
+        width: auto;
+        max-width: none;
+        max-height: none;
+        margin: 0;
+        padding:
+            max(76px, calc(env(safe-area-inset-top) + 64px))
+            max(22px, env(safe-area-inset-right))
+            max(26px, env(safe-area-inset-bottom))
+            max(22px, env(safe-area-inset-left));
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+    body.finance-ui .login-box::before,
+    body.finance-ui .login-box::after { display: none; }
+    body.finance-ui .login-hero { flex: 0 0 auto; }
+    body.finance-ui .login-secure-label {
+        position: fixed;
+        top: max(18px, env(safe-area-inset-top));
+        left: max(18px, env(safe-area-inset-left));
+        z-index: 3;
+        margin: 0;
+        box-shadow: 0 5px 18px rgba(8, 28, 24, .25);
+    }
+    body.finance-ui .login-hero h2 {
+        margin-bottom: 8px;
+        color: #fff;
+        font-size: 24px;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, .52);
+    }
+    body.finance-ui .login-box .subtitle {
+        color: rgba(255, 255, 255, .94);
+        font-size: 13px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, .58);
+    }
+    body.finance-ui .login-form-area {
+        width: min(100%, 320px);
+        align-self: flex-start;
+        padding-top: 12px;
+    }
+    body.finance-ui .login-divider { margin: 10px 0 8px; color: #fff; }
+    body.finance-ui .login-divider::before,
+    body.finance-ui .login-divider::after { background: rgba(255, 255, 255, .75); }
+    body.finance-ui .login-divider span { background: transparent; color: #fff; }
+    body.finance-ui .login-create-btn {
+        border-color: rgba(255, 255, 255, .78);
+        background: rgba(12, 31, 34, .24);
+        color: #fff;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, .16);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+    }
+    body.finance-ui .login-create-btn:hover { background: rgba(12, 31, 34, .4); }
 }
 @media (max-width: 700px) and (min-height: 500px) {
     body.finance-ui .login-copy {
-        height: clamp(140px, 24vh, 190px);
+        height: 100%;
         min-height: 0;
         padding: 0;
     }
-    body.finance-ui .login-photo { object-position: center 100%; }
-    body.finance-ui .login-box { padding: 20px 22px 22px; }
-    body.finance-ui .login-form-area { padding-top: 12px; }
-    body.finance-ui .login-divider { margin: 11px 0 8px; }
-    body.finance-ui .login-btn { min-height: 48px; padding: 10px; }
-    body.finance-ui .login-create-btn { min-height: 44px; padding-top: 8px; padding-bottom: 8px; }
+    body.finance-ui .login-photo {
+        object-fit: cover;
+        object-position: center;
+    }
+    body.finance-ui .login-box {
+        padding:
+            max(76px, calc(env(safe-area-inset-top) + 64px))
+            max(22px, env(safe-area-inset-right))
+            max(26px, env(safe-area-inset-bottom))
+            max(22px, env(safe-area-inset-left));
+    }
+    body.finance-ui .login-form-area { padding-top: 10px; }
+    body.finance-ui .login-divider { margin: 8px 0 6px; }
+    body.finance-ui .login-btn { min-height: 44px; padding: 9px; }
+    body.finance-ui .login-create-btn { min-height: 42px; padding-top: 7px; padding-bottom: 7px; }
 }
 @media (max-height: 600px) {
     body.finance-ui .login-overlay { padding-top: 8px; padding-bottom: 8px; }
@@ -4344,10 +4524,22 @@ body.finance-ui .tab.active .tab-icon { background: #E2F0E2; color: #1B684B; }
     body.finance-ui .login-divider { margin: 7px 0 5px; }
 }
 @media (max-width: 700px) and (max-height: 600px) {
-    body.finance-ui .login-layout { height: auto; }
-    body.finance-ui .login-copy { height: clamp(96px, 22vh, 130px); }
-    body.finance-ui .login-box { padding: 12px 20px 14px; }
-    body.finance-ui .login-box .subtitle { display: none; }
+    body.finance-ui .login-overlay { padding: 0; }
+    body.finance-ui .login-layout {
+        height: 100vh;
+        height: 100dvh;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+    body.finance-ui .login-copy { height: 100%; }
+    body.finance-ui .login-box {
+        padding:
+            max(66px, calc(env(safe-area-inset-top) + 56px))
+            max(22px, env(safe-area-inset-right))
+            max(18px, env(safe-area-inset-bottom))
+            max(22px, env(safe-area-inset-left));
+    }
+    body.finance-ui .login-box .subtitle { display: block; }
     body.finance-ui .login-form-area { padding-top: 6px; }
     body.finance-ui .login-btn { min-height: 42px; }
     body.finance-ui .login-create-btn { min-height: 40px; }
