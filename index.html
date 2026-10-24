@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body class="finance-ui">
 
@@ -25,123 +25,77 @@
     <!-- LOGIN OVERLAY -->
     <div id="loginOverlay" class="login-overlay">
         <div class="login-layout">
-            <section class="login-copy" aria-labelledby="loginBrandTitle">
-                <div class="login-copy-brand">
-                    <span class="login-mark" aria-hidden="true">LB</span>
-                    <h1 id="loginBrandTitle">Legacy Builders</h1>
-                </div>
-                <div class="login-copy-message">
-                    <span class="login-copy-kicker">MEMBER FINANCE, MADE CLEAR</span>
-                    <h2 class="login-copy-title">Build a stronger future, together.</h2>
-                    <p>Keep your savings, loans and group conversations moving forward in one secure place.</p>
-                </div>
-                <svg class="login-illustration" viewBox="0 0 720 420" aria-hidden="true" focusable="false">
-                    <defs>
-                        <linearGradient id="artBackground" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0" stop-color="#3D9474"/>
-                            <stop offset="1" stop-color="#155541"/>
-                        </linearGradient>
-                        <linearGradient id="coinGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0" stop-color="#F8E6B3"/>
-                            <stop offset="1" stop-color="#D6AD61"/>
-                        </linearGradient>
-                    </defs>
-                    <rect width="720" height="420" rx="30" fill="url(#artBackground)"/>
-                    <circle cx="602" cy="86" r="112" fill="#A9D6BB" opacity=".16"/>
-                    <circle cx="114" cy="344" r="142" fill="#B6D9BD" opacity=".12"/>
-                    <path d="M0 325C120 270 191 316 285 281s161-87 253-45 119 18 182-20v204H0z" fill="#0B4434" opacity=".42"/>
-                    <path d="M53 284l126-84 99 45 131-126 112 36 133-98" fill="none" stroke="#D7F0D9" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>
-                    <path d="M644 56l10 1-1 10" fill="none" stroke="#D7F0D9" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>
-                    <circle cx="178" cy="200" r="10" fill="#F5E3B4"/>
-                    <circle cx="278" cy="245" r="10" fill="#F5E3B4"/>
-                    <circle cx="409" cy="119" r="10" fill="#F5E3B4"/>
-                    <circle cx="521" cy="155" r="10" fill="#F5E3B4"/>
-                    <g transform="translate(472 234)">
-                        <ellipse cx="104" cy="102" rx="91" ry="24" fill="#0C4233" opacity=".4"/>
-                        <path d="M31 73v26c0 14 32 25 72 25s72-11 72-25V73" fill="url(#coinGradient)"/>
-                        <ellipse cx="103" cy="73" rx="72" ry="23" fill="#F7E6B9"/>
-                        <path d="M45 42v26c0 13 26 23 58 23s58-10 58-23V42" fill="url(#coinGradient)"/>
-                        <ellipse cx="103" cy="42" rx="58" ry="20" fill="#FFF0C9"/>
-                        <path d="M61 12v23c0 10 19 18 42 18s42-8 42-18V12" fill="url(#coinGradient)"/>
-                        <ellipse cx="103" cy="12" rx="42" ry="16" fill="#FFF4D9"/>
-                        <path d="M103 2v21m-10-14c0-5 20-6 20 1 0 7-20 7-20 14 0 7 20 6 20 0" fill="none" stroke="#92723C" stroke-width="4" stroke-linecap="round"/>
-                    </g>
-                    <g transform="translate(68 80)">
-                        <rect width="150" height="84" rx="19" fill="#FFFFFF" opacity=".95"/>
-                        <circle cx="39" cy="42" r="19" fill="#E4F1E7"/>
-                        <path d="M39 54V31m-8 8 8-8 8 8" fill="none" stroke="#23745D" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                        <rect x="71" y="30" width="56" height="7" rx="3.5" fill="#B5C6BB"/>
-                        <rect x="71" y="46" width="38" height="6" rx="3" fill="#D5DFD7"/>
-                    </g>
-                </svg>
-            </section>
+                <section class="login-copy" aria-label="Legacy Builders home">
+                    <video class="login-photo" autoplay muted loop playsinline preload="metadata" poster="Assets/img01.jpeg" aria-hidden="true">
+                        <source src="Assets/Img%20(1).mp4" type="video/mp4">
+                    </video>
+                </section>
 
-            <div class="login-box">
-                <div class="login-hero">
-                    <span class="login-secure-label">SECURE MEMBER SIGN IN</span>
-                    <h2>Log in to your account</h2>
-                    <div class="subtitle" id="loginSubtitle">Your group, your progress, all in one place.</div>
-                </div>
-                <div class="login-form-area">
-                    <div id="loginForm">
-                        <button class="login-btn" id="loginBtn" onclick="loginWithGoogle()">
-                            <svg class="google-mark" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.8 6-15z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.7-5.1c-1.8 1.2-4 1.9-6.8 1.9-5.2 0-9.6-3.5-11.2-8.2H5.9v5.3A20 20 0 0 0 24 44z"/><path fill="#FBBC05" d="M12.8 27.8a12 12 0 0 1 0-7.6v-5.3H5.9a20 20 0 0 0 0 18.2z"/><path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 5.9 29.5 4 24 4A20 20 0 0 0 5.9 14.9l6.9 5.3C14.4 15.5 18.8 12 24 12z"/></svg>
-                            <span>Continue with Google</span>
-                        </button>
-                        <div id="loginError" class="error-message"></div>
-                        <div class="login-divider" aria-hidden="true"><span>OR</span></div>
-                        <button class="login-create-btn" type="button" onclick="showRegisterForm()">Request to join</button>
+                <div class="login-box">
+                    <div class="login-hero">
+                        <span class="login-secure-label">SECURE MEMBER SIGN IN</span>
+                        <h2>Log in to your account</h2>
+                        <div class="subtitle" id="loginSubtitle">Your group, your progress, all in one place.</div>
                     </div>
+                    <div class="login-form-area">
+                        <div id="loginForm">
+                            <button class="login-btn" id="loginBtn" onclick="loginWithGoogle()">
+                                <svg class="google-mark" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.8 6-15z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.7-5.1c-1.8 1.2-4 1.9-6.8 1.9-5.2 0-9.6-3.5-11.2-8.2H5.9v5.3A20 20 0 0 0 24 44z"/><path fill="#FBBC05" d="M12.8 27.8a12 12 0 0 1 0-7.6v-5.3H5.9a20 20 0 0 0 0 18.2z"/><path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 5.9 29.5 4 24 4A20 20 0 0 0 5.9 14.9l6.9 5.3C14.4 15.5 18.8 12 24 12z"/></svg>
+                                <span>Continue with Google</span>
+                            </button>
+                            <div id="loginError" class="error-message"></div>
+                            <div class="login-divider" aria-hidden="true"><span>OR</span></div>
+                            <button class="login-create-btn" type="button" onclick="showRegisterForm()">Request to join</button>
+                        </div>
 
-                    <!-- OTP FORM -->
-                    <div id="otpForm" style="display: none;">
-                        <div class="otp-hint-line">We sent a 6-digit code to <span id="otpEmailHint"></span></div>
-                        <div class="otp-inputs">
-                            <input class="otp-box" inputmode="numeric" maxlength="1" autocomplete="one-time-code">
-                            <input class="otp-box" inputmode="numeric" maxlength="1">
-                            <input class="otp-box" inputmode="numeric" maxlength="1">
-                            <input class="otp-box" inputmode="numeric" maxlength="1">
-                            <input class="otp-box" inputmode="numeric" maxlength="1">
-                            <input class="otp-box" inputmode="numeric" maxlength="1">
+                        <div id="otpForm" style="display: none;">
+                            <div class="otp-hint-line">We sent a 6-digit code to <span id="otpEmailHint"></span></div>
+                            <div class="otp-inputs">
+                                <input class="otp-box" inputmode="numeric" maxlength="1" autocomplete="one-time-code">
+                                <input class="otp-box" inputmode="numeric" maxlength="1">
+                                <input class="otp-box" inputmode="numeric" maxlength="1">
+                                <input class="otp-box" inputmode="numeric" maxlength="1">
+                                <input class="otp-box" inputmode="numeric" maxlength="1">
+                                <input class="otp-box" inputmode="numeric" maxlength="1">
+                            </div>
+                            <div id="otpError" class="error-message" style="display: none;"></div>
+                            <button class="login-btn" id="otpVerifyBtn" onclick="verifyOtpAndLogin()">Verify &amp; Login</button>
+                            <button class="otp-link-btn" id="otpResendBtn" onclick="resendOtpCode()">Resend code</button>
+                            <button class="otp-link-btn" onclick="backToLoginFromOtp()">← Back to login</button>
                         </div>
-                        <div id="otpError" class="error-message" style="display: none;"></div>
-                        <button class="login-btn" id="otpVerifyBtn" onclick="verifyOtpAndLogin()">Verify &amp; Login</button>
-                        <button class="otp-link-btn" id="otpResendBtn" onclick="resendOtpCode()">Resend code</button>
-                        <button class="otp-link-btn" onclick="backToLoginFromOtp()">← Back to login</button>
-                    </div>
 
-                    <div id="registerForm" style="display: none;">
-                        <div class="login-form-group">
-                            <label>📧 Email Address</label>
-                            <input type="email" id="registerEmail" placeholder="Enter your email">
+                        <div id="registerForm" style="display: none;">
+                            <div class="login-form-group">
+                                <label>📧 Email Address</label>
+                                <input type="email" id="registerEmail" placeholder="Enter your email">
+                            </div>
+                            <div class="login-form-group">
+                                <label>👤 Full Name</label>
+                                <input type="text" id="registerName" placeholder="Enter your full name">
+                            </div>
+                            <div class="register-link">
+                                The group will review your request. Sign in with Google after approval.
+                            </div>
+                            <button class="login-btn" onclick="registerUser(this)">Send request</button>
+                            <div id="registerError" class="error-message"></div>
+                            <div class="register-link">
+                                Already have an account? <a onclick="showLoginForm()">Login here</a>
+                            </div>
                         </div>
-                        <div class="login-form-group">
-                            <label>👤 Full Name</label>
-                            <input type="text" id="registerName" placeholder="Enter your full name">
-                        </div>
-                        <div class="register-link">
-                            The group will review your request. Sign in with Google after approval.
-                        </div>
-                        <button class="login-btn" onclick="registerUser(this)">Send request</button>
-                        <div id="registerError" class="error-message"></div>
-                        <div class="register-link">
-                            Already have an account? <a onclick="showLoginForm()">Login here</a>
+
+                        <div id="forgotPasswordForm" style="display: none;">
+                            <div class="login-form-group">
+                                <label>📧 Email Address</label>
+                                <input type="email" id="resetEmail" placeholder="Enter your email">
+                            </div>
+                            <button class="login-btn" onclick="requestPasswordReset()">Send Reset Link</button>
+                            <div id="resetError" class="error-message"></div>
+                            <div id="resetSuccess" class="success-message"></div>
+                            <div class="register-link">
+                                <a onclick="showLoginForm()">Back to Login</a>
+                            </div>
                         </div>
                     </div>
-
-                    <div id="forgotPasswordForm" style="display: none;">
-                        <div class="login-form-group">
-                            <label>📧 Email Address</label>
-                            <input type="email" id="resetEmail" placeholder="Enter your email">
-                        </div>
-                        <button class="login-btn" onclick="requestPasswordReset()">Send Reset Link</button>
-                        <div id="resetError" class="error-message"></div>
-                        <div id="resetSuccess" class="success-message"></div>
-                        <div class="register-link">
-                            <a onclick="showLoginForm()">Back to Login</a>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
