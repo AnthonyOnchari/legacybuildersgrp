@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=26">
+    <link rel="stylesheet" href="style.css?v=29">
 </head>
 <body class="finance-ui">
 
@@ -37,7 +37,7 @@
                             <span class="login-secure-mark" aria-hidden="true">N</span>
                             <span>NBFA GROUP</span>
                         </span>
-                        <h2>Log in to your account</h2>
+                        <h2 id="loginTitle">Log in to your account</h2>
                         <div class="subtitle" id="loginSubtitle">Your group, your progress, all in one place.</div>
                     </div>
                     <div class="login-form-area">
@@ -48,7 +48,7 @@
                             </button>
                             <div id="loginError" class="error-message"></div>
                             <div class="login-divider" aria-hidden="true"><span>OR</span></div>
-                            <button class="login-create-btn" type="button" onclick="showRegisterForm()">Request to join</button>
+                            <button class="login-create-btn" type="button" onclick="showRegisterForm()">Set Up an Account</button>
                         </div>
 
                         <div id="otpForm" style="display: none;">
@@ -77,9 +77,9 @@
                                 <input type="text" id="registerName" placeholder="Enter your full name">
                             </div>
                             <div class="register-link">
-                                The group will review your request. Sign in with Google after approval.
+                                After group approval, sign in with Google.
                             </div>
-                            <button class="login-btn" onclick="registerUser(this)">Send request</button>
+                            <button class="login-btn" onclick="registerUser(this)">Submit for Approval</button>
                             <div id="registerError" class="error-message"></div>
                             <div class="register-link">
                                 Already have an account? <a onclick="showLoginForm()">Login here</a>

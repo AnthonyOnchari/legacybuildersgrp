@@ -110,6 +110,7 @@ function checkPersistentLogin() {
 }
 
 function showLoginForm() {
+    document.getElementById('loginTitle').textContent = 'Log in to your account';
     document.getElementById('loginForm').style.display = 'block';
     document.getElementById('registerForm').style.display = 'none';
     document.getElementById('forgotPasswordForm').style.display = 'none';
@@ -119,19 +120,23 @@ function showLoginForm() {
     document.getElementById('resetError').style.display = 'none';
     document.getElementById('resetSuccess').style.display = 'none';
     document.getElementById('loginSubtitle').textContent = 'Welcome back — login to access your account';
+    document.querySelector('.login-box').classList.remove('is-registering');
 }
 
 function showRegisterForm() {
+    document.getElementById('loginTitle').textContent = 'Set up your account';
     document.getElementById('loginForm').style.display = 'none';
     document.getElementById('registerForm').style.display = 'block';
     document.getElementById('forgotPasswordForm').style.display = 'none';
     document.getElementById('otpForm').style.display = 'none';
     document.getElementById('loginError').style.display = 'none';
     document.getElementById('registerError').style.display = 'none';
-    document.getElementById('loginSubtitle').textContent = 'Join the circle — create your account';
+    document.getElementById('loginSubtitle').textContent = 'Request approval to join the group.';
+    document.querySelector('.login-box').classList.add('is-registering');
 }
 
 function showForgotPasswordForm() {
+    document.getElementById('loginTitle').textContent = 'Reset your password';
     document.getElementById('loginForm').style.display = 'none';
     document.getElementById('registerForm').style.display = 'none';
     document.getElementById('forgotPasswordForm').style.display = 'block';
@@ -140,9 +145,11 @@ function showForgotPasswordForm() {
     document.getElementById('resetError').style.display = 'none';
     document.getElementById('resetSuccess').style.display = 'none';
     document.getElementById('loginSubtitle').textContent = "We'll help you get back in";
+    document.querySelector('.login-box').classList.remove('is-registering');
 }
 
 function showOtpScreen(emailHint) {
+    document.getElementById('loginTitle').textContent = 'Verify your email';
     document.getElementById('loginForm').style.display = 'none';
     document.getElementById('registerForm').style.display = 'none';
     document.getElementById('forgotPasswordForm').style.display = 'none';
@@ -150,6 +157,7 @@ function showOtpScreen(emailHint) {
     document.getElementById('otpEmailHint').textContent = emailHint || pendingLoginEmail || '';
     document.getElementById('otpError').style.display = 'none';
     document.getElementById('loginSubtitle').textContent = 'Enter the code we emailed you';
+    document.querySelector('.login-box').classList.remove('is-registering');
     clearOtpBoxes();
     startOtpResendCountdown();
     setTimeout(focusFirstOtpBox, 100);
