@@ -248,7 +248,98 @@ async function handleAction(action, params, user) {
     const name = user.profile.name || user.auth.name || user.email.split("@")[0];
     switch (action) {
         case "bootstrapProfile":
-            return { success: true, name, email: user.email, role: user.profile.role || "member", status: user.profile.status };
+            return {
+                success: true,
+                name,
+                displayName: user.profile.displayName || name,
+                email: user.email,
+                role: user.profile.role || "member",
+                status: user.profile.status,
+                phone: user.profile.phone || "",
+                phoneCountry: user.profile.phoneCountry || "",
+                phoneDialCode: user.profile.phoneDialCode || "",
+                phoneVerifiedAt: user.profile.phoneVerifiedAt || "",
+                phoneVerifiedBy: user.profile.phoneVerifiedBy || ""
+            };
+        case "updateOwnProfile": {
+            const displayName = String(params.displayName || "").trim();
+            if (displayName.length < 2 || displayName.length > 80) {
+                throw new Error("Enter a name between 2 and 80 characters.");
+            }
+            await user.ref.update({ displayName, updated_at: nowIso() });
+            await audit(name, "Updated own profile display name", user.email);
+            return { success: true, displayName };
+        }
+        case "getAdminMemberProfiles": {
+            requireAdmin(user);
+            const profiles = (await rows("users"))
+                .filter((profile) => profile.status === "approved")
+                .map((profile) => ({
+                    email: emailKey(profile.email || profile.id),
+                    name: String(profile.displayName || profile.name || ""),
+                    phone: String(profile.phone || ""),
+                    phoneCountry: String(profile.phoneCountry || ""),
+                    phoneDialCode: String(profile.phoneDialCode || ""),
+                    phoneVerifiedAt: String(profile.phoneVerifiedAt || ""),
+                    phoneVerifiedBy: String(profile.phoneVerifiedBy || "")
+                }))
+                .filter((profile) => profile.email);
+            return { success: true, profiles };
+        }
+        case "setMemberPhone": {
+            requireAdmin(user);
+            const email = emailKey(params.email);
+            const ref = db.collection("users").doc(safeDocId(email));
+            const snapshot = await ref.get();
+            if (!snapshot.exists || snapshot.data().status !== "approved") {
+                throw new Error("Approved member not found.");
+            }
+            const phone = String(params.phone || "").trim();
+            if (!phone) {
+                await ref.update({
+                    phone: "",
+                    phoneCountry: "",
+                    phoneDialCode: "",
+                    phoneVerifiedAt: "",
+                    phoneVerifiedBy: "",
+                    phoneUpdatedAt: nowIso()
+                });
+                await audit(name, "Removed member phone number", email);
+                return { success: true };
+            }
+            const country = String(params.country || "").trim().toUpperCase();
+            const dialCode = String(params.dialCode || "").trim();
+            const supportedDialCodes = {
+                KE: "+254",
+                UG: "+256",
+                TZ: "+255",
+                RW: "+250",
+                ET: "+251",
+                SS: "+211",
+                US: "+1",
+                GB: "+44",
+                CA: "+1",
+                AE: "+971"
+            };
+            if (!/^\+[1-9]\d{7,14}$/.test(phone)
+                || !/^[A-Z]{2}$/.test(country)
+                || !/^\+[1-9]\d{0,3}$/.test(dialCode)
+                || supportedDialCodes[country] !== dialCode
+                || !phone.startsWith(dialCode)) {
+                throw new Error("Enter a valid phone number and country code.");
+            }
+            const verifiedAt = nowIso();
+            await ref.update({
+                phone,
+                phoneCountry: country,
+                phoneDialCode: dialCode,
+                phoneVerifiedAt: verifiedAt,
+                phoneVerifiedBy: user.email,
+                phoneUpdatedAt: verifiedAt
+            });
+            await audit(name, "Added admin-verified member phone number", email);
+            return { success: true, phone, country, dialCode, phoneVerifiedAt: verifiedAt, phoneVerifiedBy: user.email };
+        }
         case "getProfileImage": {
             const snapshot = await db.collection("profileImages").doc(safeDocId(user.email)).get();
             return {

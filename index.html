@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=31">
+    <link rel="stylesheet" href="style.css?v=33">
 </head>
 <body class="finance-ui">
 
@@ -124,7 +124,7 @@
                 <button class="sidebar-link" data-panel="meetings"><span class="tab-icon" aria-hidden="true">▤</span><span>Meetings</span></button>
                 <button class="sidebar-link" data-panel="groupChat"><span class="tab-icon" aria-hidden="true">I</span><span>Group inbox</span></button>
                 <button class="sidebar-link" data-panel="about"><span class="tab-icon" aria-hidden="true">◎</span><span>About Us</span></button>
-                <button class="sidebar-link" data-panel="pending" id="pendingSidebarLink" style="display: none;"><span class="tab-icon" aria-hidden="true">•</span><span>Pending</span><span id="pendingCountSidebar" class="pending-count"></span></button>
+                <button class="sidebar-link" data-panel="pending" id="pendingSidebarLink" style="display: none;"><span class="tab-icon" aria-hidden="true">•</span><span>Admin Portal</span><span id="pendingCountSidebar" class="pending-count"></span></button>
                 <button class="sidebar-link" data-panel="developer" id="developerSidebarLink" style="display: none;"><span class="tab-icon" aria-hidden="true">D</span><span>Dev Portal</span></button>
             </div>
             <div class="sidebar-foot">
@@ -135,20 +135,31 @@
     <div class="app-container" id="appContainer">
         <div class="sticky-top">
         <div class="header-row-1">
-            <span class="user-name-badge" onclick="openProfileModal()">
+            <button type="button" class="user-name-badge" onclick="openProfileModal()" aria-label="Open your profile">
                 <span class="user-avatar-small" id="headerAvatar"></span>
                 <strong id="loggedInUser"></strong>
-            </span>
-            <div class="action-buttons">
-                <button class="profile-btn" onclick="openProfileModal()" aria-label="Profile"></button>
-                <button class="logout-btn" onclick="logout(event)" aria-label="Logout">⎋</button>
+            </button>
+            <button type="button" class="admin-portal-btn" id="adminPortalButton" onclick="openAdminPortal()" style="display: none;">
+                <span aria-hidden="true">▦</span><span id="adminPortalButtonLabel">Admin Portal</span>
+            </button>
+            <button type="button" class="logout-btn" onclick="logout(event)" aria-label="Log out">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg>
+                <span>Log out</span>
+            </button>
+        </div>
+
+        <div class="dashboard-intro">
+            <div>
+                <span class="dashboard-eyebrow">GROUP OVERVIEW</span>
+                <h1 id="dashboardGreeting">Welcome back</h1>
+                <p>Your group's finances, progress, and latest updates.</p>
             </div>
         </div>
 
+        <div class="dashboard-top-grid">
         <div class="header">
             <div class="header-row-2">
                 <div>
-                    <div class="wallet-greeting" id="dashboardGreeting">Welcome back</div>
                     <div class="wallet-label" id="walletBalanceLabel">Available group balance</div>
                     <div class="wallet-balance" id="totalSavingsTop" data-target="0">KES --</div>
                 </div>
@@ -171,6 +182,11 @@
         </div>
 
         <div class="quick-actions-card">
+            <div class="quick-actions-heading">
+                <span class="dashboard-eyebrow">GET THINGS DONE</span>
+                <h2>Quick actions</h2>
+                <p>Common group money tasks</p>
+            </div>
             <button class="quick-action" onclick="openAddTransactionModal('Savings')">
                 <span class="quick-action-icon qa-save" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span>Deposit</span>
             </button>
@@ -185,10 +201,11 @@
             </button>
         </div>
         </div>
+        </div>
 
         <div class="scroll-panels">
         <!-- Home Panel -->
-        <div id="transactionsPanel" class="panel active-panel">
+        <div id="transactionsPanel" class="panel active-panel home-dashboard">
             <div class="card" id="memoriesCard" style="display:none;">
                 <div class="memory-heading">
                     <h2>Group memories</h2>
@@ -211,14 +228,14 @@
                 </div>
                 <div class="memories-dots" id="memoriesDots"></div>
             </div>
-            <div class="card">
+            <div class="card recent-activity-card">
                 <div class="activity-card-heading">
                     <div>
                         <span class="dashboard-eyebrow">GROUP FEED</span>
                         <h2>Recent activity</h2>
-                        <p>Contributions, loan requests, and repayments</p>
+                        <p>Latest contributions, loans, and repayments</p>
                     </div>
-                    <button onclick="openHistoryModal()">View all <span aria-hidden="true">↗</span></button>
+                    <button type="button" onclick="openHistoryModal()">Full history <span aria-hidden="true">↗</span></button>
                 </div>
                 <div id="recentActivityList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
             </div>
@@ -331,6 +348,13 @@
 
         <!-- Pending Panel -->
         <div id="pendingPanel" class="panel fullscreen-panel">
+            <div class="card admin-phone-directory-card">
+                <div class="portal-section-heading">
+                    <div><span class="dashboard-eyebrow">MEMBER CONTACTS</span><h2>Verified phone numbers</h2><p>Add or update a member's phone. Numbers entered here are marked as verified by an administrator.</p></div>
+                    <span class="admin-verified-pill">Admin managed</span>
+                </div>
+                <div id="adminPhoneProfiles" class="admin-phone-profiles loading-container"><div class="loading-spinner"></div><div>Loading member contacts...</div></div>
+            </div>
             <div class="card"><h2>Pending Approvals</h2><div id="pendingApprovalsList" class="loading-container"><div class="loading-spinner"></div><div>Loading pending approvals...</div></div></div>
             <div class="card"><h2>Pending Registrations</h2><div id="pendingRegistrationsList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
         </div>
@@ -372,6 +396,13 @@
                 <h2>Developer portal</h2>
                 <p>Full system control and monitoring</p>
             </div>
+            <div class="card admin-phone-directory-card">
+                <div class="portal-section-heading">
+                    <div><span class="dashboard-eyebrow">MEMBER CONTACTS</span><h2>Verified phone numbers</h2><p>Add or update a member's phone. Numbers entered here are marked as verified by an administrator.</p></div>
+                    <span class="admin-verified-pill">Admin managed</span>
+                </div>
+                <div id="developerPhoneProfiles" class="admin-phone-profiles loading-container"><div class="loading-spinner"></div><div>Loading member contacts...</div></div>
+            </div>
             <div class="card">
                 <h3>System Statistics</h3>
                 <div id="systemStats" class="loading-container"><div class="loading-spinner"></div><div>Loading stats...</div></div>
@@ -409,7 +440,7 @@
         <button class="tab" data-panel="meetings"><span class="tab-icon" aria-hidden="true">▤</span><span>Meetings</span></button>
         <button class="tab" data-panel="groupChat"><span class="tab-icon" aria-hidden="true">I</span><span>Inbox</span></button>
         <button class="tab" data-panel="about"><span class="tab-icon" aria-hidden="true">◎</span><span>About</span></button>
-        <button class="tab" data-panel="pending" id="pendingTab" style="display: none;"><span class="tab-icon" aria-hidden="true">•</span><span>Pending<span id="pendingCount" class="pending-count"></span></span></button>
+        <button class="tab" data-panel="pending" id="pendingTab" style="display: none;"><span class="tab-icon" aria-hidden="true">•</span><span>Admin<span id="pendingCount" class="pending-count"></span></span></button>
         <button class="tab" data-panel="developer" id="developerTab" style="display: none;"><span class="tab-icon" aria-hidden="true">D</span><span>Dev</span></button>
     </div>
 

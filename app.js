@@ -6,10 +6,12 @@ const VAPID_PUBLIC_KEY = 'BB4N47xyKjLw-K29lXDolpcht45pVZcqV4m-Iw-8tJBk8g21yE66KV
 
 let allRecords = [], allMembers = [], allMembersData = [], pendingLoans = [], completedLoans = [];
 let pendingTransactions = [], pendingEditsMap = {}, activeLoans = [], loansAwaitingDueDate = [];
-let currentUser = null, currentUserEmail = null, currentUserRole = null;
+let currentUser = null, currentUserDisplayName = null, currentUserEmail = null, currentUserRole = null;
 let currentTab = localStorage.getItem('legacy_active_tab') || 'transactions';
 let countdownInterval = null, refreshInterval = null;
 let userProfileImage = null;
+let currentUserPhone = '', currentUserPhoneCountry = '', currentUserPhoneDialCode = '';
+let currentUserPhoneVerifiedAt = '', currentUserPhoneVerifiedBy = '';
 let isLoading = false, chartInstance = null;
 const memberPhotoCache = {};
 let serviceWorkerRegistered = false, pushSubscription = null;
@@ -28,6 +30,8 @@ function escapeHtml(text) {
 function isTreasurer() { return currentUser === TREASURER_NAME; }
 
 function isDeveloper() { return currentUserRole === 'developer'; }
+
+function hasAdminPortalAccess() { return currentUserRole === 'admin' || isDeveloper(); }
 
 function showToast(message, type) {
     const toast = document.createElement('div');
@@ -257,7 +261,7 @@ async function loginWithGoogle() {
             return;
         }
         currentUserRole = res.role || 'member';
-        await completeLogin(res.name || credential.user.displayName, credential.user.email);
+        await completeLogin(res.name || credential.user.displayName, credential.user.email, res);
     } catch (e) {
         if (window.firebaseAuth && window.firebaseAuth.currentUser) {
             await window.firebaseAuth.signOut();
@@ -332,6 +336,9 @@ async function resendOtpCode() {
 // COMPLETE LOGIN
 // ============================================================
 function activateCurrentTab() {
+    if ((currentTab === 'developer' && !isDeveloper()) || (currentTab === 'pending' && !hasAdminPortalAccess())) {
+        currentTab = 'transactions';
+    }
     document.querySelectorAll('.tab, .sidebar-link').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
     const activeTabBtn = document.querySelector(`.tab[data-panel="${currentTab}"]`);
@@ -346,15 +353,24 @@ function activateCurrentTab() {
     const appContainerEl = document.getElementById('appContainer');
     if (appContainerEl) appContainerEl.classList.toggle('dashboard-active', currentTab === 'transactions');
     localStorage.setItem('legacy_active_tab', currentTab);
+    if (currentTab === 'pending') loadAdminMemberProfiles('adminPhoneProfiles');
+    if (currentTab === 'developer') loadAdminMemberProfiles('developerPhoneProfiles');
 }
 
-async function completeLogin(name, email) {
+async function completeLogin(name, email, profile = {}) {
     if (!name || name.trim() === '') {
         name = email ? email.split('@')[0] : 'Member';
         name = name.charAt(0).toUpperCase() + name.slice(1);
     }
     currentUser = name;
+    currentUserDisplayName = profile.displayName || name;
     currentUserEmail = email;
+    currentUserRole = profile.role || currentUserRole || 'member';
+    currentUserPhone = profile.phone || '';
+    currentUserPhoneCountry = profile.phoneCountry || '';
+    currentUserPhoneDialCode = profile.phoneDialCode || '';
+    currentUserPhoneVerifiedAt = profile.phoneVerifiedAt || '';
+    currentUserPhoneVerifiedBy = profile.phoneVerifiedBy || '';
     userProfileImage = null;
     localStorage.setItem('legacy_current_user', currentUser);
     localStorage.setItem('legacy_current_email', email);
@@ -364,7 +380,7 @@ async function completeLogin(name, email) {
     document.getElementById('appContainer').classList.add('active');
     document.getElementById('tabBar').style.display = 'flex';
     document.getElementById('sidebarNav').classList.add('active');
-    document.getElementById('loggedInUser').innerText = currentUser;
+    document.getElementById('loggedInUser').innerText = currentUserDisplayName;
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
 
     updateHeaderAvatar();
@@ -392,7 +408,7 @@ async function completeLogin(name, email) {
     ]);
 
     showBalanceLoading(false);
-    showToast(`Welcome ${currentUser}!`, 'success');
+    showToast(`Welcome ${currentUserDisplayName}!`, 'success');
 
     setTimeout(() => {
         checkAndShowNotificationPrompt();
@@ -415,14 +431,14 @@ async function completeLogin(name, email) {
 // SHOW/HIDE DEVELOPER PORTAL
 // ============================================================
 function showHideDeveloperPortal() {
-    // Check if current user is developer
-    const isDev = currentUserEmail === 'info.onchari@gmail.com' || 
-                  currentUserRole === 'developer' ||
-                  localStorage.getItem('legacy_current_role') === 'developer';
-    
+    const isDev = isDeveloper();
     const devTab = document.getElementById('developerTab');
     const devSidebar = document.getElementById('developerSidebarLink');
     const devPanel = document.getElementById('developerPanel');
+    const portalButton = document.getElementById('adminPortalButton');
+    const portalLabel = document.getElementById('adminPortalButtonLabel');
+    if (portalButton) portalButton.style.display = hasAdminPortalAccess() ? 'inline-flex' : 'none';
+    if (portalLabel) portalLabel.textContent = isDev ? 'Developer Portal' : 'Admin Portal';
     
     if (isDev) {
         // Show developer elements
@@ -457,10 +473,18 @@ function showHideDeveloperPortal() {
 }
 
 function showHidePendingTab() {
-    const show = isTreasurer() || isDeveloper();
+    const show = hasAdminPortalAccess();
     document.getElementById('pendingTab').style.display = show ? 'flex' : 'none';
     document.getElementById('pendingSidebarLink').style.display = show ? 'flex' : 'none';
     if (show) loadPendingRegistrations();
+}
+
+function openAdminPortal() {
+    if (!hasAdminPortalAccess()) {
+        showToast('The admin portal is available to approved administrators only.', 'error');
+        return;
+    }
+    activateTab(isDeveloper() ? 'developer' : 'pending');
 }
 
 // ============================================================
@@ -568,10 +592,10 @@ function updateHeaderAvatar() {
     const avatarEl = document.getElementById('headerAvatar');
     if (!avatarEl) return;
     if (userProfileImage) {
-        avatarEl.innerHTML = `<img src="${userProfileImage}" alt="${currentUser}">`;
+        avatarEl.innerHTML = `<img src="${escapeHtml(userProfileImage)}" alt="${escapeHtml(currentUserDisplayName || currentUser)}">`;
         avatarEl.style.background = 'transparent';
     } else {
-        avatarEl.innerHTML = getInitials(currentUser);
+        avatarEl.innerHTML = getInitials(currentUserDisplayName || currentUser);
         avatarEl.style.background = 'rgba(255,255,255,0.3)';
         avatarEl.style.color = 'white';
         avatarEl.style.fontSize = '12px';
@@ -584,7 +608,7 @@ function updateDashboardGreeting() {
     if (!el || !currentUser) return;
     const hour = new Date().getHours();
     const timeGreeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-    el.textContent = `${timeGreeting}, ${currentUser.split(' ')[0]}`;
+    el.textContent = `${timeGreeting}, ${(currentUserDisplayName || currentUser).split(' ')[0]}`;
 }
 
 // ============================================================
@@ -1056,16 +1080,34 @@ function renderRecentActivity() {
         return;
     }
     const recent = [...allRecords].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
-    const iconFor = (type) => type === 'Savings' ? 'S' : type === 'Loan Taken' ? 'L' : 'R';
+    const iconFor = type => {
+        if (type === 'Savings') {
+            return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18m6-14.5c-.8-1-2.1-1.5-4-1.5h-4a3 3 0 0 0 0 6h4a3 3 0 0 1 0 6H9c-1.7 0-2.9-.5-3.8-1.5"/></svg>';
+        }
+        if (type === 'Loan Taken') {
+            return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-11a2 2 0 0 1 2-2h13"/><path d="M3 10h18m-5 5h2"/></svg>';
+        }
+        return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.2 9A7 7 0 0 1 18 6.5L20 12M4 12l2 5.5A7 7 0 0 0 17.8 15"/></svg>';
+    };
     container.innerHTML = recent.map(r => {
         const sign = r.type === 'Loan Taken' ? '-' : '+';
+        const date = new Date(r.date);
+        const dateLabel = Number.isNaN(date.getTime())
+            ? ''
+            : date.toLocaleDateString('en-KE', { day: 'numeric', month: 'short' });
+        const activityType = ['Savings', 'Loan Taken', 'Loan Repayment'].includes(r.type) ? r.type : 'Transaction';
+        const iconClass = r.type === 'Savings'
+            ? 'savings'
+            : r.type === 'Loan Taken'
+                ? 'loan'
+                : 'repayment';
         return `<div class="activity-row">
-            <div class="activity-icon">${iconFor(r.type)}</div>
+            <div class="activity-icon activity-icon--${iconClass}">${iconFor(r.type)}</div>
             <div class="activity-info">
                 <div class="activity-name">${escapeHtml(r.member)}</div>
-                <div class="activity-meta">${r.type} · ${new Date(r.date).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}</div>
+                <div class="activity-meta"><span>${escapeHtml(activityType)}</span>${dateLabel ? `<span class="activity-meta-separator" aria-hidden="true"></span><time>${dateLabel}</time>` : ''}</div>
             </div>
-            <div class="activity-amount ${sign === '-' ? 'negative' : 'positive'}">${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</div>
+            <div class="activity-amount ${sign === '-' ? 'negative' : 'positive'}">${sign} KES ${Number(r.amount || 0).toLocaleString('en-KE')}</div>
         </div>`;
     }).join('');
 }
@@ -1911,13 +1953,42 @@ async function submitTransactionEdit(rowKey) {
 // ============================================================
 // PROFILE MODAL
 // ============================================================
+const PHONE_COUNTRIES = [
+    { code: 'KE', name: 'Kenya', dialCode: '+254' },
+    { code: 'UG', name: 'Uganda', dialCode: '+256' },
+    { code: 'TZ', name: 'Tanzania', dialCode: '+255' },
+    { code: 'RW', name: 'Rwanda', dialCode: '+250' },
+    { code: 'ET', name: 'Ethiopia', dialCode: '+251' },
+    { code: 'SS', name: 'South Sudan', dialCode: '+211' },
+    { code: 'US', name: 'United States', dialCode: '+1' },
+    { code: 'GB', name: 'United Kingdom', dialCode: '+44' },
+    { code: 'CA', name: 'Canada', dialCode: '+1' },
+    { code: 'AE', name: 'United Arab Emirates', dialCode: '+971' }
+];
+
+function countryFlag(countryCode) {
+    if (!/^[A-Z]{2}$/i.test(countryCode || '')) return '';
+    return [...countryCode.toUpperCase()].map(char => String.fromCodePoint(127397 + char.charCodeAt(0))).join('');
+}
+
+function renderProfilePhone(phone, country, dialCode, verifiedAt) {
+    if (!phone) return '<span class="profile-phone-empty">No phone number added yet. Ask an administrator to add one.</span>';
+    const flag = countryFlag(country);
+    return `<div class="profile-phone-line">
+        <span class="profile-phone-number">${escapeHtml(phone)}</span>
+        <span class="profile-phone-country">${flag ? `<span>${flag}</span>` : ''}${escapeHtml(dialCode || '')}</span>
+        ${verifiedAt ? '<span class="admin-verified-pill">Verified by admin <span aria-hidden="true">✓</span></span>' : '<span class="profile-phone-pending">Awaiting admin confirmation</span>'}
+    </div>`;
+}
+
 function openProfileModal() {
     document.querySelectorAll('.profile-modal-overlay').forEach(el => el.remove());
     const userStats = getUserStats(currentUser);
-    const initial = currentUser ? getInitials(currentUser) : '?';
+    const initial = (currentUserDisplayName || currentUser) ? getInitials(currentUserDisplayName || currentUser) : '?';
     const profileImage = getProfileImage();
     const isTreas = isTreasurer();
     const isDev = isDeveloper();
+    const roleLabel = isDev ? 'Developer' : currentUserRole === 'admin' ? 'Administrator' : isTreas ? 'Treasurer' : 'Member';
     const overlay = document.createElement('div');
     overlay.className = 'profile-modal-overlay';
     overlay.onclick = function(e) { if (e.target === this) this.remove(); };
@@ -1926,15 +1997,23 @@ function openProfileModal() {
             <div class="profile-cover">
                 <div class="profile-avatar-wrapper">
                     <div class="profile-avatar" id="profileAvatar" onclick="document.getElementById('profileFileInput').click()">
-                        ${profileImage ? `<img src="${profileImage}" alt="${currentUser}">` : initial}
+                        ${profileImage ? `<img src="${escapeHtml(profileImage)}" alt="${escapeHtml(currentUserDisplayName || currentUser)}">` : initial}
                         <div class="avatar-overlay"><span class="camera-icon"></span><span>Change Photo</span></div>
                     </div>
                 </div>
             </div>
             <div class="profile-body">
-                <div class="profile-name">${escapeHtml(currentUser)}</div>
-                <div class="profile-email">${escapeHtml(currentUserEmail)}</div>
-                <span class="profile-role ${isTreas ? 'treasurer' : ''} ${isDev ? 'developer' : ''}">${isDev ? 'Developer' : isTreas ? 'Treasurer' : 'Member'}</span>
+                <div class="profile-name" id="profileDisplayName">${escapeHtml(currentUserDisplayName || currentUser)}</div>
+                <div class="profile-email">${escapeHtml(currentUserEmail)} <span class="profile-google-managed">Google account</span></div>
+                <span class="profile-role ${isTreas ? 'treasurer' : ''} ${isDev ? 'developer' : ''} ${currentUserRole === 'admin' ? 'administrator' : ''}">${roleLabel}</span>
+                <div class="profile-edit-fields">
+                    <label for="profileNameInput">Full name</label>
+                    <input id="profileNameInput" type="text" maxlength="80" value="${escapeHtml(currentUserDisplayName || currentUser)}" autocomplete="name">
+                    <label>Phone number <span class="profile-field-note">managed by an administrator</span></label>
+                    <div id="profilePhoneDisplay">${renderProfilePhone(currentUserPhone, currentUserPhoneCountry, currentUserPhoneDialCode, currentUserPhoneVerifiedAt)}</div>
+                    <p class="profile-verification-note">A phone is marked as verified when an approved administrator adds it to your group profile.</p>
+                    <button type="button" class="profile-save-btn" onclick="saveOwnProfile()">Save profile</button>
+                </div>
                 <div class="profile-divider"></div>
                 <div class="profile-stats-grid">
                     <div class="profile-stat-card savings"><div class="stat-number">KES ${userStats.savings.toLocaleString()}</div><div class="stat-label">Total Savings</div></div>
@@ -1944,7 +2023,6 @@ function openProfileModal() {
                 </div>
                 <div class="profile-divider"></div>
                 <div class="profile-actions">
-                    <span class="profile-email">Sign-in and password settings are managed by Google.</span>
                     <button class="btn-close" onclick="this.closest('.profile-modal-overlay').remove()">Close</button>
                 </div>
                 <div class="upload-progress" id="uploadProgress"><span id="uploadStatus">Uploading...</span><div class="progress-bar"><div class="progress-fill" id="uploadProgressFill"></div></div></div>
@@ -1955,6 +2033,151 @@ function openProfileModal() {
     document.body.appendChild(overlay);
 }
 
+async function saveOwnProfile() {
+    const input = document.getElementById('profileNameInput');
+    const button = document.querySelector('.profile-save-btn');
+    const name = input?.value.trim() || '';
+    if (name.length < 2 || name.length > 80) {
+        showToast('Enter a name between 2 and 80 characters.', 'error');
+        input?.focus();
+        return;
+    }
+    if (button) button.disabled = true;
+    try {
+        const result = await callAPI('updateOwnProfile', { displayName: name });
+        if (!result.success) throw new Error(result.error || 'Could not update your profile.');
+        currentUserDisplayName = result.displayName;
+        const userLabel = document.getElementById('loggedInUser');
+        if (userLabel) userLabel.textContent = currentUserDisplayName;
+        const displayName = document.getElementById('profileDisplayName');
+        if (displayName) displayName.textContent = currentUserDisplayName;
+        updateHeaderAvatar();
+        updateDashboardGreeting();
+        showToast('Profile updated.', 'success');
+    } catch (error) {
+        showToast(error.message || 'Could not update your profile.', 'error');
+    } finally {
+        if (button) button.disabled = false;
+    }
+}
+
+async function loadAdminMemberProfiles(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container || !hasAdminPortalAccess()) return;
+    container.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div><div>Loading member contacts...</div></div>';
+    try {
+        const result = await callAPI('getAdminMemberProfiles');
+        if (!result.success) throw new Error(result.error || 'Could not load member contacts.');
+        if (!result.profiles.length) {
+            container.innerHTML = '<div class="empty-state">No approved members found.</div>';
+            return;
+        }
+        container.className = 'admin-phone-profiles';
+        container.innerHTML = result.profiles.map(profile => {
+            const selectedCountry = PHONE_COUNTRIES.find(country => country.code === profile.phoneCountry) || PHONE_COUNTRIES[0];
+            const nationalNumber = profile.phone && profile.phoneDialCode && profile.phone.startsWith(profile.phoneDialCode)
+                ? profile.phone.slice(profile.phoneDialCode.length)
+                : profile.phone.replace(/^\+/, '');
+            const countryOptions = PHONE_COUNTRIES.map(country =>
+                `<option value="${country.code}" data-dial-code="${country.dialCode}" ${selectedCountry.code === country.code ? 'selected' : ''}>${countryFlag(country.code)} ${country.name} (${country.dialCode})</option>`
+            ).join('');
+            return `<article class="admin-phone-row" data-email="${escapeHtml(profile.email)}" data-has-phone="${Boolean(profile.phone)}">
+                <div class="admin-phone-member">
+                    <strong>${escapeHtml(profile.name || 'Member')}</strong>
+                    <span>${escapeHtml(profile.email)}</span>
+                    ${profile.phone
+                        ? `<span class="admin-verified-pill">${countryFlag(profile.phoneCountry)} ${escapeHtml(profile.phone)} · Verified by admin</span>`
+                        : '<span class="profile-phone-pending">No phone number on file</span>'}
+                </div>
+                <div class="admin-phone-editor">
+                    <label>
+                        <span>Country / calling code</span>
+                        <select class="admin-phone-country">${countryOptions}</select>
+                    </label>
+                    <label>
+                        <span>Phone number</span>
+                        <input class="admin-phone-input" type="tel" inputmode="tel" autocomplete="tel-national" value="${escapeHtml(nationalNumber)}" placeholder="712 345 678">
+                    </label>
+                    <button type="button" class="admin-phone-save" onclick="saveMemberPhone(this)">Save &amp; verify</button>
+                    <span class="admin-phone-status" role="status"></span>
+                </div>
+            </article>`;
+        }).join('');
+    } catch (error) {
+        container.className = 'admin-phone-profiles';
+        container.innerHTML = `<div class="empty-state">${escapeHtml(error.message || 'Could not load member contacts.')}</div>`;
+    }
+}
+
+async function saveMemberPhone(button) {
+    if (!hasAdminPortalAccess()) {
+        showToast('Only approved administrators can manage member phone numbers.', 'error');
+        return;
+    }
+    const row = button?.closest('.admin-phone-row');
+    if (!row) return;
+    const email = row.dataset.email;
+    const countrySelect = row.querySelector('.admin-phone-country');
+    const phoneInput = row.querySelector('.admin-phone-input');
+    const status = row.querySelector('.admin-phone-status');
+    const country = PHONE_COUNTRIES.find(item => item.code === countrySelect.value);
+    const digits = phoneInput.value.replace(/\D/g, '').replace(/^0+/, '');
+    let phone = '';
+    if (digits) {
+        const nationalDigits = country && digits.startsWith(country.dialCode.slice(1))
+            ? digits.slice(country.dialCode.length - 1)
+            : digits;
+        if (!country || nationalDigits.length < 6 || nationalDigits.length > 12) {
+            status.textContent = 'Enter a valid national phone number.';
+            phoneInput.focus();
+            return;
+        }
+        phone = `${country.dialCode}${nationalDigits}`;
+    } else {
+        if (!row.dataset.hasPhone) {
+            status.textContent = 'Enter a phone number to save.';
+            phoneInput.focus();
+            return;
+        }
+        if (!confirm('Remove this member’s phone number and admin verification?')) return;
+    }
+    button.disabled = true;
+    status.textContent = 'Saving...';
+    try {
+        const result = await callAPI('setMemberPhone', {
+            email,
+            phone,
+            country: country?.code || '',
+            dialCode: country?.dialCode || ''
+        });
+        if (!result.success) throw new Error(result.error || 'Could not update this phone number.');
+        if (email.toLowerCase() === (currentUserEmail || '').toLowerCase()) {
+            currentUserPhone = result.phone || '';
+            currentUserPhoneCountry = result.country || '';
+            currentUserPhoneDialCode = result.dialCode || '';
+            currentUserPhoneVerifiedAt = result.phoneVerifiedAt || '';
+            currentUserPhoneVerifiedBy = result.phoneVerifiedBy || '';
+            const phoneDisplay = document.getElementById('profilePhoneDisplay');
+            if (phoneDisplay) {
+                phoneDisplay.innerHTML = renderProfilePhone(
+                    currentUserPhone,
+                    currentUserPhoneCountry,
+                    currentUserPhoneDialCode,
+                    currentUserPhoneVerifiedAt
+                );
+            }
+        }
+        status.textContent = 'Saved';
+        showToast(phone ? 'Phone saved and marked verified by admin.' : 'Phone number removed.', 'success');
+        await loadAdminMemberProfiles(row.closest('#developerPhoneProfiles') ? 'developerPhoneProfiles' : 'adminPhoneProfiles');
+    } catch (error) {
+        status.textContent = error.message || 'Could not save this phone number.';
+        showToast(status.textContent, 'error');
+    } finally {
+        button.disabled = false;
+    }
+}
+
 function getProfileImage() {
     return userProfileImage || localStorage.getItem(`legacy_profile_image_${(currentUserEmail || '').toLowerCase()}`) || null;
 }
@@ -1962,15 +2185,16 @@ function getProfileImage() {
 const MAX_CLOUDINARY_IMAGE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_CLOUDINARY_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
-async function uploadBlobToCloudinary(blob, filename, folder) {
+async function uploadBlobToCloudinary(blob, filename, folder, uploadPreset) {
     const config = window.cloudinaryConfig || {};
-    if (!config.cloudName || !config.uploadPreset) throw new Error('Cloudinary upload preset is not configured.');
+    const preset = uploadPreset || config.uploadPreset;
+    if (!config.cloudName || !preset) throw new Error('Cloudinary upload preset is not configured.');
     if (!ALLOWED_CLOUDINARY_IMAGE_TYPES.has(blob.type)) throw new Error('Choose a JPG, PNG, or WebP image.');
     if (blob.size > MAX_CLOUDINARY_IMAGE_SIZE) throw new Error('Choose an image smaller than 5 MB.');
 
     const formData = new FormData();
     formData.append('file', blob, filename);
-    formData.append('upload_preset', config.uploadPreset);
+    formData.append('upload_preset', preset);
     formData.append('folder', `legacy-builders/${folder}`);
     let response;
     try {
@@ -2357,7 +2581,7 @@ const PANEL_TITLES = {
     summary: 'Summary',
     loans: 'Loans',
     meetings: 'Meetings',
-    pending: 'Pending Approvals',
+    pending: 'Admin Portal',
     groupChat: 'Group Inbox',
     about: 'About Us',
     developer: 'Developer Portal'
@@ -2373,6 +2597,14 @@ function ensureFullscreenBar(panel, tabId) {
 }
 
 function activateTab(tabId) {
+    if (tabId === 'developer' && !isDeveloper()) {
+        showToast('Developer portal access is restricted.', 'error');
+        return;
+    }
+    if (tabId === 'pending' && !hasAdminPortalAccess()) {
+        showToast('Admin portal access is restricted.', 'error');
+        return;
+    }
     document.querySelectorAll('.tab, .sidebar-link').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
     const btn = document.querySelector(`.tab[data-panel="${tabId}"]`);
@@ -2391,6 +2623,8 @@ function activateTab(tabId) {
     localStorage.setItem('legacy_active_tab', tabId);
     currentTab = tabId;
     if (tabId !== 'transactions') loadAllData(false, true);
+    if (tabId === 'pending') loadAdminMemberProfiles('adminPhoneProfiles');
+    if (tabId === 'developer') loadAdminMemberProfiles('developerPhoneProfiles');
 }
 
 // ============================================================
@@ -2468,7 +2702,8 @@ async function postGroupMemory() {
     button.disabled = true;
     status.textContent = 'Uploading photo...';
     try {
-        const uploaded = await uploadBlobToCloudinary(file, file.name, 'memories');
+        const config = window.cloudinaryConfig || {};
+        const uploaded = await uploadBlobToCloudinary(file, file.name, 'memories', config.memoryUploadPreset);
         status.textContent = 'Saving memory...';
         const res = await callAPI('saveGroupMemory', {
             image: uploaded.image,
@@ -2573,7 +2808,9 @@ async function logout(event) {
     localStorage.removeItem('legacy_current_role');
     localStorage.removeItem('legacy_active_tab');
     if (refreshInterval) clearInterval(refreshInterval);
-    currentUser = null; currentUserEmail = null; currentUserRole = null;
+    currentUser = null; currentUserDisplayName = null; currentUserEmail = null; currentUserRole = null;
+    currentUserPhone = ''; currentUserPhoneCountry = ''; currentUserPhoneDialCode = '';
+    currentUserPhoneVerifiedAt = ''; currentUserPhoneVerifiedBy = '';
     allRecords = []; allMembers = []; pendingLoans = []; completedLoans = []; pendingTransactions = []; isLoading = false;
     pushSubscription = null; serviceWorkerRegistered = false;
     document.getElementById('appContainer').classList.remove('active');
@@ -2629,8 +2866,14 @@ const initializeApp = async () => {
             return;
         }
         currentUser = account.name || currentUser;
+        currentUserDisplayName = account.displayName || currentUser;
         currentUserEmail = account.email || currentUserEmail;
         currentUserRole = account.role || 'member';
+        currentUserPhone = account.phone || '';
+        currentUserPhoneCountry = account.phoneCountry || '';
+        currentUserPhoneDialCode = account.phoneDialCode || '';
+        currentUserPhoneVerifiedAt = account.phoneVerifiedAt || '';
+        currentUserPhoneVerifiedBy = account.phoneVerifiedBy || '';
         localStorage.setItem('legacy_current_user', currentUser);
         localStorage.setItem('legacy_current_email', currentUserEmail);
         localStorage.setItem('legacy_current_role', currentUserRole);
@@ -2645,7 +2888,7 @@ const initializeApp = async () => {
         document.getElementById('appContainer').classList.add('active');
         document.getElementById('tabBar').style.display = 'flex';
         document.getElementById('sidebarNav')?.classList.add('active');
-        document.getElementById('loggedInUser').innerText = currentUser;
+        document.getElementById('loggedInUser').innerText = currentUserDisplayName;
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
         hideSplashScreen();
         updateHeaderAvatar();
@@ -2722,6 +2965,9 @@ window.showLoginForm = showLoginForm;
 window.showForgotPasswordForm = showForgotPasswordForm;
 window.requestPasswordReset = requestPasswordReset;
 window.openProfileModal = openProfileModal;
+window.saveOwnProfile = saveOwnProfile;
+window.openAdminPortal = openAdminPortal;
+window.saveMemberPhone = saveMemberPhone;
 window.handleProfileImageUpload = handleProfileImageUpload;
 window.viewMemberProfile = viewMemberProfile;
 window.exportToPDF = exportToPDF;
