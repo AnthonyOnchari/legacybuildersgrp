@@ -13,7 +13,7 @@ window.firebaseConfig = {
 window.FIREBASE_API_URL = "/api";
 window.cloudinaryConfig = {
     cloudName: "qopne8fk",
-    uploadPreset: "legacybuilders_unsigned",
+    uploadPreset: "NBFA-GROUP",
     memoryUploadPreset: "NBFA-GROUP"
 };
 

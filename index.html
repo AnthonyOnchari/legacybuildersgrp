@@ -10,16 +10,21 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=33">
+    <link rel="stylesheet" href="style.css?v=34">
 </head>
 <body class="finance-ui">
 
     <!-- SPLASH SCREEN -->
-    <div id="splashScreen">
-        <div class="splash-logo">LB</div>
-        <div class="splash-title">Legacy Builders Group</div>
-        <div class="splash-subtitle">Where Families Build Wealth Together</div>
-        <div class="splash-loader"></div>
+    <div id="splashScreen" role="status" aria-live="polite">
+        <div class="splash-orbit splash-orbit--one" aria-hidden="true"></div>
+        <div class="splash-orbit splash-orbit--two" aria-hidden="true"></div>
+        <div class="splash-content">
+            <div class="splash-logo" aria-hidden="true">LB</div>
+            <div class="splash-eyebrow">LEGACY BUILDERS</div>
+            <div class="splash-title">Building wealth,<br>together.</div>
+            <div class="splash-subtitle">Your group space is getting ready</div>
+            <div class="splash-loader" aria-hidden="true"><span></span></div>
+        </div>
     </div>
 
     <!-- LOGIN OVERLAY -->
@@ -456,7 +461,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-    <script src="firebase-config.js"></script>
-    <script src="app.js"></script>
+    <script src="firebase-config.js?v=34"></script>
+    <script src="app.js?v=34"></script>
 </body>
 </html>

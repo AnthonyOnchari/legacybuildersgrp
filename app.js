@@ -96,8 +96,9 @@ async function callAPI(action, data = {}, _retryCount = 0) {
 // ============================================================
 function hideSplashScreen() {
     const splash = document.getElementById('splashScreen');
+    if (!splash) return;
     splash.classList.add('hidden');
-    setTimeout(() => splash.style.display = 'none', 500);
+    splash.style.display = 'none';
 }
 
 // ============================================================
@@ -2000,6 +2001,10 @@ function openProfileModal() {
                         ${profileImage ? `<img src="${escapeHtml(profileImage)}" alt="${escapeHtml(currentUserDisplayName || currentUser)}">` : initial}
                         <div class="avatar-overlay"><span class="camera-icon"></span><span>Change Photo</span></div>
                     </div>
+                    <button type="button" class="profile-photo-edit" onclick="document.getElementById('profileFileInput').click()">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>
+                        <span>Edit photo</span>
+                    </button>
                 </div>
             </div>
             <div class="profile-body">
@@ -2027,7 +2032,7 @@ function openProfileModal() {
                 </div>
                 <div class="upload-progress" id="uploadProgress"><span id="uploadStatus">Uploading...</span><div class="progress-bar"><div class="progress-fill" id="uploadProgressFill"></div></div></div>
             </div>
-            <input type="file" id="profileFileInput" class="profile-file-input" accept="image/*" onchange="handleProfileImageUpload(event)">
+            <input type="file" id="profileFileInput" class="profile-file-input" accept="image/jpeg,image/png,image/webp" onchange="handleProfileImageUpload(event)">
         </div>
     `;
     document.body.appendChild(overlay);
@@ -2185,7 +2190,7 @@ function getProfileImage() {
 const MAX_CLOUDINARY_IMAGE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_CLOUDINARY_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
-async function uploadBlobToCloudinary(blob, filename, folder, uploadPreset) {
+async function uploadBlobToCloudinary(blob, filename, uploadPreset) {
     const config = window.cloudinaryConfig || {};
     const preset = uploadPreset || config.uploadPreset;
     if (!config.cloudName || !preset) throw new Error('Cloudinary upload preset is not configured.');
@@ -2195,7 +2200,6 @@ async function uploadBlobToCloudinary(blob, filename, folder, uploadPreset) {
     const formData = new FormData();
     formData.append('file', blob, filename);
     formData.append('upload_preset', preset);
-    formData.append('folder', `legacy-builders/${folder}`);
     let response;
     try {
         response = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(config.cloudName)}/image/upload`, {
@@ -2214,78 +2218,98 @@ async function uploadBlobToCloudinary(blob, filename, folder, uploadPreset) {
     if (!response.ok || !result.secure_url || !result.public_id) {
         throw new Error(result.error?.message || `Cloudinary upload failed (HTTP ${response.status}).`);
     }
-    if (!result.public_id.startsWith(`legacy-builders/${folder}/`)) {
-        throw new Error('Cloudinary preset did not save the photo in the expected folder.');
-    }
     return { image: result.secure_url, publicId: result.public_id };
 }
 
 async function saveProfileImageToServer(imageData) {
-    try {
-        const blob = await (await fetch(imageData)).blob();
-        const uploaded = await uploadBlobToCloudinary(blob, 'profile.jpg', 'profiles');
-        const res = await callAPI('saveProfileImage', {
-            email: currentUserEmail,
-            image: uploaded.image,
-            publicId: uploaded.publicId
-        });
-        if (!res.success) throw new Error(res.error || 'Failed to save profile photo.');
-        userProfileImage = uploaded.image;
-        localStorage.setItem(`legacy_profile_image_${currentUserEmail.toLowerCase()}`, userProfileImage);
-        updateHeaderAvatar();
-        loadMembersList();
-        return true;
-    } catch (error) {
-        showToast(error.message || 'Error saving profile photo.', 'error');
-        return false;
-    }
+    const blob = imageData instanceof Blob ? imageData : await (await fetch(imageData)).blob();
+    const uploaded = await uploadBlobToCloudinary(blob, 'profile.jpg');
+    const res = await callAPI('saveProfileImage', {
+        email: currentUserEmail,
+        image: uploaded.image,
+        publicId: uploaded.publicId
+    });
+    if (!res.success) throw new Error(res.error || 'Failed to save profile photo.');
+    userProfileImage = uploaded.image;
+    localStorage.setItem(`legacy_profile_image_${currentUserEmail.toLowerCase()}`, userProfileImage);
+    updateHeaderAvatar();
+    loadMembersList();
+    return true;
+}
+
+function optimizeProfilePhoto(file) {
+    return new Promise((resolve, reject) => {
+        const objectUrl = URL.createObjectURL(file);
+        const image = new Image();
+        image.onload = () => {
+            URL.revokeObjectURL(objectUrl);
+            const maxSize = 512;
+            const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+            canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+            const context = canvas.getContext('2d');
+            if (!context) {
+                reject(new Error('Your browser could not process this image.'));
+                return;
+            }
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(blob => {
+                if (blob) resolve(blob);
+                else reject(new Error('Could not prepare this image. Please try another photo.'));
+            }, 'image/jpeg', 0.86);
+        };
+        image.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error('Could not open this image. Please try a JPG, PNG, or WebP photo.'));
+        };
+        image.src = objectUrl;
+    });
 }
 
 async function handleProfileImageUpload(event) {
-    const file = event.target.files[0];
+    const input = event.target;
+    const file = input.files && input.files[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) { showToast('Please select an image file', 'error'); return; }
     const progressEl = document.getElementById('uploadProgress');
     const progressFill = document.getElementById('uploadProgressFill');
     const statusEl = document.getElementById('uploadStatus');
+    if (!ALLOWED_CLOUDINARY_IMAGE_TYPES.has(file.type)) {
+        showToast('Choose a JPG, PNG, or WebP photo.', 'error');
+        input.value = '';
+        return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+        showToast('Choose a photo smaller than 10 MB.', 'error');
+        input.value = '';
+        return;
+    }
     progressEl.classList.add('active');
     progressFill.style.width = '0%';
-    statusEl.textContent = 'Reading image...';
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        statusEl.textContent = 'Processing...';
-        progressFill.style.width = '75%';
-        const img = new Image();
-        img.onload = async function() {
-            const canvas = document.createElement('canvas');
-            const maxSize = 120;
-            let width = img.width, height = img.height;
-            if (width > height) { if (width > maxSize) { height = (height * maxSize) / width; width = maxSize; } }
-            else { if (height > maxSize) { width = (width * maxSize) / height; height = maxSize; } }
-            canvas.width = width; canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            const compressedData = canvas.toDataURL('image/jpeg', 0.6);
-            statusEl.textContent = 'Saving to server...';
-            progressFill.style.width = '90%';
-            const success = await saveProfileImageToServer(compressedData);
-            if (success) {
-                const avatar = document.getElementById('profileAvatar');
-                if (avatar) avatar.innerHTML = `<img src="${getProfileImage()}" alt="${escapeHtml(currentUser)}"><div class="avatar-overlay"><span class="camera-icon"></span><span>Change Photo</span></div>`;
-                progressFill.style.width = '100%';
-                statusEl.textContent = 'Done!';
-                setTimeout(() => { progressEl.classList.remove('active'); progressFill.style.width = '0%'; }, 1500);
-                showToast('Profile photo updated!', 'success');
-            } else {
-                statusEl.textContent = 'Failed to save';
-                showToast('Failed to save profile photo.', 'error');
-            }
-        };
-        img.src = e.target.result;
-    };
-    reader.onerror = function() { showToast('Error reading image', 'error'); progressEl.classList.remove('active'); };
-    reader.readAsDataURL(file);
-    event.target.value = '';
+    statusEl.textContent = 'Preparing photo...';
+    try {
+        const photoBlob = await optimizeProfilePhoto(file);
+        statusEl.textContent = 'Uploading photo...';
+        progressFill.style.width = '45%';
+        await saveProfileImageToServer(photoBlob);
+        const avatar = document.getElementById('profileAvatar');
+        if (avatar) {
+            avatar.innerHTML = `<img src="${escapeHtml(getProfileImage())}" alt="${escapeHtml(currentUserDisplayName || currentUser)}"><div class="avatar-overlay"><span class="camera-icon"></span><span>Change Photo</span></div>`;
+        }
+        progressFill.style.width = '100%';
+        statusEl.textContent = 'Profile photo updated.';
+        showToast('Profile photo updated.', 'success');
+        setTimeout(() => {
+            progressEl.classList.remove('active');
+            progressFill.style.width = '0%';
+        }, 1500);
+    } catch (error) {
+        statusEl.textContent = error.message || 'Could not save this photo.';
+        progressFill.style.width = '0%';
+        showToast(statusEl.textContent, 'error');
+    } finally {
+        input.value = '';
+    }
 }
 
 // ============================================================
@@ -2703,7 +2727,7 @@ async function postGroupMemory() {
     status.textContent = 'Uploading photo...';
     try {
         const config = window.cloudinaryConfig || {};
-        const uploaded = await uploadBlobToCloudinary(file, file.name, 'memories', config.memoryUploadPreset);
+        const uploaded = await uploadBlobToCloudinary(file, file.name, config.memoryUploadPreset);
         status.textContent = 'Saving memory...';
         const res = await callAPI('saveGroupMemory', {
             image: uploaded.image,

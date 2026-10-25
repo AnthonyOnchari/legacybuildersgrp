@@ -5997,3 +5997,156 @@ body.finance-ui .admin-phone-status {
         justify-self: stretch;
     }
 }
+
+body.finance-ui #splashScreen {
+    position: fixed;
+    z-index: 9999;
+    display: grid;
+    overflow: hidden;
+    place-items: center;
+    padding: 24px;
+    background:
+        radial-gradient(ellipse at 16% 8%, rgba(174, 217, 163, .16), transparent 34%),
+        radial-gradient(ellipse at 88% 90%, rgba(113, 185, 144, .18), transparent 36%),
+        linear-gradient(145deg, #102d23 0%, #174b36 48%, #1f6949 100%);
+    color: #fff;
+    transition: opacity .22s ease;
+}
+body.finance-ui #splashScreen.hidden { opacity: 0; pointer-events: none; }
+body.finance-ui .splash-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: min(100%, 390px);
+    padding: 42px 30px 36px;
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 28px;
+    background: rgba(255,255,255,.075);
+    box-shadow: 0 28px 80px rgba(5, 27, 18, .24);
+    text-align: center;
+    backdrop-filter: blur(15px);
+    animation: splash-card-enter .55s cubic-bezier(.2,.75,.2,1) both;
+}
+body.finance-ui .splash-logo {
+    display: grid;
+    width: 60px;
+    height: 60px;
+    margin: 0 0 20px;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,.35);
+    border-radius: 20px;
+    background: linear-gradient(145deg, #f3faef, #cfe6ca);
+    box-shadow: 0 8px 22px rgba(4, 25, 16, .18);
+    color: #1c5a3e;
+    font-size: 16px;
+    font-weight: 850;
+    letter-spacing: -.04em;
+}
+body.finance-ui .splash-eyebrow {
+    margin-bottom: 13px;
+    color: #c7e1c5;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .2em;
+}
+body.finance-ui .splash-title {
+    margin-bottom: 11px;
+    color: #fff;
+    font-size: clamp(30px, 7vw, 42px);
+    font-weight: 750;
+    letter-spacing: -.065em;
+    line-height: 1.02;
+}
+body.finance-ui .splash-subtitle {
+    margin-bottom: 25px;
+    color: rgba(243, 249, 243, .72);
+    font-size: 12px;
+}
+body.finance-ui .splash-loader {
+    position: relative;
+    width: min(100%, 180px);
+    height: 4px;
+    overflow: hidden;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255,255,255,.18);
+}
+body.finance-ui .splash-loader span {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 42%;
+    border-radius: inherit;
+    background: #c7e7b3;
+    animation: splash-progress 1.1s ease-in-out infinite;
+}
+body.finance-ui .splash-orbit {
+    position: absolute;
+    border: 1px solid rgba(233, 247, 226, .1);
+    border-radius: 50%;
+    pointer-events: none;
+}
+body.finance-ui .splash-orbit--one {
+    top: -210px;
+    right: -125px;
+    width: 590px;
+    height: 590px;
+}
+body.finance-ui .splash-orbit--two {
+    bottom: -340px;
+    left: -195px;
+    width: 690px;
+    height: 690px;
+}
+@keyframes splash-progress {
+    from { transform: translateX(-110%); }
+    to { transform: translateX(250%); }
+}
+@keyframes splash-card-enter {
+    from { opacity: 0; transform: translateY(10px) scale(.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+body.finance-ui .profile-modal-overlay { z-index: 10001; }
+body.finance-ui .profile-avatar-wrapper { display: flex; flex-direction: column; align-items: center; }
+body.finance-ui .profile-avatar-wrapper .profile-avatar { flex: 0 0 auto; }
+body.finance-ui .profile-photo-edit {
+    display: inline-flex;
+    position: relative;
+    z-index: 2;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 31px;
+    margin-top: 8px;
+    padding: 0 11px;
+    border: 1px solid #dce8da;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(30, 61, 41, .12);
+    color: #286344;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 750;
+    cursor: pointer;
+    white-space: nowrap;
+}
+body.finance-ui .profile-photo-edit:hover { background: #eff6ed; }
+body.finance-ui .profile-photo-edit svg {
+    width: 13px;
+    height: 13px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+}
+body.finance-ui .profile-body { padding-top: 84px; }
+@media (max-width: 640px) {
+    body.finance-ui .profile-modal-overlay { z-index: 10001; }
+    body.finance-ui .splash-content { padding: 35px 22px 30px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    body.finance-ui .splash-content,
+    body.finance-ui .splash-loader span { animation: none; }
+}

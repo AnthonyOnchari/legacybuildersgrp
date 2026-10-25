@@ -352,18 +352,14 @@ async function handleAction(action, params, user) {
             if (emailKey(params.email) !== user.email) throw new Error("You can only update your own profile photo.");
             const image = String(params.image || "");
             const publicId = String(params.publicId || "");
-            const legacyImage = image.startsWith("data:image/") && image.length <= 48000;
-            const cloudinaryImage = isCloudinaryImageUrl(image)
-                && publicId.startsWith("legacy-builders/profiles/")
-                && publicId.length <= 255;
-            if (!legacyImage && !cloudinaryImage) {
+            if (!isCloudinaryImageUrl(image) || !publicId || publicId.length > 255) {
                 throw new Error("Choose a valid profile photo uploaded to Cloudinary.");
             }
             await db.collection("profileImages").doc(safeDocId(user.email)).set({
                 email: user.email,
                 name,
                 image,
-                publicId: cloudinaryImage ? publicId : "",
+                publicId,
                 updated_at: nowIso()
             }, { merge: true });
             return { success: true };
@@ -384,7 +380,7 @@ async function handleAction(action, params, user) {
             const image = String(params.image || "");
             const publicId = String(params.publicId || "");
             const caption = String(params.caption || "").trim();
-            if (!isCloudinaryImageUrl(image) || !publicId.startsWith("legacy-builders/memories/") || publicId.length > 255) {
+            if (!isCloudinaryImageUrl(image) || !publicId || publicId.length > 255) {
                 throw new Error("Choose a valid photo uploaded to Cloudinary.");
             }
             if (caption.length > 200) throw new Error("Memory captions must be 200 characters or fewer.");
