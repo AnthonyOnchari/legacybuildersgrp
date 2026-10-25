@@ -4669,6 +4669,285 @@ body.finance-ui .tab.active .tab-icon { background: #E2F0E2; color: #1B684B; }
     body.finance-ui #transactionsPanel.active-panel { display: block; }
     body.finance-ui #transactionsPanel.active-panel > .card { margin-bottom: 14px; }
 }
+body.finance-ui {
+    background: #F3F6F2;
+}
+body.finance-ui .app-container {
+    max-width: 1440px;
+}
+body.finance-ui .sidebar.active {
+    border-bottom-color: #E6ECE5;
+    background: rgba(255, 255, 255, .96);
+}
+body.finance-ui .sidebar-brand-tagline {
+    color: #818C84;
+}
+body.finance-ui .header-row-1 {
+    min-height: 42px;
+    margin-bottom: 18px;
+}
+body.finance-ui .user-name-badge {
+    gap: 10px;
+    font-size: 13px;
+}
+body.finance-ui .user-avatar-small {
+    width: 38px;
+    height: 38px;
+    border: 2px solid #fff;
+    background: #DFE9DE;
+    box-shadow: 0 3px 12px rgba(23, 59, 39, .1);
+}
+body.finance-ui .header {
+    min-height: 224px;
+    padding: 27px 30px 0;
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 27px;
+    background:
+        radial-gradient(ellipse at 78% 22%, rgba(212,238,190,.2), transparent 31%),
+        linear-gradient(128deg, #286E50 0%, #1D5B43 51%, #153F32 100%);
+    box-shadow: 0 20px 42px rgba(32, 84, 57, .18);
+}
+body.finance-ui .header::before {
+    top: -142px;
+    right: -55px;
+    width: 360px;
+    height: 360px;
+    border-color: rgba(255,255,255,.14);
+    background:
+        radial-gradient(circle at center, rgba(213,238,192,.13), transparent 68%),
+        repeating-radial-gradient(circle at center, transparent 0 31px, rgba(255,255,255,.075) 32px 33px);
+}
+body.finance-ui .header::after {
+    right: 18%;
+    bottom: 51px;
+    width: 145px;
+    height: 56px;
+    border-color: rgba(227,244,211,.32);
+}
+body.finance-ui .wallet-greeting {
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+body.finance-ui .header-row-2 .wallet-label {
+    margin-bottom: 5px;
+    font-size: 12px;
+}
+body.finance-ui .header-row-2 .wallet-balance {
+    font-size: clamp(38px, 4.4vw, 54px);
+    letter-spacing: -.06em;
+}
+body.finance-ui .wallet-chip {
+    padding: 9px 14px;
+    border-color: rgba(255,255,255,.32);
+    background: rgba(255,255,255,.12);
+    font-weight: 700;
+}
+body.finance-ui .wallet-footer-row {
+    min-height: 50px;
+    border-color: rgba(255,255,255,.2);
+}
+body.finance-ui .quick-actions-card {
+    align-content: center;
+    gap: 10px;
+    padding: 16px;
+    border: 1px solid #E4EBE2;
+    border-radius: 24px;
+    background: rgba(255,255,255,.92);
+    box-shadow: 0 10px 28px rgba(31, 67, 43, .055);
+}
+body.finance-ui .quick-action {
+    min-height: 79px;
+    gap: 8px;
+    border-color: #E8EEE7;
+    border-radius: 18px;
+    background: #FBFCFA;
+    color: #294A39;
+    font-size: 12px;
+    transition: transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+body.finance-ui .quick-action:hover {
+    transform: translateY(-2px);
+    border-color: #C9DCC7;
+    background: #F3F8F1;
+    box-shadow: 0 7px 16px rgba(28, 76, 47, .07);
+}
+body.finance-ui .quick-action-icon {
+    width: 34px;
+    height: 34px;
+    background: #E8F1E5 !important;
+    color: #246748 !important;
+}
+body.finance-ui .quick-action-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+}
+body.finance-ui .activity-card-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 8px;
+}
+body.finance-ui .activity-card-heading .dashboard-eyebrow {
+    display: block;
+    margin-bottom: 6px;
+    color: #64836B;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .16em;
+}
+body.finance-ui .activity-card-heading h2 {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: #1A3728;
+    font-size: 20px;
+    letter-spacing: -.045em;
+}
+body.finance-ui .activity-card-heading p {
+    margin: 5px 0 0;
+    color: #7A887D;
+    font-size: 12px;
+    line-height: 1.5;
+}
+body.finance-ui .activity-card-heading > button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: auto;
+    min-height: 38px;
+    padding: 0 13px;
+    border: 1px solid #E2EAE1;
+    border-radius: 12px;
+    background: #F8FAF7;
+    color: #286344;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+body.finance-ui .activity-card-heading > button:hover {
+    border-color: #CADCC8;
+    background: #EDF5EA;
+}
+body.finance-ui #recentActivityList {
+    margin-top: 16px;
+}
+body.finance-ui .activity-row {
+    gap: 14px;
+    min-height: 69px;
+    padding: 12px 2px;
+    border-bottom: 1px solid #EEF1EC;
+}
+body.finance-ui .activity-icon {
+    width: 42px;
+    height: 42px;
+    border: 1px solid #E5EEE3;
+    background: #F1F6EF;
+    color: #276749;
+    font-size: 14px;
+    font-weight: 800;
+}
+body.finance-ui .activity-name {
+    color: #263A2E;
+    font-size: 13px;
+    font-weight: 700;
+}
+body.finance-ui .activity-meta {
+    margin-top: 4px;
+    color: #879187;
+    font-size: 11px;
+}
+body.finance-ui .activity-amount {
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+body.finance-ui .activity-amount.positive { color: #28764D; }
+body.finance-ui .activity-amount.negative { color: #6D4B42; }
+body.finance-ui #transactionsPanel > .card {
+    padding: 23px 25px;
+    border-color: #E7ECE5;
+    border-radius: 23px;
+    background: rgba(255,255,255,.96);
+    box-shadow: 0 9px 30px rgba(28, 54, 35, .045);
+}
+body.finance-ui .loading-container {
+    color: #758277;
+    font-size: 12px;
+}
+@media (min-width: 900px) {
+    body.finance-ui #transactionsPanel.active-panel {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    body.finance-ui #transactionsPanel > .card,
+    body.finance-ui #transactionsPanel > .card:not(#memoriesCard) {
+        grid-column: 1;
+    }
+}
+@media (max-width: 899px) {
+    body.finance-ui .header {
+        min-height: 0;
+        padding: 21px 22px 0;
+    }
+    body.finance-ui .header-row-2 { padding-bottom: 18px; }
+    body.finance-ui .wallet-greeting { margin-bottom: 14px; }
+    body.finance-ui .quick-actions-card {
+        gap: 7px;
+        padding: 10px;
+        border-radius: 20px;
+    }
+    body.finance-ui .quick-action {
+        min-height: 68px;
+        gap: 5px;
+        font-size: 10px;
+    }
+    body.finance-ui .activity-card-heading h2 { font-size: 18px; }
+}
+@media (max-width: 560px) {
+    body.finance-ui .app-container { padding: 12px 14px 0; }
+    body.finance-ui .header-row-1 { min-height: 38px; margin-bottom: 12px; }
+    body.finance-ui .header { padding: 18px 17px 0; border-radius: 21px; }
+    body.finance-ui .header-row-2 .wallet-balance { font-size: clamp(31px, 9vw, 40px); }
+    body.finance-ui .wallet-footer-row { min-height: 43px; }
+    body.finance-ui .quick-actions-card {
+        gap: 5px;
+        margin-bottom: 15px;
+        padding: 8px;
+        border-radius: 18px;
+    }
+    body.finance-ui .quick-action {
+        min-height: 64px;
+        gap: 4px;
+        border-radius: 14px;
+        font-size: 9px;
+    }
+    body.finance-ui .quick-action-icon { width: 28px; height: 28px; }
+    body.finance-ui .quick-action-icon svg { width: 16px; height: 16px; }
+    body.finance-ui #transactionsPanel > .card {
+        padding: 18px 16px;
+        border-radius: 19px;
+    }
+    body.finance-ui .activity-card-heading { gap: 8px; }
+    body.finance-ui .activity-card-heading p { max-width: 220px; font-size: 10px; }
+    body.finance-ui .activity-card-heading > button {
+        min-height: 34px;
+        gap: 5px;
+        padding: 0 9px;
+        font-size: 10px;
+    }
+    body.finance-ui .activity-row { gap: 10px; min-height: 62px; }
+    body.finance-ui .activity-icon { width: 36px; height: 36px; }
+    body.finance-ui .activity-name { font-size: 12px; }
+    body.finance-ui .activity-meta { font-size: 10px; }
+    body.finance-ui .activity-amount { font-size: 11px; }
+}
 @media (prefers-reduced-motion: reduce) {
     body.finance-ui *,
     body.finance-ui *::before,

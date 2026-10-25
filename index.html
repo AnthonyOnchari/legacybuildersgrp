@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=30">
+    <link rel="stylesheet" href="style.css?v=31">
 </head>
 <body class="finance-ui">
 
@@ -172,16 +172,16 @@
 
         <div class="quick-actions-card">
             <button class="quick-action" onclick="openAddTransactionModal('Savings')">
-                <span class="quick-action-icon qa-save" aria-hidden="true">+</span><span>Deposit</span>
+                <span class="quick-action-icon qa-save" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span>Deposit</span>
             </button>
             <button class="quick-action" onclick="openAddTransactionModal('Loan Taken')">
-                <span class="quick-action-icon qa-loan" aria-hidden="true">L</span><span>Loan</span>
+                <span class="quick-action-icon qa-loan" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M3.5 10h17M7 14h3"/></svg></span><span>Loan</span>
             </button>
             <button class="quick-action" onclick="openAddTransactionModal('Loan Repayment')">
-                <span class="quick-action-icon qa-repay" aria-hidden="true">R</span><span>Repay</span>
+                <span class="quick-action-icon qa-repay" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9A7 7 0 0 1 18 6.6L20 12M4 12l2 5.4A7 7 0 0 0 17.9 15"/></svg></span><span>Repay</span>
             </button>
             <button class="quick-action" onclick="openHistoryModal()">
-                <span class="quick-action-icon qa-history" aria-hidden="true">≡</span><span>History</span>
+                <span class="quick-action-icon qa-history" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.5 2"/></svg></span><span>History</span>
             </button>
         </div>
         </div>
@@ -212,9 +212,13 @@
                 <div class="memories-dots" id="memoriesDots"></div>
             </div>
             <div class="card">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                    <h2 style="margin-bottom: 0;">Recent activity</h2>
-                    <button onclick="openHistoryModal()" style="width: auto; padding: 4px 0; background: none; color: var(--blue); font-size: 12px; font-weight: 600;">See all</button>
+                <div class="activity-card-heading">
+                    <div>
+                        <span class="dashboard-eyebrow">GROUP FEED</span>
+                        <h2>Recent activity</h2>
+                        <p>Contributions, loan requests, and repayments</p>
+                    </div>
+                    <button onclick="openHistoryModal()">View all <span aria-hidden="true">↗</span></button>
                 </div>
                 <div id="recentActivityList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
             </div>
