@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=60">
+    <link rel="stylesheet" href="style.css?v=62">
 </head>
 <body class="finance-ui">
 
@@ -232,6 +232,7 @@
                         <button type="button" class="memory-share-btn" onclick="toggleMemoryComposer()">＋ Share a photo</button>
                     </div>
                 </div>
+                <p class="memory-sync-status" id="memorySyncStatus" role="status" aria-live="polite"></p>
                 <div class="memory-composer" id="memoryComposer" role="presentation" aria-hidden="true" style="display:none;" onclick="if(event.target===this)toggleMemoryComposer(false)">
                     <div class="memory-composer-dialog" role="dialog" aria-modal="true" aria-labelledby="memoryComposerTitle" tabindex="-1">
                         <div class="memory-composer-heading">
@@ -282,10 +283,11 @@
                 <div class="activity-card-heading">
                     <div>
                         <h2>Recent activity</h2>
-                        <p>Latest contributions, loans, and repayments</p>
+                        <p>Latest group transactions</p>
                     </div>
                     <button type="button" onclick="openHistoryModal()">Full history <span aria-hidden="true">↗</span></button>
                 </div>
+                <p class="recent-activity-hint">Showing the latest two</p>
                 <div id="recentActivityList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
             </div>
         </div>
@@ -347,11 +349,35 @@
         <div id="loansPanel" class="panel fullscreen-panel loans-page">
             <header class="loans-hero">
                 <div>
-                    <h1>Loans</h1>
-                    <p>Requests, approvals and repayments.</p>
+                    <span class="section-kicker">A CLEAR VIEW BEFORE YOU DECIDE</span>
+                    <h1>Loans, with clarity.</h1>
+                    <p>Review the estimated cost and repayment details at your own pace.</p>
                 </div>
                 <button type="button" class="loans-request-button" onclick="openAddTransactionModal('Loan Taken')">Request a loan</button>
             </header>
+            <section class="loan-planning-grid" aria-label="Loan planning information">
+                <div class="loan-estimator-card">
+                    <div class="loan-planning-heading"><span class="loan-planning-icon" aria-hidden="true">KES</span><div><span class="section-kicker">COST ESTIMATOR</span><h2>Know the total first</h2></div></div>
+                    <p>Enter an example amount to see the current 10% interest estimate. Final terms are confirmed during group approval.</p>
+                    <label for="loanEstimatePrincipal">Example principal (KES)</label>
+                    <input type="number" id="loanEstimatePrincipal" min="1" step="100" value="10000" inputmode="numeric" oninput="updateLoanEstimate()">
+                    <div class="loan-estimate-breakdown">
+                        <div><span>Principal</span><strong id="loanEstimatePrincipalDisplay">KES 10,000</strong></div>
+                        <div><span>Estimated interest (10%)</span><strong id="loanEstimateInterest">KES 1,000</strong></div>
+                        <div class="loan-estimate-total"><span>Estimated total due</span><strong id="loanEstimateTotal">KES 11,000</strong></div>
+                    </div>
+                    <p class="loan-estimate-note">This is an estimate, not an approval or a recommendation to borrow.</p>
+                </div>
+                <div class="loan-readiness-card">
+                    <span class="section-kicker">BEFORE YOU REQUEST</span>
+                    <h2>Take a moment to review</h2>
+                    <ul>
+                        <li><span aria-hidden="true">01</span><div><strong>Check the total</strong><p>Include principal and the stated interest in your plans.</p></div></li>
+                        <li><span aria-hidden="true">02</span><div><strong>Agree on a repayment date</strong><p>Make sure the due date works with your expected income.</p></div></li>
+                        <li><span aria-hidden="true">03</span><div><strong>Understand the approval process</strong><p>Requests are reviewed by the group before activation.</p></div></li>
+                    </ul>
+                </div>
+            </section>
             <div class="loans-sections-grid">
                 <section class="card loans-section loans-section--active">
                     <div class="loans-section-heading"><div><h2>Active loans</h2></div></div>
@@ -441,16 +467,38 @@
                 <div class="about-image-wrapper">
                     <img src="https://lh3.googleusercontent.com/d/1cxOVKU7CkgQUaSpB6m_KYVxNKDfBL_yS=s800" alt="Legacy Builders Group" class="about-hero-image" onerror="this.style.display='none'">
                 </div>
-                <div class="about-hero-copy"><span class="section-kicker">ABOUT THE GROUP</span><h1>NBFA GROUP</h1><p class="about-tagline">A savings community built on trust, shared responsibility and long-term progress.</p><div class="about-values-row"><span class="about-value-chip">Unity</span><span class="about-value-chip">Integrity</span><span class="about-value-chip">Legacy</span></div></div>
+                <div class="about-hero-copy">
+                    <span class="section-kicker">OUR COMMUNITY</span>
+                    <h1>Progress is stronger when we build it together.</h1>
+                    <p class="about-tagline">NBFA GROUP brings members together around shared saving, transparent decisions and steady progress toward the future.</p>
+                    <div class="about-values-row"><span class="about-value-chip">Shared responsibility</span><span class="about-value-chip">Clear decisions</span><span class="about-value-chip">Long-term progress</span></div>
+                </div>
             </div>
-            <div class="about-stats-row">
+            <div class="about-stats-row" aria-label="Group statistics">
                 <div class="about-stat"><div class="about-stat-value" id="aboutStatMembers">--</div><div class="about-stat-label">Members</div></div>
                 <div class="about-stat"><div class="about-stat-value" id="aboutStatSavings">--</div><div class="about-stat-label">Total Saved</div></div>
                 <div class="about-stat"><div class="about-stat-value" id="aboutStatTxns">--</div><div class="about-stat-label">Transactions</div></div>
             </div>
-            <div class="card">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                    <div><span class="section-kicker">THE PEOPLE BEHIND THE PROGRESS</span><h2 style="margin-bottom: 0;">Meet the members</h2></div>
+            <section class="about-purpose-grid" aria-label="How we work together">
+                <article class="about-purpose-card about-purpose-card--lead">
+                    <span class="section-kicker">WHY WE COME TOGETHER</span>
+                    <h2>A shared place to save, plan and move forward.</h2>
+                    <p>Our group space keeps everyday finances and communication in one place, helping members stay informed and take part in decisions together.</p>
+                </article>
+                <article class="about-purpose-card">
+                    <span class="about-purpose-number">01</span>
+                    <h3>Make progress together</h3>
+                    <p>Members contribute toward goals through consistent saving and participation.</p>
+                </article>
+                <article class="about-purpose-card">
+                    <span class="about-purpose-number">02</span>
+                    <h3>Keep decisions visible</h3>
+                    <p>Shared records and group updates help everyone follow what is happening.</p>
+                </article>
+            </section>
+            <section class="card about-members-card">
+                <div class="about-members-heading">
+                    <div><span class="section-kicker">THE PEOPLE BEHIND THE PROGRESS</span><h2>Meet the members</h2><p>A community shaped by the people who show up and contribute.</p></div>
                     <span class="member-count-badge" id="memberCountBadge">0 Members</span>
                 </div>
                 <div class="members-grid-wrapper">
@@ -458,7 +506,7 @@
                         <div class="loading-container" style="grid-column: 1 / -1;"><div class="loading-spinner"></div><div>Loading members...</div></div>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
 
         <!-- Developer Portal Panel -->
@@ -527,6 +575,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="firebase-config.js?v=34"></script>
-    <script src="app.js?v=56"></script>
+    <script src="app.js?v=58"></script>
 </body>
 </html>

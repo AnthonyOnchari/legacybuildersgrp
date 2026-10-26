@@ -73,7 +73,7 @@ async function callAPI(action, data = {}, _retryCount = 0) {
     try {
         const firebaseUser = window.firebaseAuth && window.firebaseAuth.currentUser;
         if (!firebaseUser) throw new Error('Please sign in with Google first.');
-        const idToken = await firebaseUser.getIdToken();
+        const idToken = await firebaseUser.getIdToken(_retryCount > 0);
         const response = await fetch(window.FIREBASE_API_URL, {
             method: 'POST',
             headers: {
@@ -94,6 +94,10 @@ async function callAPI(action, data = {}, _retryCount = 0) {
         }
         return result;
     } catch (e) {
+        if (e instanceof TypeError && _retryCount < 2) {
+            await delay(500 * (2 ** _retryCount));
+            return callAPI(action, data, _retryCount + 1);
+        }
         console.error('API Error:', e);
         return { success: false, error: e.message };
     }
@@ -1007,6 +1011,19 @@ async function loadAllData(silent = false, skipBalanceUI = false) {
 }
 
 let isLoansLoading = false;
+function updateLoanEstimate() {
+    const input = document.getElementById('loanEstimatePrincipal');
+    const principal = Math.max(0, Math.round(Number(input?.value) || 0));
+    const interest = Math.round(principal * 0.1);
+    const formatKes = value => `KES ${value.toLocaleString('en-KE')}`;
+    const principalEl = document.getElementById('loanEstimatePrincipalDisplay');
+    const interestEl = document.getElementById('loanEstimateInterest');
+    const totalEl = document.getElementById('loanEstimateTotal');
+    if (principalEl) principalEl.textContent = formatKes(principal);
+    if (interestEl) interestEl.textContent = formatKes(interest);
+    if (totalEl) totalEl.textContent = formatKes(principal + interest);
+}
+
 async function loadLoansDashboard() {
     if (isLoansLoading || !currentUser) return;
     if (DEVELOPMENT_PREVIEW_ENABLED) {
@@ -1221,9 +1238,11 @@ function renderRecentActivity() {
     if (!container) return;
     container.classList.remove('loading-container');
     if (!allRecords.length) {
+        container.classList.remove('has-recent-activity');
         container.innerHTML = '<div class="empty-state">No transactions yet</div>';
         return;
     }
+    container.classList.add('has-recent-activity');
     const recent = [...allRecords].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
     const iconFor = type => {
         if (type === 'Savings') {
@@ -1234,7 +1253,7 @@ function renderRecentActivity() {
         }
         return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.2 9A7 7 0 0 1 18 6.5L20 12M4 12l2 5.5A7 7 0 0 0 17.8 15"/></svg>';
     };
-    container.innerHTML = recent.map(r => {
+    container.innerHTML = `<div class="recent-activity-stack">${recent.map((r, index) => {
         const sign = r.type === 'Loan Taken' ? '-' : '+';
         const date = new Date(r.date);
         const dateLabel = Number.isNaN(date.getTime())
@@ -1246,7 +1265,7 @@ function renderRecentActivity() {
             : r.type === 'Loan Taken'
                 ? 'loan'
                 : 'repayment';
-        return `<div class="activity-row">
+        return `<div class="activity-row${index > 1 ? ` activity-row--fade-${Math.min(index, 4)}` : ''}">
             <div class="activity-icon activity-icon--${iconClass}">${iconFor(r.type)}</div>
             <div class="activity-info">
                 <div class="activity-name">${escapeHtml(r.member)}</div>
@@ -1254,7 +1273,7 @@ function renderRecentActivity() {
             </div>
             <div class="activity-amount ${sign === '-' ? 'negative' : 'positive'}">${sign} KES ${Number(r.amount || 0).toLocaleString('en-KE')}</div>
         </div>`;
-    }).join('');
+    }).join('')}</div>`;
 }
 
 function renderPendingLoans() {
@@ -3053,8 +3072,52 @@ function initializeAppBackNavigation() {
             addNavigationGuard();
             return;
         }
-        if (!window.confirm('Are you sure you want to exit NBFA GROUP?')) addNavigationGuard();
+        showAppConfirmation({
+            title: 'Leave NBFA GROUP?',
+            message: 'You can come back any time. Are you sure you want to leave?',
+            confirmLabel: 'Leave group',
+            destructive: true
+        }).then(confirmed => {
+            if (!confirmed) addNavigationGuard();
+        });
     });
+}
+
+let activeAppConfirmation = null;
+function showAppConfirmation({ title, message, confirmLabel = 'Continue', destructive = false }) {
+    if (activeAppConfirmation) return activeAppConfirmation.promise;
+    const overlay = document.createElement('div');
+    overlay.className = 'app-confirm-overlay';
+    overlay.innerHTML = `<section class="app-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="appConfirmTitle" aria-describedby="appConfirmMessage" tabindex="-1">
+        <div class="app-confirm-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 4.5h4M12 8v5m0 3.5h.01"/><path d="M10.3 3.8 2.8 17a2 2 0 0 0 1.8 3h14.8a2 2 0 0 0 1.8-3l-7.4-13.2a2 2 0 0 0-3.5 0Z"/></svg></div>
+        <h2 id="appConfirmTitle">${escapeHtml(title)}</h2>
+        <p id="appConfirmMessage">${escapeHtml(message)}</p>
+        <div class="app-confirm-actions"><button type="button" class="app-confirm-cancel">Stay here</button><button type="button" class="app-confirm-accept${destructive ? ' is-destructive' : ''}">${escapeHtml(confirmLabel)}</button></div>
+    </section>`;
+    document.body.appendChild(overlay);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    let resolveConfirmation;
+    const promise = new Promise(resolve => { resolveConfirmation = resolve; });
+    const finish = confirmed => {
+        if (!activeAppConfirmation || activeAppConfirmation.overlay !== overlay) return;
+        activeAppConfirmation = null;
+        document.removeEventListener('keydown', onKeyDown);
+        overlay.remove();
+        document.body.style.overflow = previousOverflow;
+        resolveConfirmation(confirmed);
+    };
+    const onKeyDown = event => {
+        if (event.key === 'Escape') finish(false);
+    };
+    overlay.addEventListener('click', event => {
+        if (event.target === overlay || event.target.closest('.app-confirm-cancel')) finish(false);
+        if (event.target.closest('.app-confirm-accept')) finish(true);
+    });
+    document.addEventListener('keydown', onKeyDown);
+    activeAppConfirmation = { overlay, promise };
+    overlay.querySelector('.app-confirm-dialog')?.focus({ preventScroll: true });
+    return promise;
 }
 
 // ============================================================
@@ -3064,25 +3127,55 @@ let GROUP_MEMORY_PHOTOS = [];
 let memoriesIndex = 0, memoriesInterval = null;
 let pendingMemoryPhoto = null, pendingMemoryPhotoFile = null, memoryPreviewUrl = null;
 let memoryComposerPreviousOverflow = '';
+const GROUP_MEMORIES_CACHE_KEY = 'nbfa_group_memories_cache_v1';
+
+function saveGroupMemoriesCache() {
+    try {
+        localStorage.setItem(GROUP_MEMORIES_CACHE_KEY, JSON.stringify(GROUP_MEMORY_PHOTOS));
+    } catch (error) {
+        console.warn('Could not save the local Group memories cache:', error);
+    }
+}
+
+function readGroupMemoriesCache() {
+    try {
+        const cached = JSON.parse(localStorage.getItem(GROUP_MEMORIES_CACHE_KEY) || '[]');
+        return Array.isArray(cached)
+            ? cached.filter(photo => photo && photo.id && photo.image && photo.image.startsWith('https://'))
+            : [];
+    } catch (error) {
+        console.warn('Could not read the local Group memories cache:', error);
+        return [];
+    }
+}
 
 async function loadGroupMemories() {
+    const cached = readGroupMemoriesCache();
+    if (!GROUP_MEMORY_PHOTOS.length && cached.length) {
+        GROUP_MEMORY_PHOTOS = cached;
+        initMemoriesCarousel();
+    }
     const res = await callAPI('getGroupMemories');
     if (!res.success || !Array.isArray(res.memories)) {
         const card = document.getElementById('memoriesCard');
-        const track = document.getElementById('memoriesCarousel');
-        const dots = document.getElementById('memoriesDots');
         const empty = document.getElementById('memoryEmptyState');
-        if (card) card.style.display = 'block';
-        if (track) track.parentElement.style.display = 'none';
-        if (dots) dots.innerHTML = '';
-        if (empty) {
-            empty.style.display = 'block';
-            empty.textContent = res.error || 'Group memories could not be loaded.';
+        if (!GROUP_MEMORY_PHOTOS.length) {
+            if (card) card.style.display = 'block';
+            if (empty) {
+                empty.style.display = 'block';
+                empty.textContent = 'Group photos are temporarily unavailable. We will try again shortly.';
+            }
+        } else {
+            const syncStatus = document.getElementById('memorySyncStatus');
+            if (syncStatus) syncStatus.textContent = 'Connection interrupted — showing saved photos.';
         }
         return;
     }
     GROUP_MEMORY_PHOTOS = res.memories;
+    saveGroupMemoriesCache();
     initMemoriesCarousel();
+    const syncStatus = document.getElementById('memorySyncStatus');
+    if (syncStatus) syncStatus.textContent = '';
 }
 
 function initMemoriesCarousel() {
@@ -3119,6 +3212,16 @@ function initMemoriesCarousel() {
         </figure>
     `;
     }).join('');
+    track.querySelectorAll('.memory-slide img').forEach(image => {
+        let retries = 0;
+        image.addEventListener('error', () => {
+            if (retries >= 2) return;
+            retries += 1;
+            const source = image.src;
+            image.src = '';
+            setTimeout(() => { image.src = source; }, 700 * retries);
+        });
+    });
     dotsWrap.innerHTML = GROUP_MEMORY_PHOTOS.map((_, i) => `<button type="button" class="memories-dot${i === 0 ? ' active' : ''}" aria-label="Show photo ${i + 1}" aria-current="${i === 0 ? 'true' : 'false'}" onclick="goToMemory(${i})"></button>`).join('');
     memoriesIndex = 0; updateMemoriesPosition();
     if (memoriesInterval) clearInterval(memoriesInterval);
@@ -3170,6 +3273,7 @@ async function editMemoryCaption(index) {
             const res = await callAPI('updateGroupMemoryCaption', { id: photo.id, caption: captionInput.value.trim() });
             if (!res.success) throw new Error(res.error || 'Could not update the caption.');
             photo.caption = res.caption;
+            saveGroupMemoriesCache();
             initMemoriesCarousel();
             overlay.remove();
             showToast('Caption updated.', 'success');
@@ -3192,6 +3296,7 @@ async function deleteGroupMemory(index) {
         const res = await callAPI('deleteGroupMemory', { id: photo.id });
         if (!res.success) throw new Error(res.error || 'Could not delete the photo.');
         GROUP_MEMORY_PHOTOS = GROUP_MEMORY_PHOTOS.filter(item => item.id !== photo.id);
+        saveGroupMemoriesCache();
         memoriesIndex = Math.min(memoriesIndex, Math.max(0, GROUP_MEMORY_PHOTOS.length - 1));
         initMemoriesCarousel();
         showToast('Photo deleted from Group memories.', 'success');
@@ -3325,6 +3430,7 @@ async function postGroupMemory() {
         if (!res.success) throw new Error(res.error || 'Could not save this memory.');
         GROUP_MEMORY_PHOTOS.unshift(res.memory);
         GROUP_MEMORY_PHOTOS = GROUP_MEMORY_PHOTOS.slice(0, 50);
+        saveGroupMemoriesCache();
         initMemoriesCarousel();
         toggleMemoryComposer(false);
         showToast('Memory shared with the group.', 'success');
@@ -3424,6 +3530,13 @@ async function sendGroupMessage(event) {
 // ============================================================
 async function logout(event) {
     if (event) { event.stopPropagation(); event.preventDefault(); }
+    const confirmed = await showAppConfirmation({
+        title: 'Log out of your account?',
+        message: 'Your group information is saved. You can securely sign back in whenever you are ready.',
+        confirmLabel: 'Log out',
+        destructive: true
+    });
+    if (!confirmed) return;
     if (window.firebaseAuth) await window.firebaseAuth.signOut();
     if (countdownInterval) clearInterval(countdownInterval);
     localStorage.removeItem('legacy_current_user');
