@@ -139,6 +139,49 @@ function animateAuthTransition() {
     }, 420);
 }
 
+function initializeAuthVideoLoop() {
+    const videos = Array.from(document.querySelectorAll('.login-photo'));
+    if (videos.length < 2) return;
+
+    let activeVideo = videos.find(video => video.classList.contains('is-visible')) || videos[0];
+    let nextVideo = videos.find(video => video !== activeVideo);
+    let isTransitioning = false;
+    let crossfadeUnavailable = false;
+    const crossfadeDurationMs = 1200;
+    const crossfadeLeadTimeSeconds = 1.6;
+
+    nextVideo.load();
+    videos.forEach(video => {
+        video.addEventListener('timeupdate', async () => {
+            if (video !== activeVideo || isTransitioning || crossfadeUnavailable || !Number.isFinite(video.duration)) return;
+            if (video.duration - video.currentTime > crossfadeLeadTimeSeconds) return;
+
+            isTransitioning = true;
+            nextVideo.currentTime = 0;
+            try {
+                await nextVideo.play();
+            } catch (error) {
+                console.warn('Auth video crossfade could not start; using the native video loop.', error);
+                crossfadeUnavailable = true;
+                isTransitioning = false;
+                return;
+            }
+
+            const outgoingVideo = activeVideo;
+            activeVideo = nextVideo;
+            nextVideo = outgoingVideo;
+            activeVideo.classList.add('is-visible');
+            outgoingVideo.classList.remove('is-visible');
+
+            setTimeout(() => {
+                outgoingVideo.pause();
+                outgoingVideo.currentTime = 0;
+                isTransitioning = false;
+            }, crossfadeDurationMs);
+        });
+    });
+}
+
 function checkPersistentLogin() {
     const user = window.firebaseAuth && window.firebaseAuth.currentUser;
     if (!user) return false;
@@ -3912,6 +3955,7 @@ function initializeDevelopmentPreview() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    initializeAuthVideoLoop();
     initializeApp().catch(error => {
         console.error('App initialization failed:', error);
         const loginOverlay = document.getElementById('loginOverlay');

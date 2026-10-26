@@ -6141,7 +6141,11 @@ body.finance-ui .login-photo {
     height: 100%;
     object-fit: cover;
     object-position: center 100%;
+    opacity: 0;
+    transition: opacity 1.2s ease-in-out;
+    will-change: opacity;
 }
+body.finance-ui .login-photo.is-visible { opacity: 1; }
 body.finance-ui .login-copy::before,
 body.finance-ui .login-copy::after {
     position: absolute;
@@ -10318,12 +10322,12 @@ body.finance-ui .communications-page .group-message-form { margin-top: 12px; }
         border: 1px solid rgba(35, 82, 60, .12);
         border-radius: 22px;
         background:
-            radial-gradient(ellipse at 100% 0%, rgba(207, 231, 208, .72), transparent 54%),
-            linear-gradient(145deg, rgba(251, 252, 249, .86) 0%, rgba(241, 246, 239, .84) 100%);
+            radial-gradient(ellipse at 100% 0%, rgba(207, 231, 208, .28), transparent 54%),
+            linear-gradient(145deg, rgba(251, 252, 249, .38) 0%, rgba(241, 246, 239, .32) 100%);
         box-shadow: 0 18px 46px rgba(22, 57, 41, .14);
         overflow: visible;
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
     }
     body.finance-ui .login-secure-label,
     body.finance-ui .login-box.is-registering .login-secure-label {
