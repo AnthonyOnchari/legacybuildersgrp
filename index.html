@@ -10,9 +10,14 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=72">
+    <link rel="stylesheet" href="style.css?v=74">
 </head>
 <body class="finance-ui">
+
+    <div id="startupLoading" class="startup-loading" role="status" aria-live="polite">
+        <div class="startup-loading-spinner" aria-hidden="true"></div>
+        <span>Loading your account...</span>
+    </div>
 
     <!-- LOGIN OVERLAY -->
     <div id="loginOverlay" class="login-overlay">
@@ -37,10 +42,13 @@
                     </div>
                     <div class="login-form-area">
                         <div id="loginForm">
-                            <button class="login-btn" id="loginBtn" onclick="loginWithGoogle()">
-                                <svg class="google-mark" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.8 6-15z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.7-5.1c-1.8 1.2-4 1.9-6.8 1.9-5.2 0-9.6-3.5-11.2-8.2H5.9v5.3A20 20 0 0 0 24 44z"/><path fill="#FBBC05" d="M12.8 27.8a12 12 0 0 1 0-7.6v-5.3H5.9a20 20 0 0 0 0 18.2z"/><path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 5.9 29.5 4 24 4A20 20 0 0 0 5.9 14.9l6.9 5.3C14.4 15.5 18.8 12 24 12z"/></svg>
-                                <span>Continue with Google</span>
-                            </button>
+                            <div class="google-signin-control" id="googleSignInControl">
+                                <div id="googleSignInButton"></div>
+                                <div class="google-signin-loading" aria-hidden="true">
+                                    <span class="login-loading"></span>
+                                    <span>Signing in with Google...</span>
+                                </div>
+                            </div>
                             <div id="loginError" class="error-message"></div>
                             <div class="login-divider login-divider--signup"><span>OR CREATE AN ACCOUNT WITH US</span></div>
                             <button class="login-create-btn" type="button" onclick="showRegisterForm()">Set Up an Account</button>
@@ -577,7 +585,8 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-    <script src="firebase-config.js?v=35"></script>
-    <script src="app.js?v=61"></script>
+    <script src="https://accounts.google.com/gsi/client" defer></script>
+    <script src="firebase-config.js?v=36"></script>
+    <script src="app.js?v=64"></script>
 </body>
 </html>

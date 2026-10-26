@@ -9,6 +9,7 @@ window.firebaseConfig = {
     appId: "1:394999400788:web:3ad6a5e8a1f69d837ba0c1",
     measurementId: "G-XWVK9P2F6K"
 };
+window.GOOGLE_OAUTH_CLIENT_ID = "394999400788-f0hv2tk2ctmjf2s40g8qv514lhbee9ga.apps.googleusercontent.com";
 
 window.FIREBASE_API_URL = "/api";
 window.cloudinaryConfig = {
@@ -22,6 +23,4 @@ if (!window.firebase) {
 } else {
     firebase.initializeApp(window.firebaseConfig);
     window.firebaseAuth = firebase.auth();
-    window.firebaseGoogleProvider = new firebase.auth.GoogleAuthProvider();
-    window.firebaseGoogleProvider.setCustomParameters({ prompt: "select_account" });
 }
