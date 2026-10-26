@@ -578,6 +578,7 @@ async function requestPasswordReset() {
 function updateHeaderAvatar() {
     const avatarEl = document.getElementById('headerAvatar');
     const walletImageEl = document.getElementById('walletProfileImage');
+    const walletPhoneEl = document.getElementById('walletCardNumber');
     const profileImage = getProfileImage();
     document.querySelectorAll('.fullscreen-panel-avatar').forEach(avatar => {
         avatar.replaceChildren();
@@ -595,12 +596,28 @@ function updateHeaderAvatar() {
     });
     if (walletImageEl) {
         if (profileImage) {
+            walletImageEl.crossOrigin = 'anonymous';
             walletImageEl.src = profileImage;
             walletImageEl.hidden = false;
         } else {
             walletImageEl.removeAttribute('src');
             walletImageEl.hidden = true;
         }
+    }
+    if (walletPhoneEl) {
+        const phone = currentUserPhone.trim();
+        const dialCode = currentUserPhoneDialCode
+            || PHONE_COUNTRIES.find(country => country.code === currentUserPhoneCountry)?.dialCode
+            || '';
+        const dialDigits = dialCode.replace(/\D/g, '');
+        let numberDigits = phone.replace(/\D/g, '');
+        if (dialDigits && numberDigits.startsWith(dialDigits)) numberDigits = numberDigits.slice(dialDigits.length);
+        else numberDigits = numberDigits.replace(/^0+/, '');
+        const formattedNumber = numberDigits.match(/.{1,3}/g)?.join(' ') || '';
+        walletPhoneEl.textContent = phone
+            ? `${dialCode ? `${dialCode} ` : ''}${formattedNumber || phone}`
+            : '';
+        walletPhoneEl.hidden = !phone;
     }
     if (!avatarEl) return;
     if (profileImage) {
@@ -1088,16 +1105,27 @@ function animateCountUp(el, newValue, prefix = 'KES ') {
 
 function toggleWalletScopeMenu() {
     const menu = document.getElementById('walletScopeMenu');
-    if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    const button = document.getElementById('walletScopeChip');
+    if (!menu || !button) return;
+    const open = menu.style.display === 'none';
+    menu.style.display = open ? 'block' : 'none';
+    button.setAttribute('aria-expanded', String(open));
 }
 
 function setWalletScope(scope) {
+    if (scope !== 'group' && scope !== 'mine') return;
     walletScope = scope;
     document.getElementById('walletScopeLabel').textContent = scope === 'mine' ? 'Mine' : 'Group';
     document.getElementById('walletBalanceLabel').textContent = scope === 'mine'
         ? 'Your savings balance'
         : 'Available group balance';
+    document.querySelectorAll('#walletScopeMenu [data-scope]').forEach(option => {
+        const selected = option.dataset.scope === scope;
+        option.classList.toggle('active', selected);
+        option.setAttribute('aria-pressed', String(selected));
+    });
     document.getElementById('walletScopeMenu').style.display = 'none';
+    document.getElementById('walletScopeChip').setAttribute('aria-expanded', 'false');
     renderWalletBalance();
 }
 
@@ -1106,8 +1134,50 @@ document.addEventListener('click', (e) => {
     const menu = document.getElementById('walletScopeMenu');
     if (wrapper && menu && menu.style.display !== 'none' && !wrapper.contains(e.target)) {
         menu.style.display = 'none';
+        document.getElementById('walletScopeChip')?.setAttribute('aria-expanded', 'false');
     }
 });
+
+async function downloadWalletCard() {
+    if (typeof html2pdf !== 'function') {
+        showToast('Card download is unavailable. Check your connection and try again.', 'error');
+        return;
+    }
+    const source = document.querySelector('.dashboard-top-grid > .header');
+    if (!source) {
+        showToast('The group card could not be found.', 'error');
+        return;
+    }
+    const exportStage = document.createElement('div');
+    exportStage.className = 'dashboard-top-grid wallet-card-export-stage';
+    const card = source.cloneNode(true);
+    card.classList.add('wallet-card-exporting');
+    card.querySelector('.wallet-card-download')?.remove();
+    const image = card.querySelector('.wallet-profile-image');
+    if (image && !image.hidden && image.src) {
+        image.crossOrigin = 'anonymous';
+        image.src = source.querySelector('.wallet-profile-image').src;
+    }
+    exportStage.appendChild(card);
+    document.body.appendChild(exportStage);
+    try {
+        await Promise.all([...card.querySelectorAll('img')].map(img => img.decode()));
+        const filename = `NBFA_Group_Card_${new Date().toISOString().slice(0, 10)}.pdf`;
+        await html2pdf().set({
+            margin: 0,
+            filename,
+            image: { type: 'png' },
+            html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: null, windowWidth: 856 },
+            jsPDF: { unit: 'mm', format: [85.6, 54], orientation: 'landscape' }
+        }).from(card).save();
+        showToast('Your NBFA Group card was downloaded.', 'success');
+    } catch (error) {
+        console.error('Card download failed:', error);
+        showToast('Could not download the card. Please try again.', 'error');
+    } finally {
+        exportStage.remove();
+    }
+}
 
 function getUserStats(username) {
     const stats = { savings: 0, loans: 0, repaid: 0, net: 0 };
@@ -1303,11 +1373,20 @@ function openAddTransactionModal(type) {
     if (!document.getElementById('date').value) {
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
     }
+    modal.tabIndex = -1;
+    modal.onclick = event => {
+        if (event.target === modal) closeAddTransactionModal();
+    };
+    modal.onkeydown = event => {
+        if (event.key === 'Escape') closeAddTransactionModal();
+    };
     modal.style.display = 'flex';
+    modal.querySelector('.modal-content')?.focus({ preventScroll: true });
 }
 
 function closeAddTransactionModal() {
-    document.getElementById('addTransactionModal').style.display = 'none';
+    const modal = document.getElementById('addTransactionModal');
+    if (modal) modal.style.display = 'none';
 }
 
 function toggleApprovalNotice() {
@@ -1890,37 +1969,53 @@ function updateAboutStats() {
 // HISTORY MODAL
 // ============================================================
 let currentHistoryRecords = [];
+let currentHistorySort = { column: 'date', direction: 'desc' };
 
 function openHistoryModal() {
+    document.querySelector('.history-modal')?.remove();
     const modal = document.createElement('div');
     modal.className = 'history-modal';
+    modal.setAttribute('role', 'presentation');
     modal.innerHTML = `
-        <div class="history-modal-content">
+        <section class="history-modal-content" role="dialog" aria-modal="true" aria-labelledby="historyModalTitle" tabindex="-1">
             <div class="history-modal-header">
-                <h3> Transaction History</h3>
-                <button class="close-history-btn" onclick="this.closest('.history-modal').remove()">✕</button>
+                <div>
+                    <span class="history-modal-kicker">GROUP FINANCES</span>
+                    <h3 id="historyModalTitle">Transaction history</h3>
+                    <p>Browse deposits, loan activity, and repayments.</p>
+                </div>
+                <button type="button" class="close-history-btn" aria-label="Close transaction history" onclick="this.closest('.history-modal').remove()">✕</button>
             </div>
             <div class="history-modal-body">
                 <div class="history-search">
-                    <input type="text" id="historySearch" placeholder="Search...">
+                    <input type="search" id="historySearch" placeholder="Search members or notes" aria-label="Search members or notes">
                     <select id="historyFilterMember"><option value="">All Members</option>${allMembers.map(m => `<option value="${m}">${m}</option>`).join('')}</select>
                     <select id="historyFilterType"><option value="">All Types</option><option value="Savings">Savings</option><option value="Loan Taken">Loan Taken</option><option value="Loan Repayment">Loan Repayment</option></select>
                 </div>
-                <div style="overflow-x: auto; max-width: 100%;">
+                <div class="history-table-wrap">
                     <table class="history-table">
-                        <thead><tr><th onclick="sortHistory('date')">Date ⬍</th><th onclick="sortHistory('member')">Member ⬍</th><th onclick="sortHistory('type')">Type ⬍</th><th onclick="sortHistory('amount')">Amount ⬍</th><th>Message</th><th></th></tr></thead>
+                        <thead><tr><th><button type="button" onclick="sortHistory('date')">Date <span aria-hidden="true">↕</span></button></th><th><button type="button" onclick="sortHistory('member')">Member <span aria-hidden="true">↕</span></button></th><th><button type="button" onclick="sortHistory('type')">Type <span aria-hidden="true">↕</span></button></th><th><button type="button" onclick="sortHistory('amount')">Amount <span aria-hidden="true">↕</span></button></th><th>Note</th><th></th></tr></thead>
                         <tbody id="historyBody"></tbody>
                     </table>
                 </div>
             </div>
-        </div>
+        </section>
     `;
+    modal.addEventListener('click', event => {
+        if (event.target === modal) modal.remove();
+    });
+    modal.tabIndex = -1;
+    modal.addEventListener('keydown', event => {
+        if (event.key === 'Escape') modal.remove();
+    });
     document.body.appendChild(modal);
     currentHistoryRecords = [...allRecords];
+    currentHistorySort = { column: 'date', direction: 'desc' };
     renderHistoryTable();
     document.getElementById('historySearch')?.addEventListener('input', filterHistory);
     document.getElementById('historyFilterMember')?.addEventListener('change', filterHistory);
     document.getElementById('historyFilterType')?.addEventListener('change', filterHistory);
+    modal.querySelector('.history-modal-content')?.focus({ preventScroll: true });
 }
 
 function filterHistory() {
@@ -1934,7 +2029,14 @@ function filterHistory() {
     renderHistoryTable(filtered);
 }
 
-function sortHistory(column) { renderHistoryTable(); }
+function sortHistory(column) {
+    if (currentHistorySort.column === column) {
+        currentHistorySort.direction = currentHistorySort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentHistorySort = { column, direction: column === 'date' || column === 'amount' ? 'desc' : 'asc' };
+    }
+    filterHistory();
+}
 
 // ============================================================
 // TOGGLE READ MORE FUNCTION - FIXED
@@ -1959,7 +2061,13 @@ function toggleReadMore(id, full, truncated) {
 function renderHistoryTable(filtered = null) {
     const tbody = document.getElementById('historyBody');
     if (!tbody) return;
-    const records = filtered || currentHistoryRecords;
+    const records = [...(filtered || currentHistoryRecords)].sort((a, b) => {
+        const { column, direction } = currentHistorySort;
+        const multiplier = direction === 'asc' ? 1 : -1;
+        if (column === 'date') return multiplier * (new Date(a.date).getTime() - new Date(b.date).getTime());
+        if (column === 'amount') return multiplier * (Number(a.amount || 0) - Number(b.amount || 0));
+        return multiplier * String(a[column] || '').localeCompare(String(b[column] || ''), undefined, { sensitivity: 'base' });
+    });
     if (!records.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No transactions found</td></tr>'; return; }
     tbody.innerHTML = records.map(r => {
         let cls = r.type === 'Savings' ? 'badge-savings' : (r.type === 'Loan Taken' ? 'badge-loan' : 'badge-repayment');
@@ -1969,12 +2077,12 @@ function renderHistoryTable(filtered = null) {
         const isOwn = r.member === currentUser;
         const editBtn = isOwn ? `<button class="edit-txn-btn" onclick="openEditTransactionModal(${JSON.stringify(rowKey)}, ${JSON.stringify(r.type)}, ${r.amount}, ${JSON.stringify(r.message || '')})"> Edit</button>` : '';
         return `<tr>
-            <td style="white-space: nowrap;">${new Date(r.date).toLocaleDateString('en-KE')}</td>
-            <td><strong>${escapeHtml(r.member)}</strong></td>
-            <td><span class="badge ${cls}">${r.type}</span></td>
-            <td style="white-space: nowrap;">${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td>
-            <td class="message-cell">${escapeHtml(msg)}</td>
-            <td>${editBtn}</td>
+            <td data-label="Date">${new Date(r.date).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+            <td data-label="Member"><strong>${escapeHtml(r.member)}</strong></td>
+            <td data-label="Type"><span class="badge ${cls}">${escapeHtml(r.type)}</span></td>
+            <td data-label="Amount" class="history-amount ${sign === '-' ? 'negative' : 'positive'}">${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td>
+            <td data-label="Note" class="message-cell">${escapeHtml(msg)}</td>
+            <td data-label="Actions" class="history-actions">${editBtn}</td>
         </tr>`;
     }).join('');
 }
@@ -2224,6 +2332,7 @@ async function saveMemberPhone(button) {
             currentUserPhoneDialCode = result.dialCode || '';
             currentUserPhoneVerifiedAt = result.phoneVerifiedAt || '';
             currentUserPhoneVerifiedBy = result.phoneVerifiedBy || '';
+            updateHeaderAvatar();
             const phoneDisplay = document.getElementById('profilePhoneDisplay');
             if (phoneDisplay) {
                 phoneDisplay.innerHTML = renderProfilePhone(
@@ -2823,16 +2932,45 @@ function initMemoriesCarousel() {
     emptyState.style.display = GROUP_MEMORY_PHOTOS.length ? 'none' : 'block';
     frame.style.display = GROUP_MEMORY_PHOTOS.length ? 'grid' : 'none';
     if (photoCount) photoCount.textContent = `${GROUP_MEMORY_PHOTOS.length} ${GROUP_MEMORY_PHOTOS.length === 1 ? 'photo' : 'photos'}`;
-    track.innerHTML = GROUP_MEMORY_PHOTOS.map(photo => `
+    track.innerHTML = GROUP_MEMORY_PHOTOS.map((photo, index) => `
         <figure class="memory-slide">
-            <img src="${escapeHtml(photo.image)}" alt="Group memory" loading="lazy">
+            <img src="${escapeHtml(photo.image)}" alt="${escapeHtml(photo.caption || `Group photo shared by ${photo.member || 'a member'}`)}" loading="lazy">
             ${photo.caption ? `<figcaption>${escapeHtml(photo.caption)}</figcaption>` : ''}
+            <button type="button" class="memory-download-btn" onclick="downloadGroupMemory(${index})" aria-label="Download group photo">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 17v3h16v-3"/></svg>
+                <span>Download</span>
+            </button>
         </figure>
     `).join('');
     dotsWrap.innerHTML = GROUP_MEMORY_PHOTOS.map((_, i) => `<button type="button" class="memories-dot${i === 0 ? ' active' : ''}" aria-label="Show photo ${i + 1}" aria-current="${i === 0 ? 'true' : 'false'}" onclick="goToMemory(${i})"></button>`).join('');
     memoriesIndex = 0; updateMemoriesPosition();
     if (memoriesInterval) clearInterval(memoriesInterval);
     if (photoPosition) photoPosition.textContent = GROUP_MEMORY_PHOTOS.length ? `1 / ${GROUP_MEMORY_PHOTOS.length}` : '';
+}
+
+async function downloadGroupMemory(index) {
+    const photo = GROUP_MEMORY_PHOTOS[index];
+    if (!photo || !photo.image) {
+        showToast('That group photo is no longer available.', 'error');
+        return;
+    }
+    try {
+        const response = await fetch(photo.image, { mode: 'cors' });
+        if (!response.ok) throw new Error('The image server did not return the photo.');
+        const blob = await response.blob();
+        const extension = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[blob.type] || 'jpg';
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `NBFA_Group_Memory_${index + 1}.${extension}`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch (error) {
+        console.error('Group photo download failed:', error);
+        showToast('Could not download this photo. Please try again.', 'error');
+    }
 }
 
 function moveMemory(direction) {
@@ -3233,6 +3371,8 @@ window.openAuditLogModal = openAuditLogModal;
 window.exportToCSV = exportToCSV;
 window.toggleWalletScopeMenu = toggleWalletScopeMenu;
 window.setWalletScope = setWalletScope;
+window.downloadWalletCard = downloadWalletCard;
+window.downloadGroupMemory = downloadGroupMemory;
 window.submitTransactionEdit = submitTransactionEdit;
 window.openEditTransactionModal = openEditTransactionModal;
 window.rejectTransactionEdit = rejectTransactionEdit;

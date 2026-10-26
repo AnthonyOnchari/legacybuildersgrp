@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=53">
+    <link rel="stylesheet" href="style.css?v=57">
 </head>
 <body class="finance-ui">
 
@@ -155,6 +155,9 @@
         <div class="dashboard-top-grid">
         <div class="header">
             <img class="wallet-profile-image" id="walletProfileImage" alt="" aria-hidden="true" hidden>
+            <button type="button" class="wallet-card-download" onclick="downloadWalletCard()" aria-label="Download NBFA Group card" title="Download card">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 17v3h16v-3"/></svg>
+            </button>
             <div class="wallet-card-topline">
                 <span class="wallet-card-brand">
                     <span class="wallet-card-brand-mark" aria-hidden="true">N</span>
@@ -168,15 +171,17 @@
                 <div>
                     <div class="wallet-label" id="walletBalanceLabel">Available group balance</div>
                     <div class="wallet-balance" id="totalSavingsTop" data-target="0">KES --</div>
+                    <div class="wallet-card-number" id="walletCardNumber" hidden></div>
                 </div>
                 <div class="wallet-scope-wrapper">
-                    <button class="wallet-chip" id="walletScopeChip" onclick="toggleWalletScopeMenu()">
+                    <button class="wallet-chip" id="walletScopeChip" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="walletScopeMenu" onclick="toggleWalletScopeMenu()">
                         <span id="walletScopeLabel">Group</span>
                         <span class="wallet-scope-caret">▾</span>
                     </button>
                     <div class="wallet-scope-menu" id="walletScopeMenu" style="display:none;">
-                        <button onclick="setWalletScope('group')">Group</button>
-                        <button onclick="setWalletScope('mine')">Mine</button>
+                        <span class="wallet-scope-menu-label">BALANCE VIEW</span>
+                        <button type="button" data-scope="group" class="active" aria-pressed="true" onclick="setWalletScope('group')"><span>Group balance</span><span class="wallet-scope-check" aria-hidden="true">✓</span></button>
+                        <button type="button" data-scope="mine" onclick="setWalletScope('mine')"><span>My balance</span><span class="wallet-scope-check" aria-hidden="true">✓</span></button>
                     </div>
                 </div>
             </div>
@@ -187,24 +192,23 @@
             </div>
         </div>
 
-        <div class="quick-actions-card">
-            <div class="quick-actions-heading">
-                <h2>Quick actions</h2>
-                <p>Common group money tasks</p>
+        <section class="quick-actions-section" aria-labelledby="quickActionsTitle">
+            <h2 class="quick-actions-title" id="quickActionsTitle">Quick actions</h2>
+            <div class="quick-actions-card">
+                <button class="quick-action" type="button" onclick="openAddTransactionModal('Savings')">
+                    <span class="quick-action-icon qa-save" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span>Deposit</span>
+                </button>
+                <button class="quick-action" type="button" onclick="openAddTransactionModal('Loan Taken')">
+                    <span class="quick-action-icon qa-loan" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M3.5 10h17M7 14h3"/></svg></span><span>Loan</span>
+                </button>
+                <button class="quick-action" type="button" onclick="openAddTransactionModal('Loan Repayment')">
+                    <span class="quick-action-icon qa-repay" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9A7 7 0 0 1 18 6.6L20 12M4 12l2 5.4A7 7 0 0 0 17.9 15"/></svg></span><span>Repay</span>
+                </button>
+                <button class="quick-action" type="button" onclick="openHistoryModal()">
+                    <span class="quick-action-icon qa-history" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.5 2"/></svg></span><span>History</span>
+                </button>
             </div>
-            <button class="quick-action" onclick="openAddTransactionModal('Savings')">
-                <span class="quick-action-icon qa-save" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span>Deposit</span>
-            </button>
-            <button class="quick-action" onclick="openAddTransactionModal('Loan Taken')">
-                <span class="quick-action-icon qa-loan" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M3.5 10h17M7 14h3"/></svg></span><span>Loan</span>
-            </button>
-            <button class="quick-action" onclick="openAddTransactionModal('Loan Repayment')">
-                <span class="quick-action-icon qa-repay" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9A7 7 0 0 1 18 6.6L20 12M4 12l2 5.4A7 7 0 0 0 17.9 15"/></svg></span><span>Repay</span>
-            </button>
-            <button class="quick-action" onclick="openHistoryModal()">
-                <span class="quick-action-icon qa-history" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.5 2"/></svg></span><span>History</span>
-            </button>
-        </div>
+        </section>
         </div>
         </div>
 
@@ -237,13 +241,13 @@
                 <div class="memory-empty-state" id="memoryEmptyState">Share a group photo to start your memories.</div>
                 <div class="memories-carousel-frame" id="memoriesCarouselFrame" style="display: none;">
                     <button type="button" class="memory-carousel-control memory-carousel-previous" onclick="moveMemory(-1)" aria-label="Previous photo">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5.5-6.5 6.5 6.5 6.5"/></svg><span>Previous</span>
                     </button>
                     <div class="memories-carousel-wrapper">
                         <div class="memories-carousel" id="memoriesCarousel"></div>
                     </div>
                     <button type="button" class="memory-carousel-control memory-carousel-next" onclick="moveMemory(1)" aria-label="Next photo">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                        <span>Next</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5.5 6.5 6.5-6.5 6.5"/></svg>
                     </button>
                 </div>
                 <div class="memory-carousel-footer">
@@ -264,8 +268,8 @@
         </div>
 
         <!-- Add Transaction Modal -->
-        <div class="modal" id="addTransactionModal" style="display: none;">
-            <div class="modal-content">
+        <div class="modal" id="addTransactionModal" role="presentation" style="display: none;">
+            <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="addTransactionTitle" tabindex="-1">
                 <h3 id="addTransactionTitle">New Transaction</h3>
                 <div class="form-grid">
                     <div><label>Date</label><input type="date" id="date"></div>
@@ -505,6 +509,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="firebase-config.js?v=34"></script>
-    <script src="app.js?v=46"></script>
+    <script src="app.js?v=52"></script>
 </body>
 </html>
