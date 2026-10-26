@@ -317,11 +317,22 @@ function initializeGoogleSignIn() {
         return;
     }
 
-    const loginOverlay = document.getElementById('loginOverlay');
+    const isMobileBrowser = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (isMobileBrowser && !('IdentityCredential' in window)) {
+        button.parentElement.hidden = true;
+        const errorEl = document.getElementById('loginError');
+        errorEl.textContent = "Google's in-page account chooser requires an updated Chrome browser on this device.";
+        errorEl.style.display = 'block';
+        return;
+    }
+
     window.google.accounts.id.initialize({
         client_id: window.GOOGLE_OAUTH_CLIENT_ID,
         callback: loginWithGoogle,
-        ux_mode: 'popup'
+        auto_select: false,
+        use_fedcm_for_button: true,
+        button_auto_select: false
     });
     window.google.accounts.id.renderButton(button, {
         type: 'standard',
@@ -329,22 +340,17 @@ function initializeGoogleSignIn() {
         size: 'large',
         text: 'continue_with',
         shape: 'rectangular',
-        width: Math.min(390, Math.floor(button.parentElement.clientWidth)),
-        click_listener: () => {
-            loginOverlay.classList.add('auth-popup-open');
-        }
+        width: Math.min(390, Math.floor(button.parentElement.clientWidth))
     });
-    window.addEventListener('focus', () => loginOverlay.classList.remove('auth-popup-open'));
 }
 
 async function loginWithGoogle(response) {
     const errorEl = document.getElementById('loginError');
     errorEl.style.display = 'none';
-    const loginOverlay = document.getElementById('loginOverlay');
     setGoogleSignInLoading(true);
     try {
         if (!response?.credential) throw new Error('Google did not return an account credential. Please try again.');
-        const firebaseCredential = firebase.auth.GoogleAuthProvider.credential(null, response.credential);
+        const firebaseCredential = firebase.auth.GoogleAuthProvider.credential(response.credential);
         const credential = await window.firebaseAuth.signInWithCredential(firebaseCredential);
         const res = await callAPI('bootstrapProfile');
         if (!res.success) {
@@ -372,7 +378,6 @@ async function loginWithGoogle(response) {
         }
         errorEl.style.display = 'block';
     } finally {
-        loginOverlay.classList.remove('auth-popup-open');
         setGoogleSignInLoading(false);
     }
 }
@@ -4006,6 +4011,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeGoogleSignIn();
     initializeApp().catch(error => {
         console.error('App initialization failed:', error);
+        document.getElementById('appContainer')?.classList.remove('active', 'dashboard-active');
+        const tabBar = document.getElementById('tabBar');
+        if (tabBar) tabBar.style.display = 'none';
+        document.getElementById('sidebarNav')?.classList.remove('active');
         const loginOverlay = document.getElementById('loginOverlay');
         if (loginOverlay) loginOverlay.classList.add('active');
         const errorEl = document.getElementById('loginError');
@@ -4014,6 +4023,7 @@ document.addEventListener('DOMContentLoaded', () => {
             errorEl.style.display = 'block';
         }
     }).finally(() => {
+        document.body.classList.remove('app-loading');
         document.getElementById('startupLoading')?.remove();
     });
 });

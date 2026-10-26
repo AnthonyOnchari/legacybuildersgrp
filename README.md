@@ -6,10 +6,11 @@ The app uses Firebase Authentication (Google sign-in), Cloud Firestore, and a Ve
 
 1. In Firebase project `legacy-builders-group`, confirm Google is enabled under Authentication → Sign-in method.
 2. Add the deployed website hostname under Authentication → Settings → Authorized domains.
-3. Create a Cloud Firestore database in Native mode.
-4. In Google Cloud IAM, create a service account for the app and grant it the **Cloud Datastore User** role for Firestore access. Create a JSON key and store it securely; never commit or share the key. Firebase Authentication ID tokens are verified against Google's signing certificates.
-5. In Vercel Project Settings → Environment Variables, add `FIREBASE_SERVICE_ACCOUNT` with the full service-account JSON as its value for Production and Preview. Redeploy after adding it. The Vercel `/api` endpoint uses this credential to verify Firebase ID tokens and access Firestore.
-6. Deploy Firestore rules with `firebase deploy --only firestore:rules --project legacy-builders-group`. Import and verify legacy data **before allowing members to sign in** so existing Gmail accounts receive migrated roles and approvals instead of starting as pending registrations.
+3. In Google Cloud Console, add the production HTTPS origin (currently `https://legacybuildersgroup.vercel.app`) to the Web OAuth client's **Authorized JavaScript origins**. Add `http://localhost:3000` for local testing. The in-page Google account chooser requires a secure origin and a browser with FedCM support.
+4. Create a Cloud Firestore database in Native mode.
+5. In Google Cloud IAM, create a service account for the app and grant it the **Cloud Datastore User** role for Firestore access. Create a JSON key and store it securely; never commit or share the key. Firebase Authentication ID tokens are verified against Google's signing certificates.
+6. In Vercel Project Settings → Environment Variables, add `FIREBASE_SERVICE_ACCOUNT` with the full service-account JSON as its value for Production and Preview. Redeploy after adding it. The Vercel `/api` endpoint uses this credential to verify Firebase ID tokens and access Firestore.
+7. Deploy Firestore rules with `firebase deploy --only firestore:rules --project legacy-builders-group`. Import and verify legacy data **before allowing members to sign in** so existing Gmail accounts receive migrated roles and approvals instead of starting as pending registrations.
 
 The web app config is in `firebase-config.js`. Its API key identifies the public web app; restrict it to the website's authorized referrers in Google Cloud. Never put service-account credentials in frontend files or commit them to this repository.
 
