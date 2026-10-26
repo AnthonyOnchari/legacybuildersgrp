@@ -397,6 +397,32 @@ async function handleAction(action, params, user) {
             await recordRef("groupMemories", id).create(memory);
             return { success: true, memory };
         }
+        case "updateGroupMemoryCaption": {
+            const id = String(params.id || "");
+            const caption = String(params.caption || "").trim();
+            if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Choose a valid group photo.");
+            if (caption.length > 200) throw new Error("Memory captions must be 200 characters or fewer.");
+            const ref = db.collection("groupMemories").doc(id);
+            const snapshot = await ref.get();
+            if (!snapshot.exists || emailKey(snapshot.data().email) !== user.email) {
+                throw new Error("You can only edit the caption on a photo you shared.");
+            }
+            await ref.update({ caption, updated_at: nowIso() });
+            await audit(name, "Updated group memory caption", id);
+            return { success: true, caption };
+        }
+        case "deleteGroupMemory": {
+            const id = String(params.id || "");
+            if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Choose a valid group photo.");
+            const ref = db.collection("groupMemories").doc(id);
+            const snapshot = await ref.get();
+            if (!snapshot.exists || emailKey(snapshot.data().email) !== user.email) {
+                throw new Error("You can only delete a photo you shared.");
+            }
+            await ref.delete();
+            await audit(name, "Deleted group memory", id);
+            return { success: true, id };
+        }
         case "getGroupMessages": {
             const [messageSnapshot, requestSnapshot] = await Promise.all([
                 db.collection("groupMessages").orderBy("created_at", "desc").limit(100).get(),

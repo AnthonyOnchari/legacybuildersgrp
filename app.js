@@ -2419,6 +2419,156 @@ async function uploadBlobToCloudinary(blob, filename, uploadPreset) {
     return { image: result.secure_url, publicId: result.public_id };
 }
 
+function openImageCropper(file, mode) {
+    return new Promise((resolve, reject) => {
+        const objectUrl = URL.createObjectURL(file);
+        const image = new Image();
+        const overlay = document.createElement('div');
+        overlay.className = 'image-crop-overlay';
+        overlay.innerHTML = `<section class="image-crop-dialog" role="dialog" aria-modal="true" aria-labelledby="imageCropTitle">
+            <header class="image-crop-heading"><div><span class="section-kicker">${mode === 'profile' ? 'PROFILE PHOTO' : 'GROUP MEMORY'}</span><h2 id="imageCropTitle">Adjust your photo</h2><p>Drag to position the image, then use the slider to zoom.</p></div><button type="button" class="image-crop-close" data-crop-cancel aria-label="Cancel crop">&times;</button></header>
+            ${mode === 'memory' ? '<label class="image-crop-ratio-label" for="imageCropRatio">Photo shape<select id="imageCropRatio"><option value="original">Original</option><option value="1">Square</option><option value="1.333333">Landscape</option><option value="1.777778">Wide</option></select></label>' : ''}
+            <div class="image-crop-stage" id="imageCropStage"><img class="image-crop-image" alt="Photo crop preview"></div>
+            <label class="image-crop-zoom" for="imageCropZoom"><span>Zoom</span><input type="range" id="imageCropZoom" min="1" max="3" step="0.01" value="1"><span>+</span></label>
+            <div class="image-crop-actions"><button type="button" class="image-crop-cancel" data-crop-cancel>Cancel</button><button type="button" class="image-crop-confirm" id="imageCropConfirm">Use this crop</button></div>
+            <p class="image-crop-error" role="status"></p>
+        </section>`;
+        document.body.appendChild(overlay);
+        const stage = overlay.querySelector('#imageCropStage');
+        const preview = overlay.querySelector('.image-crop-image');
+        const zoomInput = overlay.querySelector('#imageCropZoom');
+        const ratioInput = overlay.querySelector('#imageCropRatio');
+        const confirmButton = overlay.querySelector('#imageCropConfirm');
+        const errorMessage = overlay.querySelector('.image-crop-error');
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        let frameWidth = 0, frameHeight = 0, baseScale = 1, zoom = 1, offsetX = 0, offsetY = 0;
+        let aspectRatio = mode === 'profile' ? 1 : image.naturalWidth / image.naturalHeight;
+        let pointerId = null, dragX = 0, dragY = 0, originX = 0, originY = 0, settled = false;
+
+        const cleanup = () => {
+            document.removeEventListener('keydown', onKeyDown);
+            window.removeEventListener('resize', layoutCrop);
+            URL.revokeObjectURL(objectUrl);
+            overlay.remove();
+            document.body.style.overflow = previousOverflow;
+        };
+        const finish = (blob, error) => {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            if (error) reject(error);
+            else resolve(blob);
+        };
+        const clampOffsets = () => {
+            const width = image.naturalWidth * baseScale * zoom;
+            const height = image.naturalHeight * baseScale * zoom;
+            const horizontalLimit = Math.max(0, (width - frameWidth) / 2);
+            const verticalLimit = Math.max(0, (height - frameHeight) / 2);
+            offsetX = Math.max(-horizontalLimit, Math.min(horizontalLimit, offsetX));
+            offsetY = Math.max(-verticalLimit, Math.min(verticalLimit, offsetY));
+        };
+        const renderCrop = () => {
+            const width = image.naturalWidth * baseScale * zoom;
+            const height = image.naturalHeight * baseScale * zoom;
+            preview.style.width = `${width}px`;
+            preview.style.height = `${height}px`;
+            preview.style.left = `${(frameWidth - width) / 2 + offsetX}px`;
+            preview.style.top = `${(frameHeight - height) / 2 + offsetY}px`;
+        };
+        const layoutCrop = () => {
+            const parentStyle = getComputedStyle(stage.parentElement);
+            const availableWidth = stage.parentElement.clientWidth
+                - parseFloat(parentStyle.paddingLeft)
+                - parseFloat(parentStyle.paddingRight);
+            const targetWidth = Math.min(availableWidth, window.innerHeight * 0.52 * aspectRatio);
+            stage.style.width = `${targetWidth}px`;
+            stage.style.height = `${targetWidth / aspectRatio}px`;
+            frameWidth = stage.clientWidth;
+            frameHeight = stage.clientHeight;
+            baseScale = Math.max(frameWidth / image.naturalWidth, frameHeight / image.naturalHeight);
+            clampOffsets();
+            renderCrop();
+        };
+        const onKeyDown = event => {
+            if (event.key === 'Escape') finish(null, new DOMException('Photo crop canceled.', 'AbortError'));
+        };
+        image.onload = () => {
+            aspectRatio = mode === 'profile' ? 1 : image.naturalWidth / image.naturalHeight;
+            preview.src = objectUrl;
+            layoutCrop();
+            document.addEventListener('keydown', onKeyDown);
+            window.addEventListener('resize', layoutCrop);
+            overlay.querySelectorAll('[data-crop-cancel]').forEach(button => {
+                button.addEventListener('click', () => finish(null, new DOMException('Photo crop canceled.', 'AbortError')));
+            });
+            zoomInput.addEventListener('input', () => {
+                zoom = Number(zoomInput.value);
+                clampOffsets();
+                renderCrop();
+            });
+            ratioInput?.addEventListener('change', () => {
+                aspectRatio = ratioInput.value === 'original'
+                    ? image.naturalWidth / image.naturalHeight
+                    : Number(ratioInput.value);
+                offsetX = 0;
+                offsetY = 0;
+                layoutCrop();
+            });
+            stage.addEventListener('pointerdown', event => {
+                pointerId = event.pointerId;
+                dragX = event.clientX;
+                dragY = event.clientY;
+                originX = offsetX;
+                originY = offsetY;
+                stage.setPointerCapture(pointerId);
+            });
+            stage.addEventListener('pointermove', event => {
+                if (event.pointerId !== pointerId) return;
+                offsetX = originX + event.clientX - dragX;
+                offsetY = originY + event.clientY - dragY;
+                clampOffsets();
+                renderCrop();
+            });
+            stage.addEventListener('pointerup', event => {
+                if (event.pointerId === pointerId) pointerId = null;
+            });
+            stage.addEventListener('pointercancel', () => { pointerId = null; });
+            confirmButton.addEventListener('click', () => {
+                confirmButton.disabled = true;
+                const scale = baseScale * zoom;
+                const sourceX = Math.max(0, ((frameWidth - image.naturalWidth * scale) / 2 + offsetX) * -1 / scale);
+                const sourceY = Math.max(0, ((frameHeight - image.naturalHeight * scale) / 2 + offsetY) * -1 / scale);
+                const sourceWidth = Math.min(image.naturalWidth - sourceX, frameWidth / scale);
+                const sourceHeight = Math.min(image.naturalHeight - sourceY, frameHeight / scale);
+                const outputWidth = Math.max(1, Math.round(Math.min(1600, sourceWidth)));
+                const outputHeight = Math.max(1, Math.round(outputWidth / aspectRatio));
+                const canvas = document.createElement('canvas');
+                canvas.width = outputWidth;
+                canvas.height = outputHeight;
+                const context = canvas.getContext('2d');
+                if (!context) {
+                    errorMessage.textContent = 'Your browser could not prepare this crop.';
+                    confirmButton.disabled = false;
+                    return;
+                }
+                context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, outputWidth, outputHeight);
+                canvas.toBlob(blob => {
+                    if (!blob) {
+                        errorMessage.textContent = 'Could not prepare this photo. Please try again.';
+                        confirmButton.disabled = false;
+                        return;
+                    }
+                    finish(blob);
+                }, 'image/jpeg', 0.94);
+            });
+            confirmButton.focus();
+        };
+        image.onerror = () => finish(null, new Error('Could not open this photo. Please choose a JPG, PNG, or WebP image.'));
+        image.src = objectUrl;
+    });
+}
+
 async function saveProfileImageToServer(imageData) {
     const blob = imageData instanceof Blob ? imageData : await (await fetch(imageData)).blob();
     const uploaded = await uploadBlobToCloudinary(blob, 'profile.jpg');
@@ -2433,36 +2583,6 @@ async function saveProfileImageToServer(imageData) {
     updateHeaderAvatar();
     loadMembersList();
     return true;
-}
-
-function optimizeProfilePhoto(file) {
-    return new Promise((resolve, reject) => {
-        const objectUrl = URL.createObjectURL(file);
-        const image = new Image();
-        image.onload = () => {
-            URL.revokeObjectURL(objectUrl);
-            const maxSize = 512;
-            const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
-            const canvas = document.createElement('canvas');
-            canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-            canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-            const context = canvas.getContext('2d');
-            if (!context) {
-                reject(new Error('Your browser could not process this image.'));
-                return;
-            }
-            context.drawImage(image, 0, 0, canvas.width, canvas.height);
-            canvas.toBlob(blob => {
-                if (blob) resolve(blob);
-                else reject(new Error('Could not prepare this image. Please try another photo.'));
-            }, 'image/jpeg', 0.86);
-        };
-        image.onerror = () => {
-            URL.revokeObjectURL(objectUrl);
-            reject(new Error('Could not open this image. Please try a JPG, PNG, or WebP photo.'));
-        };
-        image.src = objectUrl;
-    });
 }
 
 async function handleProfileImageUpload(event) {
@@ -2484,9 +2604,9 @@ async function handleProfileImageUpload(event) {
     }
     progressEl.classList.add('active');
     progressFill.style.width = '0%';
-    statusEl.textContent = 'Preparing photo...';
+    statusEl.textContent = 'Adjust your crop...';
     try {
-        const photoBlob = await optimizeProfilePhoto(file);
+        const photoBlob = await openImageCropper(file, 'profile');
         statusEl.textContent = 'Uploading photo...';
         progressFill.style.width = '45%';
         await saveProfileImageToServer(photoBlob);
@@ -2502,6 +2622,11 @@ async function handleProfileImageUpload(event) {
             progressFill.style.width = '0%';
         }, 1500);
     } catch (error) {
+        if (error.name === 'AbortError') {
+            statusEl.textContent = 'Photo update canceled.';
+            progressEl.classList.remove('active');
+            return;
+        }
         statusEl.textContent = error.message || 'Could not save this photo.';
         progressFill.style.width = '0%';
         showToast(statusEl.textContent, 'error');
@@ -2937,6 +3062,8 @@ function initializeAppBackNavigation() {
 // ============================================================
 let GROUP_MEMORY_PHOTOS = [];
 let memoriesIndex = 0, memoriesInterval = null;
+let pendingMemoryPhoto = null, pendingMemoryPhotoFile = null, memoryPreviewUrl = null;
+let memoryComposerPreviousOverflow = '';
 
 async function loadGroupMemories() {
     const res = await callAPI('getGroupMemories');
@@ -2978,16 +3105,99 @@ function initMemoriesCarousel() {
     previousButton.hidden = GROUP_MEMORY_PHOTOS.length < 2;
     nextButton.hidden = GROUP_MEMORY_PHOTOS.length < 2;
     if (photoCount) photoCount.textContent = `${GROUP_MEMORY_PHOTOS.length} ${GROUP_MEMORY_PHOTOS.length === 1 ? 'photo' : 'photos'}`;
-    track.innerHTML = GROUP_MEMORY_PHOTOS.map(photo => `
+    track.innerHTML = GROUP_MEMORY_PHOTOS.map((photo, index) => {
+        const ownsPhoto = Boolean(currentUserEmail && photo.email
+            && photo.email.toLowerCase() === currentUserEmail.toLowerCase());
+        return `
         <figure class="memory-slide">
-            <img src="${escapeHtml(photo.image)}" alt="${escapeHtml(photo.caption || `Group photo shared by ${photo.member || 'a member'}`)}" loading="lazy">
+            <img src="${escapeHtml(photo.image)}" alt="${escapeHtml(photo.caption || `Group photo shared by ${photo.member || 'a member'}`)}" loading="${index === 0 ? 'eager' : 'lazy'}">
             ${photo.caption ? `<figcaption>${escapeHtml(photo.caption)}</figcaption>` : ''}
+            ${ownsPhoto ? `<div class="memory-owner-actions" aria-label="Manage your photo">
+                <button type="button" onclick="editMemoryCaption(${index})" aria-label="Edit caption" title="Edit caption">Edit</button>
+                <button type="button" onclick="deleteGroupMemory(${index})" aria-label="Delete photo" title="Delete photo">Delete</button>
+            </div>` : ''}
         </figure>
-    `).join('');
+    `;
+    }).join('');
     dotsWrap.innerHTML = GROUP_MEMORY_PHOTOS.map((_, i) => `<button type="button" class="memories-dot${i === 0 ? ' active' : ''}" aria-label="Show photo ${i + 1}" aria-current="${i === 0 ? 'true' : 'false'}" onclick="goToMemory(${i})"></button>`).join('');
     memoriesIndex = 0; updateMemoriesPosition();
     if (memoriesInterval) clearInterval(memoriesInterval);
+    const pauseAutoplay = () => { memoriesPaused = true; };
+    const resumeAutoplay = () => { memoriesPaused = false; };
+    frame.onmouseenter = pauseAutoplay;
+    frame.onmouseleave = resumeAutoplay;
+    frame.onfocusin = pauseAutoplay;
+    frame.onfocusout = event => {
+        if (!frame.contains(event.relatedTarget)) resumeAutoplay();
+    };
+    memoriesPaused = false;
+    if (GROUP_MEMORY_PHOTOS.length > 1) {
+        memoriesInterval = setInterval(() => {
+            if (!memoriesPaused && !document.hidden) moveMemory(1);
+        }, 3000);
+    }
     if (photoPosition) photoPosition.textContent = GROUP_MEMORY_PHOTOS.length ? `1 / ${GROUP_MEMORY_PHOTOS.length}` : '';
+}
+
+let memoriesPaused = false;
+
+async function editMemoryCaption(index) {
+    const photo = GROUP_MEMORY_PHOTOS[index];
+    if (!photo || !photo.id || !photo.email || photo.email.toLowerCase() !== (currentUserEmail || '').toLowerCase()) {
+        showToast('You can only edit a photo you shared.', 'error');
+        return;
+    }
+    const overlay = document.createElement('div');
+    overlay.className = 'memory-caption-overlay';
+    overlay.innerHTML = `<div class="memory-caption-dialog" role="dialog" aria-modal="true" aria-labelledby="memoryCaptionTitle">
+        <h3 id="memoryCaptionTitle">Edit photo caption</h3>
+        <label for="memoryCaptionEditInput">Caption</label>
+        <textarea id="memoryCaptionEditInput" maxlength="200" rows="3" placeholder="Add a caption to this memory">${escapeHtml(photo.caption || '')}</textarea>
+        <div class="memory-composer-actions">
+            <button type="button" class="memory-cancel-btn" data-action="cancel">Cancel</button>
+            <button type="button" data-action="save">Save caption</button>
+        </div>
+    </div>`;
+    document.body.appendChild(overlay);
+    const captionInput = overlay.querySelector('#memoryCaptionEditInput');
+    overlay.addEventListener('click', event => {
+        if (event.target === overlay || event.target.closest('[data-action="cancel"]')) overlay.remove();
+    });
+    overlay.querySelector('[data-action="save"]').addEventListener('click', async event => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        try {
+            const res = await callAPI('updateGroupMemoryCaption', { id: photo.id, caption: captionInput.value.trim() });
+            if (!res.success) throw new Error(res.error || 'Could not update the caption.');
+            photo.caption = res.caption;
+            initMemoriesCarousel();
+            overlay.remove();
+            showToast('Caption updated.', 'success');
+        } catch (error) {
+            showToast(error.message || 'Could not update the caption.', 'error');
+            button.disabled = false;
+        }
+    });
+    captionInput.focus();
+}
+
+async function deleteGroupMemory(index) {
+    const photo = GROUP_MEMORY_PHOTOS[index];
+    if (!photo || !photo.id || !photo.email || photo.email.toLowerCase() !== (currentUserEmail || '').toLowerCase()) {
+        showToast('You can only delete a photo you shared.', 'error');
+        return;
+    }
+    if (!window.confirm('Delete this photo from Group memories? This cannot be undone.')) return;
+    try {
+        const res = await callAPI('deleteGroupMemory', { id: photo.id });
+        if (!res.success) throw new Error(res.error || 'Could not delete the photo.');
+        GROUP_MEMORY_PHOTOS = GROUP_MEMORY_PHOTOS.filter(item => item.id !== photo.id);
+        memoriesIndex = Math.min(memoriesIndex, Math.max(0, GROUP_MEMORY_PHOTOS.length - 1));
+        initMemoriesCarousel();
+        showToast('Photo deleted from Group memories.', 'success');
+    } catch (error) {
+        showToast(error.message || 'Could not delete the photo.', 'error');
+    }
 }
 
 async function downloadGroupMemory(index) {
@@ -3031,7 +3241,22 @@ function toggleMemoryComposer(forceOpen) {
     const composer = document.getElementById('memoryComposer');
     if (!composer) return;
     const open = typeof forceOpen === 'boolean' ? forceOpen : composer.style.display === 'none';
-    composer.style.display = open ? 'block' : 'none';
+    composer.style.display = open ? 'flex' : 'none';
+    composer.setAttribute('aria-hidden', String(!open));
+    memoriesPaused = open;
+    if (open) {
+        memoryComposerPreviousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        composer.querySelector('.memory-composer-dialog')?.focus();
+    } else {
+        document.body.style.overflow = memoryComposerPreviousOverflow;
+        pendingMemoryPhoto = null;
+        pendingMemoryPhotoFile = null;
+        if (memoryPreviewUrl) URL.revokeObjectURL(memoryPreviewUrl);
+        memoryPreviewUrl = null;
+        const preview = document.getElementById('memoryPhotoPreviewWrap');
+        if (preview) preview.hidden = true;
+    }
     if (!open) {
         document.getElementById('memoryPhotoInput').value = '';
         document.getElementById('memoryCaptionInput').value = '';
@@ -3039,21 +3264,58 @@ function toggleMemoryComposer(forceOpen) {
     }
 }
 
+async function prepareMemoryPhoto(event) {
+    const input = event.currentTarget;
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const status = document.getElementById('memoryUploadStatus');
+    if (!ALLOWED_CLOUDINARY_IMAGE_TYPES.has(file.type)) {
+        showToast('Choose a JPG, PNG, or WebP photo.', 'error');
+        input.value = '';
+        return;
+    }
+    if (file.size > MAX_CLOUDINARY_IMAGE_SIZE) {
+        showToast('Choose a photo smaller than 5 MB.', 'error');
+        input.value = '';
+        return;
+    }
+    pendingMemoryPhotoFile = file;
+    await cropMemoryPhoto(file);
+    if (status) status.textContent = pendingMemoryPhoto ? 'Photo ready to share.' : '';
+}
+
+async function cropMemoryPhoto(file) {
+    try {
+        pendingMemoryPhoto = await openImageCropper(file, 'memory');
+        if (memoryPreviewUrl) URL.revokeObjectURL(memoryPreviewUrl);
+        memoryPreviewUrl = URL.createObjectURL(pendingMemoryPhoto);
+        const preview = document.getElementById('memoryPhotoPreview');
+        if (preview) preview.src = memoryPreviewUrl;
+        const wrap = document.getElementById('memoryPhotoPreviewWrap');
+        if (wrap) wrap.hidden = false;
+    } catch (error) {
+        if (error.name !== 'AbortError') showToast(error.message || 'Could not crop this photo.', 'error');
+    }
+}
+
+function recropMemoryPhoto() {
+    if (pendingMemoryPhotoFile) cropMemoryPhoto(pendingMemoryPhotoFile);
+}
+
 async function postGroupMemory() {
     const input = document.getElementById('memoryPhotoInput');
     const captionInput = document.getElementById('memoryCaptionInput');
     const status = document.getElementById('memoryUploadStatus');
     const button = document.getElementById('memorySubmitBtn');
-    const file = input.files && input.files[0];
-    if (!file) {
-        status.textContent = 'Choose a photo to share.';
+    if (!pendingMemoryPhoto) {
+        status.textContent = 'Choose a photo and adjust its crop to share.';
         return;
     }
     button.disabled = true;
     status.textContent = 'Uploading photo...';
     try {
         const config = window.cloudinaryConfig || {};
-        const uploaded = await uploadBlobToCloudinary(file, file.name, config.memoryUploadPreset);
+        const uploaded = await uploadBlobToCloudinary(pendingMemoryPhoto, 'group-memory.jpg', config.memoryUploadPreset);
         status.textContent = 'Saving memory...';
         const res = await callAPI('saveGroupMemory', {
             image: uploaded.image,

@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=59">
+    <link rel="stylesheet" href="style.css?v=60">
 </head>
 <body class="finance-ui">
 
@@ -232,16 +232,30 @@
                         <button type="button" class="memory-share-btn" onclick="toggleMemoryComposer()">＋ Share a photo</button>
                     </div>
                 </div>
-                <div class="memory-composer" id="memoryComposer" style="display:none;">
-                    <label for="memoryPhotoInput">Photo</label>
-                    <input type="file" id="memoryPhotoInput" accept="image/jpeg,image/png,image/webp">
-                    <label for="memoryCaptionInput">Caption <span>(optional)</span></label>
-                    <input type="text" id="memoryCaptionInput" maxlength="200" placeholder="Add a caption to this memory">
-                    <div class="memory-composer-actions">
-                        <button type="button" class="memory-cancel-btn" onclick="toggleMemoryComposer(false)">Cancel</button>
-                        <button type="button" id="memorySubmitBtn" onclick="postGroupMemory()">Post photo</button>
+                <div class="memory-composer" id="memoryComposer" role="presentation" aria-hidden="true" style="display:none;" onclick="if(event.target===this)toggleMemoryComposer(false)">
+                    <div class="memory-composer-dialog" role="dialog" aria-modal="true" aria-labelledby="memoryComposerTitle" tabindex="-1">
+                        <div class="memory-composer-heading">
+                            <div><span class="section-kicker">GROUP MEMORIES</span><h3 id="memoryComposerTitle">Share a photo</h3><p>Choose a moment and frame it just the way you want.</p></div>
+                            <button type="button" class="memory-dialog-close" onclick="toggleMemoryComposer(false)" aria-label="Close photo sharing dialog">&times;</button>
+                        </div>
+                        <label class="memory-photo-picker" for="memoryPhotoInput">
+                            <span class="memory-picker-icon" aria-hidden="true">＋</span>
+                            <strong>Choose a photo</strong>
+                            <span>JPG, PNG or WebP · up to 5 MB</span>
+                        </label>
+                        <input type="file" id="memoryPhotoInput" accept="image/jpeg,image/png,image/webp" onchange="prepareMemoryPhoto(event)">
+                        <div class="memory-photo-preview-wrap" id="memoryPhotoPreviewWrap" hidden>
+                            <img id="memoryPhotoPreview" alt="Preview of the cropped group photo">
+                            <button type="button" class="memory-recrop-btn" onclick="recropMemoryPhoto()">Adjust crop</button>
+                        </div>
+                        <label for="memoryCaptionInput">Caption <span>(optional)</span></label>
+                        <input type="text" id="memoryCaptionInput" maxlength="200" placeholder="Add a caption to this memory">
+                        <div class="memory-composer-actions">
+                            <button type="button" class="memory-cancel-btn" onclick="toggleMemoryComposer(false)">Cancel</button>
+                            <button type="button" id="memorySubmitBtn" onclick="postGroupMemory()">Share photo</button>
+                        </div>
+                        <div class="memory-upload-status" id="memoryUploadStatus" role="status"></div>
                     </div>
-                    <div class="memory-upload-status" id="memoryUploadStatus" role="status"></div>
                 </div>
                 <div class="memory-empty-state" id="memoryEmptyState">Share a group photo to start your memories.</div>
                 <div class="memories-carousel-frame" id="memoriesCarouselFrame" style="display: none;">
@@ -513,6 +527,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="firebase-config.js?v=34"></script>
-    <script src="app.js?v=55"></script>
+    <script src="app.js?v=56"></script>
 </body>
 </html>
