@@ -2946,22 +2946,24 @@ function initMemoriesCarousel() {
     const dotsWrap = document.getElementById('memoriesDots');
     const emptyState = document.getElementById('memoryEmptyState');
     const frame = document.getElementById('memoriesCarouselFrame');
+    const footer = document.getElementById('memoryCarouselFooter');
+    const previousButton = document.getElementById('memoryPreviousButton');
+    const nextButton = document.getElementById('memoryNextButton');
     const photoCount = document.getElementById('memoryPhotoCount');
     const photoPosition = document.getElementById('memoryPhotoPosition');
-    if (!card || !track || !dotsWrap || !emptyState || !frame) return;
+    if (!card || !track || !dotsWrap || !emptyState || !frame || !footer || !previousButton || !nextButton) return;
     card.style.display = 'block';
     if (!GROUP_MEMORY_PHOTOS.length) emptyState.textContent = 'Share a group photo to start your memories.';
     emptyState.style.display = GROUP_MEMORY_PHOTOS.length ? 'none' : 'block';
     frame.style.display = GROUP_MEMORY_PHOTOS.length ? 'grid' : 'none';
+    footer.hidden = !GROUP_MEMORY_PHOTOS.length;
+    previousButton.hidden = GROUP_MEMORY_PHOTOS.length < 2;
+    nextButton.hidden = GROUP_MEMORY_PHOTOS.length < 2;
     if (photoCount) photoCount.textContent = `${GROUP_MEMORY_PHOTOS.length} ${GROUP_MEMORY_PHOTOS.length === 1 ? 'photo' : 'photos'}`;
-    track.innerHTML = GROUP_MEMORY_PHOTOS.map((photo, index) => `
+    track.innerHTML = GROUP_MEMORY_PHOTOS.map(photo => `
         <figure class="memory-slide">
             <img src="${escapeHtml(photo.image)}" alt="${escapeHtml(photo.caption || `Group photo shared by ${photo.member || 'a member'}`)}" loading="lazy">
             ${photo.caption ? `<figcaption>${escapeHtml(photo.caption)}</figcaption>` : ''}
-            <button type="button" class="memory-download-btn" onclick="downloadGroupMemory(${index})" aria-label="Download group photo">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 17v3h16v-3"/></svg>
-                <span>Download</span>
-            </button>
         </figure>
     `).join('');
     dotsWrap.innerHTML = GROUP_MEMORY_PHOTOS.map((_, i) => `<button type="button" class="memories-dot${i === 0 ? ' active' : ''}" aria-label="Show photo ${i + 1}" aria-current="${i === 0 ? 'true' : 'false'}" onclick="goToMemory(${i})"></button>`).join('');

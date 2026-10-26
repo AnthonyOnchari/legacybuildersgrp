@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=58">
+    <link rel="stylesheet" href="style.css?v=59">
 </head>
 <body class="finance-ui">
 
@@ -246,19 +246,23 @@
                 </div>
                 <div class="memory-empty-state" id="memoryEmptyState">Share a group photo to start your memories.</div>
                 <div class="memories-carousel-frame" id="memoriesCarouselFrame" style="display: none;">
-                    <button type="button" class="memory-carousel-control memory-carousel-previous" onclick="moveMemory(-1)" aria-label="Previous photo">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5.5-6.5 6.5 6.5 6.5"/></svg><span>Previous</span>
-                    </button>
                     <div class="memories-carousel-wrapper">
                         <div class="memories-carousel" id="memoriesCarousel"></div>
                     </div>
-                    <button type="button" class="memory-carousel-control memory-carousel-next" onclick="moveMemory(1)" aria-label="Next photo">
-                        <span>Next</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5.5 6.5 6.5-6.5 6.5"/></svg>
-                    </button>
                 </div>
-                <div class="memory-carousel-footer">
+                <div class="memory-carousel-footer" id="memoryCarouselFooter" hidden>
+                    <button type="button" class="memory-carousel-control memory-carousel-previous" id="memoryPreviousButton" onclick="moveMemory(-1)" aria-label="Previous photo">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5.5-6.5 6.5 6.5 6.5"/></svg>
+                    </button>
                     <div class="memories-dots" id="memoriesDots"></div>
                     <span class="memory-photo-position" id="memoryPhotoPosition"></span>
+                    <button type="button" class="memory-carousel-control memory-carousel-next" id="memoryNextButton" onclick="moveMemory(1)" aria-label="Next photo">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5.5 6.5 6.5-6.5 6.5"/></svg>
+                    </button>
+                    <button type="button" class="memory-download-btn" id="memoryDownloadButton" onclick="downloadGroupMemory(memoriesIndex)" aria-label="Download current group photo">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 17v3h16v-3"/></svg>
+                        <span>Download</span>
+                    </button>
                 </div>
             </div>
             <div class="card recent-activity-card">
@@ -510,6 +514,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="firebase-config.js?v=34"></script>
-    <script src="app.js?v=53"></script>
+    <script src="app.js?v=54"></script>
 </body>
 </html>
