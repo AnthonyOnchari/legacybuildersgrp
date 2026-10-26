@@ -10279,7 +10279,8 @@ body.finance-ui .communications-page .group-message-form { margin-top: 12px; }
         position: relative;
         isolation: isolate;
         display: block;
-        width: min(100%, 440px);
+        width: min(100%, 360px);
+        max-width: 300px;
         height: auto;
         min-height: 0;
         margin: auto;
@@ -10317,8 +10318,8 @@ body.finance-ui .communications-page .group-message-form { margin-top: 12px; }
         min-height: 0;
         max-height: none;
         margin: 0;
-        padding: 17px clamp(20px, 6vw, 30px);
-        transform: none;
+        padding: 13px clamp(17px, 5vw, 22px);
+        transform: translateY(-16px);
         border: 1px solid rgba(255, 255, 255, .3);
         border-radius: 22px;
         background:
@@ -10354,15 +10355,15 @@ body.finance-ui .communications-page .group-message-form { margin-top: 12px; }
         padding-top: 14px;
     }
     body.finance-ui .login-secure-label,
-    body.finance-ui .login-box.is-registering .login-secure-label { margin-bottom: 8px; }
-    body.finance-ui .login-form-group { margin-bottom: 8px; }
+    body.finance-ui .login-box.is-registering .login-secure-label { margin-bottom: 6px; }
+    body.finance-ui .login-form-group { margin-bottom: 6px; }
     body.finance-ui .login-form-group input {
-        min-height: 46px;
+        min-height: 42px;
         font-size: 16px;
     }
     body.finance-ui .login-btn,
     body.finance-ui .login-create-btn {
-        min-height: 44px;
+        min-height: 40px;
     }
     body.finance-ui .login-box .register-link,
     body.finance-ui .login-box .forgot-password-link,
@@ -10411,7 +10412,7 @@ body.finance-ui .communications-page .group-message-form { margin-top: 12px; }
         background: #f7faf6;
     }
     body.finance-ui .login-divider {
-        margin: 9px 0 7px;
+        margin: 7px 0 5px;
         color: #fff;
         text-shadow: 0 1px 5px rgba(4, 20, 16, .95);
     }

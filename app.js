@@ -200,7 +200,7 @@ function showLoginForm() {
     document.getElementById('registerError').style.display = 'none';
     document.getElementById('resetError').style.display = 'none';
     document.getElementById('resetSuccess').style.display = 'none';
-    document.getElementById('loginSubtitle').textContent = 'Welcome back — login to access your account';
+    document.getElementById('loginSubtitle').textContent = 'Your group, your progress, all in one place.';
     document.querySelector('.login-box').classList.remove('is-registering');
     animateAuthTransition();
 }
