@@ -404,7 +404,7 @@ async function handleAction(action, params, user) {
             ]);
             const messages = messageSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
             const joinRequests = requestSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-            messages.sort((a, b) => String(a.created_at || "").localeCompare(String(b.created_at || "")));
+            messages.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
             joinRequests.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
             return {
                 success: true,
@@ -666,6 +666,7 @@ async function handleAction(action, params, user) {
         case "getPendingRegistrations":
         case "getPendingTransactions":
         case "getPendingLoans":
+        case "getLoansDashboard":
         case "getLoansAwaitingDueDate":
         case "getActiveLoans":
         case "getMeetingMinutes":
@@ -691,6 +692,50 @@ async function handleAction(action, params, user) {
             }
             if (action === "getPendingTransactions") return { success: true, transactions: await rows("pendingTransactions") };
             if (action === "getPendingLoans") return { success: true, loans: await rows("pendingLoans") };
+            if (action === "getLoansDashboard") {
+                const [loans, active, users, awaiting] = await Promise.all([
+                    rows("pendingLoans"),
+                    rows("activeLoans"),
+                    rows("users"),
+                    isAdmin(user) ? rows("loansAwaitingDueDate") : Promise.resolve([])
+                ]);
+                const members = users
+                    .filter((item) => item.status === "approved" && item.name)
+                    .map((item) => item.name);
+                const activeLoans = active.map((loan) => {
+                    const totalDue = asNumber(loan.totalDue);
+                    const amountRepaid = asNumber(loan.amountRepaid);
+                    const remaining = Math.max(0, totalDue - amountRepaid);
+                    const dueDate = loan.dueDate || "";
+                    const isOverdue = Boolean(dueDate && remaining > 0 && new Date(dueDate) < new Date(new Date().toDateString()));
+                    return {
+                        ...loan,
+                        loanId: loan.loanId || loan.id,
+                        totalDue,
+                        amountRepaid,
+                        remaining,
+                        status: remaining <= 0 ? "paid_off" : (isOverdue ? "overdue" : "active"),
+                        isOverdue
+                    };
+                });
+                return {
+                    success: true,
+                    members,
+                    loans: loans.map((loan) => {
+                        const principal = asNumber(loan.amount ?? loan.principal);
+                        const approvals = Array.isArray(loan.approvals) ? loan.approvals : [];
+                        return {
+                            ...loan,
+                            principal,
+                            interest: Math.round(principal * LOAN_INTEREST_RATE),
+                            totalDue: principal + Math.round(principal * LOAN_INTEREST_RATE),
+                            approvals
+                        };
+                    }),
+                    activeLoans,
+                    loansAwaitingDueDate: awaiting
+                };
+            }
             if (action === "getLoansAwaitingDueDate") return { success: true, loans: await rows("loansAwaitingDueDate") };
             if (action === "getActiveLoans") return { success: true, loans: await rows("activeLoans") };
             if (action === "getMeetingMinutes") {

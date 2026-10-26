@@ -14,19 +14,6 @@
 </head>
 <body class="finance-ui">
 
-    <!-- SPLASH SCREEN -->
-    <div id="splashScreen" role="status" aria-live="polite">
-        <div class="splash-orbit splash-orbit--one" aria-hidden="true"></div>
-        <div class="splash-orbit splash-orbit--two" aria-hidden="true"></div>
-        <div class="splash-content">
-            <div class="splash-logo" aria-hidden="true">LB</div>
-            <div class="splash-eyebrow">LEGACY BUILDERS</div>
-            <div class="splash-title">Building wealth,<br>together.</div>
-            <div class="splash-subtitle">Your group space is getting ready</div>
-            <div class="splash-loader" aria-hidden="true"><span></span></div>
-        </div>
-    </div>
-
     <!-- LOGIN OVERLAY -->
     <div id="loginOverlay" class="login-overlay">
         <div class="login-layout">
@@ -126,8 +113,7 @@
                 <button class="sidebar-link" data-panel="transactions"><span class="tab-icon" aria-hidden="true">⌂</span><span>Home</span></button>
                 <button class="sidebar-link" data-panel="summary"><span class="tab-icon" aria-hidden="true">◷</span><span>Summary</span></button>
                 <button class="sidebar-link" data-panel="loans"><span class="tab-icon" aria-hidden="true">L</span><span>Loans</span></button>
-                <button class="sidebar-link" data-panel="meetings"><span class="tab-icon" aria-hidden="true">▤</span><span>Meetings</span></button>
-                <button class="sidebar-link" data-panel="groupChat"><span class="tab-icon" aria-hidden="true">I</span><span>Group inbox</span></button>
+                <button class="sidebar-link" data-panel="meetings"><span class="tab-icon" aria-hidden="true">▤</span><span>Meetings &amp; inbox</span></button>
                 <button class="sidebar-link" data-panel="about"><span class="tab-icon" aria-hidden="true">◎</span><span>About Us</span></button>
                 <button class="sidebar-link" data-panel="pending" id="pendingSidebarLink" style="display: none;"><span class="tab-icon" aria-hidden="true">•</span><span>Admin Portal</span><span id="pendingCountSidebar" class="pending-count"></span></button>
                 <button class="sidebar-link" data-panel="developer" id="developerSidebarLink" style="display: none;"><span class="tab-icon" aria-hidden="true">D</span><span>Dev Portal</span></button>
@@ -162,9 +148,7 @@
 
         <div class="dashboard-intro">
             <div class="dashboard-intro-copy">
-                <span class="dashboard-eyebrow">GROUP OVERVIEW</span>
                 <h1 id="dashboardGreeting">Welcome back</h1>
-                <p>Your group's finances, progress, and latest updates.</p>
             </div>
         </div>
 
@@ -205,7 +189,6 @@
 
         <div class="quick-actions-card">
             <div class="quick-actions-heading">
-                <span class="dashboard-eyebrow">GET THINGS DONE</span>
                 <h2>Quick actions</h2>
                 <p>Common group money tasks</p>
             </div>
@@ -253,7 +236,6 @@
             <div class="card recent-activity-card">
                 <div class="activity-card-heading">
                     <div>
-                        <span class="dashboard-eyebrow">GROUP FEED</span>
                         <h2>Recent activity</h2>
                         <p>Latest contributions, loans, and repayments</p>
                     </div>
@@ -293,14 +275,14 @@
                 <div class="summary-lower-grid">
                     <section class="summary-card summary-chart-card">
                         <div class="summary-card-heading">
-                            <div><span class="summary-eyebrow">THE BREAKDOWN</span><h3>How funds are moving</h3></div>
+                            <div><h3>How funds are moving</h3></div>
                             <span class="summary-card-caption">Savings · loans · repayments</span>
                         </div>
                         <div class="chart-wrapper"><canvas id="financialChart"></canvas></div>
                     </section>
                     <section class="summary-card summary-export-card">
                         <div class="summary-card-heading">
-                            <div><span class="summary-eyebrow">TAKE IT WITH YOU</span><h3>Download a report</h3></div>
+                            <div><h3>Download a report</h3></div>
                         </div>
                         <p class="summary-export-intro">Keep a copy for your records or share the latest group figures.</p>
                         <button id="exportPdfBtn" class="summary-export-button summary-export-button--pdf" type="button">
@@ -317,62 +299,86 @@
         </div>
 
         <!-- Loans Panel -->
-        <div id="loansPanel" class="panel fullscreen-panel">
-            <div class="card" id="awaitingDueDateCard" style="display:none;"><h2>Awaiting Due Date</h2><div id="awaitingDueDateList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
-            <div class="card"><h2>Active Loans</h2><div id="activeLoansList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
-            <div class="card"><h2>Pending Loan Approvals</h2><div id="pendingLoans" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
-            <div class="card"><h2>Completed Loans</h2><div id="completedLoans" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
+        <div id="loansPanel" class="panel fullscreen-panel loans-page">
+            <header class="loans-hero">
+                <div>
+                    <span class="section-kicker">MEMBER FINANCE</span>
+                    <h1>Loans, made clear.</h1>
+                    <p>Track repayments, follow requests, and keep every member in the loop.</p>
+                </div>
+                <button type="button" class="loans-request-button" onclick="openAddTransactionModal('Loan Taken')"><span aria-hidden="true">＋</span> Request a loan</button>
+            </header>
+            <div class="loans-sections-grid">
+                <section class="card loans-section loans-section--active">
+                    <div class="loans-section-heading"><span class="loans-section-icon" aria-hidden="true">↗</span><div><h2>Active loans</h2><p>Repayment progress across the group</p></div></div>
+                    <div id="activeLoansList" class="loading-container"><div class="loading-spinner"></div><div>Loading loans…</div></div>
+                </section>
+                <section class="card loans-section" id="awaitingDueDateCard" style="display:none;">
+                    <div class="loans-section-heading"><span class="loans-section-icon" aria-hidden="true">◷</span><div><h2>Awaiting a due date</h2><p>Approved requests ready to activate</p></div></div>
+                    <div id="awaitingDueDateList" class="loading-container"><div class="loading-spinner"></div><div>Loading…</div></div>
+                </section>
+                <section class="card loans-section">
+                    <div class="loans-section-heading"><span class="loans-section-icon" aria-hidden="true">◎</span><div><h2>Needs approval</h2><p>Member requests currently in progress</p></div></div>
+                    <div id="pendingLoans" class="loading-container"><div class="loading-spinner"></div><div>Loading requests…</div></div>
+                </section>
+                <section class="card loans-section">
+                    <div class="loans-section-heading"><span class="loans-section-icon" aria-hidden="true">✓</span><div><h2>Completed requests</h2><p>Requests that have received all approvals</p></div></div>
+                    <div id="completedLoans" class="loading-container"><div class="loading-spinner"></div><div>Loading…</div></div>
+                </section>
+            </div>
         </div>
 
         <!-- Meetings Panel -->
-        <div id="meetingsPanel" class="panel fullscreen-panel">
-            <div id="upcomingMeetingCard" class="card upcoming-meeting-card" style="display: none;">
-                <h2>Upcoming Meeting</h2>
-                <div id="upcomingMeetingInfo"></div>
-            </div>
-            <div class="card" style="padding: 8px;">
-                <button class="meeting-action-row" onclick="openViewMinutesModal()">
-                    <span class="meeting-action-icon" aria-hidden="true">M</span>
-                    <span class="meeting-action-text"><span class="meeting-action-title">Meeting Minutes</span><span class="meeting-action-sub">View past minutes &amp; record new ones</span></span>
-                    <span class="meeting-action-arrow">›</span>
-                </button>
-                <button class="meeting-action-row" onclick="openScheduleMeetingModal()">
-                    <span class="meeting-action-icon" aria-hidden="true">S</span>
-                    <span class="meeting-action-text"><span class="meeting-action-title">Schedule Next Meeting</span><span class="meeting-action-sub">Set date, agenda &amp; venue</span></span>
-                    <span class="meeting-action-arrow">›</span>
-                </button>
-                <button class="meeting-action-row" onclick="openSendAnnouncementModal()">
-                    <span class="meeting-action-icon" aria-hidden="true">A</span>
-                    <span class="meeting-action-text"><span class="meeting-action-title">Send Announcement</span><span class="meeting-action-sub">Push a message to all members</span></span>
-                    <span class="meeting-action-arrow">›</span>
-                </button>
-                <button class="meeting-action-row" onclick="openAuditLogModal()">
-                    <span class="meeting-action-icon" aria-hidden="true">L</span>
-                    <span class="meeting-action-text"><span class="meeting-action-title">Activity Log</span><span class="meeting-action-sub">See who did what, and when</span></span>
-                    <span class="meeting-action-arrow">›</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Group Inbox -->
-        <div id="groupChatPanel" class="panel fullscreen-panel">
-            <div class="card">
-                <div class="group-chat-heading">
-                    <div>
-                        <h2>Group inbox</h2>
-                        <p>Share updates and discuss requests with approved members.</p>
+        <div id="meetingsPanel" class="panel fullscreen-panel communications-page">
+            <header class="communications-hero">
+                <div class="communications-hero-mark" aria-hidden="true">LB</div>
+                <div><span class="section-kicker">TOGETHER, IN ONE PLACE</span><h1>Meet, share, move forward.</h1><p>Everything happening in the group, from the next gathering to today's conversation.</p></div>
+            </header>
+            <div class="communications-grid">
+                <div class="communications-meetings">
+                    <div id="upcomingMeetingCard" class="card upcoming-meeting-card" style="display: none;">
+                        <span class="section-kicker">NEXT UP</span><h2>Upcoming meeting</h2>
+                        <div id="upcomingMeetingInfo"></div>
                     </div>
-                    <button type="button" class="group-refresh-btn" onclick="loadGroupMessages()">Refresh</button>
+                    <div class="card meeting-tools-card">
+                        <div class="communications-card-heading"><div><span class="section-kicker">THE GROUP CALENDAR</span><h2>Meetings &amp; updates</h2></div></div>
+                        <button class="meeting-action-row" onclick="openViewMinutesModal()">
+                            <span class="meeting-action-icon" aria-hidden="true">M</span>
+                            <span class="meeting-action-text"><span class="meeting-action-title">Meeting minutes</span><span class="meeting-action-sub">Read past notes and decisions</span></span>
+                            <span class="meeting-action-arrow">›</span>
+                        </button>
+                        <button class="meeting-action-row" onclick="openScheduleMeetingModal()">
+                            <span class="meeting-action-icon" aria-hidden="true">S</span>
+                            <span class="meeting-action-text"><span class="meeting-action-title">Schedule a meeting</span><span class="meeting-action-sub">Set a date, agenda and venue</span></span>
+                            <span class="meeting-action-arrow">›</span>
+                        </button>
+                        <button class="meeting-action-row" onclick="openSendAnnouncementModal()">
+                            <span class="meeting-action-icon" aria-hidden="true">A</span>
+                            <span class="meeting-action-text"><span class="meeting-action-title">Send an announcement</span><span class="meeting-action-sub">Share an important update</span></span>
+                            <span class="meeting-action-arrow">›</span>
+                        </button>
+                        <button class="meeting-action-row" onclick="openAuditLogModal()">
+                            <span class="meeting-action-icon" aria-hidden="true">L</span>
+                            <span class="meeting-action-text"><span class="meeting-action-title">Group activity</span><span class="meeting-action-sub">See what has happened recently</span></span>
+                            <span class="meeting-action-arrow">›</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="group-inbox-requests" id="groupInboxRequests"></div>
-                <div class="group-messages" id="groupMessages" aria-live="polite">
-                    <div class="empty-state">Loading group conversation...</div>
-                </div>
-                <form class="group-message-form" onsubmit="sendGroupMessage(event)">
-                    <label class="sr-only" for="groupMessageInput">Message to the group</label>
-                    <textarea id="groupMessageInput" maxlength="1000" rows="2" placeholder="Write a message to everyone..."></textarea>
-                    <button type="submit" id="groupMessageSendBtn">Send</button>
-                </form>
+                <section class="card communications-inbox-card">
+                    <div class="group-chat-heading">
+                        <div><span class="section-kicker">THE GROUP INBOX</span><h2>Conversation</h2><p>Share an update with everyone.</p></div>
+                        <button type="button" class="group-refresh-btn" onclick="loadGroupMessages()" aria-label="Refresh messages">↻ <span>Refresh</span></button>
+                    </div>
+                    <div class="group-inbox-requests" id="groupInboxRequests"></div>
+                    <div class="group-messages" id="groupMessages" aria-live="polite">
+                        <div class="empty-state">Loading group conversation...</div>
+                    </div>
+                    <form class="group-message-form" onsubmit="sendGroupMessage(event)">
+                        <label class="sr-only" for="groupMessageInput">Message to the group</label>
+                        <textarea id="groupMessageInput" maxlength="1000" rows="2" placeholder="Write a message to everyone..."></textarea>
+                        <button type="submit" id="groupMessageSendBtn">Send message <span aria-hidden="true">↗</span></button>
+                    </form>
+                </section>
             </div>
         </div>
 
@@ -395,21 +401,16 @@
                 <div class="about-image-wrapper">
                     <img src="https://lh3.googleusercontent.com/d/1cxOVKU7CkgQUaSpB6m_KYVxNKDfBL_yS=s800" alt="Legacy Builders Group" class="about-hero-image" onerror="this.style.display='none'">
                 </div>
-                <p class="about-tagline">A savings circle built on trust, not paperwork.</p>
+                <div class="about-hero-copy"><span class="section-kicker">OUR STORY</span><h1>Building a legacy,<br>together.</h1><p class="about-tagline">A community grounded in trust, growing through shared purpose, and creating lasting opportunity for every member.</p><div class="about-values-row"><span class="about-value-chip">Unity</span><span class="about-value-chip">Integrity</span><span class="about-value-chip">Legacy</span></div></div>
             </div>
             <div class="about-stats-row">
                 <div class="about-stat"><div class="about-stat-value" id="aboutStatMembers">--</div><div class="about-stat-label">Members</div></div>
                 <div class="about-stat"><div class="about-stat-value" id="aboutStatSavings">--</div><div class="about-stat-label">Total Saved</div></div>
                 <div class="about-stat"><div class="about-stat-value" id="aboutStatTxns">--</div><div class="about-stat-label">Transactions</div></div>
             </div>
-            <div class="about-values-row">
-                <span class="about-value-chip">Unity</span>
-                <span class="about-value-chip">Integrity</span>
-                <span class="about-value-chip">Legacy</span>
-            </div>
             <div class="card">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                    <h2 style="margin-bottom: 0;">Members</h2>
+                    <div><span class="section-kicker">THE PEOPLE BEHIND THE PROGRESS</span><h2 style="margin-bottom: 0;">Meet the members</h2></div>
                     <span class="member-count-badge" id="memberCountBadge">0 Members</span>
                 </div>
                 <div class="members-grid-wrapper">
@@ -468,7 +469,6 @@
         <button class="tab" data-panel="summary"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19.5h16M6.5 16V11m5 5V5m5 11V8"/></svg></span><span>Summary</span></button>
         <button class="tab" data-panel="loans"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M3.5 10h17M7 14.5h3"/></svg></span><span>Loans</span></button>
         <button class="tab" data-panel="meetings"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="15" rx="2"/><path d="M8 3.5v4m8-4v4M4 10h16M8 13.5h2m4 0h2m-8 3h2"/></svg></span><span>Meetings</span></button>
-        <button class="tab" data-panel="groupChat"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-9.5A7.5 7.5 0 0 1 10.5 4h2A7.5 7.5 0 0 1 20 11.5Z"/><path d="M8 11.5h8m-8 3h5"/></svg></span><span>Inbox</span></button>
         <button class="tab" data-panel="about"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5m0-8h.01"/></svg></span><span>About</span></button>
         <button class="tab" data-panel="pending" id="pendingTab" style="display: none;"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></svg></span><span>Admin<span id="pendingCount" class="pending-count"></span></span></button>
         <button class="tab" data-panel="developer" id="developerTab" style="display: none;"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1"/><circle cx="12" cy="12" r="4"/></svg></span><span>Dev</span></button>

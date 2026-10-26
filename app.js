@@ -16,6 +16,7 @@ let userProfileImage = null;
 let currentUserPhone = '', currentUserPhoneCountry = '', currentUserPhoneDialCode = '';
 let currentUserPhoneVerifiedAt = '', currentUserPhoneVerifiedBy = '';
 let isLoading = false, chartInstance = null;
+let dashboardLoaded = false;
 const memberPhotoCache = {};
 let serviceWorkerRegistered = false, pushSubscription = null;
 const countUpFrames = new WeakMap();
@@ -100,13 +101,6 @@ async function callAPI(action, data = {}, _retryCount = 0) {
 // ============================================================
 // SPLASH SCREEN
 // ============================================================
-function hideSplashScreen() {
-    const splash = document.getElementById('splashScreen');
-    if (!splash) return;
-    splash.classList.add('hidden');
-    splash.style.display = 'none';
-}
-
 // ============================================================
 // LOGIN FUNCTIONS
 // ============================================================
@@ -343,6 +337,7 @@ async function resendOtpCode() {
 // COMPLETE LOGIN
 // ============================================================
 function activateCurrentTab() {
+    if (currentTab === 'groupChat') currentTab = 'meetings';
     if ((currentTab === 'developer' && !isDeveloper()) || (currentTab === 'pending' && !hasAdminPortalAccess())) {
         currentTab = 'transactions';
     }
@@ -362,6 +357,8 @@ function activateCurrentTab() {
     localStorage.setItem('legacy_active_tab', currentTab);
     if (currentTab === 'pending') loadAdminMemberProfiles('adminPhoneProfiles');
     if (currentTab === 'developer') loadAdminMemberProfiles('developerPhoneProfiles');
+    if (currentTab === 'loans') loadLoansDashboard();
+    if (currentTab === 'meetings') loadGroupMessages();
 }
 
 async function completeLogin(name, email, profile = {}) {
@@ -405,7 +402,6 @@ async function completeLogin(name, email, profile = {}) {
         }
     });
     loadGroupMemories();
-    loadGroupMessages();
     await Promise.all([
         loadAllData(),
         profileImageLoad,
@@ -917,6 +913,7 @@ let lastGroupSummary = null;
 async function loadAllData(silent = false, skipBalanceUI = false) {
     if (isLoading || !currentUser) return;
     if (DEVELOPMENT_PREVIEW_ENABLED) {
+        dashboardLoaded = true;
         renderRecentActivity();
         updateAboutStats();
         renderWalletBalance();
@@ -932,6 +929,7 @@ async function loadAllData(silent = false, skipBalanceUI = false) {
         });
         if (!dash.success) throw new Error(dash.error || 'Failed to load dashboard data');
 
+        dashboardLoaded = true;
         allRecords = dash.records || [];
         renderRecentActivity();
         updateAboutStats();
@@ -954,20 +952,22 @@ async function loadAllData(silent = false, skipBalanceUI = false) {
         }
         if (!skipBalanceUI) renderWalletBalance();
 
-        const total = allMembers.length || 1;
-        const allLoans = dash.loans || [];
-        pendingLoans = allLoans.filter(l => l.approvals.length < (total - 1) && l.status !== 'completed' && l.status !== 'rejected');
-        completedLoans = allLoans.filter(l => l.approvals.length >= (total - 1) || l.status === 'completed');
-        renderPendingLoans();
-        renderCompletedLoans();
+        if (currentTab !== 'loans') {
+            const total = allMembers.length || 1;
+            const allLoans = dash.loans || [];
+            pendingLoans = allLoans.filter(l => l.approvals.length < (total - 1) && l.status !== 'completed' && l.status !== 'rejected');
+            completedLoans = allLoans.filter(l => l.approvals.length >= (total - 1) || l.status === 'completed');
+            renderPendingLoans();
+            renderCompletedLoans();
 
-        if (dash.activeLoans !== undefined) {
-            activeLoans = dash.activeLoans || [];
-            if (!skipBalanceUI) renderActiveLoans();
-        }
-        if ((isTreasurer() || isDeveloper()) && dash.loansAwaitingDueDate !== undefined) {
-            loansAwaitingDueDate = dash.loansAwaitingDueDate || [];
-            if (!skipBalanceUI) renderLoansAwaitingDueDate();
+            if (dash.activeLoans !== undefined) {
+                activeLoans = dash.activeLoans || [];
+                if (!skipBalanceUI) renderActiveLoans();
+            }
+            if ((isTreasurer() || isDeveloper()) && dash.loansAwaitingDueDate !== undefined) {
+                loansAwaitingDueDate = dash.loansAwaitingDueDate || [];
+                if (!skipBalanceUI) renderLoansAwaitingDueDate();
+            }
         }
 
         if (isTreasurer() || isDeveloper()) {
@@ -982,6 +982,46 @@ async function loadAllData(silent = false, skipBalanceUI = false) {
     } finally {
         isLoading = false;
         showBalanceLoading(false);
+    }
+}
+
+let isLoansLoading = false;
+async function loadLoansDashboard() {
+    if (isLoansLoading || !currentUser) return;
+    if (DEVELOPMENT_PREVIEW_ENABLED) {
+        pendingLoans = [];
+        completedLoans = [];
+        activeLoans = [];
+        loansAwaitingDueDate = [];
+        renderPendingLoans();
+        renderCompletedLoans();
+        renderActiveLoans();
+        renderLoansAwaitingDueDate();
+        return;
+    }
+    isLoansLoading = true;
+    try {
+        const result = await callAPI('getLoansDashboard');
+        if (!result.success) throw new Error(result.error || 'Could not load loan information.');
+        allMembers = result.members || [];
+        const total = allMembers.length || 1;
+        const loans = result.loans || [];
+        pendingLoans = loans.filter(loan => loan.approvals.length < total - 1 && loan.status !== 'completed' && loan.status !== 'rejected');
+        completedLoans = loans.filter(loan => loan.approvals.length >= total - 1 || loan.status === 'completed');
+        activeLoans = result.activeLoans || [];
+        loansAwaitingDueDate = result.loansAwaitingDueDate || [];
+        renderPendingLoans();
+        renderCompletedLoans();
+        renderActiveLoans();
+        renderLoansAwaitingDueDate();
+    } catch (error) {
+        console.error('Error loading loans:', error);
+        ['activeLoansList', 'pendingLoans', 'completedLoans', 'awaitingDueDateList'].forEach(id => {
+            const container = document.getElementById(id);
+            if (container) container.innerHTML = `<div class="empty-state">${escapeHtml(error.message || 'Could not load loan information.')}</div>`;
+        });
+    } finally {
+        isLoansLoading = false;
     }
 }
 
@@ -2420,7 +2460,7 @@ function renderChart(summary) {
                     }
                 }
             },
-            animation: { duration: 1000, easing: 'easeOutQuart' }
+            animation: { duration: 680, easing: 'easeOutCubic', animateRotate: true, animateScale: true }
         }
     });
 }
@@ -2661,9 +2701,8 @@ async function subscribeToPush() {
 const PANEL_TITLES = {
     summary: 'Summary',
     loans: 'Loans',
-    meetings: 'Meetings',
+    meetings: 'Meetings & inbox',
     pending: 'Admin Portal',
-    groupChat: 'Group Inbox',
     about: 'About Us',
     developer: 'Developer Portal'
 };
@@ -2715,6 +2754,7 @@ function ensureFullscreenBar(panel, tabId) {
 }
 
 function activateTab(tabId) {
+    if (tabId === 'groupChat') tabId = 'meetings';
     if (tabId === 'developer' && !isDeveloper()) {
         showToast('Developer portal access is restricted.', 'error');
         return;
@@ -2740,7 +2780,9 @@ function activateTab(tabId) {
     if (appContainer) appContainer.classList.toggle('dashboard-active', tabId === 'transactions');
     localStorage.setItem('legacy_active_tab', tabId);
     currentTab = tabId;
-    if (tabId !== 'transactions') loadAllData(false, true);
+    if (tabId === 'loans') loadLoansDashboard();
+    else if (tabId !== 'transactions' || !dashboardLoaded) loadAllData(false, true);
+    if (tabId === 'meetings') loadGroupMessages();
     if (tabId === 'pending') loadAdminMemberProfiles('adminPhoneProfiles');
     if (tabId === 'developer') {
         loadAdminMemberProfiles('developerPhoneProfiles');
@@ -2854,6 +2896,12 @@ function updateMemoriesPosition() {
 async function loadGroupMessages() {
     const container = document.getElementById('groupMessages');
     if (!container) return;
+    if (DEVELOPMENT_PREVIEW_ENABLED) {
+        const requestContainer = document.getElementById('groupInboxRequests');
+        if (requestContainer) requestContainer.innerHTML = '';
+        container.innerHTML = '<div class="empty-state">Your group conversation will appear here after you sign in.</div>';
+        return;
+    }
     const res = await callAPI('getGroupMessages');
     if (!res.success) {
         const requestContainer = document.getElementById('groupInboxRequests');
@@ -2891,7 +2939,6 @@ async function loadGroupMessages() {
             <p>${escapeHtml(message.message)}</p>
         </article>
     `).join('');
-    container.scrollTop = container.scrollHeight;
 }
 
 async function sendGroupMessage(event) {
@@ -2932,7 +2979,7 @@ async function logout(event) {
     currentUser = null; currentUserDisplayName = null; currentUserEmail = null; currentUserRole = null;
     currentUserPhone = ''; currentUserPhoneCountry = ''; currentUserPhoneDialCode = '';
     currentUserPhoneVerifiedAt = ''; currentUserPhoneVerifiedBy = '';
-    allRecords = []; allMembers = []; pendingLoans = []; completedLoans = []; pendingTransactions = []; isLoading = false;
+    allRecords = []; allMembers = []; pendingLoans = []; completedLoans = []; pendingTransactions = []; isLoading = false; dashboardLoaded = false;
     pushSubscription = null; serviceWorkerRegistered = false;
     document.getElementById('appContainer').classList.remove('active');
     document.getElementById('tabBar').style.display = 'none';
@@ -2940,16 +2987,12 @@ async function logout(event) {
     document.getElementById('loginOverlay').classList.add('active');
     document.getElementById('loginError').style.display = 'none';
     showToast('Logged out', 'success');
-    document.getElementById('splashScreen').style.display = 'flex';
-    document.getElementById('splashScreen').classList.remove('hidden');
-    setTimeout(hideSplashScreen, 800);
 }
 
 // ============================================================
 // DOM READY
 // ============================================================
 const initializeApp = async () => {
-    const splash = document.getElementById('splashScreen');
     if (DEVELOPMENT_PREVIEW_ENABLED) {
         initializeDevelopmentPreview();
         return;
@@ -2971,9 +3014,6 @@ const initializeApp = async () => {
         );
     });
     const hasPersistentSession = checkPersistentLogin();
-    splash.style.display = 'flex';
-    splash.classList.remove('hidden');
-
     if (hasPersistentSession) {
         const account = await callAPI('bootstrapProfile');
         if (!account.success || account.status !== 'approved') {
@@ -2987,7 +3027,6 @@ const initializeApp = async () => {
                 ? 'Your registration is awaiting approval. Please contact the treasurer.'
                 : (account.error || 'This account is not approved. Please contact the treasurer.');
             errorEl.style.display = 'block';
-            hideSplashScreen();
             return;
         }
         currentUser = account.name || currentUser;
@@ -3015,7 +3054,6 @@ const initializeApp = async () => {
         document.getElementById('sidebarNav')?.classList.add('active');
         document.getElementById('loggedInUser').innerText = currentUserDisplayName;
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
-        hideSplashScreen();
         updateHeaderAvatar();
         showHideDeveloperPortal();
         showHidePendingTab();
@@ -3024,7 +3062,7 @@ const initializeApp = async () => {
         initMemoriesCarousel();
         activateCurrentTab();
         await Promise.all([
-            loadAllData(),
+            ...(currentTab === 'loans' ? [] : [loadAllData()]),
             profileImageLoad,
             loadMeetingMinutes(),
             loadScheduledMeeting(),
@@ -3041,7 +3079,6 @@ const initializeApp = async () => {
             }
         }, 30000);
     } else {
-        hideSplashScreen();
         document.getElementById('loginOverlay').classList.add('active');
     }
 
@@ -3085,7 +3122,6 @@ function initializeDevelopmentPreview() {
         repaid: 24000
     };
 
-    hideSplashScreen();
     document.getElementById('loginOverlay').classList.remove('active');
     document.getElementById('appContainer').classList.add('active', 'dashboard-active');
     document.getElementById('tabBar').style.display = 'flex';
@@ -3101,6 +3137,8 @@ function initializeDevelopmentPreview() {
     updateMemberDropdowns();
     renderRecentActivity();
     updateAboutStats();
+    renderMembersList(allMembersData);
+    document.getElementById('memberCountBadge').textContent = `${allMembersData.length} Members`;
     document.getElementById('summarySkeleton').style.display = 'none';
     document.getElementById('summaryContent').style.display = 'block';
     if (typeof Chart !== 'undefined') renderChart(lastGroupSummary);
@@ -3115,11 +3153,6 @@ function initializeDevelopmentPreview() {
 document.addEventListener('DOMContentLoaded', () => {
     initializeApp().catch(error => {
         console.error('App initialization failed:', error);
-        const splash = document.getElementById('splashScreen');
-        if (splash) {
-            splash.classList.add('hidden');
-            splash.style.display = 'none';
-        }
         const loginOverlay = document.getElementById('loginOverlay');
         if (loginOverlay) loginOverlay.classList.add('active');
         const errorEl = document.getElementById('loginError');
