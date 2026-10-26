@@ -620,7 +620,7 @@ function updateDashboardGreeting() {
     if (!el || !currentUser) return;
     const hour = new Date().getHours();
     const timeGreeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-    el.textContent = `${timeGreeting}, ${(currentUserDisplayName || currentUser).split(' ')[0]}`;
+    el.textContent = `${timeGreeting}, ${(currentUserDisplayName || currentUser).trim()}`;
 }
 
 // ============================================================
@@ -2460,7 +2460,7 @@ function renderChart(summary) {
                     }
                 }
             },
-            animation: { duration: 680, easing: 'easeOutCubic', animateRotate: true, animateScale: true }
+            animation: false
         }
     });
 }
@@ -2716,14 +2716,8 @@ function ensureFullscreenBar(panel, tabId) {
     backButton.className = 'fullscreen-panel-back';
     backButton.type = 'button';
     backButton.setAttribute('aria-label', 'Back to Home');
-    if (tabId === 'summary') backButton.textContent = 'Home';
-    else backButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7M8 12h12"/></svg>';
+    backButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5-7 7 7 7M7 12h13"/></svg><span>Home</span>';
     backButton.addEventListener('click', () => activateTab('transactions'));
-    if (tabId !== 'summary') {
-        const backLabel = document.createElement('span');
-        backLabel.textContent = 'Home';
-        backButton.appendChild(backLabel);
-    }
 
     const title = document.createElement('h2');
     title.textContent = PANEL_TITLES[tabId] || '';
@@ -2744,8 +2738,7 @@ function ensureFullscreenBar(panel, tabId) {
     logoutButton.className = 'fullscreen-panel-logout';
     logoutButton.type = 'button';
     logoutButton.setAttribute('aria-label', 'Log out');
-    if (tabId === 'summary') logoutButton.textContent = 'Log out';
-    else logoutButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg>';
+    logoutButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg><span>Log out</span>';
     logoutButton.addEventListener('click', logout);
 
     bar.append(backButton, title, user, logoutButton);
@@ -2821,23 +2814,37 @@ function initMemoriesCarousel() {
     const track = document.getElementById('memoriesCarousel');
     const dotsWrap = document.getElementById('memoriesDots');
     const emptyState = document.getElementById('memoryEmptyState');
-    if (!card || !track || !dotsWrap || !emptyState) return;
+    const frame = document.getElementById('memoriesCarouselFrame');
+    const photoCount = document.getElementById('memoryPhotoCount');
+    const photoPosition = document.getElementById('memoryPhotoPosition');
+    if (!card || !track || !dotsWrap || !emptyState || !frame) return;
     card.style.display = 'block';
     if (!GROUP_MEMORY_PHOTOS.length) emptyState.textContent = 'Share a group photo to start your memories.';
     emptyState.style.display = GROUP_MEMORY_PHOTOS.length ? 'none' : 'block';
-    track.parentElement.style.display = GROUP_MEMORY_PHOTOS.length ? 'block' : 'none';
+    frame.style.display = GROUP_MEMORY_PHOTOS.length ? 'grid' : 'none';
+    if (photoCount) photoCount.textContent = `${GROUP_MEMORY_PHOTOS.length} ${GROUP_MEMORY_PHOTOS.length === 1 ? 'photo' : 'photos'}`;
     track.innerHTML = GROUP_MEMORY_PHOTOS.map(photo => `
         <figure class="memory-slide">
             <img src="${escapeHtml(photo.image)}" alt="Group memory" loading="lazy">
             ${photo.caption ? `<figcaption>${escapeHtml(photo.caption)}</figcaption>` : ''}
         </figure>
     `).join('');
-    dotsWrap.innerHTML = GROUP_MEMORY_PHOTOS.map((_, i) => `<span class="memories-dot${i === 0 ? 'active' : ''}"></span>`).join('');
+    dotsWrap.innerHTML = GROUP_MEMORY_PHOTOS.map((_, i) => `<button type="button" class="memories-dot${i === 0 ? ' active' : ''}" aria-label="Show photo ${i + 1}" aria-current="${i === 0 ? 'true' : 'false'}" onclick="goToMemory(${i})"></button>`).join('');
     memoriesIndex = 0; updateMemoriesPosition();
     if (memoriesInterval) clearInterval(memoriesInterval);
-    if (GROUP_MEMORY_PHOTOS.length > 1 && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
-        memoriesInterval = setInterval(() => { memoriesIndex = (memoriesIndex + 1) % GROUP_MEMORY_PHOTOS.length; updateMemoriesPosition(); }, 4000);
-    }
+    if (photoPosition) photoPosition.textContent = GROUP_MEMORY_PHOTOS.length ? `1 / ${GROUP_MEMORY_PHOTOS.length}` : '';
+}
+
+function moveMemory(direction) {
+    if (!GROUP_MEMORY_PHOTOS.length) return;
+    memoriesIndex = (memoriesIndex + direction + GROUP_MEMORY_PHOTOS.length) % GROUP_MEMORY_PHOTOS.length;
+    updateMemoriesPosition();
+}
+
+function goToMemory(index) {
+    if (index < 0 || index >= GROUP_MEMORY_PHOTOS.length) return;
+    memoriesIndex = index;
+    updateMemoriesPosition();
 }
 
 function toggleMemoryComposer(forceOpen) {
@@ -2890,7 +2897,13 @@ async function postGroupMemory() {
 function updateMemoriesPosition() {
     const track = document.getElementById('memoriesCarousel');
     if (track) track.style.transform = `translateX(-${memoriesIndex * 100}%)`;
-    document.querySelectorAll('.memories-dot').forEach((dot, i) => dot.classList.toggle('active', i === memoriesIndex));
+    document.querySelectorAll('.memories-dot').forEach((dot, i) => {
+        const active = i === memoriesIndex;
+        dot.classList.toggle('active', active);
+        dot.setAttribute('aria-current', active ? 'true' : 'false');
+    });
+    const photoPosition = document.getElementById('memoryPhotoPosition');
+    if (photoPosition && GROUP_MEMORY_PHOTOS.length) photoPosition.textContent = `${memoriesIndex + 1} / ${GROUP_MEMORY_PHOTOS.length}`;
 }
 
 async function loadGroupMessages() {
