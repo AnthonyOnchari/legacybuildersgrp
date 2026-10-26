@@ -304,35 +304,39 @@ async function loginWithGoogle() {
     const errorEl = document.getElementById('loginError');
     errorEl.style.display = 'none';
     const btn = document.getElementById('loginBtn');
+    const loginOverlay = document.getElementById('loginOverlay');
     const orig = btn.innerHTML;
-    showButtonLoading(btn, 'Opening Google sign-in...');
+    showButtonLoading(btn, 'Choose your Google account...');
+    loginOverlay.classList.add('auth-popup-open');
     try {
-        let credential;
-        try {
-            credential = await window.firebaseAuth.signInWithPopup(window.firebaseGoogleProvider);
-        } catch (error) {
-            if (error.code !== 'auth/popup-blocked') throw error;
-            await window.firebaseAuth.signInWithRedirect(window.firebaseGoogleProvider);
+        const credential = await window.firebaseAuth.signInWithPopup(window.firebaseGoogleProvider);
+        const res = await callAPI('bootstrapProfile');
+        if (!res.success) {
+            errorEl.textContent = res.error || 'Could not verify your account. Please try again.';
+            errorEl.style.display = 'block';
             return;
         }
-        const res = await callAPI('bootstrapProfile');
         if (res.status !== 'approved') {
             await window.firebaseAuth.signOut();
             errorEl.textContent = res.status === 'pending'
                 ? 'Your registration is awaiting approval. Please contact the treasurer.'
-                : (res.error || 'This account is not approved. Please contact the treasurer.');
+                : 'This account is not approved. Please contact the treasurer.';
             errorEl.style.display = 'block';
             return;
         }
         currentUserRole = res.role || 'member';
         await completeLogin(res.name || credential.user.displayName, credential.user.email, res);
     } catch (e) {
-        if (window.firebaseAuth && window.firebaseAuth.currentUser) {
-            await window.firebaseAuth.signOut();
+        if (e.code === 'auth/popup-blocked') {
+            errorEl.textContent = 'Allow pop-ups for this site, then try Google sign-in again.';
+        } else if (e.code === 'auth/popup-closed-by-user') {
+            errorEl.textContent = 'Google sign-in was closed before you selected an account.';
+        } else {
+            errorEl.textContent = e.message || 'Google sign-in failed.';
         }
-        errorEl.textContent = e.message || 'Google sign-in failed.';
         errorEl.style.display = 'block';
     } finally {
+        loginOverlay.classList.remove('auth-popup-open');
         hideButtonLoading(btn, orig);
     }
 }
@@ -3817,7 +3821,14 @@ const initializeApp = async () => {
     const hasPersistentSession = checkPersistentLogin();
     if (hasPersistentSession) {
         const account = await callAPI('bootstrapProfile');
-        if (!account.success || account.status !== 'approved') {
+        if (!account.success) {
+            document.getElementById('loginOverlay').classList.add('active');
+            const errorEl = document.getElementById('loginError');
+            errorEl.textContent = account.error || 'Could not verify your account. Please try again.';
+            errorEl.style.display = 'block';
+            return;
+        }
+        if (account.status !== 'approved') {
             await window.firebaseAuth.signOut();
             localStorage.removeItem('legacy_current_user');
             localStorage.removeItem('legacy_current_email');

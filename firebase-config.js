@@ -23,4 +23,5 @@ if (!window.firebase) {
     firebase.initializeApp(window.firebaseConfig);
     window.firebaseAuth = firebase.auth();
     window.firebaseGoogleProvider = new firebase.auth.GoogleAuthProvider();
+    window.firebaseGoogleProvider.setCustomParameters({ prompt: "select_account" });
 }

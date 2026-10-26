@@ -54,6 +54,16 @@ html { overflow-x: hidden; }
     overflow-y: auto;
 }
 .login-overlay.active { display: flex; }
+.login-overlay.auth-popup-open::after {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    background: rgba(7, 23, 19, .14);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    content: "";
+    pointer-events: none;
+}
 
 .login-box {
     position: relative;
