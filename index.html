@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=34">
+    <link rel="stylesheet" href="style.css?v=51">
 </head>
 <body class="finance-ui">
 
@@ -138,6 +138,10 @@
         </nav>
 
     <div class="app-container" id="appContainer">
+        <div class="development-preview-notice" id="developmentPreviewNotice" role="status" hidden>
+            <strong>Development preview</strong>
+            <span>Sample data only. Sign-in and API actions are disabled.</span>
+        </div>
         <div class="sticky-top">
         <div class="header-row-1">
             <button type="button" class="user-name-badge" onclick="openProfileModal()" aria-label="Open your profile">
@@ -154,7 +158,7 @@
         </div>
 
         <div class="dashboard-intro">
-            <div>
+            <div class="dashboard-intro-copy">
                 <span class="dashboard-eyebrow">GROUP OVERVIEW</span>
                 <h1 id="dashboardGreeting">Welcome back</h1>
                 <p>Your group's finances, progress, and latest updates.</p>
@@ -163,6 +167,16 @@
 
         <div class="dashboard-top-grid">
         <div class="header">
+            <img class="wallet-profile-image" id="walletProfileImage" alt="" aria-hidden="true" hidden>
+            <div class="wallet-card-topline">
+                <span class="wallet-card-brand">
+                    <span class="wallet-card-brand-mark" aria-hidden="true">LB</span>
+                    <span>Legacy Builders Group</span>
+                </span>
+                <span class="wallet-card-chip" aria-hidden="true">
+                    <span></span><span></span><span></span><span></span>
+                </span>
+            </div>
             <div class="header-row-2">
                 <div>
                     <div class="wallet-label" id="walletBalanceLabel">Available group balance</div>
@@ -271,22 +285,30 @@
 
         <!-- Summary Panel -->
         <div id="summaryPanel" class="panel fullscreen-panel">
-            <div class="card">
-                <h2>Financial Summary</h2>
-                <div id="summarySkeleton" class="loading-container"><div class="loading-spinner"></div><div>Loading summary...</div></div>
-                <div id="summaryContent" style="display: none;">
-                    <div class="summary-stats-row">
-                        <div class="summary-stat"><div class="summary-stat-value" id="summaryStatAvailable">--</div><div class="summary-stat-label">Available Balance</div></div>
-                        <div class="summary-stat"><div class="summary-stat-value" id="summaryStatOutstanding">--</div><div class="summary-stat-label">Outstanding Principal</div></div>
-                        <div class="summary-stat summary-stat-interest"><div class="summary-stat-value" id="summaryStatInterest">--</div><div class="summary-stat-label">Interest Earned</div></div>
-                    </div>
-                    <div class="chart-wrapper"><canvas id="financialChart"></canvas></div>
-                </div>
-            </div>
-            <div class="card"><h2>Export Data</h2>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <button id="exportPdfBtn" class="pdf-btn">Download PDF</button>
-                    <button id="exportCsvBtn" class="csv-btn" onclick="exportToCSV()">Download CSV / Excel</button>
+            <div id="summarySkeleton" class="loading-container summary-loading"><div class="loading-spinner"></div><div>Loading summary...</div></div>
+            <div id="summaryContent" class="summary-content" style="display: none;">
+                <div class="summary-lower-grid">
+                    <section class="summary-card summary-chart-card">
+                        <div class="summary-card-heading">
+                            <div><span class="summary-eyebrow">THE BREAKDOWN</span><h3>How funds are moving</h3></div>
+                            <span class="summary-card-caption">Savings · loans · repayments</span>
+                        </div>
+                        <div class="chart-wrapper"><canvas id="financialChart"></canvas></div>
+                    </section>
+                    <section class="summary-card summary-export-card">
+                        <div class="summary-card-heading">
+                            <div><span class="summary-eyebrow">TAKE IT WITH YOU</span><h3>Download a report</h3></div>
+                        </div>
+                        <p class="summary-export-intro">Keep a copy for your records or share the latest group figures.</p>
+                        <button id="exportPdfBtn" class="summary-export-button summary-export-button--pdf" type="button">
+                            <span class="summary-export-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H7zM14 3.5v4h4M9.5 13h5m-5 3h5"/></svg></span>
+                            <span class="summary-export-copy"><strong>Financial report</strong><small>Print-ready PDF · overview and activity</small></span>
+                        </button>
+                        <button id="exportCsvBtn" class="summary-export-button summary-export-button--csv" type="button" onclick="exportToCSV()">
+                            <span class="summary-export-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H7zM14 3.5v4h4M9.5 13h5m-5 3h5"/></svg></span>
+                            <span class="summary-export-copy"><strong>Transactions spreadsheet</strong><small>CSV · opens in Excel and Sheets</small></span>
+                        </button>
+                    </section>
                 </div>
             </div>
         </div>
@@ -439,14 +461,14 @@
 
     <!-- TAB BAR -->
     <div class="tab-bar" id="tabBar" style="display: none;" aria-label="App navigation">
-        <button class="tab" data-panel="transactions"><span class="tab-icon" aria-hidden="true">⌂</span><span>Home</span></button>
-        <button class="tab" data-panel="summary"><span class="tab-icon" aria-hidden="true">◷</span><span>Summary</span></button>
-        <button class="tab" data-panel="loans"><span class="tab-icon" aria-hidden="true">L</span><span>Loans</span></button>
-        <button class="tab" data-panel="meetings"><span class="tab-icon" aria-hidden="true">▤</span><span>Meetings</span></button>
-        <button class="tab" data-panel="groupChat"><span class="tab-icon" aria-hidden="true">I</span><span>Inbox</span></button>
-        <button class="tab" data-panel="about"><span class="tab-icon" aria-hidden="true">◎</span><span>About</span></button>
-        <button class="tab" data-panel="pending" id="pendingTab" style="display: none;"><span class="tab-icon" aria-hidden="true">•</span><span>Admin<span id="pendingCount" class="pending-count"></span></span></button>
-        <button class="tab" data-panel="developer" id="developerTab" style="display: none;"><span class="tab-icon" aria-hidden="true">D</span><span>Dev</span></button>
+        <button class="tab" data-panel="transactions"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3.5 10 8.5-7 8.5 7M5.5 9v11h13V9M9 20v-6h6v6"/></svg></span><span>Home</span></button>
+        <button class="tab" data-panel="summary"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19.5h16M6.5 16V11m5 5V5m5 11V8"/></svg></span><span>Summary</span></button>
+        <button class="tab" data-panel="loans"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M3.5 10h17M7 14.5h3"/></svg></span><span>Loans</span></button>
+        <button class="tab" data-panel="meetings"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="15" rx="2"/><path d="M8 3.5v4m8-4v4M4 10h16M8 13.5h2m4 0h2m-8 3h2"/></svg></span><span>Meetings</span></button>
+        <button class="tab" data-panel="groupChat"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-9.5A7.5 7.5 0 0 1 10.5 4h2A7.5 7.5 0 0 1 20 11.5Z"/><path d="M8 11.5h8m-8 3h5"/></svg></span><span>Inbox</span></button>
+        <button class="tab" data-panel="about"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5m0-8h.01"/></svg></span><span>About</span></button>
+        <button class="tab" data-panel="pending" id="pendingTab" style="display: none;"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></svg></span><span>Admin<span id="pendingCount" class="pending-count"></span></span></button>
+        <button class="tab" data-panel="developer" id="developerTab" style="display: none;"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1"/><circle cx="12" cy="12" r="4"/></svg></span><span>Dev</span></button>
     </div>
 
     <!-- PDF GENERATOR CONTAINER -->
@@ -462,6 +484,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="firebase-config.js?v=34"></script>
-    <script src="app.js?v=34"></script>
+    <script src="app.js?v=43"></script>
 </body>
 </html>

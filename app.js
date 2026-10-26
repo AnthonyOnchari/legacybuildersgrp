@@ -3,6 +3,9 @@
 // ============================================================
 const TREASURER_NAME = "Mrs. Kithinji";
 const VAPID_PUBLIC_KEY = 'BB4N47xyKjLw-K29lXDolpcht45pVZcqV4m-Iw-8tJBk8g21yE66KVJmxbNOIDEIRBun-JDACI0lK4MRIvVwYH0';
+const DEVELOPMENT_PREVIEW_PROFILE_IMAGE = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80';
+const DEVELOPMENT_PREVIEW_ENABLED = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+    && new URLSearchParams(window.location.search).get('preview') === '1';
 
 let allRecords = [], allMembers = [], allMembersData = [], pendingLoans = [], completedLoans = [];
 let pendingTransactions = [], pendingEditsMap = {}, activeLoans = [], loansAwaitingDueDate = [];
@@ -62,6 +65,9 @@ function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 // API CALL
 // ============================================================
 async function callAPI(action, data = {}, _retryCount = 0) {
+    if (DEVELOPMENT_PREVIEW_ENABLED) {
+        return { success: false, error: 'API actions are disabled in the local sample-data preview.' };
+    }
     try {
         const firebaseUser = window.firebaseAuth && window.firebaseAuth.currentUser;
         if (!firebaseUser) throw new Error('Please sign in with Google first.');
@@ -591,9 +597,34 @@ async function requestPasswordReset() {
 // ============================================================
 function updateHeaderAvatar() {
     const avatarEl = document.getElementById('headerAvatar');
+    const walletImageEl = document.getElementById('walletProfileImage');
+    const profileImage = getProfileImage();
+    document.querySelectorAll('.fullscreen-panel-avatar').forEach(avatar => {
+        avatar.replaceChildren();
+        if (profileImage) {
+            const image = document.createElement('img');
+            image.src = profileImage;
+            image.alt = '';
+            avatar.appendChild(image);
+        } else {
+            avatar.textContent = getInitials(currentUserDisplayName || currentUser);
+        }
+    });
+    document.querySelectorAll('.fullscreen-panel-user-name').forEach(name => {
+        name.textContent = currentUserDisplayName || currentUser || '';
+    });
+    if (walletImageEl) {
+        if (profileImage) {
+            walletImageEl.src = profileImage;
+            walletImageEl.hidden = false;
+        } else {
+            walletImageEl.removeAttribute('src');
+            walletImageEl.hidden = true;
+        }
+    }
     if (!avatarEl) return;
-    if (userProfileImage) {
-        avatarEl.innerHTML = `<img src="${escapeHtml(userProfileImage)}" alt="${escapeHtml(currentUserDisplayName || currentUser)}">`;
+    if (profileImage) {
+        avatarEl.innerHTML = `<img src="${escapeHtml(profileImage)}" alt="${escapeHtml(currentUserDisplayName || currentUser)}">`;
         avatarEl.style.background = 'transparent';
     } else {
         avatarEl.innerHTML = getInitials(currentUserDisplayName || currentUser);
@@ -901,6 +932,12 @@ let lastGroupSummary = null;
 
 async function loadAllData(silent = false, skipBalanceUI = false) {
     if (isLoading || !currentUser) return;
+    if (DEVELOPMENT_PREVIEW_ENABLED) {
+        renderRecentActivity();
+        updateAboutStats();
+        renderWalletBalance();
+        return;
+    }
     isLoading = true;
     if (!silent && !skipBalanceUI) showBalanceLoading(true);
     try {
@@ -1076,6 +1113,7 @@ function updateMemberDropdowns() {
 function renderRecentActivity() {
     const container = document.getElementById('recentActivityList');
     if (!container) return;
+    container.classList.remove('loading-container');
     if (!allRecords.length) {
         container.innerHTML = '<div class="empty-state">No transactions yet</div>';
         return;
@@ -2184,7 +2222,10 @@ async function saveMemberPhone(button) {
 }
 
 function getProfileImage() {
-    return userProfileImage || localStorage.getItem(`legacy_profile_image_${(currentUserEmail || '').toLowerCase()}`) || null;
+    return userProfileImage
+        || localStorage.getItem(`legacy_profile_image_${(currentUserEmail || '').toLowerCase()}`)
+        || (window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseAuth.currentUser.photoURL)
+        || (DEVELOPMENT_PREVIEW_ENABLED ? DEVELOPMENT_PREVIEW_PROFILE_IMAGE : null);
 }
 
 const MAX_CLOUDINARY_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -2332,7 +2373,8 @@ function renderChart(summary) {
     const savings = summary.savings || 0;
     const loans = summary.loansTaken || 0;
     const repaid = summary.repaid || 0;
-    const net = savings - loans + repaid;
+    const outstanding = Number(summary.outstanding);
+    const net = Number.isFinite(outstanding) ? savings - outstanding : savings - loans + repaid;
 
     animateCountUp(document.getElementById('summaryStatAvailable'), savings);
     animateCountUp(document.getElementById('summaryStatOutstanding'), summary.outstanding || 0);
@@ -2352,10 +2394,10 @@ function renderChart(summary) {
             ctx.save();
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillStyle = '#7C8AA5';
-            ctx.font = `600 ${window.innerWidth < 500 ? 9 : 11}px Inter, sans-serif`;
+            ctx.font = `600 ${window.innerWidth < 500 ? 10 : 12}px "DM Sans", sans-serif`;
             ctx.fillText('NET BALANCE', cx, cy - 14);
             ctx.fillStyle = net >= 0 ? '#14213D' : '#1E3FC4';
-            ctx.font = `700 ${window.innerWidth < 500 ? 16 : 20}px Inter, sans-serif`;
+            ctx.font = `700 ${window.innerWidth < 500 ? 17 : 21}px "DM Sans", sans-serif`;
             ctx.fillText('KES ' + Math.round(net).toLocaleString('en-KE'), cx, cy + 8);
             ctx.restore();
         }
@@ -2382,7 +2424,7 @@ function renderChart(summary) {
                 legend: {
                     display: true,
                     position: 'bottom',
-                    labels: { boxWidth: 12, boxHeight: 12, padding: 14, font: { size: window.innerWidth < 500 ? 10 : 12, weight: '600' }, color: '#7C8AA5' }
+                    labels: { boxWidth: 12, boxHeight: 12, padding: 14, font: { family: '"DM Sans", sans-serif', size: window.innerWidth < 500 ? 11 : 12, weight: '600' }, color: '#7C8AA5' }
                 },
                 tooltip: {
                     callbacks: {
@@ -2403,9 +2445,9 @@ function renderChart(summary) {
 // EXPORT FUNCTIONS
 // ============================================================
 function exportToCSV() {
-    if (!allRecords.length) { showToast('No transactions to export', 'error'); return; }
     const btn = document.getElementById('exportCsvBtn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Preparing...'; }
+    const originalButtonContent = btn?.innerHTML;
+    if (btn) { btn.disabled = true; btn.textContent = 'Preparing download...'; }
     try {
         const columns = ['Date', 'Member', 'Type', 'Amount (KES)', 'Message', 'Balance After'];
         const rows = [...allRecords].sort((a, b) => new Date(a.date) - new Date(b.date)).map(r => [
@@ -2429,96 +2471,127 @@ function exportToCSV() {
         const a = document.createElement('a');
         a.href = url;
         a.download = `Legacy_Builders_Transactions_${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
         showToast(`Exported ${rows.length} transactions`, 'success');
-    } catch (e) { showToast('Error generating CSV', 'error'); }
-    if (btn) { btn.disabled = false; btn.textContent = 'Download CSV / Excel'; }
+    } catch (error) {
+        console.error('CSV export failed:', error);
+        showToast('Could not create the CSV download. Please try again.', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalButtonContent;
+        }
+    }
 }
 
 function exportToPDF() {
-    if (!allRecords.length) { showToast('No data to export', 'error'); return; }
     const exportBtn = document.getElementById('exportPdfBtn');
+    if (typeof html2pdf !== 'function') {
+        showToast('PDF export is unavailable. Check your connection and try again.', 'error');
+        return;
+    }
+    if (!exportBtn) {
+        console.error('PDF export button was not found.');
+        showToast('Could not start the PDF export.', 'error');
+        return;
+    }
     const exportBtnOrig = exportBtn.innerHTML;
     showButtonLoading(exportBtn, 'Preparing PDF...');
-    let savings = 0, loansTaken = 0, repaid = 0;
+    let savingsFromRecords = 0, loansFromRecords = 0, repaidFromRecords = 0;
     allRecords.forEach(r => {
-        if (r.type === 'Savings') savings += r.amount;
-        else if (r.type === 'Loan Taken') loansTaken += r.amount;
-        else if (r.type === 'Loan Repayment') repaid += r.amount;
+        if (r.type === 'Savings') savingsFromRecords += Number(r.amount) || 0;
+        else if (r.type === 'Loan Taken') loansFromRecords += Number(r.amount) || 0;
+        else if (r.type === 'Loan Repayment') repaidFromRecords += Number(r.amount) || 0;
     });
-    const outstanding = Math.max(0, loansTaken - repaid);
+    const summaryValue = (key, fallback) => {
+        const value = Number(lastGroupSummary?.[key]);
+        return Number.isFinite(value) ? value : fallback;
+    };
+    const savings = summaryValue('savings', savingsFromRecords);
+    const loansTaken = summaryValue('loansTaken', loansFromRecords);
+    const repaid = summaryValue('repaid', repaidFromRecords);
+    const outstanding = summaryValue('outstanding', Math.max(0, loansTaken - repaid));
+    const interestEarned = summaryValue('interestEarned', 0);
     const net = savings - outstanding;
 
     const generator = document.getElementById('pdfGenerator');
     const preview = document.getElementById('pdfPreview');
-    preview.innerHTML = `<div style="text-align:center;padding:30px;"><div style="width:40px;height:40px;border:3px solid #E7EBF5;border-top-color:#3B6FF2;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;"></div><p style="color:#7C8AA5;">Generating PDF...</p></div>`;
+    if (!generator || !preview) {
+        hideButtonLoading(exportBtn, exportBtnOrig);
+        console.error('PDF preview container was not found.');
+        showToast('Could not open the PDF preview.', 'error');
+        return;
+    }
+    const recentRecords = [...allRecords]
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 10);
+    const financialChartImg = chartInstance ? chartInstance.toBase64Image('image/png', 1) : null;
+    const formatAmount = amount => `KES ${Number(amount || 0).toLocaleString('en-KE')}`;
+    const transactionRows = recentRecords.length
+        ? recentRecords.map(r => `<tr style="border-bottom:1px solid #E7EBF5;"><td style="padding:7px 8px;">${new Date(r.date).toLocaleDateString('en-KE')}</td><td style="padding:7px 8px;font-weight:500;">${escapeHtml(r.member)}</td><td style="padding:7px 8px;">${escapeHtml(r.type)}</td><td style="padding:7px 8px;text-align:right;">${r.type === 'Loan Taken' ? '-' : '+'} ${formatAmount(r.amount)}</td></tr>`).join('')
+        : '<tr><td colspan="4" style="padding:16px;text-align:center;color:#7C8AA5;">No transactions have been recorded yet.</td></tr>';
+    const metric = (label, value) => `<div style="padding:10px 8px;text-align:center;"><div style="font-size:9px;color:#718078;margin-bottom:4px;">${label}</div><div style="font-size:13px;font-weight:700;color:#18392F;">${formatAmount(value)}</div></div>`;
     generator.classList.add('active');
-
-    setTimeout(() => {
-        const recentRecords = allRecords.slice(-10).reverse();
-        const financialChartImg = chartInstance ? chartInstance.toBase64Image('image/png', 1) : null;
-        const contentHtml = `
-            <div id="pdfReportContent" style="max-width:800px;margin:0 auto;font-family:Arial,sans-serif;color:#14213D;font-size:12px;padding:10px;">
-                <h1 style="text-align:center;border-bottom:2px solid #3B6FF2;padding-bottom:8px;"> Legacy Builders Group</h1>
-                <h2 style="text-align:center;font-weight:400;margin-top:0;font-size:15px;">Financial Report</h2>
-                <p style="text-align:center;color:#7C8AA5;font-size:10px;">${new Date().toLocaleDateString()}</p>
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin:10px 0;background:#F4F6FB;padding:10px;border-radius:8px;">
-                    <div style="text-align:center;"><div style="font-size:8px;color:#7C8AA5;">Savings</div><div style="font-size:13px;font-weight:700;">KES ${savings.toLocaleString()}</div></div>
-                    <div style="text-align:center;"><div style="font-size:8px;color:#7C8AA5;">Loans</div><div style="font-size:13px;font-weight:700;color:#1E3FC4;">KES ${loansTaken.toLocaleString()}</div></div>
-                    <div style="text-align:center;"><div style="font-size:8px;color:#7C8AA5;">Repaid</div><div style="font-size:13px;font-weight:700;color:#1E3FC4;">KES ${repaid.toLocaleString()}</div></div>
-                    <div style="text-align:center;"><div style="font-size:8px;color:#7C8AA5;">Net</div><div style="font-size:13px;font-weight:700;">KES ${net.toLocaleString()}</div></div>
+    preview.innerHTML = `
+            <div id="pdfReportContent" style="max-width:800px;margin:0 auto;font-family:Arial,sans-serif;color:#18392F;font-size:12px;padding:10px;">
+                <h1 style="margin:0;text-align:center;border-bottom:2px solid #367454;padding-bottom:9px;">Legacy Builders Group</h1>
+                <h2 style="margin:9px 0 3px;text-align:center;font-weight:500;font-size:17px;">Financial report</h2>
+                <p style="margin:0;text-align:center;color:#718078;font-size:10px;">Prepared ${new Date().toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin:18px 0;background:#E3EAE2;border:1px solid #E3EAE2;border-radius:8px;overflow:hidden;">
+                    ${metric('Available balance', savings)}
+                    ${metric('Outstanding principal', outstanding)}
+                    ${metric('Interest earned', interestEarned)}
+                    ${metric('Loans taken', loansTaken)}
+                    ${metric('Repayments', repaid)}
+                    ${metric('Net position', net)}
                 </div>
-                ${financialChartImg ? `<div style="margin:10px 0;background:white;padding:10px;border-radius:8px;border:1px solid #E7EBF5;text-align:center;"><h3 style="margin:0 0 8px 0;font-size:12px;"> Financial Overview</h3><img src="${financialChartImg}" style="max-width:100%;height:auto;" /></div>` : ''}
-                <h3 style="margin:10px 0 4px 0;font-size:12px;"> Recent Transactions</h3>
-                <table style="width:100%;border-collapse:collapse;font-size:9px;margin-top:4px;">
-                    <thead><tr style="background:#3B6FF2;color:white;"><th style="padding:3px 5px;text-align:left;">Date</th><th style="padding:3px 5px;text-align:left;">Member</th><th style="padding:3px 5px;text-align:left;">Type</th><th style="padding:3px 5px;text-align:right;">Amount</th></tr></thead>
-                    <tbody>${recentRecords.map(r => `<tr style="border-bottom:1px solid #E7EBF5;"><td style="padding:3px 5px;">${new Date(r.date).toLocaleDateString('en-KE')}</td><td style="padding:3px 5px;font-weight:500;">${escapeHtml(r.member)}</td><td style="padding:3px 5px;">${r.type}</td><td style="padding:3px 5px;text-align:right;">${r.type === 'Loan Repayment' ? '+' : (r.type === 'Savings' ? '+' : '-')} KES ${(r.amount || 0).toLocaleString('en-KE')}</td></tr>`).join('')}</tbody>
+                ${financialChartImg ? `<div style="margin:14px 0;padding:12px;border:1px solid #E3EAE2;border-radius:8px;text-align:center;"><h3 style="margin:0 0 8px;font-size:12px;">Financial activity breakdown</h3><img src="${financialChartImg}" style="display:block;max-width:100%;max-height:240px;margin:0 auto;" /></div>` : ''}
+                <h3 style="margin:16px 0 6px;font-size:13px;">Recent transactions</h3>
+                <table style="width:100%;border-collapse:collapse;font-size:10px;">
+                    <thead><tr style="background:#EAF2E8;color:#254837;"><th style="padding:8px;text-align:left;">Date</th><th style="padding:8px;text-align:left;">Member</th><th style="padding:8px;text-align:left;">Type</th><th style="padding:8px;text-align:right;">Amount</th></tr></thead>
+                    <tbody>${transactionRows}</tbody>
                 </table>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding:8px;background:#F4F6FB;border-radius:8px;">
-                    <div style="text-align:center;"><div style="font-size:8px;color:#7C8AA5;">Total Members</div><div style="font-size:13px;font-weight:700;">${allMembers.length}</div></div>
-                    <div style="text-align:center;"><div style="font-size:8px;color:#7C8AA5;">Total Transactions</div><div style="font-size:13px;font-weight:700;">${allRecords.length}</div></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;padding:12px;background:#F4F7F2;border-radius:8px;">
+                    <div style="text-align:center;"><div style="font-size:9px;color:#718078;">Group members</div><div style="font-size:13px;font-weight:700;">${allMembers.length}</div></div>
+                    <div style="text-align:center;"><div style="font-size:9px;color:#718078;">Transactions</div><div style="font-size:13px;font-weight:700;">${allRecords.length}</div></div>
                 </div>
-                <p style="text-align:center;color:#7C8AA5;font-size:9px;margin-top:12px;border-top:1px solid #E7EBF5;padding-top:10px;">Legacy Builders Group — Building Wealth Together</p>
-                <button class="pdf-generate-btn" id="pdfGenerateBtn" style="background:#3B6FF2;color:#14213D;border:none;padding:10px 20px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;width:100%;margin-top:12px;"> Download PDF</button>
-                <button class="pdf-close-btn" onclick="document.getElementById('pdfGenerator').classList.remove('active')" style="position:absolute;top:8px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:#7C8AA5;width:auto;">✕</button>
+                <p style="margin:16px 0 0;text-align:center;color:#718078;font-size:9px;border-top:1px solid #E3EAE2;padding-top:10px;">Legacy Builders Group · Building wealth together</p>
+                <button class="pdf-generate-btn" id="pdfGenerateBtn" data-html2canvas-ignore="true">Download PDF</button>
+                <button class="pdf-close-btn" data-html2canvas-ignore="true" aria-label="Close PDF preview" onclick="document.getElementById('pdfGenerator').classList.remove('active', 'pdf-exporting')">×</button>
             </div>
         `;
-        preview.innerHTML = contentHtml;
-        document.getElementById('pdfGenerateBtn').addEventListener('click', function() {
-            const btn = this;
-            btn.disabled = true; btn.innerHTML = 'Generating...';
-            const reportSource = document.getElementById('pdfReportContent') || preview;
-            const reportClone = reportSource.cloneNode(true);
-            reportClone.querySelectorAll('.pdf-generate-btn, .pdf-close-btn').forEach(b => b.remove());
-            const captureHost = document.createElement('div');
-            captureHost.style.position = 'fixed';
-            captureHost.style.top = '0';
-            captureHost.style.left = '-9999px';
-            captureHost.style.width = '800px';
-            captureHost.style.background = '#ffffff';
-            captureHost.appendChild(reportClone);
-            document.body.appendChild(captureHost);
-            const opt = {
-                margin: 8,
-                filename: `Legacy_Builders_Report_${new Date().toISOString().split('T')[0]}.pdf`,
-                image: { type: 'jpeg', quality: 0.95 },
-                html2canvas: { scale: 2, useCORS: true, logging: false, letterRendering: true, backgroundColor: '#ffffff' },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak: { mode: ['css', 'legacy'] }
-            };
-            html2pdf().set(opt).from(reportClone).save().then(() => {
-                captureHost.remove();
-                btn.disabled = false; btn.innerHTML = 'Download PDF';
-                document.getElementById('pdfGenerator').classList.remove('active');
-                showToast('PDF downloaded!', 'success');
-            }).catch((err) => {
-                captureHost.remove();
-                btn.disabled = false; btn.innerHTML = 'Download PDF';
-                showToast('Error generating PDF', 'error');
-            });
-        });
-        hideButtonLoading(exportBtn, exportBtnOrig);
-    }, 300);
+    const generateButton = document.getElementById('pdfGenerateBtn');
+    generateButton.addEventListener('click', async function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.textContent = 'Generating PDF...';
+        generator.classList.add('pdf-exporting');
+        const reportSource = document.getElementById('pdfReportContent');
+        const options = {
+            margin: 8,
+            filename: `Legacy_Builders_Report_${new Date().toISOString().split('T')[0]}.pdf`,
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['css', 'legacy'] }
+        };
+        try {
+            await html2pdf().set(options).from(reportSource).save();
+            generator.classList.remove('active', 'pdf-exporting');
+            showToast('PDF downloaded!', 'success');
+        } catch (error) {
+            console.error('PDF export failed:', error);
+            showToast('Could not create the PDF download. Please try again.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Download PDF';
+            generator.classList.remove('pdf-exporting');
+        }
+    });
+    hideButtonLoading(exportBtn, exportBtnOrig);
 }
 
 // ============================================================
@@ -2616,8 +2689,45 @@ function ensureFullscreenBar(panel, tabId) {
     if (panel.querySelector('.fullscreen-panel-bar')) return;
     const bar = document.createElement('div');
     bar.className = 'fullscreen-panel-bar';
-    bar.innerHTML = `<button class="fullscreen-panel-back" onclick="activateTab('transactions')">←</button><h2>${PANEL_TITLES[tabId] || ''}</h2>`;
+    const backButton = document.createElement('button');
+    backButton.className = 'fullscreen-panel-back';
+    backButton.type = 'button';
+    backButton.setAttribute('aria-label', 'Back to Home');
+    if (tabId === 'summary') backButton.textContent = 'Home';
+    else backButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7M8 12h12"/></svg>';
+    backButton.addEventListener('click', () => activateTab('transactions'));
+    if (tabId !== 'summary') {
+        const backLabel = document.createElement('span');
+        backLabel.textContent = 'Home';
+        backButton.appendChild(backLabel);
+    }
+
+    const title = document.createElement('h2');
+    title.textContent = PANEL_TITLES[tabId] || '';
+
+    const user = document.createElement('button');
+    user.className = 'fullscreen-panel-user';
+    user.type = 'button';
+    user.setAttribute('aria-label', 'Open your profile');
+    user.addEventListener('click', openProfileModal);
+
+    const avatar = document.createElement('span');
+    avatar.className = 'fullscreen-panel-avatar';
+    const name = document.createElement('span');
+    name.className = 'fullscreen-panel-user-name';
+    user.append(avatar, name);
+
+    const logoutButton = document.createElement('button');
+    logoutButton.className = 'fullscreen-panel-logout';
+    logoutButton.type = 'button';
+    logoutButton.setAttribute('aria-label', 'Log out');
+    if (tabId === 'summary') logoutButton.textContent = 'Log out';
+    else logoutButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg>';
+    logoutButton.addEventListener('click', logout);
+
+    bar.append(backButton, title, user, logoutButton);
     panel.insertBefore(bar, panel.firstChild);
+    updateHeaderAvatar();
 }
 
 function activateTab(tabId) {
@@ -2853,6 +2963,10 @@ async function logout(event) {
 // ============================================================
 const initializeApp = async () => {
     const splash = document.getElementById('splashScreen');
+    if (DEVELOPMENT_PREVIEW_ENABLED) {
+        initializeDevelopmentPreview();
+        return;
+    }
     if (!window.firebaseAuth) {
         throw window.firebaseInitializationError || new Error('Firebase could not be initialized. Check your connection and reload.');
     }
@@ -2948,6 +3062,68 @@ const initializeApp = async () => {
     document.getElementById('exportPdfBtn').onclick = exportToPDF;
     document.querySelectorAll('.tab, .sidebar-link').forEach(tab => { tab.onclick = () => activateTab(tab.dataset.panel); });
 };
+
+function initializeDevelopmentPreview() {
+    const sampleMembers = [
+        { name: 'Alex Morgan', email: 'alex.morgan@example.test' },
+        { name: 'Taylor Quinn', email: 'taylor.quinn@example.test' },
+        { name: 'Jordan Lee', email: 'jordan.lee@example.test' },
+        { name: 'Casey Rivers', email: 'casey.rivers@example.test' }
+    ];
+    const daysAgo = days => {
+        const date = new Date();
+        date.setDate(date.getDate() - days);
+        return date.toISOString().split('T')[0];
+    };
+
+    currentUser = 'Alex Morgan';
+    currentUserDisplayName = currentUser;
+    currentUserEmail = 'alex.morgan@example.test';
+    currentUserRole = 'member';
+    currentTab = 'transactions';
+    allMembers = sampleMembers.map(member => member.name);
+    allMembersData = sampleMembers;
+    allRecords = [
+        { date: daysAgo(1), member: 'Alex Morgan', type: 'Savings', amount: 12000 },
+        { date: daysAgo(2), member: 'Taylor Quinn', type: 'Loan Repayment', amount: 8500 },
+        { date: daysAgo(3), member: 'Jordan Lee', type: 'Loan Taken', amount: 25000 },
+        { date: daysAgo(4), member: 'Casey Rivers', type: 'Savings', amount: 10000 },
+        { date: daysAgo(6), member: 'Taylor Quinn', type: 'Savings', amount: 15000 }
+    ];
+    lastGroupSummary = {
+        savings: 184500,
+        outstanding: 42000,
+        interestEarned: 5600,
+        loansTaken: 68000,
+        repaid: 24000
+    };
+
+    hideSplashScreen();
+    document.getElementById('loginOverlay').classList.remove('active');
+    document.getElementById('appContainer').classList.add('active', 'dashboard-active');
+    document.getElementById('tabBar').style.display = 'flex';
+    document.getElementById('sidebarNav').classList.add('active');
+    document.getElementById('developmentPreviewNotice').hidden = false;
+    document.getElementById('loggedInUser').textContent = currentUserDisplayName;
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+
+    updateHeaderAvatar();
+    updateDashboardGreeting();
+    showHideDeveloperPortal();
+    showHidePendingTab();
+    updateMemberDropdowns();
+    renderRecentActivity();
+    updateAboutStats();
+    document.getElementById('summarySkeleton').style.display = 'none';
+    document.getElementById('summaryContent').style.display = 'block';
+    if (typeof Chart !== 'undefined') renderChart(lastGroupSummary);
+    renderWalletBalance();
+    activateCurrentTab();
+
+    document.getElementById('addBtn').onclick = addRecord;
+    document.getElementById('exportPdfBtn').onclick = exportToPDF;
+    document.querySelectorAll('.tab, .sidebar-link').forEach(tab => { tab.onclick = () => activateTab(tab.dataset.panel); });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeApp().catch(error => {
