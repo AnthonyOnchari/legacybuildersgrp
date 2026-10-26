@@ -7,10 +7,10 @@
     <title>Legacy Builders Group</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=57">
+    <link rel="stylesheet" href="style.css?v=58">
 </head>
 <body class="finance-ui">
 
@@ -155,9 +155,6 @@
         <div class="dashboard-top-grid">
         <div class="header">
             <img class="wallet-profile-image" id="walletProfileImage" alt="" aria-hidden="true" hidden>
-            <button type="button" class="wallet-card-download" onclick="downloadWalletCard()" aria-label="Download NBFA Group card" title="Download card">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 17v3h16v-3"/></svg>
-            </button>
             <div class="wallet-card-topline">
                 <span class="wallet-card-brand">
                     <span class="wallet-card-brand-mark" aria-hidden="true">N</span>
@@ -172,16 +169,9 @@
                     <div class="wallet-label" id="walletBalanceLabel">Available group balance</div>
                     <div class="wallet-balance" id="totalSavingsTop" data-target="0">KES --</div>
                     <div class="wallet-card-number" id="walletCardNumber" hidden></div>
-                </div>
-                <div class="wallet-scope-wrapper">
-                    <button class="wallet-chip" id="walletScopeChip" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="walletScopeMenu" onclick="toggleWalletScopeMenu()">
-                        <span id="walletScopeLabel">Group</span>
-                        <span class="wallet-scope-caret">▾</span>
-                    </button>
-                    <div class="wallet-scope-menu" id="walletScopeMenu" style="display:none;">
-                        <span class="wallet-scope-menu-label">BALANCE VIEW</span>
-                        <button type="button" data-scope="group" class="active" aria-pressed="true" onclick="setWalletScope('group')"><span>Group balance</span><span class="wallet-scope-check" aria-hidden="true">✓</span></button>
-                        <button type="button" data-scope="mine" onclick="setWalletScope('mine')"><span>My balance</span><span class="wallet-scope-check" aria-hidden="true">✓</span></button>
+                    <div class="wallet-cardholder">
+                        <span class="wallet-cardholder-label">CARDHOLDER</span>
+                        <span class="wallet-cardholder-name" id="walletCardholderName"></span>
                     </div>
                 </div>
             </div>
@@ -190,6 +180,22 @@
                 <span class="wallet-footer-label" id="walletFooterLabel">Outstanding loans</span>
                 <span class="wallet-footer-amount" id="outstandingTop" data-target="0">KES --</span>
             </div>
+        </div>
+        <div class="wallet-card-controls" aria-label="Wallet card controls">
+            <div class="wallet-scope-wrapper">
+                <button class="wallet-chip" id="walletScopeChip" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="walletScopeMenu" onclick="toggleWalletScopeMenu()">
+                    <span id="walletScopeLabel">Group</span>
+                    <span class="wallet-scope-caret" aria-hidden="true">▾</span>
+                </button>
+                <div class="wallet-scope-menu" id="walletScopeMenu" style="display:none;">
+                    <span class="wallet-scope-menu-label">BALANCE VIEW</span>
+                    <button type="button" data-scope="group" class="active" aria-pressed="true" onclick="setWalletScope('group')"><span>Group balance</span><span class="wallet-scope-check" aria-hidden="true">✓</span></button>
+                    <button type="button" data-scope="mine" onclick="setWalletScope('mine')"><span>My balance</span><span class="wallet-scope-check" aria-hidden="true">✓</span></button>
+                </div>
+            </div>
+            <button type="button" class="wallet-card-download" onclick="downloadWalletCard()" aria-label="Download NBFA GROUP card" title="Download card">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 17v3h16v-3"/></svg>
+            </button>
         </div>
 
         <section class="quick-actions-section" aria-labelledby="quickActionsTitle">
@@ -324,27 +330,26 @@
         <div id="loansPanel" class="panel fullscreen-panel loans-page">
             <header class="loans-hero">
                 <div>
-                    <span class="section-kicker">FINANCE</span>
                     <h1>Loans</h1>
                     <p>Requests, approvals and repayments.</p>
                 </div>
-                <button type="button" class="loans-request-button" onclick="openAddTransactionModal('Loan Taken')"><span aria-hidden="true">＋</span> Request loan</button>
+                <button type="button" class="loans-request-button" onclick="openAddTransactionModal('Loan Taken')">Request a loan</button>
             </header>
             <div class="loans-sections-grid">
                 <section class="card loans-section loans-section--active">
-                    <div class="loans-section-heading"><span class="loans-section-icon" aria-hidden="true">↗</span><div><h2>Active loans</h2><p>Current balances and repayments</p></div></div>
+                    <div class="loans-section-heading"><div><h2>Active loans</h2></div></div>
                     <div id="activeLoansList" class="loading-container"><div class="loading-spinner"></div><div>Loading loans…</div></div>
                 </section>
                 <section class="card loans-section" id="awaitingDueDateCard" style="display:none;">
-                    <div class="loans-section-heading"><span class="loans-section-icon" aria-hidden="true">◷</span><div><h2>Due date needed</h2><p>Approved loans ready to activate</p></div></div>
+                    <div class="loans-section-heading"><div><h2>Due date needed</h2></div></div>
                     <div id="awaitingDueDateList" class="loading-container"><div class="loading-spinner"></div><div>Loading…</div></div>
                 </section>
                 <section class="card loans-section">
-                    <div class="loans-section-heading"><span class="loans-section-icon" aria-hidden="true">◎</span><div><h2>Pending requests</h2><p>Loan requests awaiting member approval</p></div></div>
+                    <div class="loans-section-heading"><div><h2>Pending requests</h2></div></div>
                     <div id="pendingLoans" class="loading-container"><div class="loading-spinner"></div><div>Loading requests…</div></div>
                 </section>
                 <section class="card loans-section">
-                    <div class="loans-section-heading"><span class="loans-section-icon" aria-hidden="true">✓</span><div><h2>Approved requests</h2><p>Loans ready for activation</p></div></div>
+                    <div class="loans-section-heading"><div><h2>Approved requests</h2></div></div>
                     <div id="completedLoans" class="loading-container"><div class="loading-spinner"></div><div>Loading…</div></div>
                 </section>
             </div>
@@ -353,8 +358,8 @@
         <!-- Meetings Panel -->
         <div id="meetingsPanel" class="panel fullscreen-panel communications-page">
             <header class="communications-hero">
-                <div><span class="section-kicker">GROUP SPACE</span><h1>Meetings &amp; inbox</h1><p>Meeting details, group notices and member messages.</p></div>
-                <button type="button" class="meeting-primary-action" onclick="openScheduleMeetingModal()">＋ Schedule meeting</button>
+                <div class="communications-hero-copy"><span class="section-kicker">GROUP SPACE</span><h1>Meetings &amp; inbox</h1><p>Plan together. Stay in touch.</p></div>
+                <button type="button" class="meeting-primary-action" onclick="openScheduleMeetingModal()">Schedule a meeting</button>
             </header>
             <div class="communications-grid">
                 <div class="communications-meetings">
@@ -364,32 +369,28 @@
                     </div>
                     <div class="card meeting-tools-card">
                         <div class="communications-card-heading"><div><span class="section-kicker">MEETINGS</span><h2>Group calendar</h2></div></div>
-                        <button class="meeting-action-row" onclick="openViewMinutesModal()">
-                            <span class="meeting-action-icon" aria-hidden="true">M</span>
+                        <button type="button" class="meeting-action-row" onclick="openViewMinutesModal()">
+                            <span class="meeting-action-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>
                             <span class="meeting-action-text"><span class="meeting-action-title">Meeting minutes</span><span class="meeting-action-sub">Read past notes and decisions</span></span>
-                            <span class="meeting-action-arrow">›</span>
                         </button>
-                        <button class="meeting-action-row" onclick="openScheduleMeetingModal()">
-                            <span class="meeting-action-icon" aria-hidden="true">S</span>
+                        <button type="button" class="meeting-action-row" onclick="openScheduleMeetingModal()">
+                            <span class="meeting-action-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M8 3.5v3M16 3.5v3M3.5 9h17M8 12.5h3m2 0h3M8 16h3"/></svg></span>
                             <span class="meeting-action-text"><span class="meeting-action-title">Schedule a meeting</span><span class="meeting-action-sub">Set a date, agenda and venue</span></span>
-                            <span class="meeting-action-arrow">›</span>
                         </button>
-                        <button class="meeting-action-row" onclick="openSendAnnouncementModal()">
-                            <span class="meeting-action-icon" aria-hidden="true">A</span>
+                        <button type="button" class="meeting-action-row" onclick="openSendAnnouncementModal()">
+                            <span class="meeting-action-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></span>
                             <span class="meeting-action-text"><span class="meeting-action-title">Send an announcement</span><span class="meeting-action-sub">Share an important update</span></span>
-                            <span class="meeting-action-arrow">›</span>
                         </button>
-                        <button class="meeting-action-row" onclick="openAuditLogModal()">
-                            <span class="meeting-action-icon" aria-hidden="true">L</span>
+                        <button type="button" class="meeting-action-row" onclick="openAuditLogModal()">
+                            <span class="meeting-action-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19.5h16M6.5 16v-4m5 4V7m5 9v-6"/></svg></span>
                             <span class="meeting-action-text"><span class="meeting-action-title">Group activity</span><span class="meeting-action-sub">See what has happened recently</span></span>
-                            <span class="meeting-action-arrow">›</span>
                         </button>
                     </div>
                 </div>
                 <section class="card communications-inbox-card">
                     <div class="group-chat-heading">
                         <div><span class="section-kicker">GROUP INBOX</span><h2>Messages</h2><p>Messages shared with the group.</p></div>
-                        <button type="button" class="group-refresh-btn" onclick="loadGroupMessages()" aria-label="Refresh messages">↻ <span>Refresh</span></button>
+                        <button type="button" class="group-refresh-btn" onclick="loadGroupMessages()" aria-label="Refresh messages">Refresh</button>
                     </div>
                     <div class="group-inbox-requests" id="groupInboxRequests"></div>
                     <div class="group-messages" id="groupMessages" aria-live="polite">
@@ -398,7 +399,7 @@
                     <form class="group-message-form" onsubmit="sendGroupMessage(event)">
                         <label class="sr-only" for="groupMessageInput">Message to the group</label>
                         <textarea id="groupMessageInput" maxlength="1000" rows="2" placeholder="Write a message to everyone..."></textarea>
-                        <button type="submit" id="groupMessageSendBtn">Send message <span aria-hidden="true">↗</span></button>
+                        <button type="submit" id="groupMessageSendBtn">Send message</button>
                     </form>
                 </section>
             </div>
@@ -423,7 +424,7 @@
                 <div class="about-image-wrapper">
                     <img src="https://lh3.googleusercontent.com/d/1cxOVKU7CkgQUaSpB6m_KYVxNKDfBL_yS=s800" alt="Legacy Builders Group" class="about-hero-image" onerror="this.style.display='none'">
                 </div>
-                <div class="about-hero-copy"><span class="section-kicker">ABOUT THE GROUP</span><h1>NBFA Group</h1><p class="about-tagline">A savings community built on trust, shared responsibility and long-term progress.</p><div class="about-values-row"><span class="about-value-chip">Unity</span><span class="about-value-chip">Integrity</span><span class="about-value-chip">Legacy</span></div></div>
+                <div class="about-hero-copy"><span class="section-kicker">ABOUT THE GROUP</span><h1>NBFA GROUP</h1><p class="about-tagline">A savings community built on trust, shared responsibility and long-term progress.</p><div class="about-values-row"><span class="about-value-chip">Unity</span><span class="about-value-chip">Integrity</span><span class="about-value-chip">Legacy</span></div></div>
             </div>
             <div class="about-stats-row">
                 <div class="about-stat"><div class="about-stat-value" id="aboutStatMembers">--</div><div class="about-stat-label">Members</div></div>
@@ -509,6 +510,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="firebase-config.js?v=34"></script>
-    <script src="app.js?v=52"></script>
+    <script src="app.js?v=53"></script>
 </body>
 </html>

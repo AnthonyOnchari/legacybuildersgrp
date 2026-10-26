@@ -579,6 +579,7 @@ function updateHeaderAvatar() {
     const avatarEl = document.getElementById('headerAvatar');
     const walletImageEl = document.getElementById('walletProfileImage');
     const walletPhoneEl = document.getElementById('walletCardNumber');
+    const walletCardholderNameEl = document.getElementById('walletCardholderName');
     const profileImage = getProfileImage();
     document.querySelectorAll('.fullscreen-panel-avatar').forEach(avatar => {
         avatar.replaceChildren();
@@ -613,12 +614,13 @@ function updateHeaderAvatar() {
         let numberDigits = phone.replace(/\D/g, '');
         if (dialDigits && numberDigits.startsWith(dialDigits)) numberDigits = numberDigits.slice(dialDigits.length);
         else numberDigits = numberDigits.replace(/^0+/, '');
-        const formattedNumber = numberDigits.match(/.{1,3}/g)?.join(' ') || '';
+        const formattedNumber = numberDigits.match(/\d{1,3}/g)?.join(' ') || '';
         walletPhoneEl.textContent = phone
             ? `${dialCode ? `${dialCode} ` : ''}${formattedNumber || phone}`
             : '';
         walletPhoneEl.hidden = !phone;
     }
+    if (walletCardholderNameEl) walletCardholderNameEl.textContent = currentUserDisplayName || currentUser || '';
     if (!avatarEl) return;
     if (profileImage) {
         avatarEl.innerHTML = `<img src="${escapeHtml(profileImage)}" alt="${escapeHtml(currentUserDisplayName || currentUser)}">`;
@@ -1035,7 +1037,11 @@ async function loadLoansDashboard() {
         console.error('Error loading loans:', error);
         ['activeLoansList', 'pendingLoans', 'completedLoans', 'awaitingDueDateList'].forEach(id => {
             const container = document.getElementById(id);
-            if (container) container.innerHTML = `<div class="empty-state">${escapeHtml(error.message || 'Could not load loan information.')}</div>`;
+            if (container) {
+                container.innerHTML = `<div class="empty-state">${escapeHtml(error.message || 'Could not load loan information.')}</div>`;
+                const section = container.closest('.loans-section');
+                if (section && section.id !== 'awaitingDueDateCard') section.hidden = false;
+            }
         });
     } finally {
         isLoansLoading = false;
@@ -1162,7 +1168,11 @@ async function downloadWalletCard() {
     document.body.appendChild(exportStage);
     try {
         await Promise.all([...card.querySelectorAll('img')].map(img => img.decode()));
-        const filename = `NBFA_Group_Card_${new Date().toISOString().slice(0, 10)}.pdf`;
+        const accountName = (currentUserDisplayName || currentUser || 'Member')
+            .trim()
+            .replace(/[^A-Za-z0-9_-]+/g, '_')
+            .replace(/^_+|_+$/g, '') || 'Member';
+        const filename = `${accountName}_NBFA_GROUP_Card_${new Date().toISOString().slice(0, 10)}.pdf`;
         await html2pdf().set({
             margin: 0,
             filename,
@@ -1170,7 +1180,7 @@ async function downloadWalletCard() {
             html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: null, windowWidth: 856 },
             jsPDF: { unit: 'mm', format: [85.6, 54], orientation: 'landscape' }
         }).from(card).save();
-        showToast('Your NBFA Group card was downloaded.', 'success');
+        showToast('Your NBFA GROUP card was downloaded.', 'success');
     } catch (error) {
         console.error('Card download failed:', error);
         showToast('Could not download the card. Please try again.', 'error');
@@ -1248,7 +1258,9 @@ function renderRecentActivity() {
 function renderPendingLoans() {
     const container = document.getElementById('pendingLoans');
     if (!container) return;
-    if (!pendingLoans.length) { container.innerHTML = '<div class="empty-state">No pending loan approvals</div>'; return; }
+    const section = container.closest('.loans-section');
+    if (section) section.hidden = pendingLoans.length === 0;
+    if (!pendingLoans.length) { container.replaceChildren(); return; }
     container.innerHTML = pendingLoans.map(loan => {
         const isRequester = (loan.member === currentUser);
         const alreadyApproved = loan.approvals.includes(currentUser);
@@ -1269,7 +1281,9 @@ function renderPendingLoans() {
 function renderCompletedLoans() {
     const container = document.getElementById('completedLoans');
     if (!container) return;
-    if (!completedLoans.length) { container.innerHTML = '<div class="empty-state">No completed loans yet</div>'; return; }
+    const section = container.closest('.loans-section');
+    if (section) section.hidden = completedLoans.length === 0;
+    if (!completedLoans.length) { container.replaceChildren(); return; }
     container.innerHTML = completedLoans.map(loan =>
         `<div class="completed-loan-item">
             <div><strong>${escapeHtml(loan.member)}</strong> borrowed <strong>KES ${(loan.principal || 0).toLocaleString('en-KE')}</strong></div>
@@ -1284,7 +1298,9 @@ function renderActiveLoans() {
     const container = document.getElementById('activeLoansList');
     if (!container) return;
     const stillOwed = activeLoans.filter(l => l.status !== 'paid_off');
-    if (!stillOwed.length) { container.innerHTML = '<div class="empty-state">No active loans right now</div>'; return; }
+    const section = container.closest('.loans-section');
+    if (section) section.hidden = stillOwed.length === 0;
+    if (!stillOwed.length) { container.replaceChildren(); return; }
     container.innerHTML = stillOwed.map(loan => {
         const isMine = loan.member === currentUser;
         const overdueClass = loan.isOverdue ? 'loan-overdue' : '';
@@ -1302,10 +1318,16 @@ function renderLoansAwaitingDueDate() {
     const container = document.getElementById('awaitingDueDateList');
     const card = document.getElementById('awaitingDueDateCard');
     if (!container) return;
-    if (card) card.style.display = (isTreasurer() || isDeveloper()) ? 'block' : 'none';
-    if (!isTreasurer() && !isDeveloper()) return;
+    if (!isTreasurer() && !isDeveloper()) {
+        if (card) card.hidden = true;
+        return;
+    }
+    if (card) {
+        card.hidden = loansAwaitingDueDate.length === 0;
+        card.style.display = loansAwaitingDueDate.length ? 'block' : 'none';
+    }
     if (!loansAwaitingDueDate.length) {
-        container.innerHTML = '<div class="empty-state">No loans waiting on a due date</div>';
+        container.replaceChildren();
         return;
     }
     container.innerHTML = loansAwaitingDueDate.map(loan => {
@@ -2825,7 +2847,7 @@ function ensureFullscreenBar(panel, tabId) {
     backButton.className = 'fullscreen-panel-back';
     backButton.type = 'button';
     backButton.setAttribute('aria-label', 'Back to Home');
-    backButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5-7 7 7 7M7 12h13"/></svg><span>Home</span>';
+    backButton.textContent = 'Home';
     backButton.addEventListener('click', () => activateTab('transactions'));
 
     const title = document.createElement('h2');
@@ -3050,7 +3072,7 @@ async function loadGroupMessages() {
     if (DEVELOPMENT_PREVIEW_ENABLED) {
         const requestContainer = document.getElementById('groupInboxRequests');
         if (requestContainer) requestContainer.innerHTML = '';
-        container.innerHTML = '<div class="empty-state">Your group conversation will appear here after you sign in.</div>';
+        container.innerHTML = '<div class="empty-state">No group messages yet.</div>';
         return;
     }
     const res = await callAPI('getGroupMessages');
@@ -3143,7 +3165,27 @@ async function logout(event) {
 // ============================================================
 // DOM READY
 // ============================================================
+function initializeModalScrollLock() {
+    const modalSelector = '.modal, .history-modal, .profile-modal-overlay';
+    const syncScrollLock = () => {
+        const isOpen = Array.from(document.querySelectorAll(modalSelector)).some(modal => {
+            const style = window.getComputedStyle(modal);
+            return style.display !== 'none' && style.visibility !== 'hidden';
+        });
+        document.documentElement.classList.toggle('modal-open', isOpen);
+    };
+    const observer = new MutationObserver(syncScrollLock);
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style'],
+        childList: true,
+        subtree: true
+    });
+    syncScrollLock();
+}
+
 const initializeApp = async () => {
+    initializeModalScrollLock();
     if (DEVELOPMENT_PREVIEW_ENABLED) {
         initializeDevelopmentPreview();
         return;
