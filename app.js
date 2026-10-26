@@ -441,40 +441,24 @@ function showHideDeveloperPortal() {
     const isDev = isDeveloper();
     const devTab = document.getElementById('developerTab');
     const devSidebar = document.getElementById('developerSidebarLink');
-    const devPanel = document.getElementById('developerPanel');
     const portalButton = document.getElementById('adminPortalButton');
     const portalLabel = document.getElementById('adminPortalButtonLabel');
     if (portalButton) portalButton.style.display = hasAdminPortalAccess() ? 'inline-flex' : 'none';
     if (portalLabel) portalLabel.textContent = isDev ? 'Developer Portal' : 'Admin Portal';
-    
+
     if (isDev) {
-        // Show developer elements
         if (devTab) {
             devTab.style.display = 'flex';
-            devTab.style.visibility = 'visible';
         }
         if (devSidebar) {
             devSidebar.style.display = 'flex';
-            devSidebar.style.visibility = 'visible';
-        }
-        if (devPanel) {
-            devPanel.style.display = 'block';
-            devPanel.style.visibility = 'visible';
-            // Load developer content
-            if (typeof loadDeveloperPortal === 'function') {
-                setTimeout(loadDeveloperPortal, 500);
-            }
         }
     } else {
-        // Hide developer elements
         if (devTab) {
             devTab.style.display = 'none';
         }
         if (devSidebar) {
             devSidebar.style.display = 'none';
-        }
-        if (devPanel) {
-            devPanel.style.display = 'none';
         }
     }
 }
@@ -2758,7 +2742,10 @@ function activateTab(tabId) {
     currentTab = tabId;
     if (tabId !== 'transactions') loadAllData(false, true);
     if (tabId === 'pending') loadAdminMemberProfiles('adminPhoneProfiles');
-    if (tabId === 'developer') loadAdminMemberProfiles('developerPhoneProfiles');
+    if (tabId === 'developer') {
+        loadAdminMemberProfiles('developerPhoneProfiles');
+        if (typeof loadDeveloperPortal === 'function') loadDeveloperPortal();
+    }
 }
 
 // ============================================================

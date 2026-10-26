@@ -6719,9 +6719,24 @@ body.finance-ui .admin-portal-btn:hover {
     border-color: #bfd8c0;
     background: #e7f1e5;
 }
-body.finance-ui .admin-portal-btn > span:first-child {
-    font-size: 15px;
-    line-height: 1;
+body.finance-ui .admin-portal-icon {
+    display: grid;
+    width: 23px;
+    height: 23px;
+    flex: 0 0 23px;
+    place-items: center;
+    border-radius: 8px;
+    background: #dcebd9;
+    color: #1c6847;
+}
+body.finance-ui .admin-portal-icon svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
 }
 body.finance-ui .header-row-1 > .logout-btn {
     display: inline-flex;
@@ -7023,13 +7038,19 @@ body.finance-ui .admin-phone-status {
     }
     body.finance-ui .header-row-1 .user-avatar-small { width: 34px; height: 34px; }
     body.finance-ui .admin-portal-btn {
-        gap: 5px;
-        min-height: 34px;
-        padding: 0 8px;
-        border-radius: 10px;
-        font-size: 9px;
+        gap: 7px;
+        min-height: 40px;
+        padding: 0 10px;
+        border-radius: 11px;
+        font-size: 10px;
     }
-    body.finance-ui .admin-portal-btn > span:first-child { font-size: 13px; }
+    body.finance-ui .admin-portal-icon {
+        width: 27px;
+        height: 27px;
+        flex-basis: 27px;
+        border-radius: 9px;
+    }
+    body.finance-ui .admin-portal-icon svg { width: 19px; height: 19px; }
     body.finance-ui .header-row-1 > .logout-btn {
         gap: 5px;
         min-width: 0;
