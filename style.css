@@ -10255,3 +10255,160 @@ body.finance-ui .communications-page .group-message-form { margin-top: 12px; }
     }
     body.finance-ui .wallet-card-exporting .wallet-profile-image { width: 48%; }
 }
+
+@media (max-width: 700px) {
+    body.finance-ui .login-overlay {
+        align-items: flex-start;
+        justify-content: center;
+        padding:
+            max(18px, env(safe-area-inset-top))
+            max(16px, env(safe-area-inset-right))
+            max(18px, env(safe-area-inset-bottom))
+            max(16px, env(safe-area-inset-left));
+        overflow-x: hidden;
+        overflow-y: auto;
+        background:
+            radial-gradient(ellipse at 50% 0%, rgba(204, 230, 208, .72), transparent 58%),
+            linear-gradient(145deg, #e8efe8 0%, #f5f7f2 48%, #e7eee8 100%);
+    }
+    body.finance-ui .login-layout {
+        position: relative;
+        isolation: isolate;
+        display: block;
+        width: min(100%, 440px);
+        height: auto;
+        min-height: 0;
+        margin: auto;
+        overflow: visible;
+        border: 0;
+        border-radius: 24px;
+        background: transparent;
+        box-shadow: none;
+        animation: none;
+    }
+    body.finance-ui .login-copy {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        display: flex;
+        min-height: 0;
+        border-radius: 0;
+        padding: 0;
+    }
+    body.finance-ui .login-copy::before {
+        display: block;
+        background: linear-gradient(180deg, rgba(7, 23, 19, .12), rgba(7, 23, 19, .4));
+    }
+    body.finance-ui .login-photo {
+        object-fit: cover;
+        object-position: center;
+    }
+    body.finance-ui .login-box,
+    body.finance-ui .login-box.is-registering {
+        position: relative;
+        z-index: 1;
+        inset: auto;
+        align-self: auto;
+        width: 100%;
+        min-height: 0;
+        max-height: none;
+        margin: 0;
+        padding: 26px clamp(20px, 6vw, 30px);
+        transform: none;
+        border: 1px solid rgba(35, 82, 60, .12);
+        border-radius: 22px;
+        background:
+            radial-gradient(ellipse at 100% 0%, rgba(207, 231, 208, .72), transparent 54%),
+            linear-gradient(145deg, rgba(251, 252, 249, .86) 0%, rgba(241, 246, 239, .84) 100%);
+        box-shadow: 0 18px 46px rgba(22, 57, 41, .14);
+        overflow: visible;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+    }
+    body.finance-ui .login-secure-label,
+    body.finance-ui .login-box.is-registering .login-secure-label {
+        position: static;
+        margin-bottom: 16px;
+    }
+    body.finance-ui .login-hero h2,
+    body.finance-ui .login-box.is-registering .login-hero h2 {
+        margin-bottom: 8px;
+        color: #18392f;
+        font-size: clamp(27px, 7vw, 32px);
+        text-shadow: none;
+    }
+    body.finance-ui .login-box .subtitle,
+    body.finance-ui .login-box.is-registering .subtitle {
+        color: #68786e;
+        font-size: 14px;
+        text-shadow: none;
+    }
+    body.finance-ui .login-form-area,
+    body.finance-ui .login-box.is-registering .login-form-area {
+        width: 100%;
+        max-width: none;
+        padding-top: 22px;
+    }
+    body.finance-ui .login-form-group input {
+        min-height: 50px;
+        font-size: 16px;
+    }
+    body.finance-ui .login-btn,
+    body.finance-ui .login-create-btn {
+        min-height: 50px;
+    }
+    body.finance-ui .login-create-btn {
+        border-color: rgba(35, 116, 93, .24);
+        background: #fff;
+        color: #1d674a;
+        box-shadow: 0 4px 12px rgba(28, 68, 45, .04);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+    body.finance-ui .login-create-btn:hover {
+        border-color: rgba(35, 116, 93, .42);
+        background: #f7faf6;
+    }
+    body.finance-ui .login-divider {
+        color: #748278;
+        text-shadow: none;
+    }
+    body.finance-ui .login-divider span {
+        background: transparent;
+        color: #748278;
+    }
+    body.finance-ui .login-box.is-registering .login-form-group label,
+    body.finance-ui .login-box.is-registering .register-link {
+        color: #52665a;
+    }
+    body.finance-ui .login-box.is-registering .login-form-group input {
+        border-color: #dde7de;
+        background: #fafcfa;
+        color: #1d2b23;
+    }
+}
+
+@media (min-width: 701px) {
+    body.finance-ui .login-layout {
+        height: auto;
+        width: min(980px, calc(100vw - 48px));
+        min-height: 420px;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-rows: auto;
+        align-items: stretch;
+        overflow: visible;
+    }
+    body.finance-ui .login-copy {
+        height: auto;
+        min-height: 540px;
+    }
+    body.finance-ui .login-box {
+        align-self: stretch;
+        min-height: 540px;
+        height: auto;
+        margin: 0;
+        padding: clamp(28px, 3.2vw, 42px);
+        border-radius: 0;
+        overflow: hidden;
+    }
+}
