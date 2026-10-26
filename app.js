@@ -7,7 +7,7 @@ const DEVELOPMENT_PREVIEW_PROFILE_IMAGE = 'https://images.unsplash.com/photo-150
 const DEVELOPMENT_PREVIEW_ENABLED = ['localhost', '127.0.0.1'].includes(window.location.hostname)
     && new URLSearchParams(window.location.search).get('preview') === '1';
 
-let allRecords = [], allMembers = [], allMembersData = [], pendingLoans = [], completedLoans = [];
+let allRecords = [], allMembers = [], allMembersData = [], pendingLoans = [], completedLoans = [], loanRequests = [];
 let pendingTransactions = [], pendingEditsMap = {}, activeLoans = [], loansAwaitingDueDate = [];
 let currentUser = null, currentUserDisplayName = null, currentUserEmail = null, currentUserRole = null;
 let currentTab = localStorage.getItem('legacy_active_tab') || 'transactions';
@@ -30,6 +30,21 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function getLocalDateInputValue(date = new Date()) {
+    const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return localDate.toISOString().split('T')[0];
+}
+
+function updateLoanRequestedDueDateMinimum() {
+    const dueDateInput = document.getElementById('loanRequestedDueDate');
+    const requestDateInput = document.getElementById('date');
+    if (!dueDateInput || !requestDateInput?.value) return;
+    const minimumDate = new Date(`${requestDateInput.value}T00:00:00`);
+    if (Number.isNaN(minimumDate.getTime())) return;
+    minimumDate.setDate(minimumDate.getDate() + 1);
+    dueDateInput.min = getLocalDateInputValue(minimumDate);
 }
 
 function isTreasurer() { return currentUser === TREASURER_NAME; }
@@ -391,7 +406,7 @@ async function completeLogin(name, email, profile = {}) {
     document.getElementById('tabBar').style.display = 'flex';
     document.getElementById('sidebarNav').classList.add('active');
     document.getElementById('loggedInUser').innerText = currentUserDisplayName;
-    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('date').value = getLocalDateInputValue();
 
     updateHeaderAvatar();
     updateDashboardGreeting();
@@ -978,10 +993,12 @@ async function loadAllData(silent = false, skipBalanceUI = false) {
         if (!skipBalanceUI) renderWalletBalance();
 
         if (currentTab !== 'loans') {
-            const total = allMembers.length || 1;
             const allLoans = dash.loans || [];
-            pendingLoans = allLoans.filter(l => l.approvals.length < (total - 1) && l.status !== 'completed' && l.status !== 'rejected');
-            completedLoans = allLoans.filter(l => l.approvals.length >= (total - 1) || l.status === 'completed');
+            const requiredApprovals = loan => Number.isFinite(Number(loan.approvalsRequired))
+                ? Number(loan.approvalsRequired)
+                : Math.max(allMembers.length - 1, 1);
+            pendingLoans = allLoans.filter(l => l.approvals.length < requiredApprovals(l) && l.status !== 'completed' && l.status !== 'rejected');
+            completedLoans = allLoans.filter(l => l.approvals.length >= requiredApprovals(l) || l.status === 'completed');
             renderPendingLoans();
             renderCompletedLoans();
 
@@ -1031,10 +1048,12 @@ async function loadLoansDashboard() {
         completedLoans = [];
         activeLoans = [];
         loansAwaitingDueDate = [];
+        loanRequests = [];
         renderPendingLoans();
         renderCompletedLoans();
         renderActiveLoans();
         renderLoansAwaitingDueDate();
+        renderLoanRequestHistory();
         return;
     }
     isLoansLoading = true;
@@ -1044,10 +1063,15 @@ async function loadLoansDashboard() {
         allMembers = result.members || [];
         const total = allMembers.length || 1;
         const loans = result.loans || [];
-        pendingLoans = loans.filter(loan => loan.approvals.length < total - 1 && loan.status !== 'completed' && loan.status !== 'rejected');
-        completedLoans = loans.filter(loan => loan.approvals.length >= total - 1 || loan.status === 'completed');
+        const requiredApprovals = loan => Number.isFinite(Number(loan.approvalsRequired))
+            ? Number(loan.approvalsRequired)
+            : Math.max(total - 1, 1);
+        pendingLoans = loans.filter(loan => loan.approvals.length < requiredApprovals(loan) && loan.status !== 'completed' && loan.status !== 'rejected');
+        completedLoans = loans.filter(loan => loan.approvals.length >= requiredApprovals(loan) || loan.status === 'completed');
         activeLoans = result.activeLoans || [];
         loansAwaitingDueDate = result.loansAwaitingDueDate || [];
+        loanRequests = result.loanRequests || [];
+        renderLoanRequestHistory();
         renderPendingLoans();
         renderCompletedLoans();
         renderActiveLoans();
@@ -1062,9 +1086,62 @@ async function loadLoansDashboard() {
                 if (section && section.id !== 'awaitingDueDateCard') section.hidden = false;
             }
         });
+        const history = document.getElementById('loanRequestHistory');
+        if (history) history.innerHTML = `<div class="empty-state">${escapeHtml(error.message || 'Could not load loan request history.')}</div>`;
     } finally {
         isLoansLoading = false;
     }
+}
+
+function requestEstimatedLoan() {
+    const principal = Math.max(0, Math.round(Number(document.getElementById('loanEstimatePrincipal')?.value) || 0));
+    if (!principal) {
+        showToast('Enter a loan amount to request.', 'error');
+        document.getElementById('loanEstimatePrincipal')?.focus();
+        return;
+    }
+    openAddTransactionModal('Loan Taken');
+    const amount = document.getElementById('amount');
+    if (amount) amount.value = String(principal);
+    document.getElementById('message')?.focus();
+}
+
+function renderLoanRequestHistory() {
+    const container = document.getElementById('loanRequestHistory');
+    if (!container) return;
+    if (!loanRequests.length) {
+        container.innerHTML = '<div class="loan-history-empty"><strong>No loan requests yet</strong><span>New requests and their approval progress will appear here for the group.</span></div>';
+        return;
+    }
+    container.innerHTML = loanRequests.map(request => {
+        const principal = Number(request.principal ?? request.amount) || 0;
+        const interest = Number(request.interest) || Math.round(principal * 0.1);
+        const total = Number(request.totalDue) || principal + interest;
+        const approvals = Array.isArray(request.approvals) ? request.approvals : [];
+        const required = Math.max(Number(request.approvalsRequired) || (allMembers.length - 1), 1);
+        const ownRequest = request.isRequester !== undefined ? Boolean(request.isRequester) : request.member === currentUser;
+        const status = request.status === 'rejected'
+            ? 'Declined'
+            : request.status === 'cancelled'
+                ? 'Cancelled'
+            : ['approved', 'active'].includes(request.status)
+                ? (request.status === 'active' ? 'Active loan' : 'Approved — awaiting due date')
+                : 'Awaiting member approvals';
+        const statusClass = ['rejected', 'cancelled'].includes(request.status)
+            ? 'is-rejected'
+            : ['approved', 'active'].includes(request.status) ? 'is-approved' : 'is-pending';
+        const isResolved = ['rejected', 'cancelled'].includes(request.status);
+        const date = request.createdAt ? new Date(request.createdAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+        return `<article class="loan-history-item ${ownRequest ? 'is-own-request' : ''}">
+            <div class="loan-history-topline"><div><span class="section-kicker">${ownRequest ? 'YOUR REQUEST' : 'GROUP REQUEST'}</span><h3>${escapeHtml(request.member || 'Group member')} · KES ${principal.toLocaleString('en-KE')}</h3></div><span class="loan-history-status ${statusClass}">${status}</span></div>
+            <p class="loan-history-details">${escapeHtml(request.message || 'No purpose supplied')} · Requested total KES ${total.toLocaleString('en-KE')} (KES ${interest.toLocaleString('en-KE')} interest)</p>
+            <div class="loan-history-meta">${date ? `<span>Submitted ${date}</span>` : ''}${request.requestedDueDate ? `<span>Requested repayment by ${escapeHtml(request.requestedDueDate)}</span>` : ''}${request.dueDate ? `<span>Confirmed due date ${escapeHtml(request.dueDate)}</span>` : ''}${!isResolved ? `<span>${approvals.length} of ${required} approvals</span>` : ''}</div>
+            ${!isResolved ? `<div class="loan-history-progress" role="progressbar" aria-valuenow="${Math.min(approvals.length, required)}" aria-valuemin="0" aria-valuemax="${required}"><span style="width:${Math.min(100, approvals.length / required * 100)}%"></span></div>` : ''}
+            ${approvals.length ? `<p class="loan-history-votes"><strong>Approved by</strong> ${escapeHtml(approvals.join(', '))}</p>` : ''}
+            ${request.status === 'rejected' ? `<p class="loan-history-reason"><strong>Decline reason:</strong> ${escapeHtml(request.rejectionReason || 'No reason provided')}</p>` : ''}
+            ${request.status === 'cancelled' ? '<p class="loan-history-votes">This request was cancelled.</p>' : ''}
+        </article>`;
+    }).join('');
 }
 
 // ============================================================
@@ -1239,11 +1316,13 @@ function renderRecentActivity() {
     container.classList.remove('loading-container');
     if (!allRecords.length) {
         container.classList.remove('has-recent-activity');
+        container.classList.remove('has-fade-activity');
         container.innerHTML = '<div class="empty-state">No transactions yet</div>';
         return;
     }
     container.classList.add('has-recent-activity');
     const recent = [...allRecords].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+    container.classList.toggle('has-fade-activity', recent.length > 2);
     const iconFor = type => {
         if (type === 'Savings') {
             return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18m6-14.5c-.8-1-2.1-1.5-4-1.5h-4a3 3 0 0 0 0 6h4a3 3 0 0 1 0 6H9c-1.7 0-2.9-.5-3.8-1.5"/></svg>';
@@ -1283,17 +1362,21 @@ function renderPendingLoans() {
     if (section) section.hidden = pendingLoans.length === 0;
     if (!pendingLoans.length) { container.replaceChildren(); return; }
     container.innerHTML = pendingLoans.map(loan => {
-        const isRequester = (loan.member === currentUser);
-        const alreadyApproved = loan.approvals.includes(currentUser);
-        const showButtons = !isRequester && !alreadyApproved && (isTreasurer() || isDeveloper());
-        const totalNeeded = Math.max(allMembers.length - 1, 1);
-        const percent = totalNeeded > 0 ? (loan.approvals.length / totalNeeded) * 100 : 100;
+        const isRequester = loan.isRequester !== undefined ? Boolean(loan.isRequester) : loan.member === currentUser;
+        const approvals = Array.isArray(loan.approvals) ? loan.approvals : [];
+        const alreadyApproved = loan.viewerHasApproved !== undefined
+            ? Boolean(loan.viewerHasApproved)
+            : approvals.includes(currentUser);
+        const showButtons = !isRequester && !alreadyApproved;
+        const totalNeeded = Math.max(Number(loan.approvalsRequired) || (allMembers.length - 1), 1);
+        const percent = totalNeeded > 0 ? (approvals.length / totalNeeded) * 100 : 100;
         return `<div class="loan-item ${isRequester ? 'own-loan' : ''}">
             <div><strong>${escapeHtml(loan.member)}</strong> requested <strong>KES ${(loan.principal || 0).toLocaleString('en-KE')}</strong> + 10% = <strong>KES ${(loan.totalDue || 0).toLocaleString('en-KE')}</strong>${isRequester ? ' (Your request)' : (alreadyApproved ? ' (You approved)' : '')}</div>
             <div style="font-size:12px;">${escapeHtml(loan.message || '')}</div>
-            <div style="font-size:11px; margin-top:5px;">Approvals: ${loan.approvals.length}/${totalNeeded}</div>
+            ${loan.requestedDueDate ? `<div style="font-size:11px; margin-top:5px;">Requested repayment date: ${escapeHtml(loan.requestedDueDate)}</div>` : ''}
+            <div style="font-size:11px; margin-top:5px;">Approvals: ${approvals.length}/${totalNeeded}${isRequester ? ' (you cannot approve your own request)' : ''}</div>
             <div class="progress-bar"><div class="progress-fill" style="width: ${Math.min(percent, 100)}%;"></div></div>
-            ${showButtons ? `<div style="margin-top:8px; display:flex; gap:8px;"><button class="approve-btn" onclick="approveLoan('${loan.id}')">Approve</button><button class="reject-btn" onclick="rejectLoan('${loan.id}')">Reject</button></div>` : ''}
+            ${showButtons ? `<div style="margin-top:8px; display:flex; gap:8px;"><button class="approve-btn" onclick="approveLoan('${loan.id}')">Approve request</button><button class="reject-btn" onclick="rejectLoan('${loan.id}')">Decline with reason</button></div>` : ''}
             ${isRequester && loan.status === 'pending' ? `<div style="margin-top:8px;"><button class="cancel-btn" onclick="cancelLoanRequest('${loan.id}')"> Cancel Request</button></div>` : ''}
         </div>`;
     }).join('');
@@ -1354,11 +1437,14 @@ function renderLoansAwaitingDueDate() {
     container.innerHTML = loansAwaitingDueDate.map(loan => {
         const interest = Math.round((loan.principal || 0) * 0.10);
         const totalDue = (loan.principal || 0) + interest;
+        const requestDate = loan.date ? new Date(`${loan.date}T00:00:00`) : null;
+        if (requestDate && !Number.isNaN(requestDate.getTime())) requestDate.setDate(requestDate.getDate() + 1);
+        const earliestDueDate = requestDate && !Number.isNaN(requestDate.getTime()) ? getLocalDateInputValue(requestDate) : '';
         return `<div class="loan-item">
             <div><strong>${escapeHtml(loan.member)}</strong> — KES ${(loan.principal || 0).toLocaleString('en-KE')} + 10% = <strong>KES ${totalDue.toLocaleString('en-KE')}</strong></div>
             <div style="font-size:12px; margin-top:4px;">${escapeHtml(loan.message || '')}</div>
             <div class="form-grid" style="margin-top:10px; margin-bottom:8px;">
-                <div><label> Repayment Due Date</label><input type="date" id="dueDateInput-${loan.id}"></div>
+                <div><label>Confirm repayment due date</label><input type="date" id="dueDateInput-${loan.id}" min="${escapeHtml(earliestDueDate)}" value="${escapeHtml(loan.requestedDueDate || '')}"></div>
             </div>
             <button onclick="submitLoanDueDate('${loan.id}')" style="width:auto; padding:8px 16px;">Set Due Date &amp; Activate</button>
         </div>`;
@@ -1414,8 +1500,9 @@ function openAddTransactionModal(type) {
         type === 'Savings' ? 'New Deposit' : type === 'Loan Taken' ? 'Request a Loan' : 'Repay a Loan';
     toggleApprovalNotice();
     if (!document.getElementById('date').value) {
-        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = getLocalDateInputValue();
     }
+    updateLoanRequestedDueDateMinimum();
     modal.tabIndex = -1;
     modal.onclick = event => {
         if (event.target === modal) closeAddTransactionModal();
@@ -1434,7 +1521,23 @@ function closeAddTransactionModal() {
 
 function toggleApprovalNotice() {
     const type = document.getElementById('type').value;
-    document.getElementById('approvalNotice').style.display = type === 'Loan Taken' ? 'block' : 'none';
+    const isLoanRequest = type === 'Loan Taken';
+    document.getElementById('approvalNotice').style.display = isLoanRequest ? 'block' : 'none';
+    const dueDateWrapper = document.getElementById('loanRequestedDueDateWrapper');
+    const dueDateInput = document.getElementById('loanRequestedDueDate');
+    const messageInput = document.getElementById('message');
+    const messageLabel = document.getElementById('transactionMessageLabel');
+    if (dueDateWrapper) dueDateWrapper.style.display = isLoanRequest ? 'block' : 'none';
+    if (dueDateInput) {
+        dueDateInput.required = isLoanRequest;
+        document.getElementById('date').onchange = updateLoanRequestedDueDateMinimum;
+        updateLoanRequestedDueDateMinimum();
+    }
+    if (messageInput) {
+        messageInput.required = isLoanRequest;
+        messageInput.placeholder = isLoanRequest ? 'e.g., School fees or medical expenses' : 'e.g., Bank/Mpesa Message';
+    }
+    if (messageLabel) messageLabel.textContent = isLoanRequest ? 'What is the loan for? *' : 'Transaction Message';
     const pickerWrapper = document.getElementById('repayLoanPickerWrapper');
     const amountHint = document.getElementById('amountHint');
     if (pickerWrapper) {
@@ -1468,7 +1571,15 @@ async function addRecord() {
     const type = document.getElementById('type').value;
     const amount = parseFloat(document.getElementById('amount').value);
     const message = document.getElementById('message').value;
+    const requestedDueDate = document.getElementById('loanRequestedDueDate')?.value || '';
     if (!date || !amount || amount <= 0) { showToast('Please fill all fields', 'error'); return; }
+    if (type === 'Loan Taken') {
+        if (message.trim().length < 3) { showToast('Describe what the loan will be used for.', 'error'); return; }
+        if (!requestedDueDate || requestedDueDate <= date) {
+            showToast('Choose a requested repayment date after the request date.', 'error');
+            return;
+        }
+    }
     const btn = document.getElementById('addBtn');
     const orig = btn.innerHTML;
     showButtonLoading(btn, 'Processing...');
@@ -1480,13 +1591,18 @@ async function addRecord() {
             hideButtonLoading(btn, orig);
             return;
         }
-        const res = await callAPI('submitLoan', { date, member, amount, message, notes: '', requestedBy: currentUser });
+        const res = await callAPI('submitLoan', { date, member, amount, message: message.trim(), requestedDueDate, notes: '', requestedBy: currentUser });
         if (res.success) {
-            showToast(`Loan request submitted! Needs ${Math.max(allMembers.length - 1, 1)} other approvals.`, 'success');
+            const approvalsRequired = Number.isFinite(Number(res.approvalsRequired))
+                ? Number(res.approvalsRequired)
+                : Math.max(allMembers.length - 1, 1);
+            showToast(`Loan request submitted! Needs ${approvalsRequired} other approval${approvalsRequired === 1 ? '' : 's'}.`, 'success');
             document.getElementById('amount').value = '';
             document.getElementById('message').value = '';
+            document.getElementById('loanRequestedDueDate').value = '';
             closeAddTransactionModal();
             await loadAllData();
+            await loadLoansDashboard();
         } else showToast('Error: ' + res.error, 'error');
     } else {
         let loanId = '';
@@ -1554,17 +1670,68 @@ async function approveLoan(loanId) {
     showButtonLoading(btn, 'Approving...');
     const res = await callAPI('approveLoan', { loanId, approver: currentUser });
     if (res.success) {
-        const remaining = Math.max((allMembers.length - 1) - (res.approvals || 0), 0);
+        const remaining = Math.max((res.approvalsRequired ?? allMembers.length - 1) - (res.approvals || 0), 0);
         showToast(remaining > 0 ? `Approved! Need ${remaining} more` : `Loan fully approved!`, 'success');
         await loadAllData();
+        await loadLoansDashboard();
     } else { showToast('Error: ' + res.error, 'error'); }
     hideButtonLoading(btn, orig);
 }
 
+function showLoanRejectionDialog() {
+    return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal loan-decision-modal';
+        overlay.innerHTML = `<section class="modal-content loan-decision-content" role="dialog" aria-modal="true" aria-labelledby="loanDeclineTitle">
+            <span class="section-kicker">MEMBER DECISION</span>
+            <h3 id="loanDeclineTitle">Decline this loan request?</h3>
+            <p>Your reason will be saved in the group loan history and shared in the group inbox.</p>
+            <label for="loanDeclineReason">Reason for declining *</label>
+            <textarea id="loanDeclineReason" maxlength="500" placeholder="Share a clear, respectful reason (at least 3 characters)."></textarea>
+            <div class="modal-buttons">
+                <button type="button" class="close-modal loan-decline-cancel">Keep request open</button>
+                <button type="button" class="loan-decline-submit">Decline request</button>
+            </div>
+        </section>`;
+        const previousOverflow = document.body.style.overflow;
+        const finish = value => {
+            document.removeEventListener('keydown', handleKeydown);
+            document.body.style.overflow = previousOverflow;
+            overlay.remove();
+            resolve(value);
+        };
+        const handleKeydown = keyboardEvent => {
+            if (keyboardEvent.key === 'Escape') finish(null);
+        };
+        overlay.addEventListener('click', clickEvent => {
+            if (clickEvent.target === overlay) finish(null);
+        });
+        overlay.querySelector('.loan-decline-cancel').addEventListener('click', () => finish(null));
+        overlay.querySelector('.loan-decline-submit').addEventListener('click', () => {
+            const reason = overlay.querySelector('#loanDeclineReason').value.trim();
+            if (reason.length < 3) {
+                showToast('Please provide a reason of at least 3 characters.', 'error');
+                overlay.querySelector('#loanDeclineReason').focus();
+                return;
+            }
+            finish(reason);
+        });
+        document.body.style.overflow = 'hidden';
+        document.addEventListener('keydown', handleKeydown);
+        document.body.appendChild(overlay);
+        overlay.querySelector('#loanDeclineReason').focus();
+    });
+}
+
 async function rejectLoan(loanId) {
-    const res = await callAPI('rejectLoan', { loanId });
-    if (res.success) { showToast('Loan rejected', 'success'); await loadAllData(); }
-    else showToast('Error: ' + res.error, 'error');
+    const reason = await showLoanRejectionDialog();
+    if (!reason) return;
+    const res = await callAPI('rejectLoan', { loanId, reason });
+    if (res.success) {
+        showToast('Decision recorded and shared with the group.', 'success');
+        await loadAllData();
+        await loadLoansDashboard();
+    } else showToast('Error: ' + res.error, 'error');
 }
 
 async function cancelLoanRequest(loanId) {
@@ -1573,7 +1740,7 @@ async function cancelLoanRequest(loanId) {
     const orig = btn.innerHTML;
     showButtonLoading(btn, 'Cancelling...');
     const res = await callAPI('cancelLoan', { loanId });
-    if (res.success) { showToast('Loan cancelled!', 'success'); await loadAllData(); }
+    if (res.success) { showToast('Loan cancelled!', 'success'); await loadAllData(); await loadLoansDashboard(); }
     else showToast(res.error || 'Error', 'error');
     hideButtonLoading(btn, orig);
 }
@@ -1589,6 +1756,7 @@ async function submitLoanDueDate(loanId) {
     if (res.success) {
         showToast('Loan activated with due date set!', 'success');
         await loadAllData();
+        await loadLoansDashboard();
     } else {
         showToast(res.error || 'Error setting due date', 'error');
     }
@@ -1640,7 +1808,7 @@ function openViewMinutesModal() {
 }
 
 function openAddMeetingModal() {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateInputValue();
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.innerHTML = `<div class="modal-content">
@@ -3167,7 +3335,7 @@ async function loadGroupMemories() {
             }
         } else {
             const syncStatus = document.getElementById('memorySyncStatus');
-            if (syncStatus) syncStatus.textContent = 'Connection interrupted — showing saved photos.';
+            if (syncStatus) syncStatus.textContent = '';
         }
         return;
     }
@@ -3641,7 +3809,7 @@ const initializeApp = async () => {
         document.getElementById('tabBar').style.display = 'flex';
         document.getElementById('sidebarNav')?.classList.add('active');
         document.getElementById('loggedInUser').innerText = currentUserDisplayName;
-        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = getLocalDateInputValue();
         updateHeaderAvatar();
         showHideDeveloperPortal();
         showHidePendingTab();
@@ -3719,7 +3887,7 @@ function initializeDevelopmentPreview() {
     document.getElementById('sidebarNav').classList.add('active');
     document.getElementById('developmentPreviewNotice').hidden = false;
     document.getElementById('loggedInUser').textContent = currentUserDisplayName;
-    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('date').value = getLocalDateInputValue();
 
     updateHeaderAvatar();
     updateDashboardGreeting();

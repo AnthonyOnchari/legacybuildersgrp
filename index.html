@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=62">
+    <link rel="stylesheet" href="style.css?v=63">
 </head>
 <body class="finance-ui">
 
@@ -305,9 +305,13 @@
                         <select id="repayLoanPicker"><option value="">Loading your loans...</option></select>
                     </div>
                     <div><label>Amount (KES)</label><input type="number" id="amount" placeholder="0"><small id="amountHint" style="font-size:10px; color:#7C8AA5; display:block; margin-top:4px;">For loans: Enter PRINCIPAL amount (10% interest added)</small></div>
-                    <div><label>Transaction Message</label><input type="text" id="message" placeholder="e.g., Bank/Mpesa Message"></div>
+                    <div><label id="transactionMessageLabel">Transaction Message</label><input type="text" id="message" maxlength="500" placeholder="e.g., Bank/Mpesa Message"></div>
+                    <div id="loanRequestedDueDateWrapper" style="display:none;">
+                        <label for="loanRequestedDueDate">Requested repayment date *</label>
+                        <input type="date" id="loanRequestedDueDate">
+                    </div>
                 </div>
-                <div id="approvalNotice" style="background:#E8EEFF; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">Loan requests need approval from ALL other members. 10% interest will be added.</div>
+                <div id="approvalNotice" style="background:#E8EEFF; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">All other approved members must approve the request. 10% interest will be added; the treasurer confirms the activation date.</div>
                 <div class="modal-buttons">
                     <button id="addBtn">Submit Transaction</button>
                     <button class="close-modal" onclick="closeAddTransactionModal()">Cancel</button>
@@ -367,6 +371,7 @@
                         <div class="loan-estimate-total"><span>Estimated total due</span><strong id="loanEstimateTotal">KES 11,000</strong></div>
                     </div>
                     <p class="loan-estimate-note">This is an estimate, not an approval or a recommendation to borrow.</p>
+                    <button type="button" class="loan-estimate-request" onclick="requestEstimatedLoan()">Request this amount</button>
                 </div>
                 <div class="loan-readiness-card">
                     <span class="section-kicker">BEFORE YOU REQUEST</span>
@@ -396,6 +401,10 @@
                     <div id="completedLoans" class="loading-container"><div class="loading-spinner"></div><div>Loading…</div></div>
                 </section>
             </div>
+            <section class="card loans-section loans-request-history">
+                <div class="loans-section-heading"><div><span class="section-kicker">A SHARED RECORD</span><h2>Loan request history</h2><p>Follow every request, approval and decision reason.</p></div></div>
+                <div id="loanRequestHistory" class="loan-history-list"><div class="loading-container"><div class="loading-spinner"></div><div>Loading request history…</div></div></div>
+            </section>
         </div>
 
         <!-- Meetings Panel -->
@@ -575,6 +584,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="firebase-config.js?v=34"></script>
-    <script src="app.js?v=58"></script>
+    <script src="app.js?v=59"></script>
 </body>
 </html>

@@ -15,6 +15,9 @@ const emailKey = (email) => String(email || "").trim().toLowerCase();
 const safeDocId = (value) => encodeURIComponent(String(value || "").trim()).replace(/\./g, "%2E");
 const nowIso = () => new Date().toISOString();
 const asNumber = (value) => Number(value) || 0;
+const isIsoDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value)
+    && Number.isFinite(Date.parse(`${value}T00:00:00.000Z`))
+    && new Date(`${value}T00:00:00.000Z`).toISOString().slice(0, 10) === value;
 const rows = async (collection) => {
     const snapshot = await db.collection(collection).get();
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -178,21 +181,36 @@ async function getDashboard(user, params) {
     const data = Object.fromEntries(collections.map((name, index) => [name, values[index]]));
     const allTransactions = data.transactions || [];
     const summary = summarizeData(allTransactions, data.activeLoans || []);
-    const members = (data.users || [])
-        .filter((item) => item.status === "approved" && item.name)
-        .map((item) => item.name);
+    const actorEmail = emailKey(user.email);
+    const actorName = user.profile.name || user.auth.name || user.email.split("@")[0];
+    const approvedUsers = (data.users || []).filter((item) => item.status === "approved");
+    const members = approvedUsers.filter((item) => item.name).map((item) => item.name);
     const loans = (data.pendingLoans || []).map((loan) => {
         const principal = asNumber(loan.amount ?? loan.principal);
         const interest = Math.round(principal * LOAN_INTEREST_RATE);
+        let requesterEmail = emailKey(loan.requesterEmail);
+        if (!requesterEmail) {
+            const requester = approvedUsers.find((item) => String(item.name || "").trim().toLowerCase() === String(loan.member || "").trim().toLowerCase());
+            requesterEmail = emailKey(requester && requester.email);
+        }
         return {
             id: loan.id,
             date: loan.date || "",
             member: loan.member || "",
+            isRequester: requesterEmail === actorEmail || (!requesterEmail && loan.member === actorName),
+            viewerHasApproved: Array.isArray(loan.approvalEmails)
+                ? loan.approvalEmails.map(emailKey).includes(actorEmail)
+                : (Array.isArray(loan.approvals) && loan.approvals.includes(actorName)),
             principal,
             interest,
             totalDue: principal + interest,
             message: loan.message || loan.description || "",
             approvals: Array.isArray(loan.approvals) ? loan.approvals : [],
+            approvalsRequired: Number.isFinite(Number(loan.approvalsRequired))
+                ? Number(loan.approvalsRequired)
+                : approvedUsers.filter((item) => requesterEmail
+                    ? emailKey(item.email) !== requesterEmail
+                    : item.name !== loan.member).length,
             status: loan.status || "pending"
         };
     });
@@ -246,6 +264,7 @@ async function getDashboard(user, params) {
 
 async function handleAction(action, params, user) {
     const name = user.profile.name || user.auth.name || user.email.split("@")[0];
+    const actorEmail = emailKey(user.email);
     switch (action) {
         case "bootstrapProfile":
             return {
@@ -564,29 +583,77 @@ async function handleAction(action, params, user) {
         case "submitLoan": {
             const amount = Number(params.amount);
             if (!Number.isFinite(amount) || amount <= 0) throw new Error("Loan amount must be positive.");
+            const date = String(params.date || "");
+            const requestedDueDate = String(params.requestedDueDate || "");
+            const message = String(params.message || "").trim();
+            if (!isIsoDate(date)) {
+                throw new Error("Enter a valid loan request date.");
+            }
+            if (!isIsoDate(requestedDueDate) || requestedDueDate <= date) {
+                throw new Error("Choose a valid repayment date after the request date.");
+            }
+            if (message.length < 3 || message.length > 500) {
+                throw new Error("Describe the purpose of the loan in 3-500 characters.");
+            }
             const summary = await getSummaryData();
             if (amount > summary.savings) throw new Error(`Loan exceeds available savings of KES ${summary.savings.toLocaleString()}.`);
             const id = crypto.randomUUID();
-            await recordRef("pendingLoans", id).create({
-                id, date: params.date || "", member: name, amount,
-                message: String(params.message || ""), notes: String(params.notes || ""),
-                approvals: [], status: "pending", createdAt: nowIso()
+            const createdAt = nowIso();
+            const usersSnapshot = await db.collection("users").where("status", "==", "approved").get();
+            const requesterEmail = emailKey(user.email);
+            const approvalsRequired = usersSnapshot.docs.filter((doc) => emailKey(doc.data().email || doc.id) !== requesterEmail).length;
+            const loan = {
+                id,
+                date,
+                member: name,
+                requesterEmail,
+                amount,
+                principal: amount,
+                interest: Math.round(amount * LOAN_INTEREST_RATE),
+                totalDue: amount + Math.round(amount * LOAN_INTEREST_RATE),
+                requestedDueDate,
+                message,
+                notes: String(params.notes || ""),
+                approvals: [],
+                approvalEmails: [],
+                approvalsRequired,
+                status: "pending",
+                createdAt
+            };
+            if (approvalsRequired < 1) throw new Error("At least one other approved member must be available to review a loan request.");
+            const inboxMessage = {
+                id: crypto.randomUUID(),
+                message: `${name} requested KES ${amount.toLocaleString()} for ${message}. Estimated total with 10% interest: KES ${loan.totalDue.toLocaleString()}. Requested repayment date: ${requestedDueDate}. Approval is needed from all ${approvalsRequired} other approved member(s).`,
+                member: name,
+                email: requesterEmail,
+                type: "loan_request",
+                loanId: id,
+                created_at: createdAt
+            };
+            await db.runTransaction(async (tx) => {
+                tx.create(recordRef("pendingLoans", id), loan);
+                tx.create(recordRef("loanRequests", id), loan);
+                tx.create(recordRef("groupMessages", inboxMessage.id), inboxMessage);
             });
             await audit(name, "Requested a loan", `KES ${amount.toLocaleString()} — needs member approval`);
             await sendPush(
                 `New Loan Request from ${name}`,
-                `${name} has requested a loan of KES ${amount.toLocaleString()}. Please approve.`,
+                `${name} requested KES ${amount.toLocaleString()} for ${message}. Estimated total: KES ${loan.totalDue.toLocaleString()}. Requested repayment: ${requestedDueDate}. All ${approvalsRequired} other approved member(s) must approve.`,
                 null,
-                name,
-                { type: "loan_request", amount, member: name, loanId: id }
+                requesterEmail,
+                { type: "loan_request", amount, member: name, loanId: id, requestedDueDate }
             );
-            return { success: true, id };
+            return { success: true, id, approvalsRequired };
         }
         case "approveLoan": {
             const id = String(params.loanId || "");
             const ref = recordRef("pendingLoans", id);
+            const historyRef = recordRef("loanRequests", id);
             let approvalCount = 0;
             let completedLoan = null;
+            let member = "";
+            let approvalsRequired = 0;
+            const approverEmail = actorEmail;
             await db.runTransaction(async (tx) => {
                 const [loanSnap, usersSnap] = await Promise.all([
                     tx.get(ref),
@@ -594,81 +661,192 @@ async function handleAction(action, params, user) {
                 ]);
                 if (!loanSnap.exists) throw new Error("Loan not found.");
                 const loan = loanSnap.data();
-                if (loan.member === name) throw new Error("You cannot approve your own loan request.");
+                let requesterEmail = emailKey(loan.requesterEmail);
+                if (!requesterEmail) {
+                    const requesterProfile = usersSnap.docs.find((doc) => String(doc.data().name || "").trim().toLowerCase() === String(loan.member || "").trim().toLowerCase());
+                    requesterEmail = emailKey(requesterProfile && (requesterProfile.data().email || requesterProfile.id));
+                }
+                if (requesterEmail ? requesterEmail === approverEmail : loan.member === name) {
+                    throw new Error("You cannot approve your own loan request.");
+                }
+                const eligibleUsers = usersSnap.docs.filter((doc) => emailKey(doc.data().email || doc.id) !== requesterEmail);
+                if (!eligibleUsers.some((doc) => emailKey(doc.data().email || doc.id) === approverEmail)) {
+                    throw new Error("Only an approved group member can approve this request.");
+                }
                 const approvals = Array.isArray(loan.approvals) ? loan.approvals : [];
-                if (approvals.includes(name)) throw new Error("You already approved this loan.");
+                const hasApprovalEmailRecords = Array.isArray(loan.approvalEmails);
+                const approvalEmails = hasApprovalEmailRecords ? loan.approvalEmails.map(emailKey) : [];
+                if (!hasApprovalEmailRecords) {
+                    for (const approverName of approvals) {
+                        const profile = usersSnap.docs.find((doc) => String(doc.data().name || "").trim().toLowerCase() === String(approverName || "").trim().toLowerCase());
+                        const profileEmail = emailKey(profile && (profile.data().email || profile.id));
+                        if (profileEmail && !approvalEmails.includes(profileEmail)) approvalEmails.push(profileEmail);
+                    }
+                }
+                if (approvalEmails.includes(approverEmail) || (!hasApprovalEmailRecords && approvals.includes(name))) {
+                    throw new Error("You already approved this loan.");
+                }
                 approvals.push(name);
+                approvalEmails.push(approverEmail);
                 approvalCount = approvals.length;
-                const needed = Math.max(usersSnap.size - 1, 1);
-                if (approvalCount >= needed) {
-                    completedLoan = { ...loan, approvals, approvedBy: approvals.join(", ") };
+                approvalsRequired = eligibleUsers.length;
+                member = loan.member;
+                const updatedLoan = {
+                    ...loan,
+                    approvals,
+                    approvalEmails,
+                    approvalsRequired,
+                    status: approvalCount >= approvalsRequired ? "approved" : "pending"
+                };
+                if (approvalCount >= approvalsRequired) {
+                    completedLoan = { ...updatedLoan, approvedBy: approvals.join(", "), approvedAt: nowIso() };
                     tx.create(recordRef("loansAwaitingDueDate", id), completedLoan);
                     tx.delete(ref);
                 } else {
-                    tx.update(ref, { approvals });
+                    tx.update(ref, {
+                        approvals,
+                        approvalEmails,
+                        approvalsRequired,
+                        status: "pending"
+                    });
                 }
+                tx.set(historyRef, completedLoan || updatedLoan);
+                const inboxMessage = {
+                    id: crypto.randomUUID(),
+                    message: `${name} approved ${loan.member}'s KES ${asNumber(loan.amount).toLocaleString()} loan request. ${Math.max(0, approvalsRequired - approvalCount)} more approval(s) required.`,
+                    member: name,
+                    email: approverEmail,
+                    type: "loan_approval",
+                    loanId: id,
+                    created_at: nowIso()
+                };
+                tx.create(recordRef("groupMessages", inboxMessage.id), inboxMessage);
             });
             await audit(name, "Approved a loan vote", `${approvalCount} approval(s)`);
             if (completedLoan) {
                 await sendPush(
                     "Loan Fully Approved!",
-                    `Your loan of KES ${asNumber(completedLoan.amount).toLocaleString()} has been approved by all members. The treasurer will set a repayment due date.`,
-                    completedLoan.member,
-                    name,
+                    `${completedLoan.member}'s request for KES ${asNumber(completedLoan.amount).toLocaleString()} has all ${approvalsRequired} required member approvals. The treasurer will confirm the activation due date.`,
+                    null,
+                    approverEmail,
                     { type: "loan_fully_approved", loanId: id, amount: asNumber(completedLoan.amount) }
                 );
                 await sendPush(
                     "Set Loan Due Date",
                     `${completedLoan.member}'s loan has been fully approved and needs a due date.`,
                     await getTreasurerName(),
-                    name,
+                    approverEmail,
                     { type: "loan_needs_due_date", loanId: id, member: completedLoan.member }
                 );
             } else {
-                const loan = await ref.get();
-                const member = loan.exists ? loan.data().member : "";
                 await sendPush(
                     "Loan Approval Update",
-                    `${name} approved ${member}'s loan. ${Math.max(0, Math.max(1, (await rows("users")).filter((item) => item.status === "approved").length - 1) - approvalCount)} more approval(s) needed.`,
-                    member,
-                    name,
+                    `${name} approved ${member}'s request. ${Math.max(0, approvalsRequired - approvalCount)} more approval(s) are needed.`,
+                    null,
+                    approverEmail,
                     { type: "loan_approval_update", loanId: id, approvals: approvalCount }
                 );
             }
-            return { success: true, approvals: approvalCount };
+            return { success: true, approvals: approvalCount, approvalsRequired };
         }
         case "rejectLoan": {
-            requireAdmin(user);
-            const ref = recordRef("pendingLoans", params.loanId);
-            const snapshot = await ref.get();
-            if (!snapshot.exists) throw new Error("Loan not found.");
-            const loan = snapshot.data();
-            await ref.delete();
-            await audit(name, "Rejected a loan request", `${loan.member}'s loan request`);
-            await sendPush("Loan Request Rejected", `Your loan request has been rejected by ${name}.`, loan.member, name, { type: "loan_rejected", loanId: params.loanId });
+            const id = String(params.loanId || "");
+            const reason = String(params.reason || "").trim();
+            if (reason.length < 3 || reason.length > 500) throw new Error("Provide a decline reason in 3-500 characters.");
+            const ref = recordRef("pendingLoans", id);
+            const historyRef = recordRef("loanRequests", id);
+            let loanMember = "";
+            await db.runTransaction(async (tx) => {
+                const [snapshot, historySnapshot] = await Promise.all([tx.get(ref), tx.get(historyRef)]);
+                if (!snapshot.exists) throw new Error("Pending loan request not found.");
+                const loan = snapshot.data();
+                if (emailKey(loan.requesterEmail) === actorEmail || (!loan.requesterEmail && loan.member === name)) {
+                    throw new Error("You cannot decline your own loan request.");
+                }
+                const hasApprovalEmailRecords = Array.isArray(loan.approvalEmails);
+                const approvalEmails = hasApprovalEmailRecords ? loan.approvalEmails.map(emailKey) : [];
+                if (approvalEmails.includes(actorEmail)
+                    || (!hasApprovalEmailRecords && Array.isArray(loan.approvals) && loan.approvals.includes(name))) {
+                    throw new Error("You have already approved this loan request.");
+                }
+                loanMember = loan.member;
+                const updatedLoan = {
+                    ...(historySnapshot.exists ? historySnapshot.data() : loan),
+                    status: "rejected",
+                    rejectionReason: reason,
+                    rejectedBy: name,
+                    rejectedByEmail: user.email,
+                    decidedAt: nowIso()
+                };
+                tx.set(historyRef, updatedLoan);
+                tx.delete(ref);
+                const inboxMessage = {
+                    id: crypto.randomUUID(),
+                    message: `${name} declined ${loan.member}'s KES ${asNumber(loan.amount).toLocaleString()} loan request. Reason: ${reason}`,
+                    member: name,
+                    email: actorEmail,
+                    type: "loan_rejected",
+                    loanId: id,
+                    created_at: nowIso()
+                };
+                tx.create(recordRef("groupMessages", inboxMessage.id), inboxMessage);
+            });
+            await audit(name, "Rejected a loan request", `${loanMember}'s request — ${reason}`);
+            await sendPush("Loan Request Declined", `${name} declined ${loanMember}'s loan request. Reason: ${reason}`, null, actorEmail, { type: "loan_rejected", loanId: id, reason });
             return { success: true };
         }
         case "cancelLoan": {
-            const ref = recordRef("pendingLoans", params.loanId);
-            const snapshot = await ref.get();
-            if (!snapshot.exists) throw new Error("Loan not found.");
-            if (snapshot.data().member !== name && !isAdmin(user)) throw new Error("You can only cancel your own loan request.");
-            const loan = snapshot.data();
-            await ref.delete();
-            await sendPush("Loan Request Cancelled", `${name} cancelled a loan request of KES ${asNumber(loan.amount).toLocaleString()}.`, null, name, { type: "loan_cancelled", loanId: params.loanId });
+            const id = String(params.loanId || "");
+            const ref = recordRef("pendingLoans", id);
+            const historyRef = recordRef("loanRequests", id);
+            let amount = 0;
+            await db.runTransaction(async (tx) => {
+                const [snapshot, historySnapshot] = await Promise.all([tx.get(ref), tx.get(historyRef)]);
+                if (!snapshot.exists) throw new Error("Loan not found.");
+                const loan = snapshot.data();
+                const requesterIsAnotherMember = loan.requesterEmail
+                    ? emailKey(loan.requesterEmail) !== actorEmail
+                    : loan.member !== name;
+                if (requesterIsAnotherMember && !isAdmin(user)) {
+                    throw new Error("You can only cancel your own loan request.");
+                }
+                amount = asNumber(loan.amount);
+                tx.delete(ref);
+                tx.set(historyRef, {
+                    ...(historySnapshot.exists ? historySnapshot.data() : loan),
+                    status: "cancelled",
+                    cancelledAt: nowIso(),
+                    cancelledBy: name
+                });
+                const inboxMessage = {
+                    id: crypto.randomUUID(),
+                    message: `${name} cancelled a loan request of KES ${amount.toLocaleString()}.`,
+                    member: name,
+                    email: user.email,
+                    type: "loan_cancelled",
+                    loanId: id,
+                    created_at: nowIso()
+                };
+                tx.create(recordRef("groupMessages", inboxMessage.id), inboxMessage);
+            });
+            await sendPush("Loan Request Cancelled", `${name} cancelled a loan request of KES ${amount.toLocaleString()}.`, null, actorEmail, { type: "loan_cancelled", loanId: id });
             return { success: true };
         }
         case "setLoanDueDate": {
             requireAdmin(user);
             const loanId = String(params.loanId || "");
             const dueDate = String(params.dueDate || "");
-            if (!dueDate) throw new Error("Due date is required.");
+            if (!isIsoDate(dueDate)) {
+                throw new Error("Enter a valid repayment due date.");
+            }
             const awaitingRef = recordRef("loansAwaitingDueDate", loanId);
+            const historyRef = recordRef("loanRequests", loanId);
             let loanMember = "";
             await db.runTransaction(async (tx) => {
-                const snapshot = await tx.get(awaitingRef);
+                const [snapshot, historySnapshot] = await Promise.all([tx.get(awaitingRef), tx.get(historyRef)]);
                 if (!snapshot.exists) throw new Error("Loan not found or already activated.");
                 const loan = snapshot.data();
+                if (loan.date && dueDate <= loan.date) throw new Error("Repayment due date must be after the request date.");
                 loanMember = loan.member;
                 const principal = asNumber(loan.principal ?? loan.amount);
                 const interest = Math.round(principal * LOAN_INTEREST_RATE);
@@ -683,10 +861,26 @@ async function handleAction(action, params, user) {
                     amount: principal, message: loan.message || loan.description || "",
                     status: "Approved", approvedBy: loan.approvedBy || "", approvalDate: nowIso(), balanceAfter: 0
                 });
+                tx.set(historyRef, {
+                    ...(historySnapshot.exists ? historySnapshot.data() : loan),
+                    status: "active",
+                    dueDate,
+                    activatedAt: nowIso()
+                });
                 tx.delete(awaitingRef);
+                const inboxMessage = {
+                    id: crypto.randomUUID(),
+                    message: `${loan.member}'s approved loan of KES ${principal.toLocaleString()} is now active. Total due: KES ${(principal + interest).toLocaleString()}. Repayment due: ${dueDate}.`,
+                    member: name,
+                    email: user.email,
+                    type: "loan_activated",
+                    loanId,
+                    created_at: nowIso()
+                };
+                tx.create(recordRef("groupMessages", inboxMessage.id), inboxMessage);
             });
             await audit(name, "Activated loan with due date", `${loanId} — due ${dueDate}`);
-            await sendPush("Loan Activated", `Your loan is active. Repayment due: ${dueDate}.`, loanMember, name, { type: "loan_due_date_set", loanId, dueDate });
+            await sendPush("Loan Activated", `${loanMember}'s loan is active. Repayment due: ${dueDate}.`, null, actorEmail, { type: "loan_due_date_set", loanId, dueDate });
             return { success: true };
         }
         case "getPendingRegistrations":
@@ -719,15 +913,16 @@ async function handleAction(action, params, user) {
             if (action === "getPendingTransactions") return { success: true, transactions: await rows("pendingTransactions") };
             if (action === "getPendingLoans") return { success: true, loans: await rows("pendingLoans") };
             if (action === "getLoansDashboard") {
-                const [loans, active, users, awaiting] = await Promise.all([
+                const [loans, active, users, awaiting, requestHistory] = await Promise.all([
                     rows("pendingLoans"),
                     rows("activeLoans"),
                     rows("users"),
-                    isAdmin(user) ? rows("loansAwaitingDueDate") : Promise.resolve([])
+                    rows("loansAwaitingDueDate"),
+                    rows("loanRequests")
                 ]);
-                const members = users
-                    .filter((item) => item.status === "approved" && item.name)
-                    .map((item) => item.name);
+                const approvedUsers = users
+                    .filter((item) => item.status === "approved");
+                const members = approvedUsers.filter((item) => item.name).map((item) => item.name);
                 const activeLoans = active.map((loan) => {
                     const totalDue = asNumber(loan.totalDue);
                     const amountRepaid = asNumber(loan.amountRepaid);
@@ -744,22 +939,89 @@ async function handleAction(action, params, user) {
                         isOverdue
                     };
                 });
+                const requestById = new Map(requestHistory.map((request) => [request.id, request]));
+                const loanRequests = [...requestHistory];
+                const addLegacyRequest = (loan, status) => {
+                    const id = String(loan.id || loan.loanId || "");
+                    if (!id || requestById.has(id)) return;
+                    const principal = asNumber(loan.amount ?? loan.principal);
+                    const request = {
+                        ...loan,
+                        id,
+                        principal,
+                        interest: Math.round(principal * LOAN_INTEREST_RATE),
+                        totalDue: principal + Math.round(principal * LOAN_INTEREST_RATE),
+                        approvals: Array.isArray(loan.approvals) ? loan.approvals : [],
+                        status
+                    };
+                    requestById.set(id, request);
+                    loanRequests.push(request);
+                };
+                loans.forEach((loan) => addLegacyRequest(loan, loan.status || "pending"));
+                awaiting.forEach((loan) => addLegacyRequest(loan, "approved"));
+                active.forEach((loan) => addLegacyRequest(loan, "active"));
+                loanRequests.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
                 return {
                     success: true,
                     members,
                     loans: loans.map((loan) => {
                         const principal = asNumber(loan.amount ?? loan.principal);
                         const approvals = Array.isArray(loan.approvals) ? loan.approvals : [];
+                        let requesterEmail = emailKey(loan.requesterEmail);
+                        if (!requesterEmail) {
+                            const requester = approvedUsers.find((item) => String(item.name || "").trim().toLowerCase() === String(loan.member || "").trim().toLowerCase());
+                            requesterEmail = emailKey(requester && requester.email);
+                        }
+                        const approvalEmails = Array.isArray(loan.approvalEmails) ? loan.approvalEmails : [];
+                        const publicLoan = { ...loan };
+                        delete publicLoan.requesterEmail;
+                        delete publicLoan.approvalEmails;
                         return {
-                            ...loan,
+                            ...publicLoan,
+                            isRequester: requesterEmail === actorEmail || (!requesterEmail && loan.member === name),
+                            viewerHasApproved: approvalEmails.length
+                                ? approvalEmails.map(emailKey).includes(actorEmail)
+                                : (Array.isArray(loan.approvalEmails) ? false : approvals.includes(name)),
                             principal,
                             interest: Math.round(principal * LOAN_INTEREST_RATE),
                             totalDue: principal + Math.round(principal * LOAN_INTEREST_RATE),
-                            approvals
+                            approvals,
+                            approvalsRequired: Number.isFinite(Number(loan.approvalsRequired))
+                                ? Number(loan.approvalsRequired)
+                                : approvedUsers.filter((item) => requesterEmail
+                                    ? emailKey(item.email) !== requesterEmail
+                                    : item.name !== loan.member).length
                         };
                     }),
                     activeLoans,
-                    loansAwaitingDueDate: awaiting
+                    loansAwaitingDueDate: isAdmin(user) ? awaiting : [],
+                    loanRequests: loanRequests.map((request) => {
+                        const requesterProfile = approvedUsers.find((item) => String(item.name || "").trim().toLowerCase() === String(request.member || "").trim().toLowerCase());
+                        const requesterEmail = emailKey(request.requesterEmail || (requesterProfile && requesterProfile.email));
+                        const principal = asNumber(request.principal ?? request.amount);
+                        return {
+                            id: request.id,
+                            member: request.member || "",
+                            isRequester: requesterEmail === actorEmail || (!requesterEmail && request.member === name),
+                            principal,
+                            amount: asNumber(request.amount ?? request.principal),
+                            interest: asNumber(request.interest) || Math.round(principal * LOAN_INTEREST_RATE),
+                            totalDue: asNumber(request.totalDue) || (principal + Math.round(principal * LOAN_INTEREST_RATE)),
+                            message: request.message || "",
+                            date: request.date || "",
+                            requestedDueDate: request.requestedDueDate || "",
+                            createdAt: request.createdAt || "",
+                            approvals: Array.isArray(request.approvals) ? request.approvals : [],
+                            approvalsRequired: Number.isFinite(Number(request.approvalsRequired))
+                                ? Number(request.approvalsRequired)
+                                : approvedUsers.filter((item) => requesterEmail
+                                    ? emailKey(item.email) !== requesterEmail
+                                    : item.name !== request.member).length,
+                            status: request.status || "pending",
+                            rejectionReason: request.rejectionReason || "",
+                            dueDate: request.dueDate || ""
+                        };
+                    })
                 };
             }
             if (action === "getLoansAwaitingDueDate") return { success: true, loans: await rows("loansAwaitingDueDate") };

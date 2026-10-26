@@ -9763,11 +9763,11 @@ body.finance-ui .dashboard-top-grid > .header .wallet-profile-image {
 
 body.finance-ui .recent-activity-card #recentActivityList {
     position: relative;
-    max-height: 190px;
+    max-height: 236px;
     overflow: hidden;
     padding-bottom: 2px;
 }
-body.finance-ui .recent-activity-card #recentActivityList.has-recent-activity::after {
+body.finance-ui .recent-activity-card #recentActivityList.has-fade-activity::after {
     position: absolute;
     right: 0;
     bottom: 0;
@@ -9786,6 +9786,74 @@ body.finance-ui .recent-activity-hint {
     font-size: 9px;
     text-align: right;
 }
+body.finance-ui .recent-activity-stack .activity-row--fade-2 { opacity: .32; }
+body.finance-ui .recent-activity-stack .activity-row--fade-3 { opacity: .12; }
+body.finance-ui .recent-activity-stack .activity-row--fade-4 { opacity: .04; }
+body.finance-ui .recent-activity-card #recentActivityList.has-fade-activity::after {
+    height: 64px;
+    background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.8) 64%, #fff 100%);
+}
+
+body.finance-ui .loan-estimate-request {
+    width: 100%;
+    min-height: 44px;
+    margin-top: 10px;
+    border: 1px solid #244b34;
+    border-radius: 12px;
+    background: #244b34;
+    color: #fff;
+    font-weight: 750;
+}
+body.finance-ui .loan-estimate-request:hover { background: #193d2a; }
+body.finance-ui .loans-request-history { margin-top: 16px; }
+body.finance-ui .loans-request-history .loans-section-heading { margin-bottom: 12px; }
+body.finance-ui .loans-request-history .loans-section-heading p {
+    margin: 5px 0 0;
+    color: #7b897e;
+    font-size: 11px;
+}
+body.finance-ui .loan-history-list { display: grid; gap: 10px; }
+body.finance-ui .loan-history-item {
+    padding: 16px 17px;
+    border: 1px solid #e8ede7;
+    border-radius: 15px;
+    background: #fff;
+}
+body.finance-ui .loan-history-item.is-own-request { border-color: #d9e6d6; background: #fbfdf9; }
+body.finance-ui .loan-history-topline { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+body.finance-ui .loan-history-topline .section-kicker { color: #758779; font-size: 8px; letter-spacing: .13em; }
+body.finance-ui .loan-history-topline h3 { margin: 4px 0 0; color: #273b2e; font: 750 14px "Manrope", sans-serif; }
+body.finance-ui .loan-history-status {
+    flex: 0 0 auto;
+    padding: 6px 9px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 750;
+}
+body.finance-ui .loan-history-status.is-pending { color: #79521c; background: #fbf0d9; }
+body.finance-ui .loan-history-status.is-approved { color: #24543a; background: #e5f1e4; }
+body.finance-ui .loan-history-status.is-rejected { color: #8a3935; background: #fae9e7; }
+body.finance-ui .loan-history-details { margin: 9px 0; color: #67756a; font-size: 11px; line-height: 1.55; }
+body.finance-ui .loan-history-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; color: #879187; font-size: 9px; }
+body.finance-ui .loan-history-progress { height: 5px; margin-top: 10px; overflow: hidden; border-radius: 99px; background: #edf1ec; }
+body.finance-ui .loan-history-progress span { display: block; height: 100%; border-radius: inherit; background: #6a946c; transition: width .25s ease; }
+body.finance-ui .loan-history-votes,
+body.finance-ui .loan-history-reason { margin: 9px 0 0; color: #67756a; font-size: 10px; line-height: 1.5; }
+body.finance-ui .loan-history-reason { padding: 9px 11px; border-radius: 10px; background: #fff4f2; color: #754541; }
+body.finance-ui .loan-history-empty {
+    display: grid;
+    gap: 4px;
+    padding: 18px;
+    border: 1px dashed #dce5da;
+    border-radius: 13px;
+    color: #7b897e;
+    font-size: 10px;
+}
+body.finance-ui .loan-history-empty strong { color: #344d3b; font-size: 12px; }
+body.finance-ui .loan-decision-content { max-width: 460px; }
+body.finance-ui .loan-decision-content > p { color: #738074; font-size: 12px; line-height: 1.6; }
+body.finance-ui .loan-decision-content textarea { min-height: 120px; resize: vertical; }
+body.finance-ui .loan-decision-content .loan-decline-submit { background: #8e423b; }
 
 body.finance-ui .header-row-1 > .logout-btn {
     min-width: 0;
@@ -10006,8 +10074,8 @@ body.finance-ui .about-members-heading p { margin: 0; color: #7c887d; font-size:
     body.finance-ui .about-purpose-card--lead { grid-column: 1 / -1; min-height: auto; }
 }
 @media (max-width: 560px) {
-    body.finance-ui .recent-activity-card #recentActivityList { max-height: 180px; }
-    body.finance-ui .recent-activity-card #recentActivityList.has-recent-activity::after { height: 38px; }
+    body.finance-ui .recent-activity-card #recentActivityList { max-height: 205px; }
+    body.finance-ui .recent-activity-card #recentActivityList.has-fade-activity::after { height: 68px; }
     body.finance-ui .recent-activity-hint { margin-right: 12px; font-size: 8px; }
     body.finance-ui .header-row-1 > .logout-btn {
         height: 35px;
