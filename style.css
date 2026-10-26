@@ -9946,12 +9946,11 @@ body.finance-ui .loans-hero h1 { max-width: 560px; font-family: "Manrope", sans-
 body.finance-ui .loans-hero p { max-width: 400px; color: rgba(255,255,255,.82); line-height: 1.6; }
 body.finance-ui .loan-planning-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: 14px;
     margin: 0 0 16px;
 }
-body.finance-ui .loan-estimator-card,
-body.finance-ui .loan-readiness-card {
+body.finance-ui .loan-estimator-card {
     padding: 22px;
     border: 1px solid #e1e9df;
     border-radius: 18px;
@@ -9972,10 +9971,8 @@ body.finance-ui .loan-planning-icon {
     font-size: 10px;
     font-weight: 850;
 }
-body.finance-ui .loan-planning-heading .section-kicker,
-body.finance-ui .loan-readiness-card > .section-kicker { margin-bottom: 3px; font-size: 9px; }
-body.finance-ui .loan-planning-heading h2,
-body.finance-ui .loan-readiness-card h2 { margin: 0; color: #294332; font-family: "Manrope", sans-serif; font-size: 17px; font-weight: 800; letter-spacing: -.035em; }
+body.finance-ui .loan-planning-heading .section-kicker { margin-bottom: 3px; font-size: 9px; }
+body.finance-ui .loan-planning-heading h2 { margin: 0; color: #294332; font-family: "Manrope", sans-serif; font-size: 17px; font-weight: 800; letter-spacing: -.035em; }
 body.finance-ui .loan-estimator-card > p { margin: 13px 0; color: #78857b; font-size: 11px; line-height: 1.6; }
 body.finance-ui .loan-estimator-card > label { display: block; margin-bottom: 6px; color: #4c5f50; font-size: 10px; font-weight: 750; }
 body.finance-ui .loan-estimator-card > input {
@@ -9994,25 +9991,6 @@ body.finance-ui .loan-estimate-breakdown strong { color: #344b38; font-size: 10p
 body.finance-ui .loan-estimate-breakdown .loan-estimate-total { padding-top: 9px; border-top: 1px solid #e1e9df; color: #344b38; font-size: 11px; font-weight: 800; }
 body.finance-ui .loan-estimate-breakdown .loan-estimate-total strong { color: #28583b; font-size: 14px; }
 body.finance-ui .loan-estimator-card .loan-estimate-note { margin-bottom: 0; color: #8a958b; font-size: 9px; }
-body.finance-ui .loan-readiness-card { background: #f8faf7; }
-body.finance-ui .loan-readiness-card h2 { margin: 5px 0 15px; }
-body.finance-ui .loan-readiness-card ul { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
-body.finance-ui .loan-readiness-card li { display: flex; align-items: flex-start; gap: 10px; }
-body.finance-ui .loan-readiness-card li > span {
-    display: grid;
-    width: 25px;
-    height: 25px;
-    flex: 0 0 25px;
-    place-items: center;
-    border: 1px solid #e0e9dd;
-    border-radius: 8px;
-    background: #fff;
-    color: #638167;
-    font: 700 8px "Roboto Mono", monospace;
-}
-body.finance-ui .loan-readiness-card li strong { color: #3a5140; font-size: 10px; }
-body.finance-ui .loan-readiness-card li p { margin: 2px 0 0; color: #7d897f; font-size: 9px; line-height: 1.55; }
-
 body.finance-ui #aboutPanel { padding: 6px 0 44px; }
 body.finance-ui #aboutPanel .about-hero-card {
     display: flex;
@@ -10090,8 +10068,7 @@ body.finance-ui .about-members-heading p { margin: 0; color: #7c887d; font-size:
     }
     body.finance-ui .header-row-1 > .logout-btn svg { width: 13px; height: 13px; }
     body.finance-ui .loans-hero { min-height: 196px; }
-    body.finance-ui .loan-estimator-card,
-    body.finance-ui .loan-readiness-card { padding: 18px; }
+    body.finance-ui .loan-estimator-card { padding: 18px; }
     body.finance-ui #aboutPanel .about-hero-card { min-height: 360px; padding: 21px; border-radius: 20px; }
     body.finance-ui #aboutPanel .about-image-wrapper::after { background: linear-gradient(0deg, rgba(13,38,27,.92) 0%, rgba(16,43,31,.68) 56%, rgba(16,43,31,.08) 100%); }
     body.finance-ui #aboutPanel .about-hero-copy h1 { font-size: 34px; }
@@ -10107,4 +10084,174 @@ body.finance-ui .about-members-heading p { margin: 0; color: #7c887d; font-size:
     body.finance-ui .about-members-heading { align-items: flex-start; }
     body.finance-ui .app-confirm-dialog { padding: 23px 19px; border-radius: 19px; }
     body.finance-ui .app-confirm-actions button { min-height: 39px; padding: 0 12px; }
+}
+
+body.finance-ui .login-box {
+    align-self: center;
+    width: auto;
+    min-height: calc(100% - 36px);
+    margin: 18px;
+    padding: clamp(22px, 3vw, 36px);
+    border: 1px solid rgba(255, 255, 255, .58);
+    border-radius: 19px;
+    background: rgba(250, 253, 249, .76);
+    box-shadow: 0 16px 42px rgba(12, 37, 26, .12), inset 0 1px 0 rgba(255,255,255,.7);
+    backdrop-filter: blur(14px) saturate(1.08);
+    -webkit-backdrop-filter: blur(14px) saturate(1.08);
+}
+body.finance-ui .login-secure-logo,
+body.finance-ui .sidebar-brand-logo {
+    display: block;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    border: 1px solid rgba(35, 82, 60, .1);
+    border-radius: 9px;
+    background: rgba(255,255,255,.94);
+    object-fit: contain;
+}
+body.finance-ui .sidebar-brand-logo { width: 34px; height: 34px; flex-basis: 34px; }
+body.finance-ui .wallet-card-brand-mark-image {
+    display: block;
+    width: 29px;
+    height: 29px;
+    flex: 0 0 29px;
+    border-radius: 8px;
+    background: #fff;
+    object-fit: contain;
+}
+body.finance-ui .wallet-card-exporting .wallet-card-brand-mark-image { width: 48px; height: 48px; flex-basis: 48px; }
+body.finance-ui .wallet-card-exporting .wallet-profile-image {
+    width: 48%;
+    opacity: .76;
+    filter: contrast(1.04) saturate(1.06);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.62) 24%, #000 72%);
+    mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.62) 24%, #000 72%);
+}
+body.finance-ui .wallet-card-exporting .header-row-2 { padding-bottom: 21px; }
+body.finance-ui .wallet-card-exporting .wallet-cardholder-name { font-size: 16px; }
+body.finance-ui .header-row-1 { gap: 8px; }
+body.finance-ui .header-row-1 .user-name-badge {
+    min-height: 35px;
+    gap: 7px;
+    padding: 3px 10px 3px 4px;
+    border-radius: 999px;
+}
+body.finance-ui .header-row-1 .user-avatar-small { width: 29px; height: 29px; }
+body.finance-ui .header-row-1 .user-name-badge strong { font-size: 10px; }
+body.finance-ui .admin-portal-btn {
+    min-height: 33px;
+    gap: 6px;
+    padding: 0 9px;
+    border-radius: 10px;
+    font-size: 9px;
+}
+body.finance-ui .admin-portal-icon { width: 21px; height: 21px; flex-basis: 21px; border-radius: 7px; }
+body.finance-ui .admin-portal-icon svg { width: 15px; height: 15px; }
+body.finance-ui .header-row-1 > .logout-btn {
+    min-width: 0;
+    min-height: 33px;
+    height: 33px;
+    gap: 6px;
+    padding: 0 9px;
+    border-radius: 10px;
+    font-size: 9px;
+}
+body.finance-ui .header-row-1 > .logout-btn svg { width: 14px; height: 14px; }
+body.finance-ui .recent-activity-card .activity-card-heading > button {
+    min-height: 32px;
+    padding: 0 11px;
+}
+body.finance-ui .communications-page .communications-hero {
+    min-height: 150px;
+    margin-bottom: 13px;
+    padding: 24px clamp(20px, 3vw, 32px);
+    border-radius: 19px;
+}
+body.finance-ui .communications-page .communications-grid {
+    grid-template-columns: minmax(290px, .9fr) minmax(0, 1.1fr);
+    align-items: start;
+    gap: 13px;
+}
+body.finance-ui .communications-page .communications-meetings { gap: 10px; }
+body.finance-ui .communications-page .meeting-tools-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 7px;
+    padding: 16px;
+}
+body.finance-ui .communications-page .meeting-tools-card .communications-card-heading { margin-bottom: 4px; }
+body.finance-ui .communications-page .meeting-tools-card .communications-card-heading .section-kicker { margin-bottom: 4px; }
+body.finance-ui .communications-page .meeting-tools-card .communications-card-heading h2 { font-size: 16px; }
+body.finance-ui .communications-page .meeting-action-row {
+    min-height: 62px;
+    align-items: center;
+    padding: 9px 10px;
+    border-radius: 11px;
+    background: #fff;
+}
+body.finance-ui .communications-page .meeting-action-icon { width: 34px; height: 34px; flex-basis: 34px; }
+body.finance-ui .communications-page .meeting-action-title { font-size: 11px; }
+body.finance-ui .communications-page .meeting-action-sub { font-size: 9px; }
+body.finance-ui .communications-page .communications-inbox-card {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+body.finance-ui .communications-page .communications-inbox-card .group-messages {
+    min-height: 300px;
+    max-height: min(58vh, 620px);
+    flex: 1 1 auto;
+}
+body.finance-ui .communications-page .group-message-form { margin-top: 12px; }
+
+@media (max-width: 899px) {
+    body.finance-ui .tab-bar[style] {
+        right: 10px;
+        bottom: max(8px, env(safe-area-inset-bottom));
+        left: 10px;
+        min-height: 0;
+        gap: 0;
+        padding: 4px 5px calc(4px + env(safe-area-inset-bottom));
+        border: 1px solid rgba(221, 232, 221, .96);
+        border-radius: 17px;
+        background: rgba(255, 255, 255, .96);
+        box-shadow: 0 10px 30px rgba(22, 49, 31, .18), 0 2px 5px rgba(22, 49, 31, .08);
+        backdrop-filter: blur(16px) saturate(1.08);
+        -webkit-backdrop-filter: blur(16px) saturate(1.08);
+    }
+    body.finance-ui .tab { min-height: 42px; gap: 2px; padding: 2px; }
+    body.finance-ui .tab::before { top: -4px; }
+    body.finance-ui .tab .tab-icon { width: 21px; height: 21px; flex-basis: 21px; }
+    body.finance-ui .tab .tab-icon svg { width: 17px; height: 17px; }
+    body.finance-ui .fullscreen-panel.active-panel { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+    body.finance-ui .communications-page .communications-grid { grid-template-columns: minmax(0, 1fr); }
+    body.finance-ui .communications-page .communications-inbox-card .group-messages {
+        min-height: 250px;
+        max-height: 46vh;
+    }
+}
+@media (max-width: 560px) {
+    body.finance-ui .login-box {
+        min-height: calc(100% - 22px);
+        margin: 11px;
+        padding: 22px 17px;
+        border-radius: 16px;
+    }
+    body.finance-ui .header-row-1 .user-name-badge { min-height: 33px; gap: 5px; padding-right: 6px; }
+    body.finance-ui .header-row-1 .user-avatar-small { width: 27px; height: 27px; }
+    body.finance-ui .header-row-1 .user-name-badge strong { max-width: 24vw; font-size: 9px; }
+    body.finance-ui .admin-portal-btn { min-height: 31px; gap: 4px; padding: 0 6px; font-size: 8px; }
+    body.finance-ui .admin-portal-icon { width: 19px; height: 19px; flex-basis: 19px; }
+    body.finance-ui .admin-portal-icon svg { width: 13px; height: 13px; }
+    body.finance-ui .header-row-1 > .logout-btn { min-height: 31px; height: 31px; gap: 4px; padding: 0 6px; font-size: 8px; }
+    body.finance-ui .header-row-1 > .logout-btn svg { width: 12px; height: 12px; }
+    body.finance-ui .communications-page .communications-hero { min-height: 0; padding: 19px 17px; }
+    body.finance-ui .communications-page .communications-inbox-card .group-messages { min-height: 220px; }
+    body.finance-ui .wallet-card-export-stage .wallet-card-exporting {
+        width: 856px;
+        height: 540px;
+        min-height: 540px;
+        padding: 42px 48px 0;
+    }
+    body.finance-ui .wallet-card-exporting .wallet-profile-image { width: 48%; }
 }

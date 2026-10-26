@@ -1263,17 +1263,19 @@ async function downloadWalletCard() {
     exportStage.appendChild(card);
     document.body.appendChild(exportStage);
     try {
-        await Promise.all([...card.querySelectorAll('img')].map(img => img.decode()));
+        await Promise.all([...card.querySelectorAll('img')]
+            .filter(img => !img.hidden && (img.currentSrc || img.src))
+            .map(img => img.decode()));
         const accountName = (currentUserDisplayName || currentUser || 'Member')
             .trim()
             .replace(/[^A-Za-z0-9_-]+/g, '_')
             .replace(/^_+|_+$/g, '') || 'Member';
-        const filename = `${accountName}_NBFA_GROUP_Card_${new Date().toISOString().slice(0, 10)}.pdf`;
+        const filename = `${accountName}_NBFA_GROUP_Card_${getLocalDateInputValue()}.pdf`;
         await html2pdf().set({
             margin: 0,
             filename,
             image: { type: 'png' },
-            html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: null, windowWidth: 856 },
+            html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: null, windowWidth: 856, scrollX: 0, scrollY: 0 },
             jsPDF: { unit: 'mm', format: [85.6, 54], orientation: 'landscape' }
         }).from(card).save();
         showToast('Your NBFA GROUP card was downloaded.', 'success');

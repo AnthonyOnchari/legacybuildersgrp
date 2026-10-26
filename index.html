@@ -18,7 +18,7 @@
     <div id="loginOverlay" class="login-overlay">
         <div class="login-layout">
                 <section class="login-copy" aria-label="Legacy Builders home">
-                    <video class="login-photo" autoplay muted loop playsinline preload="metadata" poster="Assets/img01.jpeg" aria-hidden="true">
+                    <video class="login-photo" autoplay muted loop playsinline preload="metadata" aria-hidden="true">
                         <source src="Assets/Img%20(1).mp4" type="video/mp4">
                     </video>
                 </section>
@@ -26,7 +26,7 @@
                 <div class="login-box">
                     <div class="login-hero">
                         <span class="login-secure-label">
-                            <span class="login-secure-mark" aria-hidden="true">N</span>
+                            <img class="login-secure-logo" src="Assets/logo.png" alt="">
                             <span>NBFA GROUP</span>
                         </span>
                         <h2 id="loginTitle">Log in to your account</h2>
@@ -106,7 +106,7 @@
     <div class="app-shell">
         <nav class="sidebar" id="sidebarNav" aria-label="Main navigation">
             <div class="sidebar-brand">
-                <div class="sidebar-brand-name"><span class="brand-mark" aria-hidden="true">LB</span><span>Legacy Builders</span></div>
+                <div class="sidebar-brand-name"><img class="sidebar-brand-logo" src="Assets/logo.png" alt=""><span>Legacy Builders</span></div>
                 <div class="sidebar-brand-tagline">Where Families Build Wealth Together</div>
             </div>
             <div class="sidebar-nav">
@@ -157,7 +157,7 @@
             <img class="wallet-profile-image" id="walletProfileImage" alt="" aria-hidden="true" hidden>
             <div class="wallet-card-topline">
                 <span class="wallet-card-brand">
-                    <span class="wallet-card-brand-mark" aria-hidden="true">N</span>
+                    <img class="wallet-card-brand-mark-image" src="Assets/logo.png" alt="">
                     <span>NBFA GROUP</span>
                 </span>
                 <span class="wallet-card-chip" aria-hidden="true">
@@ -285,7 +285,7 @@
                         <h2>Recent activity</h2>
                         <p>Latest group transactions</p>
                     </div>
-                    <button type="button" onclick="openHistoryModal()">Full history <span aria-hidden="true">↗</span></button>
+                    <button type="button" onclick="openHistoryModal()">View full history</button>
                 </div>
                 <p class="recent-activity-hint">Showing the latest two</p>
                 <div id="recentActivityList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
@@ -359,7 +359,7 @@
                 </div>
                 <button type="button" class="loans-request-button" onclick="openAddTransactionModal('Loan Taken')">Request a loan</button>
             </header>
-            <section class="loan-planning-grid" aria-label="Loan planning information">
+            <section class="loan-planning-grid" aria-label="Loan cost estimate">
                 <div class="loan-estimator-card">
                     <div class="loan-planning-heading"><span class="loan-planning-icon" aria-hidden="true">KES</span><div><span class="section-kicker">COST ESTIMATOR</span><h2>Know the total first</h2></div></div>
                     <p>Enter an example amount to see the current 10% interest estimate. Final terms are confirmed during group approval.</p>
@@ -372,15 +372,6 @@
                     </div>
                     <p class="loan-estimate-note">This is an estimate, not an approval or a recommendation to borrow.</p>
                     <button type="button" class="loan-estimate-request" onclick="requestEstimatedLoan()">Request this amount</button>
-                </div>
-                <div class="loan-readiness-card">
-                    <span class="section-kicker">BEFORE YOU REQUEST</span>
-                    <h2>Take a moment to review</h2>
-                    <ul>
-                        <li><span aria-hidden="true">01</span><div><strong>Check the total</strong><p>Include principal and the stated interest in your plans.</p></div></li>
-                        <li><span aria-hidden="true">02</span><div><strong>Agree on a repayment date</strong><p>Make sure the due date works with your expected income.</p></div></li>
-                        <li><span aria-hidden="true">03</span><div><strong>Understand the approval process</strong><p>Requests are reviewed by the group before activation.</p></div></li>
-                    </ul>
                 </div>
             </section>
             <div class="loans-sections-grid">
