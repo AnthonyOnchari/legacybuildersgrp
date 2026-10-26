@@ -17,6 +17,7 @@ let currentUserPhone = '', currentUserPhoneCountry = '', currentUserPhoneDialCod
 let currentUserPhoneVerifiedAt = '', currentUserPhoneVerifiedBy = '';
 let isLoading = false, chartInstance = null;
 let dashboardLoaded = false;
+let appBackNavigationInitialized = false;
 const memberPhotoCache = {};
 let serviceWorkerRegistered = false, pushSubscription = null;
 const countUpFrames = new WeakMap();
@@ -337,6 +338,7 @@ async function resendOtpCode() {
 // COMPLETE LOGIN
 // ============================================================
 function activateCurrentTab() {
+    initializeAppBackNavigation();
     if (currentTab === 'groupChat') currentTab = 'meetings';
     if ((currentTab === 'developer' && !isDeveloper()) || (currentTab === 'pending' && !hasAdminPortalAccess())) {
         currentTab = 'transactions';
@@ -401,9 +403,9 @@ async function completeLogin(name, email, profile = {}) {
             updateHeaderAvatar();
         }
     });
-    loadGroupMemories();
     await Promise.all([
         loadAllData(),
+        loadGroupMemories(),
         profileImageLoad,
         loadMeetingMinutes(),
         loadScheduledMeeting(),
@@ -2914,6 +2916,22 @@ function activateTab(tabId) {
     }
 }
 
+function initializeAppBackNavigation() {
+    if (appBackNavigationInitialized || !currentUser) return;
+    appBackNavigationInitialized = true;
+    const addNavigationGuard = () => window.history.pushState({ appNavigationGuard: true }, document.title, window.location.href);
+    addNavigationGuard();
+    window.addEventListener('popstate', () => {
+        if (!currentUser) return;
+        if (currentTab !== 'transactions') {
+            activateTab('transactions');
+            addNavigationGuard();
+            return;
+        }
+        if (!window.confirm('Are you sure you want to exit NBFA GROUP?')) addNavigationGuard();
+    });
+}
+
 // ============================================================
 // MEMORIES CAROUSEL
 // ============================================================
@@ -3258,6 +3276,7 @@ const initializeApp = async () => {
         activateCurrentTab();
         await Promise.all([
             ...(currentTab === 'loans' ? [] : [loadAllData()]),
+            loadGroupMemories(),
             profileImageLoad,
             loadMeetingMinutes(),
             loadScheduledMeeting(),
@@ -3269,6 +3288,8 @@ const initializeApp = async () => {
         refreshInterval = setInterval(() => {
             if (currentUser) {
                 loadAllData(true);
+                loadGroupMessages();
+                loadGroupMemories();
                 loadScheduledMeeting();
                 loadMembersList();
             }
