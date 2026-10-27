@@ -1217,7 +1217,7 @@ async function handleAction(action, params, user) {
         case "sendPushNotification": {
             requireAdmin(user);
             const count = await sendPush(
-                String(params.title || "Legacy Builders Group"),
+                String(params.title || "NBFA GROUP"),
                 String(params.body || ""),
                 params.recipient || null,
                 params.sender || name,

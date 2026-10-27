@@ -16,7 +16,7 @@ self.addEventListener('push', function(event) {
     console.log('Push notification received:', event);
     
     let data = {
-        title: 'Legacy Builders Group',
+        title: 'NBFA GROUP',
         body: 'You have a new notification',
         data: {}
     };

@@ -48,7 +48,7 @@ export default async function handler(req, res) {
         }
 
         const payload = JSON.stringify({
-            title: title || 'Legacy Builders Group',
+            title: title || 'NBFA GROUP',
             body: body || 'You have a new notification',
             data: data || {},
             timestamp: new Date().toISOString()

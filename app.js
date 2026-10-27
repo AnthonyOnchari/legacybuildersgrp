@@ -3203,7 +3203,7 @@ function exportToCSV() {
             return str;
         };
         const csvLines = [
-            'Legacy Builders Group — Transaction Export',
+            'NBFA GROUP — Transaction Export',
             `Exported: ${new Date().toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' })}`,
             `Total records: ${rows.length}`, '',
             columns.map(escapeCell).join(','),
@@ -3214,7 +3214,7 @@ function exportToCSV() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Legacy_Builders_Transactions_${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = `NBFA_GROUP_Transactions_${new Date().toISOString().split('T')[0]}.csv`;
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -3281,7 +3281,7 @@ function exportToPDF() {
     generator.classList.add('active');
     preview.innerHTML = `
             <div id="pdfReportContent" style="max-width:800px;margin:0 auto;font-family:Arial,sans-serif;color:#18392F;font-size:12px;padding:10px;">
-                <h1 style="margin:0;text-align:center;border-bottom:2px solid #367454;padding-bottom:9px;">Legacy Builders Group</h1>
+                <h1 style="margin:0;text-align:center;border-bottom:2px solid #367454;padding-bottom:9px;">NBFA GROUP</h1>
                 <h2 style="margin:9px 0 3px;text-align:center;font-weight:500;font-size:17px;">Financial report</h2>
                 <p style="margin:0;text-align:center;color:#718078;font-size:10px;">Prepared ${new Date().toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin:18px 0;background:#E3EAE2;border:1px solid #E3EAE2;border-radius:8px;overflow:hidden;">
@@ -3302,7 +3302,7 @@ function exportToPDF() {
                     <div style="text-align:center;"><div style="font-size:9px;color:#718078;">Group members</div><div style="font-size:13px;font-weight:700;">${allMembers.length}</div></div>
                     <div style="text-align:center;"><div style="font-size:9px;color:#718078;">Transactions</div><div style="font-size:13px;font-weight:700;">${allRecords.length}</div></div>
                 </div>
-                <p style="margin:16px 0 0;text-align:center;color:#718078;font-size:9px;border-top:1px solid #E3EAE2;padding-top:10px;">Legacy Builders Group · Building wealth together</p>
+                <p style="margin:16px 0 0;text-align:center;color:#718078;font-size:9px;border-top:1px solid #E3EAE2;padding-top:10px;">NBFA GROUP · Building wealth together</p>
                 <button class="pdf-generate-btn" id="pdfGenerateBtn" data-html2canvas-ignore="true">Download PDF</button>
                 <button class="pdf-close-btn" data-html2canvas-ignore="true" aria-label="Close PDF preview" onclick="document.getElementById('pdfGenerator').classList.remove('active', 'pdf-exporting')">×</button>
             </div>
@@ -3316,7 +3316,7 @@ function exportToPDF() {
         const reportSource = document.getElementById('pdfReportContent');
         const options = {
             margin: 8,
-            filename: `Legacy_Builders_Report_${new Date().toISOString().split('T')[0]}.pdf`,
+            filename: `NBFA_GROUP_Report_${new Date().toISOString().split('T')[0]}.pdf`,
             image: { type: 'jpeg', quality: 0.95 },
             html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },

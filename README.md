@@ -1,4 +1,4 @@
-# Legacy Builders Group
+# NBFA GROUP
 
 The app uses Firebase Authentication (Google sign-in), Cloud Firestore, and a Vercel serverless API backed by the Firebase Admin SDK. The old Apps Script proxy is removed; the Google Sheet and the supplied Excel workbook are not modified by the app or importer.
 
@@ -34,7 +34,7 @@ The importer supports Excel exports with the existing tab names. Run it from the
 
 ```powershell
 npm --prefix functions install
-npm --prefix functions run import -- --source "C:\path\to\Legacy Builders Group - Data.xlsx"
+npm --prefix functions run import -- --source "C:\path\to\NBFA GROUP - Data.xlsx"
 ```
 
 The command is a **dry run** and prints collection counts only. To add missing records, rerun with `--commit`. To merge multiple exports, pass `--source` once for each file. It only creates documents; it does not update or delete existing Firestore documents, and existing documents are preserved. Keep the original workbook and Sheet as backups until Firebase data is verified.
