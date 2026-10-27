@@ -3373,7 +3373,7 @@ function renderChart(summary) {
     const formatKes = value => `KES ${Math.round(value).toLocaleString('en-KE')}`;
     const drawDuration = 3600;
     const eraseDuration = 2300;
-    const pauseDuration = 2000;
+    const pauseDuration = 5000;
     const cycleDuration = drawDuration + eraseDuration + pauseDuration;
     const revealStartedAt = performance.now();
     const revealChart = timestamp => {
