@@ -92,7 +92,7 @@ function updateUnreadIndicators() {
         const labels = sidebarLink.querySelectorAll('span');
         if (labels[1]) labels[1].textContent = 'Connect';
         if (!document.getElementById('connectSidebarBadge')) {
-            sidebarLink.insertAdjacentHTML('beforeend', '<span id="connectSidebarBadge" class="nav-unread-badge" hidden></span><span id="connectSidebarDot" class="nav-unread-dot" hidden></span>');
+            sidebarLink.insertAdjacentHTML('beforeend', '<span id="connectSidebarBadge" class="nav-unread-badge" hidden></span>');
         }
     }
     const messageBadge = document.getElementById('connectTabBadge');
@@ -103,11 +103,21 @@ function updateUnreadIndicators() {
         el.textContent = unreadGroupMessages > 99 ? '99+' : String(unreadGroupMessages);
         el.hidden = unreadGroupMessages === 0;
     });
-    const dotVisible = unreadMeetingUpdates;
-    ['connectTabDot', 'connectSidebarDot'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.hidden = !dotVisible;
+}
+
+function scrollGroupMessagesToBottom(behavior = 'auto') {
+    const container = document.getElementById('groupMessages');
+    if (!container) return;
+    requestAnimationFrame(() => {
+        container.scrollTo({ top: container.scrollHeight, behavior });
     });
+}
+
+function syncChatViewport() {
+    const viewport = window.visualViewport;
+    const keyboardOffset = viewport ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop) : 0;
+    document.documentElement.style.setProperty('--chat-keyboard-offset', `${keyboardOffset}px`);
+    if (document.getElementById('groupChatModal')?.style.display !== 'none') scrollGroupMessagesToBottom();
 }
 
 function markGroupMessagesRead() {
@@ -3922,6 +3932,7 @@ async function loadGroupMessages() {
     container.querySelectorAll('.group-message-delete').forEach(button => {
         button.addEventListener('click', () => deleteGroupMessage(button));
     });
+    scrollGroupMessagesToBottom();
     if (document.getElementById('groupChatModal')?.style.display !== 'none') markGroupMessagesRead();
 }
 
@@ -4000,6 +4011,11 @@ function toggleGroupChat(open, opener = null) {
         modal.querySelector('.group-chat-modal-dialog')?.focus({ preventScroll: true });
         document.getElementById('groupMessageInput')?.focus({ preventScroll: true });
         markGroupMessagesRead();
+        loadGroupMessages();
+        setTimeout(() => {
+            syncChatViewport();
+            scrollGroupMessagesToBottom('smooth');
+        }, 80);
         return;
     }
 
@@ -4263,6 +4279,16 @@ function initializeDevelopmentPreview() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', syncChatViewport);
+        window.visualViewport.addEventListener('scroll', syncChatViewport);
+    }
+    document.getElementById('groupMessageInput')?.addEventListener('focus', () => {
+        setTimeout(() => {
+            syncChatViewport();
+            scrollGroupMessagesToBottom('smooth');
+        }, 250);
+    });
     initializeAuthVideoLoop();
     initializeGoogleSignIn();
     initializeApp().catch(error => {

@@ -11507,3 +11507,19 @@ body.finance-ui .group-chat-modal .communications-inbox-card .group-chat-heading
 body.finance-ui .group-chat-modal .communications-inbox-card .group-chat-heading--compact h2 { font-size: 15px; }
 body.finance-ui .group-chat-modal .communications-inbox-card .group-chat-heading--compact p { margin-top: 2px; font-size: 10px; }
 body.finance-ui .summary-target-caption { color: #367454; }
+@media (max-width: 560px) {
+    body.finance-ui .group-chat-modal {
+        align-items: center;
+        padding: 8px 8px calc(8px + var(--chat-keyboard-offset, 0px));
+    }
+    body.finance-ui .group-chat-modal-dialog {
+        height: min(680px, calc(100dvh - var(--chat-keyboard-offset, 0px) - 16px));
+        max-height: calc(100dvh - var(--chat-keyboard-offset, 0px) - 16px);
+        margin: 0;
+    }
+    body.finance-ui .group-chat-modal .group-messages {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+}
