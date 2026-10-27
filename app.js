@@ -101,8 +101,10 @@ function updateUnreadIndicators() {
     const heroBadge = document.getElementById('heroChatBadge');
     [messageBadge, sidebarBadge, heroBadge].forEach(el => {
         if (!el) return;
-        el.textContent = unreadGroupMessages > 99 ? '99+' : String(unreadGroupMessages);
-        el.hidden = unreadGroupMessages === 0;
+        const hasUnread = unreadGroupMessages > 0;
+        el.textContent = hasUnread ? (unreadGroupMessages > 99 ? '99+' : String(unreadGroupMessages)) : '';
+        el.hidden = !hasUnread;
+        el.style.display = hasUnread ? '' : 'none';
     });
 }
 
