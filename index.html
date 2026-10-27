@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=92">
+    <link rel="stylesheet" href="style.css?v=93">
 </head>
 <body class="finance-ui app-loading">
 
@@ -526,36 +526,36 @@
         </div>
 
         <!-- Developer Portal Panel -->
-        <div id="developerPanel" class="panel fullscreen-panel">
-            <div class="card developer-hero-card">
-                <h2>Developer portal</h2>
-                <p>Full system control and monitoring</p>
+        <div id="developerPanel" class="panel fullscreen-panel developer-portal">
+            <div class="developer-portal-hero">
+                <div><span class="developer-portal-kicker">SYSTEM CONTROL</span><h1>Developer portal</h1><p>Monitor the group, manage access, and keep the platform healthy.</p></div>
+                <div class="developer-portal-status"><span></span>Live workspace</div>
             </div>
-            <div class="card admin-phone-directory-card">
+            <div class="card developer-section developer-contacts-card">
                 <div class="portal-section-heading">
                     <div><span class="dashboard-eyebrow">MEMBER CONTACTS</span><h2>Verified phone numbers</h2><p>Add or update a member's phone. Numbers entered here are marked as verified by an administrator.</p></div>
                     <span class="admin-verified-pill">Admin managed</span>
                 </div>
                 <div id="developerPhoneProfiles" class="admin-phone-profiles loading-container"><div class="loading-spinner"></div><div>Loading member contacts...</div></div>
             </div>
-            <div class="card">
-                <h3>System Statistics</h3>
+            <div class="card developer-section developer-stats-card">
+                <div class="developer-section-heading"><div><span class="developer-portal-kicker">AT A GLANCE</span><h2>System statistics</h2></div><span class="developer-section-mark">01</span></div>
                 <div id="systemStats" class="loading-container"><div class="loading-spinner"></div><div>Loading stats...</div></div>
             </div>
-            <div class="card">
-                <h3>User Management</h3>
+            <div class="card developer-section developer-users-card">
+                <div class="developer-section-heading"><div><span class="developer-portal-kicker">ACCESS CONTROL</span><h2>User management</h2></div><span class="developer-section-mark">02</span></div>
                 <div id="allUsersList" class="loading-container"><div class="loading-spinner"></div><div>Loading users...</div></div>
             </div>
-            <div class="card">
-                <h3>Pending Registrations</h3>
+            <div class="card developer-section developer-pending-card">
+                <div class="developer-section-heading"><div><span class="developer-portal-kicker">ACTION QUEUE</span><h2>Pending registrations</h2></div><span class="developer-section-mark">03</span></div>
                 <div id="devPendingRegistrations" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
             </div>
-            <div class="card">
-                <h3>Full Audit Log</h3>
+            <div class="card developer-section developer-audit-card">
+                <div class="developer-section-heading"><div><span class="developer-portal-kicker">RECENT ACTIVITY</span><h2>Audit log</h2></div><span class="developer-section-mark">04</span></div>
                 <div id="devAuditLog" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
             </div>
-            <div class="card">
-                <h3>Developer Actions</h3>
+            <div class="card developer-section developer-actions-card">
+                <div class="developer-section-heading"><div><span class="developer-portal-kicker">TOOLS</span><h2>Developer actions</h2></div><span class="developer-section-mark">05</span></div>
                 <div class="developer-actions">
                     <button class="dev-refresh-btn" onclick="refreshAllData()">Refresh data</button>
                     <button class="dev-export-btn" onclick="exportSystemData()">Export data</button>
@@ -591,6 +591,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://accounts.google.com/gsi/client" defer></script>
     <script src="firebase-config.js?v=36"></script>
-    <script src="app.js?v=72"></script>
+    <script src="app.js?v=73"></script>
 </body>
 </html>
