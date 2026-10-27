@@ -3224,6 +3224,8 @@ async function changePassword() {
 // ============================================================
 // CHART
 // ============================================================
+let chartRevealFrame = null;
+
 function renderChart(summary) {
     const canvas = document.getElementById('financialChart');
     if (!canvas) return;
@@ -3249,6 +3251,10 @@ function renderChart(summary) {
     animateCountUp(document.getElementById('summaryStatOutstanding'), summary.outstanding || 0);
     animateCountUp(document.getElementById('summaryStatInterest'), summary.interestEarned || 0);
 
+    if (chartRevealFrame) {
+        cancelAnimationFrame(chartRevealFrame);
+        chartRevealFrame = null;
+    }
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
     const ctx = canvas.getContext('2d');
     const now = new Date();
@@ -3270,6 +3276,25 @@ function renderChart(summary) {
     const savingsGradient = ctx.createLinearGradient(0, 0, 0, 280);
     savingsGradient.addColorStop(0, 'rgba(54, 116, 84, .32)');
     savingsGradient.addColorStop(1, 'rgba(54, 116, 84, .015)');
+
+    const chartRevealPlugin = {
+        id: 'summaryLineReveal',
+        beforeDatasetsDraw(chart) {
+            if (!chart.chartArea) return;
+            const progress = Math.max(0, Math.min(1, Number(chart.$summaryRevealProgress) || 0));
+            const { left, top, right, bottom } = chart.chartArea;
+            const context = chart.ctx;
+            context.save();
+            context.beginPath();
+            context.rect(left, top, Math.max(1, (right - left) * progress), bottom - top);
+            context.clip();
+            chart.$summaryRevealContext = context;
+        },
+        afterDatasetsDraw(chart) {
+            chart.$summaryRevealContext?.restore();
+            chart.$summaryRevealContext = null;
+        }
+    };
 
     chartInstance = new Chart(ctx, {
         type: 'line',
@@ -3305,11 +3330,29 @@ function renderChart(summary) {
                 x: { grid: { display: false }, ticks: { color: '#84958A', font: { family: '"DM Sans", sans-serif', size: 10, weight: '700' } } },
                 y: { beginAtZero: true, grid: { color: 'rgba(123, 151, 130, .13)' }, ticks: { color: '#84958A', padding: 8, callback: value => `KES ${Number(value).toLocaleString('en-KE')}`, font: { family: '"DM Sans", sans-serif', size: 9 } } }
             },
-            animation: { duration: 1400, easing: 'easeOutQuart' },
+            animation: false,
             interaction: { intersect: false, mode: 'index' },
             layout: { padding: { top: 10, right: 12, bottom: 4, left: 2 } }
-        }
+        },
+        plugins: [chartRevealPlugin]
     });
+
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const revealDuration = reducedMotion ? 0 : 1250;
+    const revealStartedAt = performance.now();
+    const revealChart = timestamp => {
+        if (!chartInstance) return;
+        const elapsed = timestamp - revealStartedAt;
+        const rawProgress = revealDuration ? Math.min(1, elapsed / revealDuration) : 1;
+        const easedProgress = 1 - Math.pow(1 - rawProgress, 3);
+        chartInstance.$summaryRevealProgress = easedProgress;
+        chartInstance.draw();
+        if (rawProgress < 1) chartRevealFrame = requestAnimationFrame(revealChart);
+        else chartRevealFrame = null;
+    };
+    chartInstance.$summaryRevealProgress = 0;
+    chartInstance.draw();
+    chartRevealFrame = requestAnimationFrame(revealChart);
 }
 
 // ============================================================
