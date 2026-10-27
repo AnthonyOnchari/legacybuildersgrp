@@ -3751,6 +3751,7 @@ function showAppConfirmation({ title, message, confirmLabel = 'Continue', destru
 let GROUP_MEMORY_PHOTOS = [];
 let memoriesIndex = 0, memoriesInterval = null;
 let memoryTransitionTimer = null;
+let memoryOrderKey = '';
 let pendingMemoryPhoto = null, pendingMemoryPhotoFile = null, pendingMemoryPhotoFiles = [], pendingMemoryPhotos = [], memoryPreviewUrl = null;
 let memoryComposerPreviousOverflow = '';
 const GROUP_MEMORIES_CACHE_KEY = 'nbfa_group_memories_cache_v1';
@@ -3775,10 +3776,38 @@ function readGroupMemoriesCache() {
     }
 }
 
+function shuffleMemoryPhotos(photos) {
+    const shuffled = [...photos];
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+        const randomIndex = Math.floor(Math.random() * (index + 1));
+        [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+    }
+    return shuffled;
+}
+
+function applyMemoryPhotos(photos) {
+    const normalized = Array.isArray(photos) ? photos.filter(photo => photo && photo.id && photo.image) : [];
+    const nextOrderKey = normalized.map(photo => String(photo.id)).sort().join('|');
+    const activeId = GROUP_MEMORY_PHOTOS[memoriesIndex]?.id;
+    if (nextOrderKey !== memoryOrderKey) {
+        GROUP_MEMORY_PHOTOS = shuffleMemoryPhotos(normalized);
+        memoryOrderKey = nextOrderKey;
+    } else {
+        const incoming = new Map(normalized.map(photo => [String(photo.id), photo]));
+        GROUP_MEMORY_PHOTOS = GROUP_MEMORY_PHOTOS
+            .filter(photo => incoming.has(String(photo.id)))
+            .map(photo => ({ ...photo, ...incoming.get(String(photo.id)) }));
+    }
+    if (activeId) {
+        const activeIndex = GROUP_MEMORY_PHOTOS.findIndex(photo => photo.id === activeId);
+        if (activeIndex >= 0) memoriesIndex = activeIndex;
+    }
+}
+
 async function loadGroupMemories() {
     const cached = readGroupMemoriesCache();
     if (!GROUP_MEMORY_PHOTOS.length && cached.length) {
-        GROUP_MEMORY_PHOTOS = cached;
+        applyMemoryPhotos(cached);
         initMemoriesCarousel();
     }
     const res = await callAPI('getGroupMemories');
@@ -3797,7 +3826,7 @@ async function loadGroupMemories() {
         }
         return;
     }
-    GROUP_MEMORY_PHOTOS = res.memories;
+    applyMemoryPhotos(res.memories);
     saveGroupMemoriesCache();
     initMemoriesCarousel();
     const syncStatus = document.getElementById('memorySyncStatus');
@@ -3814,8 +3843,11 @@ function initMemoriesCarousel() {
     const previousButton = document.getElementById('memoryPreviousButton');
     const nextButton = document.getElementById('memoryNextButton');
     const photoCount = document.getElementById('memoryPhotoCount');
-    const photoPosition = document.getElementById('memoryPhotoPosition');
     if (!card || !track || !dotsWrap || !emptyState || !frame || !footer || !previousButton || !nextButton) return;
+    const activePhotoId = GROUP_MEMORY_PHOTOS[memoriesIndex]?.id;
+    const activePhotoIndex = activePhotoId
+        ? GROUP_MEMORY_PHOTOS.findIndex(photo => photo.id === activePhotoId)
+        : 0;
     card.style.display = 'block';
     if (!GROUP_MEMORY_PHOTOS.length) emptyState.textContent = 'Share a group photo to start your memories.';
     emptyState.style.display = GROUP_MEMORY_PHOTOS.length ? 'none' : 'block';
@@ -3829,7 +3861,7 @@ function initMemoriesCarousel() {
             && photo.email.toLowerCase() === currentUserEmail.toLowerCase());
         return `
         <figure class="memory-slide">
-            <img src="${escapeHtml(photo.image)}" alt="${escapeHtml(photo.caption || `Group photo shared by ${photo.member || 'a member'}`)}" loading="${index === 0 ? 'eager' : 'lazy'}">
+            <img src="${escapeHtml(photo.image)}" alt="${escapeHtml(photo.caption || `Group photo shared by ${photo.member || 'a member'}`)}" loading="${index === (activePhotoIndex >= 0 ? activePhotoIndex : 0) ? 'eager' : 'lazy'}">
             ${photo.caption ? `<figcaption>${escapeHtml(photo.caption)}</figcaption>` : ''}
             ${ownsPhoto ? `<div class="memory-owner-actions" aria-label="Manage your photo">
                 <button type="button" class="memory-more-button" onclick="toggleMemoryOwnerMenu(event, ${index})" aria-label="More photo actions" aria-expanded="false" title="More actions">•••</button>
@@ -3853,7 +3885,8 @@ function initMemoriesCarousel() {
         });
     });
     dotsWrap.innerHTML = GROUP_MEMORY_PHOTOS.map((_, i) => `<button type="button" class="memories-dot${i === 0 ? ' active' : ''}" aria-label="Show photo ${i + 1}" aria-current="${i === 0 ? 'true' : 'false'}" onclick="goToMemory(${i})"></button>`).join('');
-    memoriesIndex = 0; updateMemoriesPosition();
+    memoriesIndex = activePhotoIndex >= 0 ? activePhotoIndex : 0;
+    updateMemoriesPosition(true);
     if (memoriesInterval) clearInterval(memoriesInterval);
     const pauseAutoplay = () => { memoriesPaused = true; };
     const resumeAutoplay = () => { memoriesPaused = false; };
@@ -3869,7 +3902,6 @@ function initMemoriesCarousel() {
             if (!memoriesPaused && !document.hidden) moveMemory(1);
         }, 3000);
     }
-    if (photoPosition) photoPosition.textContent = GROUP_MEMORY_PHOTOS.length ? `1 / ${GROUP_MEMORY_PHOTOS.length}` : '';
 }
 
 let memoriesPaused = false;
@@ -3972,6 +4004,7 @@ async function deleteGroupMemory(index) {
         const res = await callAPI('deleteGroupMemory', { id: photo.id });
         if (!res.success) throw new Error(res.error || 'Could not delete the photo.');
         GROUP_MEMORY_PHOTOS = GROUP_MEMORY_PHOTOS.filter(item => item.id !== photo.id);
+        memoryOrderKey = GROUP_MEMORY_PHOTOS.map(item => String(item.id)).sort().join('|');
         saveGroupMemoriesCache();
         memoriesIndex = Math.min(memoriesIndex, Math.max(0, GROUP_MEMORY_PHOTOS.length - 1));
         initMemoriesCarousel();
@@ -4135,6 +4168,8 @@ async function postGroupMemory() {
         }
         GROUP_MEMORY_PHOTOS.unshift(...savedMemories);
         GROUP_MEMORY_PHOTOS = GROUP_MEMORY_PHOTOS.slice(0, 50);
+        GROUP_MEMORY_PHOTOS = shuffleMemoryPhotos(GROUP_MEMORY_PHOTOS);
+        memoryOrderKey = GROUP_MEMORY_PHOTOS.map(photo => String(photo.id)).sort().join('|');
         saveGroupMemoriesCache();
         initMemoriesCarousel();
         toggleMemoryComposer(false);
@@ -4146,13 +4181,18 @@ async function postGroupMemory() {
     }
 }
 
-function updateMemoriesPosition() {
+function updateMemoriesPosition(instant = false) {
     const track = document.getElementById('memoriesCarousel');
     if (track) {
         const slides = [...track.querySelectorAll('.memory-slide')];
         const nextSlide = slides[memoriesIndex];
         const previousSlide = slides.find(slide => slide.classList.contains('is-active'));
-        if (nextSlide && previousSlide !== nextSlide) {
+        if (instant) {
+            if (memoryTransitionTimer) clearTimeout(memoryTransitionTimer);
+            slides.forEach(slide => slide.classList.remove('is-active', 'memory-is-leaving', 'memory-effect-fade', 'memory-effect-zoom', 'memory-effect-lift', 'memory-effect-flip'));
+            if (nextSlide) nextSlide.classList.add('is-active');
+            memoryTransitionTimer = null;
+        } else if (nextSlide && previousSlide !== nextSlide) {
             const effects = ['fade', 'zoom', 'lift', 'flip'];
             const effect = effects[Math.floor(Math.random() * effects.length)];
             slides.forEach(slide => slide.classList.remove('memory-is-leaving', 'memory-effect-fade', 'memory-effect-zoom', 'memory-effect-lift', 'memory-effect-flip'));
@@ -4176,8 +4216,6 @@ function updateMemoriesPosition() {
         dot.classList.toggle('active', active);
         dot.setAttribute('aria-current', active ? 'true' : 'false');
     });
-    const photoPosition = document.getElementById('memoryPhotoPosition');
-    if (photoPosition && GROUP_MEMORY_PHOTOS.length) photoPosition.textContent = `${memoriesIndex + 1} / ${GROUP_MEMORY_PHOTOS.length}`;
 }
 
 async function loadGroupMessages() {
