@@ -383,20 +383,25 @@ async function handleAction(action, params, user) {
             };
         }
         case "saveProfileImage": {
-            if (emailKey(params.email) !== user.email) throw new Error("You can only update your own profile photo.");
+            const targetEmail = emailKey(params.email || user.email);
+            const editingSomeoneElse = targetEmail !== user.email;
+            if (editingSomeoneElse && !isDeveloper(user)) throw new Error("Only the developer can update another user's profile photo.");
+            const targetProfile = await profileFor(targetEmail);
+            if (!targetProfile) throw new Error("User profile not found.");
             const image = String(params.image || "");
             const publicId = String(params.publicId || "");
             if (!isCloudinaryImageUrl(image) || !publicId || publicId.length > 255) {
                 throw new Error("Choose a valid profile photo uploaded to Cloudinary.");
             }
-            await db.collection("profileImages").doc(safeDocId(user.email)).set({
-                email: user.email,
-                name,
+            await db.collection("profileImages").doc(safeDocId(targetEmail)).set({
+                email: targetEmail,
+                name: targetProfile.data.name || targetEmail,
                 image,
                 publicId,
                 updated_at: nowIso()
             }, { merge: true });
-            return { success: true };
+            await audit(name, editingSomeoneElse ? "Updated member profile photo" : "Updated profile photo", targetEmail);
+            return { success: true, email: targetEmail, image };
         }
         case "getGroupMemories": {
             const snapshot = await db.collection("groupMemories")

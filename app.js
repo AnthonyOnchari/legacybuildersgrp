@@ -944,6 +944,7 @@ async function loadAllUsersFull(containerId = 'allUsersList') {
                                             <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Treasurer</option>
                                             ${isDeveloper() ? `<option value="developer" ${user.role === 'developer' ? 'selected' : ''}>Developer</option>` : ''}
                                         </select>
+                                        ${isDeveloper() ? `<button class="user-photo-edit-button" type="button" onclick="editUserProfilePhoto('${user.email}')">Edit photo</button>` : ''}
                                         ${user.role === 'developer' ? '<span class="protected-user-label">Protected developer</span>' : `<button aria-label="Delete user" onclick="deleteUser('${user.email}')" style="background: #E5484D; color: white; width: auto; padding: 4px 10px; font-size: 11px; margin-top: 4px;">Delete</button>`}
                                     ` : '<em>You</em>'}</td>
                                 </tr>
@@ -956,6 +957,37 @@ async function loadAllUsersFull(containerId = 'allUsersList') {
     } catch (e) {
         container.innerHTML = '<div class="empty-state">Error loading users</div>';
     }
+}
+
+async function editUserProfilePhoto(email) {
+    if (!isDeveloper()) {
+        showToast('Only the developer can edit another user profile photo.', 'error');
+        return;
+    }
+    const targetEmail = String(email || '').trim().toLowerCase();
+    if (!targetEmail) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.onchange = async event => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        try {
+            if (!ALLOWED_CLOUDINARY_IMAGE_TYPES.has(file.type)) throw new Error('Choose a JPG, PNG, or WebP photo.');
+            if (file.size > 10 * 1024 * 1024) throw new Error('Choose a photo smaller than 10 MB.');
+            const cropped = await openImageCropper(file, 'profile');
+            await saveProfileImageToServer(cropped, targetEmail);
+            showToast(`Profile photo updated for ${targetEmail}.`, 'success');
+            await loadAllUsersFull();
+            await loadAllUsersFull('adminAllUsersList');
+        } catch (error) {
+            if (error.name !== 'AbortError') showToast(error.message || 'Could not update this profile photo.', 'error');
+        } finally {
+            input.remove();
+        }
+    };
+    document.body.appendChild(input);
+    input.click();
 }
 
 async function loadDevPendingRegistrations() {
@@ -3144,19 +3176,21 @@ function openImageCropper(file, mode) {
     });
 }
 
-async function saveProfileImageToServer(imageData) {
+async function saveProfileImageToServer(imageData, targetEmail = currentUserEmail) {
     const blob = imageData instanceof Blob ? imageData : await (await fetch(imageData)).blob();
     const uploaded = await uploadBlobToCloudinary(blob, 'profile.jpg');
     const res = await callAPI('saveProfileImage', {
-        email: currentUserEmail,
+        email: targetEmail,
         image: uploaded.image,
         publicId: uploaded.publicId
     });
     if (!res.success) throw new Error(res.error || 'Failed to save profile photo.');
-    userProfileImage = uploaded.image;
-    localStorage.setItem(`legacy_profile_image_${currentUserEmail.toLowerCase()}`, userProfileImage);
-    updateHeaderAvatar();
-    loadMembersList();
+    if (targetEmail.toLowerCase() === (currentUserEmail || '').toLowerCase()) {
+        userProfileImage = uploaded.image;
+        localStorage.setItem(`legacy_profile_image_${currentUserEmail.toLowerCase()}`, userProfileImage);
+        updateHeaderAvatar();
+        loadMembersList();
+    }
     return true;
 }
 
@@ -3337,9 +3371,10 @@ function renderChart(summary) {
 
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     const formatKes = value => `KES ${Math.round(value).toLocaleString('en-KE')}`;
-    const cycleDuration = 7200;
     const drawDuration = 3600;
     const eraseDuration = 2300;
+    const pauseDuration = 2000;
+    const cycleDuration = drawDuration + eraseDuration + pauseDuration;
     const revealStartedAt = performance.now();
     const revealChart = timestamp => {
         if (!chartInstance) return;
@@ -4719,6 +4754,7 @@ window.dismissNotificationPrompt = dismissNotificationPrompt;
 window.checkAndShowNotificationPrompt = checkAndShowNotificationPrompt;
 window.loadDeveloperPortal = loadDeveloperPortal;
 window.loadAllUsersFull = loadAllUsersFull;
+window.editUserProfilePhoto = editUserProfilePhoto;
 window.updateUserRole = updateUserRole;
 window.deleteUser = deleteUser;
 window.openAddUserModal = openAddUserModal;

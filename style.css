@@ -110,8 +110,8 @@ body:not(.app-loading) #tabBar {
     animation: appContentReveal .52s cubic-bezier(.22, 1, .36, 1) both;
 }
 @keyframes appContentReveal {
-    from { opacity: .72; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: .72; }
+    to { opacity: 1; }
 }
 
 /* ============================================
@@ -12141,4 +12141,62 @@ body.finance-ui .developer-portal .developer-actions button { min-height: 38px; 
     body.finance-ui .developer-portal > .developer-actions-card { grid-column: auto; }
     body.finance-ui .admin-portal-hero { min-height: 142px; padding: 22px; align-items: flex-start; flex-direction: column; }
     body.finance-ui .admin-portal-hero h1 { font-size: 25px; }
+}
+
+/* Keep the viewport controls out of the document's scrolling and prevent transformed ancestors from trapping them. */
+body.finance-ui .header-row-1 {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 1100;
+    width: 100vw;
+    min-height: 58px;
+    padding: 8px clamp(12px, 3vw, 34px);
+    border-radius: 0 0 16px 16px;
+}
+body.finance-ui .sticky-top { padding-top: 70px; }
+@media (max-width: 899px) {
+    body.finance-ui #tabBar,
+    body.finance-ui .tab-bar[style] {
+        position: fixed !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        z-index: 1300 !important;
+        width: 100% !important;
+        min-height: 64px;
+        padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
+        border-radius: 18px 18px 0 0;
+    }
+    body.finance-ui .scroll-panels { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+    body.finance-ui .sticky-top { padding-top: 64px; }
+}
+body.finance-ui #pendingPanel .history-table,
+body.finance-ui #developerPanel .history-table { text-align: left; }
+body.finance-ui #pendingPanel .history-table th,
+body.finance-ui #pendingPanel .history-table td,
+body.finance-ui #developerPanel .history-table th,
+body.finance-ui #developerPanel .history-table td { padding: 12px 10px; text-align: left; vertical-align: middle; }
+body.finance-ui #pendingPanel .history-table tbody tr,
+body.finance-ui #developerPanel .history-table tbody tr { border-bottom: 1px solid #edf1ed; }
+body.finance-ui #pendingPanel .history-table tbody tr:last-child,
+body.finance-ui #developerPanel .history-table tbody tr:last-child { border-bottom: 0; }
+body.finance-ui #pendingPanel .history-table td:last-child,
+body.finance-ui #developerPanel .history-table td:last-child { min-width: 180px; }
+body.finance-ui .user-photo-edit-button {
+    width: auto;
+    min-height: 29px;
+    margin: 5px 5px 0 0;
+    padding: 0 9px;
+    border: 1px solid #cbded0;
+    border-radius: 8px;
+    background: #f3faf4;
+    color: #246144;
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+}
+body.finance-ui .user-photo-edit-button:hover { border-color: #78a982; background: #e7f4e9; }
+@media (max-width: 680px) {
+    body.finance-ui #pendingPanel .history-table,
+    body.finance-ui #developerPanel .history-table { min-width: 680px; }
 }
