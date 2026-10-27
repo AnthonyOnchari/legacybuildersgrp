@@ -11459,3 +11459,51 @@ body.finance-ui .group-chat-modal .communications-inbox-card .group-message-form
         padding: 12px 14px;
     }
 }
+/* Connect and unread states */
+body.finance-ui .meeting-secondary-action {
+    min-height: 40px;
+    padding: 0 15px;
+    border: 1px solid #cfe0ca;
+    border-radius: 12px;
+    background: #f5faf2;
+    color: #2d5c3c;
+    font-size: 11px;
+    font-weight: 750;
+}
+body.finance-ui .meeting-secondary-action:hover { background: #fff; }
+.nav-unread-badge {
+    display: inline-grid;
+    min-width: 18px;
+    height: 18px;
+    margin-left: 4px;
+    padding: 0 5px;
+    place-items: center;
+    border-radius: 999px;
+    background: #d84b43;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1;
+}
+.nav-unread-badge[hidden], .nav-unread-dot[hidden] { display: none; }
+.nav-unread-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-left: 4px;
+    border-radius: 50%;
+    background: #d84b43;
+    box-shadow: 0 0 0 2px #fff;
+}
+body.finance-ui .group-chat-modal-dialog {
+    width: min(620px, 100%);
+    height: min(620px, 78vh);
+    max-height: 78vh;
+    border-radius: 18px;
+}
+body.finance-ui .group-chat-modal-content { padding: 8px; }
+body.finance-ui .group-chat-modal .communications-inbox-card { border-radius: 13px; }
+body.finance-ui .group-chat-modal .communications-inbox-card .group-chat-heading--compact { padding: 10px 14px; }
+body.finance-ui .group-chat-modal .communications-inbox-card .group-chat-heading--compact h2 { font-size: 15px; }
+body.finance-ui .group-chat-modal .communications-inbox-card .group-chat-heading--compact p { margin-top: 2px; font-size: 10px; }
+body.finance-ui .summary-target-caption { color: #367454; }

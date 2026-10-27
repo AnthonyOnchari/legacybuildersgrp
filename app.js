@@ -18,6 +18,8 @@ let currentUserPhoneVerifiedAt = '', currentUserPhoneVerifiedBy = '';
 let isLoading = false, chartInstance = null;
 let dashboardLoaded = false;
 let appBackNavigationInitialized = false;
+let unreadGroupMessages = 0;
+let unreadMeetingUpdates = false;
 const memberPhotoCache = {};
 let serviceWorkerRegistered = false, pushSubscription = null;
 const countUpFrames = new WeakMap();
@@ -79,6 +81,46 @@ function getInitials(name) {
 }
 
 function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+function unreadStorageKey(kind) {
+    return `legacy_${kind}_seen_${String(currentUserEmail || currentUser || 'member').toLowerCase()}`;
+}
+
+function updateUnreadIndicators() {
+    const sidebarLink = document.querySelector('.sidebar-link[data-panel="meetings"]');
+    if (sidebarLink) {
+        const labels = sidebarLink.querySelectorAll('span');
+        if (labels[1]) labels[1].textContent = 'Connect';
+        if (!document.getElementById('connectSidebarBadge')) {
+            sidebarLink.insertAdjacentHTML('beforeend', '<span id="connectSidebarBadge" class="nav-unread-badge" hidden></span><span id="connectSidebarDot" class="nav-unread-dot" hidden></span>');
+        }
+    }
+    const messageBadge = document.getElementById('connectTabBadge');
+    const sidebarBadge = document.getElementById('connectSidebarBadge');
+    const heroBadge = document.getElementById('heroChatBadge');
+    [messageBadge, sidebarBadge, heroBadge].forEach(el => {
+        if (!el) return;
+        el.textContent = unreadGroupMessages > 99 ? '99+' : String(unreadGroupMessages);
+        el.hidden = unreadGroupMessages === 0;
+    });
+    const dotVisible = unreadMeetingUpdates;
+    ['connectTabDot', 'connectSidebarDot'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.hidden = !dotVisible;
+    });
+}
+
+function markGroupMessagesRead() {
+    localStorage.setItem(unreadStorageKey('group_messages'), new Date().toISOString());
+    unreadGroupMessages = 0;
+    updateUnreadIndicators();
+}
+
+function markMeetingUpdatesRead() {
+    localStorage.setItem(unreadStorageKey('meeting_updates'), new Date().toISOString());
+    unreadMeetingUpdates = false;
+    updateUnreadIndicators();
+}
 
 // ============================================================
 // API CALL
@@ -1863,6 +1905,10 @@ async function loadMeetingMinutes() {
     const res = await callAPI('getMeetingMinutes');
     if (res.success && res.meetings) {
         const meetings = res.meetings;
+        const meetingSeenAt = localStorage.getItem(unreadStorageKey('meeting_updates')) || '';
+        const latestMeetingDate = meetings.reduce((latest, meeting) => String(meeting.date || '') > latest ? String(meeting.date || '') : latest, '');
+        unreadMeetingUpdates = Boolean(latestMeetingDate && new Date(`${latestMeetingDate}T23:59:59`).getTime() > new Date(meetingSeenAt || 0).getTime());
+        updateUnreadIndicators();
         if (meetings.length === 0) {
             container.innerHTML = '<div class="empty-state">No meeting minutes recorded yet.</div>';
             return;
@@ -1953,6 +1999,9 @@ async function loadScheduledMeeting() {
         const card = document.getElementById('upcomingMeetingCard');
         const info = document.getElementById('upcomingMeetingInfo');
         if (res.success && res.meeting && res.meeting.date) {
+            const meetingSeenAt = localStorage.getItem(unreadStorageKey('meeting_updates')) || '';
+            unreadMeetingUpdates = unreadMeetingUpdates || new Date(`${res.meeting.date}T23:59:59`).getTime() > new Date(meetingSeenAt || 0).getTime();
+            updateUnreadIndicators();
             card.style.display = 'block';
             info.innerHTML = `
                 <div class="meeting-item" style="border-left-color: #3B6FF2; background: #F4F6FB;">
@@ -3029,11 +3078,10 @@ async function changePassword() {
 function renderChart(summary) {
     const canvas = document.getElementById('financialChart');
     if (!canvas) return;
-    const savings = summary.savings || 0;
-    const loans = summary.loansTaken || 0;
-    const repaid = summary.repaid || 0;
+    const savings = Number(summary.savings) || 0;
+    const contributionTarget = 2500 * 4 * 9;
+    const remainingTarget = Math.max(0, contributionTarget - savings);
     const outstanding = Number(summary.outstanding);
-    const net = Number.isFinite(outstanding) ? savings - outstanding : savings - loans + repaid;
 
     animateCountUp(document.getElementById('summaryStatAvailable'), savings);
     animateCountUp(document.getElementById('summaryStatOutstanding'), summary.outstanding || 0);
@@ -3041,7 +3089,7 @@ function renderChart(summary) {
 
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
     const ctx = canvas.getContext('2d');
-    const total = savings + loans + repaid;
+    const total = savings + remainingTarget;
 
     const centerTextPlugin = {
         id: 'centerText',
@@ -3054,10 +3102,10 @@ function renderChart(summary) {
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillStyle = '#7C8AA5';
             ctx.font = `600 ${window.innerWidth < 500 ? 10 : 12}px "DM Sans", sans-serif`;
-            ctx.fillText('NET BALANCE', cx, cy - 14);
-            ctx.fillStyle = net >= 0 ? '#14213D' : '#1E3FC4';
+            ctx.fillText('STILL TO GO', cx, cy - 14);
+            ctx.fillStyle = '#14213D';
             ctx.font = `700 ${window.innerWidth < 500 ? 17 : 21}px "DM Sans", sans-serif`;
-            ctx.fillText('KES ' + Math.round(net).toLocaleString('en-KE'), cx, cy + 8);
+            ctx.fillText('KES ' + Math.round(remainingTarget).toLocaleString('en-KE'), cx, cy + 8);
             ctx.restore();
         }
     };
@@ -3065,11 +3113,11 @@ function renderChart(summary) {
     chartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Savings', 'Loans Taken', 'Repaid'],
+            labels: ['Contributed', 'Still to go'],
             datasets: [{
-                data: [savings, loans, repaid],
-                backgroundColor: ['rgba(20, 33, 61, 0.85)', 'rgba(59, 111, 242, 0.9)', 'rgba(20, 33, 61, 0.3)'],
-                borderColor: ['#FFFFFF', '#FFFFFF', '#FFFFFF'],
+                data: [Math.min(savings, contributionTarget), remainingTarget],
+                backgroundColor: ['rgba(54, 116, 84, 0.9)', 'rgba(211, 226, 207, 0.95)'],
+                borderColor: ['#FFFFFF', '#FFFFFF'],
                 borderWidth: 2,
                 hoverOffset: 8
             }]
@@ -3108,10 +3156,14 @@ function exportToCSV() {
     const originalButtonContent = btn?.innerHTML;
     if (btn) { btn.disabled = true; btn.textContent = 'Preparing download...'; }
     try {
-        const columns = ['Date', 'Member', 'Type', 'Amount (KES)', 'Message', 'Balance After'];
-        const rows = [...allRecords].sort((a, b) => new Date(a.date) - new Date(b.date)).map(r => [
-            r.date || '', r.member || '', r.type || '', r.amount || 0, r.message || '', r.balanceAfter || ''
-        ]);
+        const columns = ['Date', 'Member', 'Type', 'Amount (KES)', 'Message', 'Group balance after'];
+        let runningBalance = 0;
+        const rows = [...allRecords].sort((a, b) => new Date(a.date) - new Date(b.date)).map(r => {
+            const amount = Number(r.amount) || 0;
+            if (r.type === 'Savings' || r.type === 'Loan Repayment') runningBalance += amount;
+            if (r.type === 'Loan Taken') runningBalance -= amount;
+            return [r.date || '', r.member || '', r.type || '', amount, r.message || '', runningBalance];
+        });
         const escapeCell = (val) => {
             const str = String(val);
             if (str.includes(',') || str.includes('"') || str.includes('\n')) return `"${str.replace(/"/g, '""')}"`;
@@ -3411,7 +3463,10 @@ function activateTab(tabId) {
     currentTab = tabId;
     if (tabId === 'loans') loadLoansDashboard();
     else if (tabId !== 'transactions' || !dashboardLoaded) loadAllData(false, true);
-    if (tabId === 'meetings') loadGroupMessages();
+    if (tabId === 'meetings') {
+        loadGroupMessages();
+        markMeetingUpdatesRead();
+    }
     if (tabId === 'pending') loadAdminMemberProfiles('adminPhoneProfiles');
     if (tabId === 'developer') {
         loadAdminMemberProfiles('developerPhoneProfiles');
@@ -3846,6 +3901,9 @@ async function loadGroupMessages() {
     ` : '';
 
     const messages = Array.isArray(res.messages) ? res.messages : [];
+    const messagesSeenAt = localStorage.getItem(unreadStorageKey('group_messages')) || '';
+    unreadGroupMessages = messages.filter(message => message.created_at && String(message.created_at) > messagesSeenAt).length;
+    updateUnreadIndicators();
     if (!messages.length) {
         container.innerHTML = '<div class="empty-state">No messages yet. Start the group conversation.</div>';
         return;
@@ -3864,6 +3922,7 @@ async function loadGroupMessages() {
     container.querySelectorAll('.group-message-delete').forEach(button => {
         button.addEventListener('click', () => deleteGroupMessage(button));
     });
+    if (document.getElementById('groupChatModal')?.style.display !== 'none') markGroupMessagesRead();
 }
 
 async function deleteGroupMessage(button) {
@@ -3940,6 +3999,7 @@ function toggleGroupChat(open, opener = null) {
         document.addEventListener('keydown', handleGroupChatKeydown);
         modal.querySelector('.group-chat-modal-dialog')?.focus({ preventScroll: true });
         document.getElementById('groupMessageInput')?.focus({ preventScroll: true });
+        markGroupMessagesRead();
         return;
     }
 
