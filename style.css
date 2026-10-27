@@ -12669,3 +12669,37 @@ body.finance-ui .developer-contacts-card .admin-verified-pill { width: fit-conte
     body.finance-ui .admin-phone-directory-card .admin-phone-editor-fields,
     body.finance-ui .developer-contacts-card .admin-phone-editor-fields { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Use the supplied chip blueprint as the card's top-right contact surface. */
+body.finance-ui .wallet-card-chip {
+    width: 37px;
+    height: 29px;
+    flex: 0 0 37px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    padding: 0;
+    overflow: hidden;
+}
+body.finance-ui .wallet-card-chip-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+body.finance-ui .wallet-card-exporting .wallet-card-chip-image {
+    width: 100%;
+    height: 100%;
+}
+body.finance-ui .wallet-card-exporting .wallet-card-chip {
+    width: 62px;
+    height: 44px;
+    flex-basis: 62px;
+}
+@media (max-width: 560px) {
+    body.finance-ui .wallet-card-chip {
+        width: 33px;
+        height: 25px;
+        flex-basis: 33px;
+    }
+}
