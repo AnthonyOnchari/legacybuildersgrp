@@ -11578,6 +11578,10 @@ body.finance-ui .developer-portal {
     align-items: start;
     padding-bottom: 48px;
 }
+/* Developer information must never render in the general Home view. */
+body.finance-ui #developerPanel:not(.active-panel):not(.developer-portal-modal-content) {
+    display: none !important;
+}
 body.finance-ui .developer-portal > * { min-width: 0; margin: 0; }
 body.finance-ui .developer-portal-hero {
     display: flex;
