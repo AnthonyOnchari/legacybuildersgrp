@@ -141,6 +141,21 @@ async function sendPush(title, body, recipient = null, sender = null, data = {})
     return selected.length - failures.length;
 }
 
+async function notifyDevelopersOfProtectedAccountAttempt(actor, targetEmail, action) {
+    const developerUsers = (await rows("users"))
+        .filter((item) => item.role === "developer" && item.status === "approved")
+        .map((item) => emailKey(item.email))
+        .filter(Boolean);
+    const recipients = [...new Set([...DEVELOPER_EMAILS, ...developerUsers])];
+    await Promise.all(recipients.map((recipient) => sendPush(
+        "CLASSIFIED — Developer security alert",
+        `A protected developer account action was blocked. Action: ${action}. Actor: ${actor || "Unknown"}.`,
+        recipient,
+        null,
+        { type: "classified_developer_security_alert", action }
+    )));
+}
+
 function summarizeData(transactions, activeLoans) {
     let savingsIn = 0;
     let loansTaken = 0;
@@ -907,9 +922,12 @@ async function handleAction(action, params, user) {
         case "getSystemStats":
         case "getScheduledMeeting":
         case "getTreasurerInfo":
-        case "getSubscriptions": {
+        case "getSubscriptions":
+        case "exportAuditLog": {
             if (["getPendingRegistrations", "getPendingTransactions", "getLoansAwaitingDueDate"].includes(action)) requireAdmin(user);
-            if (["getDeveloperAuditLog", "getAllUsersFull", "getSystemStats", "getSubscriptions"].includes(action)) requireDeveloper(user);
+            if (["getAllUsersFull", "exportAuditLog"].includes(action)) requireAdmin(user);
+            if (["getDeveloperAuditLog", "getSystemStats", "getSubscriptions"].includes(action)) requireDeveloper(user);
+            if (action === "getAuditLog") requireAdmin(user);
             if (action === "getPendingRegistrations") {
                 const [users, joinRequests] = await Promise.all([
                     rows("users"),
@@ -1047,6 +1065,12 @@ async function handleAction(action, params, user) {
                 entries.sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)));
                 return { success: true, entries: entries.slice(0, Math.min(Number(params.limit) || 50, 200)) };
             }
+            if (action === "exportAuditLog") {
+                const entries = await rows("auditLog");
+                entries.sort((a, b) => String(b.timestamp || "").localeCompare(String(a.timestamp || "")));
+                await audit(user.profile.name || user.email, "Exported complete group audit log", "Admin download");
+                return { success: true, entries };
+            }
             if (action === "getAllUsersFull") return { success: true, users: (await rows("users")).map(publicUser) };
             if (action === "getSystemStats") {
                 const [users, joinRequests, pendingTransactions, pendingLoans, activeLoans, subscriptions, summary] = await Promise.all([
@@ -1135,7 +1159,7 @@ async function handleAction(action, params, user) {
             return { success: true };
         }
         case "updateUserRole": {
-            requireDeveloper(user);
+            requireAdmin(user);
             const email = emailKey(params.email);
             const role = String(params.role || "").toLowerCase();
             if (!["member", "admin", "developer"].includes(role)) throw new Error("Invalid role.");
@@ -1143,24 +1167,46 @@ async function handleAction(action, params, user) {
             const ref = db.collection("users").doc(safeDocId(email));
             const snapshot = await ref.get();
             if (!snapshot.exists) throw new Error("User not found.");
-            if (snapshot.data().role === "developer" && role !== "developer") {
-                const developers = (await rows("users")).filter((item) => item.role === "developer" && item.status === "approved");
-                if (developers.length <= 1) throw new Error("Cannot remove the last developer.");
+            if (snapshot.data().role === "developer") {
+                await audit(name, "CLASSIFIED: blocked protected developer role change", `${email} — requested role ${role}`);
+                await notifyDevelopersOfProtectedAccountAttempt(name, email, "role change");
+                throw new Error("Developer accounts are protected and cannot be changed.");
             }
+            if (!isDeveloper(user) && role === "developer") throw new Error("Only the developer can assign developer access.");
             await ref.update({ role });
             await audit(name, "Updated user role", `${email} → ${role}`);
             return { success: true, message: `User role updated to ${role}` };
         }
+        case "createUser": {
+            requireAdmin(user);
+            const email = emailKey(params.email);
+            const newName = String(params.name || "").trim();
+            if (newName.length < 2 || newName.length > 80) throw new Error("Enter a name between 2 and 80 characters.");
+            if (email.length > 254 || !/^\S+@\S+\.\S+$/.test(email)) throw new Error("Enter a valid Google email address.");
+            if (DEVELOPER_EMAILS.has(email)) {
+                await audit(name, "CLASSIFIED: blocked protected developer creation attempt", email);
+                await notifyDevelopersOfProtectedAccountAttempt(name, email, "account creation");
+                throw new Error("Developer accounts are protected.");
+            }
+            const newUserRef = db.collection("users").doc(safeDocId(email));
+            if ((await newUserRef.get()).exists) throw new Error("A user with this email already exists.");
+            const timestamp = nowIso();
+            const newUser = { email, name: newName, role: "member", status: "approved", created_at: timestamp, approved_by: user.email, approved_at: timestamp };
+            await newUserRef.create(newUser);
+            await audit(name, "Added approved group user", email);
+            return { success: true, user: publicUser(newUser) };
+        }
         case "deleteUser": {
-            requireDeveloper(user);
+            requireAdmin(user);
             const email = emailKey(params.email);
             if (email === user.email) throw new Error("You cannot delete your own account.");
             const ref = db.collection("users").doc(safeDocId(email));
             const snapshot = await ref.get();
             if (!snapshot.exists) throw new Error("User not found.");
             if (snapshot.data().role === "developer") {
-                const developers = (await rows("users")).filter((item) => item.role === "developer" && item.status === "approved");
-                if (developers.length <= 1) throw new Error("Cannot disable the last developer.");
+                await audit(name, "CLASSIFIED: blocked protected developer deletion attempt", email);
+                await notifyDevelopersOfProtectedAccountAttempt(name, email, "account deletion");
+                throw new Error("Developer accounts are protected and cannot be deleted.");
             }
             // Preserve history: disable the profile rather than deleting its document.
             await ref.update({ status: "disabled", disabled_at: nowIso() });

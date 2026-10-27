@@ -11683,3 +11683,32 @@ body.finance-ui #tabBar .tab .nav-unread-badge {
         -webkit-overflow-scrolling: touch;
     }
 }
+body.finance-ui .admin-phone-profiles { display: grid; gap: 8px; text-align: left; }
+body.finance-ui .admin-phone-row { padding: 12px 0; border-bottom: 1px solid #e7eee6; text-align: left; }
+body.finance-ui .admin-phone-row:last-child { border-bottom: 0; }
+body.finance-ui .admin-phone-member { display: grid; gap: 4px; text-align: left; }
+body.finance-ui .admin-phone-member > span:not(.admin-verified-pill):not(.profile-phone-pending) { color: #7d8d82; font-size: 10px; }
+body.finance-ui .admin-phone-editor { margin-top: 9px; border: 1px solid #e1ebe0; border-radius: 12px; background: #f8fbf7; }
+body.finance-ui .admin-phone-editor summary { padding: 9px 11px; color: #356b4a; cursor: pointer; font-size: 10px; font-weight: 800; list-style: none; }
+body.finance-ui .admin-phone-editor summary::-webkit-details-marker { display: none; }
+body.finance-ui .admin-phone-editor summary::after { content: '+'; float: right; font-size: 15px; line-height: 10px; }
+body.finance-ui .admin-phone-editor[open] summary::after { content: '−'; }
+body.finance-ui .admin-phone-editor-fields { display: grid; grid-template-columns: 1fr 1fr auto; gap: 9px; align-items: end; padding: 0 11px 11px; }
+body.finance-ui .admin-phone-editor-fields label { display: grid; gap: 4px; color: #718177; font-size: 9px; font-weight: 700; text-align: left; }
+body.finance-ui .admin-phone-editor-fields input,
+body.finance-ui .admin-phone-editor-fields select { min-height: 36px; margin: 0; font-size: 11px; }
+body.finance-ui .admin-phone-editor-fields .admin-phone-save { width: auto; min-height: 36px; padding: 0 12px; font-size: 10px; }
+body.finance-ui .protected-user-label { display: inline-block; margin-top: 5px; color: #7b5a25; font-size: 10px; font-weight: 750; }
+body.finance-ui .admin-add-user-button,
+body.finance-ui .admin-download-log-button { width: auto; min-height: 36px; padding: 0 13px; border-radius: 10px; background: #2b7652; color: #fff; font-size: 10px; font-weight: 750; white-space: nowrap; }
+body.finance-ui .admin-download-log-button { background: #315f99; }
+body.finance-ui .admin-user-management-card,
+body.finance-ui .admin-audit-download-card { text-align: left; }
+body.finance-ui #auditLogList,
+body.finance-ui #devAuditLog { width: 100%; text-align: left; }
+@media (max-width: 680px) {
+    body.finance-ui .admin-phone-editor-fields { grid-template-columns: 1fr; }
+    body.finance-ui .admin-phone-editor-fields .admin-phone-save { justify-self: start; }
+    body.finance-ui .admin-user-management-card .portal-section-heading,
+    body.finance-ui .admin-audit-download-card .portal-section-heading { align-items: flex-start; flex-direction: column; }
+}

@@ -522,7 +522,10 @@ function activateCurrentTab() {
     const appContainerEl = document.getElementById('appContainer');
     if (appContainerEl) appContainerEl.classList.toggle('dashboard-active', currentTab === 'transactions');
     localStorage.setItem('legacy_active_tab', currentTab);
-    if (currentTab === 'pending') loadAdminMemberProfiles('adminPhoneProfiles');
+    if (currentTab === 'pending') {
+        loadAdminMemberProfiles('adminPhoneProfiles');
+        loadAllUsersFull('adminAllUsersList');
+    }
     if (currentTab === 'developer') loadAdminMemberProfiles('developerPhoneProfiles');
     if (currentTab === 'loans') loadLoansDashboard();
     if (currentTab === 'meetings') loadGroupMessages();
@@ -852,8 +855,9 @@ async function loadSystemStats() {
     }
 }
 
-async function loadAllUsersFull() {
-    const container = document.getElementById('allUsersList');
+async function loadAllUsersFull(containerId = 'allUsersList') {
+    const container = document.getElementById(containerId);
+    if (!container) return;
     try {
         const res = await callAPI('getAllUsersFull', { email: currentUserEmail });
         if (res.success && res.users) {
@@ -872,9 +876,9 @@ async function loadAllUsersFull() {
                                         <select onchange="updateUserRole('${user.email}', this.value)" style="width: auto; padding: 4px 8px; font-size: 11px;">
                                             <option value="member" ${user.role === 'member' ? 'selected' : ''}>Member</option>
                                             <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Treasurer</option>
-                                            <option value="developer" ${user.role === 'developer' ? 'selected' : ''}>Developer</option>
+                                            ${isDeveloper() ? `<option value="developer" ${user.role === 'developer' ? 'selected' : ''}>Developer</option>` : ''}
                                         </select>
-                                        <button aria-label="Delete user" onclick="deleteUser('${user.email}')" style="background: #E5484D; color: white; width: auto; padding: 4px 10px; font-size: 11px; margin-top: 4px;">Delete</button>
+                                        ${user.role === 'developer' ? '<span class="protected-user-label">Protected developer</span>' : `<button aria-label="Delete user" onclick="deleteUser('${user.email}')" style="background: #E5484D; color: white; width: auto; padding: 4px 10px; font-size: 11px; margin-top: 4px;">Delete</button>`}
                                     ` : '<em>You</em>'}</td>
                                 </tr>
                             `).join('')}
@@ -945,12 +949,72 @@ async function updateUserRole(email, role) {
         if (res.success) {
             showToast(`Role updated for ${email}`, 'success');
             await loadAllUsersFull();
+            await loadAllUsersFull('adminAllUsersList');
             await loadSystemStats();
         } else {
             showToast(res.error || 'Error updating role', 'error');
         }
     } catch (e) {
         showToast('Error updating role', 'error');
+    }
+}
+
+function openAddUserModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `<div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="addUserTitle">
+        <h3 id="addUserTitle">Add group user</h3>
+        <p class="modal-description">Create an approved member profile. They can sign in with Google using this email.</p>
+        <div class="form-grid">
+            <div><label for="newUserName">Full name</label><input id="newUserName" type="text" maxlength="80" placeholder="e.g. Jane Wanjiku"></div>
+            <div><label for="newUserEmail">Google email</label><input id="newUserEmail" type="email" maxlength="254" placeholder="jane@example.com"></div>
+        </div>
+        <div class="modal-buttons"><button type="button" onclick="createGroupUser(this)">Add user</button><button type="button" class="close-modal" onclick="this.closest('.modal').remove()">Cancel</button></div>
+    </div>`;
+    document.body.appendChild(modal);
+}
+
+async function createGroupUser(button) {
+    const modal = button.closest('.modal');
+    const name = modal.querySelector('#newUserName').value.trim();
+    const email = modal.querySelector('#newUserEmail').value.trim();
+    if (!name || !email) { showToast('Enter a name and Google email.', 'error'); return; }
+    button.disabled = true;
+    try {
+        const result = await callAPI('createUser', { name, email });
+        if (!result.success) throw new Error(result.error || 'Could not add this user.');
+        modal.remove();
+        showToast('User added successfully.', 'success');
+        await loadAllUsersFull('adminAllUsersList');
+        await loadAllUsersFull();
+    } catch (error) {
+        showToast(error.message || 'Could not add this user.', 'error');
+        button.disabled = false;
+    }
+}
+
+async function exportAuditLog() {
+    const button = document.querySelector('.admin-download-log-button');
+    if (button) { button.disabled = true; button.textContent = 'Preparing...'; }
+    try {
+        const result = await callAPI('exportAuditLog');
+        if (!result.success) throw new Error(result.error || 'Could not download the audit log.');
+        const escapeCell = value => {
+            const text = String(value ?? '');
+            return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+        };
+        const lines = ['NBFA GROUP — Complete Activity Log', `Exported: ${new Date().toLocaleString('en-KE')}`, '', ['Timestamp', 'Actor', 'Action', 'Details'].map(escapeCell).join(','), ...result.entries.map(entry => [entry.timestamp, entry.actor, entry.action, entry.details].map(escapeCell).join(','))];
+        const url = URL.createObjectURL(new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `NBFA_GROUP_Audit_Log_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link); link.click(); link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast(`Downloaded ${result.entries.length} log entries.`, 'success');
+    } catch (error) {
+        showToast(error.message || 'Could not download the audit log.', 'error');
+    } finally {
+        if (button) { button.disabled = false; button.textContent = 'Download full log'; }
     }
 }
 
@@ -962,6 +1026,7 @@ async function deleteUser(email) {
         if (res.success) {
             showToast(` ${email} deleted successfully`, 'success');
             await loadAllUsersFull();
+            await loadAllUsersFull('adminAllUsersList');
             await loadSystemStats();
         } else {
             showToast(res.error || 'Error deleting user', 'error');
@@ -2728,7 +2793,9 @@ async function loadAdminMemberProfiles(containerId) {
                         ? `<span class="admin-verified-pill">${countryFlag(profile.phoneCountry)} ${escapeHtml(profile.phone)} · Verified by admin</span>`
                         : '<span class="profile-phone-pending">No phone number on file</span>'}
                 </div>
-                <div class="admin-phone-editor">
+                <details class="admin-phone-editor">
+                    <summary>${profile.phone ? 'Edit verified number' : 'Add phone number'}</summary>
+                    <div class="admin-phone-editor-fields">
                     <label>
                         <span>Country / calling code</span>
                         <select class="admin-phone-country">${countryOptions}</select>
@@ -2739,7 +2806,8 @@ async function loadAdminMemberProfiles(containerId) {
                     </label>
                     <button type="button" class="admin-phone-save" onclick="saveMemberPhone(this)">Save &amp; verify</button>
                     <span class="admin-phone-status" role="status"></span>
-                </div>
+                    </div>
+                </details>
             </article>`;
         }).join('');
     } catch (error) {
@@ -3497,7 +3565,10 @@ function activateTab(tabId) {
         loadGroupMessages();
         markMeetingUpdatesRead();
     }
-    if (tabId === 'pending') loadAdminMemberProfiles('adminPhoneProfiles');
+    if (tabId === 'pending') {
+        loadAdminMemberProfiles('adminPhoneProfiles');
+        loadAllUsersFull('adminAllUsersList');
+    }
     if (tabId === 'developer') {
         loadAdminMemberProfiles('developerPhoneProfiles');
         if (typeof loadDeveloperPortal === 'function') loadDeveloperPortal();
@@ -4380,6 +4451,9 @@ window.loadDeveloperPortal = loadDeveloperPortal;
 window.loadAllUsersFull = loadAllUsersFull;
 window.updateUserRole = updateUserRole;
 window.deleteUser = deleteUser;
+window.openAddUserModal = openAddUserModal;
+window.createGroupUser = createGroupUser;
+window.exportAuditLog = exportAuditLog;
 window.deleteGroupMessage = deleteGroupMessage;
 window.toggleGroupChat = toggleGroupChat;
 window.approveRegistration = approveRegistration;
