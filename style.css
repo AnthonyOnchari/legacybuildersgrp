@@ -11977,17 +11977,21 @@ body.finance-ui #devAuditLog { width: 100%; text-align: left; }
 
 /* Final header treatment: pinned to the page and stretched across the content. */
 body.finance-ui .header-row-1 {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 100;
-    align-self: stretch;
-    width: 100%;
+    width: 100vw;
     box-sizing: border-box;
     border-radius: 0 0 19px 19px;
     background: rgba(255, 255, 255, .92);
     box-shadow: 0 9px 26px rgba(30, 61, 41, .1);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
+}
+body.finance-ui .sticky-top {
+    padding-top: 70px;
 }
 @media (max-width: 560px) {
     body.finance-ui .header-row-1 {
@@ -11997,4 +12001,5 @@ body.finance-ui .header-row-1 {
         padding: 7px 10px;
         border-radius: 0 0 16px 16px;
     }
+    body.finance-ui .sticky-top { padding-top: 64px; }
 }
