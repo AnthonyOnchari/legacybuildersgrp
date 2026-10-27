@@ -3628,6 +3628,9 @@ body.finance-ui .chart-progress-note {
     font-size: 9px;
     font-weight: 650;
 }
+body.finance-ui .summary-target-caption { display: none; }
+body.finance-ui .chart-progress-stats > div:nth-child(2) strong { color: #c3443d; }
+body.finance-ui .chart-progress-stats > div:nth-child(3) strong { color: #3567bd; }
 @media (max-width: 560px) {
     body.finance-ui .chart-progress-stats { gap: 5px; }
     body.finance-ui .chart-progress-stats > div { padding: 8px 7px; }

@@ -3099,15 +3099,14 @@ function renderChart(summary) {
     const contributed = Math.min(savings, contributionTarget);
     const progress = contributionTarget > 0 ? Math.min(100, (contributed / contributionTarget) * 100) : 0;
 
-    const chartAmount = (value) => `KES ${Math.round(value).toLocaleString('en-KE')}`;
     const chartContributed = document.getElementById('summaryChartContributed');
     const chartRemaining = document.getElementById('summaryChartRemaining');
     const chartTarget = document.getElementById('summaryChartTarget');
     const chartProgressFill = document.getElementById('summaryChartProgressFill');
     const chartProgressNote = document.getElementById('summaryChartProgressNote');
-    if (chartContributed) chartContributed.textContent = chartAmount(contributed);
-    if (chartRemaining) chartRemaining.textContent = chartAmount(remainingTarget);
-    if (chartTarget) chartTarget.textContent = chartAmount(contributionTarget);
+    animateCountUp(chartContributed, contributed);
+    animateCountUp(chartRemaining, remainingTarget);
+    animateCountUp(chartTarget, contributionTarget);
     if (chartProgressFill) chartProgressFill.style.width = `${progress}%`;
     if (chartProgressNote) chartProgressNote.textContent = `${progress.toFixed(0)}% of the year-end contribution goal is on track.`;
 
@@ -3176,7 +3175,7 @@ function renderChart(summary) {
                     }
                 }
             },
-            animation: { animateRotate: true, animateScale: true, duration: 900, easing: 'easeOutQuart' },
+            animation: { animateRotate: true, animateScale: true, duration: 1400, easing: 'easeOutQuart' },
             layout: { padding: 8 }
         }
     });
