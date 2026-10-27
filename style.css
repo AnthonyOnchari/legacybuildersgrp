@@ -11528,9 +11528,12 @@ body.finance-ui .nav-unread-badge {
 }
 body.finance-ui .nav-unread-badge[hidden] { display: none !important; }
 body.finance-ui #tabBar .tab .nav-unread-badge {
-    position: static;
-    margin-left: 2px;
+    position: absolute;
+    top: 3px;
+    left: calc(50% + 7px);
+    margin: 0;
     font-size: 8px;
+    z-index: 2;
 }
 @media (max-width: 560px) {
     body.finance-ui .group-chat-modal {
