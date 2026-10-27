@@ -3788,8 +3788,12 @@ function initMemoriesCarousel() {
             <img src="${escapeHtml(photo.image)}" alt="${escapeHtml(photo.caption || `Group photo shared by ${photo.member || 'a member'}`)}" loading="${index === 0 ? 'eager' : 'lazy'}">
             ${photo.caption ? `<figcaption>${escapeHtml(photo.caption)}</figcaption>` : ''}
             ${ownsPhoto ? `<div class="memory-owner-actions" aria-label="Manage your photo">
-                <button type="button" onclick="editMemoryCaption(${index})" aria-label="Edit caption" title="Edit caption">Edit</button>
-                <button type="button" onclick="deleteGroupMemory(${index})" aria-label="Delete photo" title="Delete photo">Delete</button>
+                <button type="button" class="memory-more-button" onclick="toggleMemoryOwnerMenu(event, ${index})" aria-label="More photo actions" aria-expanded="false" title="More actions">•••</button>
+                <div class="memory-owner-menu" role="menu">
+                    <button type="button" role="menuitem" onclick="editMemoryCaption(${index})">Edit caption</button>
+                    <button type="button" role="menuitem" onclick="recropGroupMemory(${index})">Recrop image</button>
+                    <button type="button" class="is-destructive" role="menuitem" onclick="deleteGroupMemory(${index})">Delete photo</button>
+                </div>
             </div>` : ''}
         </figure>
     `;
@@ -3826,6 +3830,46 @@ function initMemoriesCarousel() {
 
 let memoriesPaused = false;
 
+function toggleMemoryOwnerMenu(event) {
+    event?.stopPropagation();
+    const currentMenu = event?.currentTarget?.parentElement?.querySelector('.memory-owner-menu');
+    document.querySelectorAll('.memory-owner-menu.is-open').forEach(menu => {
+        if (menu !== currentMenu) {
+            menu.classList.remove('is-open');
+            menu.parentElement?.querySelector('.memory-more-button')?.setAttribute('aria-expanded', 'false');
+        }
+    });
+    if (!currentMenu) return;
+    const open = currentMenu.classList.toggle('is-open');
+    event.currentTarget.setAttribute('aria-expanded', String(open));
+}
+
+async function recropGroupMemory(index) {
+    const photo = GROUP_MEMORY_PHOTOS[index];
+    if (!photo || !photo.id || !photo.image || !photo.email || photo.email.toLowerCase() !== (currentUserEmail || '').toLowerCase()) {
+        showToast('You can only recrop a photo you shared.', 'error');
+        return;
+    }
+    try {
+        const response = await fetch(photo.image, { mode: 'cors' });
+        if (!response.ok) throw new Error('Could not open this photo for cropping.');
+        const blob = await response.blob();
+        const file = new File([blob], 'group-memory-recrop.jpg', { type: blob.type || 'image/jpeg' });
+        const cropped = await openImageCropper(file, 'memory');
+        const config = window.cloudinaryConfig || {};
+        const uploaded = await uploadBlobToCloudinary(cropped, 'group-memory-recrop.jpg', config.memoryUploadPreset);
+        const res = await callAPI('updateGroupMemoryImage', { id: photo.id, image: uploaded.image, publicId: uploaded.publicId });
+        if (!res.success) throw new Error(res.error || 'Could not save the cropped photo.');
+        photo.image = res.image;
+        photo.publicId = res.publicId;
+        saveGroupMemoriesCache();
+        initMemoriesCarousel();
+        showToast('Photo crop updated.', 'success');
+    } catch (error) {
+        if (error.name !== 'AbortError') showToast(error.message || 'Could not recrop this photo.', 'error');
+    }
+}
+
 async function editMemoryCaption(index) {
     const photo = GROUP_MEMORY_PHOTOS[index];
     if (!photo || !photo.id || !photo.email || photo.email.toLowerCase() !== (currentUserEmail || '').toLowerCase()) {
@@ -3840,6 +3884,7 @@ async function editMemoryCaption(index) {
         <textarea id="memoryCaptionEditInput" maxlength="200" rows="3" placeholder="Add a caption to this memory">${escapeHtml(photo.caption || '')}</textarea>
         <div class="memory-composer-actions">
             <button type="button" class="memory-cancel-btn" data-action="cancel">Cancel</button>
+            <button type="button" data-action="recrop">Recrop image</button>
             <button type="button" data-action="save">Save caption</button>
         </div>
     </div>`;
@@ -3847,6 +3892,11 @@ async function editMemoryCaption(index) {
     const captionInput = overlay.querySelector('#memoryCaptionEditInput');
     overlay.addEventListener('click', event => {
         if (event.target === overlay || event.target.closest('[data-action="cancel"]')) overlay.remove();
+    });
+    overlay.querySelector('[data-action="recrop"]').addEventListener('click', async event => {
+        event.currentTarget.disabled = true;
+        overlay.remove();
+        await recropGroupMemory(index);
     });
     overlay.querySelector('[data-action="save"]').addEventListener('click', async event => {
         const button = event.currentTarget;
@@ -4553,6 +4603,8 @@ window.saveOwnProfile = saveOwnProfile;
 window.openAdminPortal = openAdminPortal;
 window.openDeveloperPortalModal = openDeveloperPortalModal;
 window.closeDeveloperPortalModal = closeDeveloperPortalModal;
+window.toggleMemoryOwnerMenu = toggleMemoryOwnerMenu;
+window.recropGroupMemory = recropGroupMemory;
 window.saveMemberPhone = saveMemberPhone;
 window.handleProfileImageUpload = handleProfileImageUpload;
 window.viewMemberProfile = viewMemberProfile;

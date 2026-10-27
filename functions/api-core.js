@@ -445,6 +445,23 @@ async function handleAction(action, params, user) {
             await audit(name, "Updated group memory caption", id);
             return { success: true, caption };
         }
+        case "updateGroupMemoryImage": {
+            const id = String(params.id || "");
+            const image = String(params.image || "");
+            const publicId = String(params.publicId || "");
+            if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Choose a valid group photo.");
+            if (!isCloudinaryImageUrl(image) || !publicId || publicId.length > 255) {
+                throw new Error("Choose a valid cropped photo uploaded to Cloudinary.");
+            }
+            const ref = db.collection("groupMemories").doc(id);
+            const snapshot = await ref.get();
+            if (!snapshot.exists || emailKey(snapshot.data().email) !== user.email) {
+                throw new Error("You can only recrop a photo you shared.");
+            }
+            await ref.update({ image, publicId, updated_at: nowIso() });
+            await audit(name, "Recropped group memory image", id);
+            return { success: true, image, publicId };
+        }
         case "deleteGroupMemory": {
             const id = String(params.id || "");
             if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Choose a valid group photo.");

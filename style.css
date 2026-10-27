@@ -2992,9 +2992,19 @@ body.finance-ui #memoriesCard {
 }
 body.finance-ui #memoriesCard .memory-heading {
     align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 12;
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(255,255,255,.96);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 8px 22px rgba(26, 60, 36, .06);
     padding: 20px 22px 16px;
     border-bottom: 1px solid #edf0ea;
 }
+body.finance-ui #memoriesCard { overflow: visible; }
 body.finance-ui .memory-heading-copy .section-kicker {
     margin-bottom: 5px;
     font-size: 8px;
@@ -9887,6 +9897,55 @@ body.finance-ui .memory-owner-actions button {
 }
 body.finance-ui .memory-owner-actions button:last-child { color: #963f37; }
 body.finance-ui .memory-owner-actions button:hover { background: #fff; }
+body.finance-ui .memory-owner-actions { display: block; }
+body.finance-ui .memory-owner-actions .memory-more-button {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    place-items: center;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 14px;
+    letter-spacing: 1px;
+    line-height: 1;
+}
+body.finance-ui .memory-owner-menu {
+    position: absolute;
+    top: 42px;
+    right: 0;
+    display: grid;
+    min-width: 148px;
+    padding: 5px;
+    border: 1px solid rgba(214,228,214,.95);
+    border-radius: 13px;
+    background: rgba(255,255,255,.98);
+    box-shadow: 0 14px 32px rgba(20, 48, 28, .2);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-5px) scale(.97);
+    transform-origin: top right;
+    transition: opacity .16s ease, transform .16s ease;
+}
+body.finance-ui .memory-owner-menu.is-open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+body.finance-ui .memory-owner-menu button {
+    min-height: 34px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    box-shadow: none;
+    color: #315e40;
+    font-size: 11px;
+    text-align: left;
+}
+body.finance-ui .memory-owner-menu button:hover { background: #eef6ed; }
+body.finance-ui .memory-owner-menu button.is-destructive { color: #a0443b; }
+body.finance-ui .memory-owner-menu button.is-destructive:hover { background: #fff1ef; }
 
 body.finance-ui .dashboard-top-grid > .header .wallet-profile-image {
     opacity: .68;
