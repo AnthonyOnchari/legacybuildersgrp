@@ -2415,7 +2415,7 @@ function renderMembersList(members) {
         const emailKey = member.email.toLowerCase();
         if (memberPhotoCache[emailKey]) return;
         setTimeout(() => loadMemberPhoto(member.email), photoFetchDelay);
-        photoFetchDelay += 200;
+        photoFetchDelay += 45;
     });
 }
 
@@ -3861,7 +3861,7 @@ function initMemoriesCarousel() {
             && photo.email.toLowerCase() === currentUserEmail.toLowerCase());
         return `
         <figure class="memory-slide">
-            <img src="${escapeHtml(photo.image)}" alt="${escapeHtml(photo.caption || `Group photo shared by ${photo.member || 'a member'}`)}" loading="${index === (activePhotoIndex >= 0 ? activePhotoIndex : 0) ? 'eager' : 'lazy'}">
+            <img src="${escapeHtml(photo.image)}" alt="${escapeHtml(photo.caption || `Group photo shared by ${photo.member || 'a member'}`)}" decoding="async" fetchpriority="${index === (activePhotoIndex >= 0 ? activePhotoIndex : 0) ? 'high' : 'auto'}" loading="${index === (activePhotoIndex >= 0 ? activePhotoIndex : 0) ? 'eager' : 'lazy'}">
             ${photo.caption ? `<figcaption>${escapeHtml(photo.caption)}</figcaption>` : ''}
             ${ownsPhoto ? `<div class="memory-owner-actions" aria-label="Manage your photo">
                 <button type="button" class="memory-more-button" onclick="toggleMemoryOwnerMenu(event, ${index})" aria-label="More photo actions" aria-expanded="false" title="More actions">•••</button>
@@ -4660,8 +4660,10 @@ document.addEventListener('DOMContentLoaded', () => {
             errorEl.style.display = 'block';
         }
     }).finally(() => {
+        const startupLoading = document.getElementById('startupLoading');
         document.body.classList.remove('app-loading');
-        document.getElementById('startupLoading')?.remove();
+        startupLoading?.classList.add('is-fading');
+        window.setTimeout(() => startupLoading?.remove(), 480);
     });
 });
 

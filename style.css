@@ -54,36 +54,64 @@ html { overflow-x: hidden; }
     font-weight: 600;
     backdrop-filter: blur(14px) saturate(.88);
     -webkit-backdrop-filter: blur(14px) saturate(.88);
+    opacity: 1;
+    transition: opacity .46s cubic-bezier(.22, 1, .36, 1);
+    will-change: opacity;
+}
+.startup-loading.is-fading {
+    opacity: 0;
+    pointer-events: none;
 }
 .startup-loading-spinner {
     position: relative;
     display: grid;
-    width: 78px;
-    height: 78px;
+    width: 74px;
+    height: 74px;
     place-items: center;
 }
 .startup-loading-spinner::before {
     position: absolute;
     inset: 0;
-    border: 3px solid rgba(80, 122, 85, .18);
-    border-top-color: #367454;
-    border-right-color: #8eae83;
+    border: 1.5px solid rgba(80, 122, 85, .16);
+    border-top-color: rgba(35, 116, 93, .88);
+    border-right-color: rgba(181, 139, 76, .72);
     border-radius: 50%;
-    animation: spin .86s linear infinite;
+    animation: spin 1.15s cubic-bezier(.55, .08, .28, .95) infinite;
+    content: "";
+}
+.startup-loading-spinner::after {
+    position: absolute;
+    inset: 9px;
+    border: 1px solid rgba(35, 116, 93, .12);
+    border-radius: 50%;
+    animation: startupPulse 1.8s ease-in-out infinite;
     content: "";
 }
 .startup-loading-spinner img {
-    width: 62px;
-    height: 62px;
-    border: 4px solid rgba(255,255,255,.94);
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 5px 16px rgba(33, 73, 44, .18);
-    object-fit: contain;
+    width: 78px;
+    height: 46px;
+    border: 0;
+    background: transparent;
+    object-fit: cover;
+    object-position: center 53%;
+    filter: drop-shadow(0 5px 12px rgba(33, 73, 44, .14));
+}
+@keyframes startupPulse {
+    0%, 100% { transform: scale(.92); opacity: .35; }
+    50% { transform: scale(1.05); opacity: .08; }
 }
 body.app-loading .app-shell,
 body.app-loading #tabBar {
     visibility: visible;
+    opacity: .98;
+}
+body:not(.app-loading) .app-shell,
+body:not(.app-loading) #tabBar {
+    animation: appContentReveal .52s cubic-bezier(.22, 1, .36, 1) both;
+}
+@keyframes appContentReveal {
+    from { opacity: .72; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* ============================================
