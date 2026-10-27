@@ -3001,7 +3001,7 @@ function openImageCropper(file, mode) {
         overlay.className = 'image-crop-overlay';
         overlay.innerHTML = `<section class="image-crop-dialog" role="dialog" aria-modal="true" aria-labelledby="imageCropTitle">
             <header class="image-crop-heading"><div><span class="section-kicker">${mode === 'profile' ? 'PROFILE PHOTO' : 'GROUP MEMORY'}</span><h2 id="imageCropTitle">Adjust your photo</h2><p>Drag to position the image, then use the slider to zoom.</p></div><button type="button" class="image-crop-close" data-crop-cancel aria-label="Cancel crop">&times;</button></header>
-            ${mode === 'memory' ? '<label class="image-crop-ratio-label" for="imageCropRatio">Photo shape<select id="imageCropRatio"><option value="original">Original</option><option value="1">Square</option><option value="1.333333">Landscape</option><option value="1.777778">Wide</option></select></label>' : ''}
+            ${mode === 'memory' ? '<label class="image-crop-ratio-label" for="imageCropRatio">Photo shape<select id="imageCropRatio"><option value="1.333333" selected>Landscape</option><option value="original">Original</option><option value="1">Square</option><option value="1.777778">Wide</option></select></label>' : ''}
             <div class="image-crop-stage" id="imageCropStage"><img class="image-crop-image" alt="Photo crop preview"></div>
             <label class="image-crop-zoom" for="imageCropZoom"><span>Zoom</span><input type="range" id="imageCropZoom" min="1" max="3" step="0.01" value="1"><span>+</span></label>
             <div class="image-crop-actions"><button type="button" class="image-crop-cancel" data-crop-cancel>Cancel</button><button type="button" class="image-crop-confirm" id="imageCropConfirm">Use this crop</button></div>
@@ -3017,7 +3017,7 @@ function openImageCropper(file, mode) {
         const previousOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
         let frameWidth = 0, frameHeight = 0, baseScale = 1, zoom = 1, offsetX = 0, offsetY = 0;
-        let aspectRatio = mode === 'profile' ? 1 : image.naturalWidth / image.naturalHeight;
+        let aspectRatio = mode === 'profile' ? 1 : 1.333333;
         let pointerId = null, dragX = 0, dragY = 0, originX = 0, originY = 0, settled = false;
 
         const cleanup = () => {
@@ -3055,7 +3055,8 @@ function openImageCropper(file, mode) {
             const availableWidth = stage.parentElement.clientWidth
                 - parseFloat(parentStyle.paddingLeft)
                 - parseFloat(parentStyle.paddingRight);
-            const targetWidth = Math.min(availableWidth, window.innerHeight * 0.52 * aspectRatio);
+            const availableHeight = Math.max(180, window.innerHeight * 0.44);
+            const targetWidth = Math.min(availableWidth, availableHeight * aspectRatio);
             stage.style.width = `${targetWidth}px`;
             stage.style.height = `${targetWidth / aspectRatio}px`;
             frameWidth = stage.clientWidth;
@@ -3068,7 +3069,7 @@ function openImageCropper(file, mode) {
             if (event.key === 'Escape') finish(null, new DOMException('Photo crop canceled.', 'AbortError'));
         };
         image.onload = () => {
-            aspectRatio = mode === 'profile' ? 1 : image.naturalWidth / image.naturalHeight;
+            aspectRatio = mode === 'profile' ? 1 : 1.333333;
             preview.src = objectUrl;
             layoutCrop();
             document.addEventListener('keydown', onKeyDown);
