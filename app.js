@@ -391,14 +391,26 @@ function initializeGoogleSignIn() {
         use_fedcm_for_button: true,
         button_auto_select: false
     });
-    window.google.accounts.id.renderButton(button, {
-        type: 'standard',
-        theme: 'outline',
-        size: 'large',
-        text: 'continue_with',
-        shape: 'rectangular',
-        width: Math.min(390, Math.floor(button.parentElement.clientWidth))
-    });
+    const renderGoogleButton = () => {
+        const availableWidth = Math.floor(
+            button.parentElement?.getBoundingClientRect().width
+            || document.querySelector('.login-box')?.getBoundingClientRect().width
+            || 340
+        );
+        const width = Math.max(240, Math.min(390, availableWidth));
+        button.replaceChildren();
+        window.google.accounts.id.renderButton(button, {
+            type: 'standard',
+            theme: 'outline',
+            size: 'large',
+            text: 'continue_with',
+            shape: 'rectangular',
+            width
+        });
+    };
+    renderGoogleButton();
+    window.requestAnimationFrame(renderGoogleButton);
+    window.addEventListener('resize', renderGoogleButton, { passive: true });
 }
 
 async function loginWithGoogle(response) {
@@ -883,10 +895,12 @@ function updateDashboardGreeting() {
 // ============================================================
 async function loadDeveloperPortal() {
     if (!isDeveloper()) return;
-    await loadSystemStats();
-    await loadAllUsersFull();
-    await loadDevPendingRegistrations();
-    await loadDevAuditLog();
+    await Promise.all([
+        loadSystemStats(),
+        loadAllUsersFull(),
+        loadDevPendingRegistrations(),
+        loadDevAuditLog()
+    ]);
 }
 
 async function loadSystemStats() {
@@ -928,25 +942,25 @@ async function loadAllUsersFull(containerId = 'allUsersList') {
         const res = await callAPI('getAllUsersFull', { email: currentUserEmail });
         if (res.success && res.users) {
             container.innerHTML = `
-                <div style="overflow-x: auto;">
-                    <table class="history-table">
+                <div class="developer-user-directory">
+                    <table class="history-table developer-user-table">
                         <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
                         <tbody>
                             ${res.users.map(user => `
                                 <tr>
-                                    <td><strong>${escapeHtml(user.name)}</strong></td>
-                                    <td>${escapeHtml(user.email)}</td>
-                                    <td><span class="badge ${user.role === 'developer' ? 'badge-savings' : user.role === 'admin' ? 'badge-loan' : 'badge-repayment'}">${user.role || 'member'}</span></td>
-                                    <td><span class="badge ${user.status === 'approved' ? 'badge-savings' : user.status === 'pending' ? 'badge-repayment' : 'badge-loan'}">${user.status || 'pending'}</span></td>
-                                    <td>${user.email !== currentUserEmail ? `
-                                        <select onchange="updateUserRole('${user.email}', this.value)" style="width: auto; padding: 4px 8px; font-size: 11px;">
+                                    <td data-label="Name"><strong>${escapeHtml(user.name)}</strong></td>
+                                    <td data-label="Email" class="developer-user-email">${escapeHtml(user.email)}</td>
+                                    <td data-label="Role"><span class="badge ${user.role === 'developer' ? 'badge-savings' : user.role === 'admin' ? 'badge-loan' : 'badge-repayment'}">${user.role || 'member'}</span></td>
+                                    <td data-label="Status"><span class="badge ${user.status === 'approved' ? 'badge-savings' : user.status === 'pending' ? 'badge-repayment' : 'badge-loan'}">${user.status || 'pending'}</span></td>
+                                    <td data-label="Actions" class="developer-user-actions">${user.email !== currentUserEmail ? `<div class="developer-user-action-list">
+                                        <select onchange="updateUserRole('${user.email}', this.value)" aria-label="Role for ${escapeHtml(user.name)}">
                                             <option value="member" ${user.role === 'member' ? 'selected' : ''}>Member</option>
                                             <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Treasurer</option>
                                             ${isDeveloper() ? `<option value="developer" ${user.role === 'developer' ? 'selected' : ''}>Developer</option>` : ''}
                                         </select>
                                         ${isDeveloper() ? `<button class="user-photo-edit-button" type="button" onclick="editUserProfilePhoto('${user.email}')">Edit photo</button>` : ''}
-                                        ${user.role === 'developer' ? '<span class="protected-user-label">Protected developer</span>' : `<button aria-label="Delete user" onclick="deleteUser('${user.email}')" style="background: #E5484D; color: white; width: auto; padding: 4px 10px; font-size: 11px; margin-top: 4px;">Delete</button>`}
-                                    ` : '<em>You</em>'}</td>
+                                        ${user.role === 'developer' ? '<span class="protected-user-label">Protected developer</span>' : `<button class="user-delete-button" aria-label="Delete user" onclick="deleteUser('${user.email}')">Delete</button>`}
+                                    </div>` : '<em class="developer-user-self">You</em>'}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
