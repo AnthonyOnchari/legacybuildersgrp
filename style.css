@@ -11507,6 +11507,31 @@ body.finance-ui .group-chat-modal .communications-inbox-card .group-chat-heading
 body.finance-ui .group-chat-modal .communications-inbox-card .group-chat-heading--compact h2 { font-size: 15px; }
 body.finance-ui .group-chat-modal .communications-inbox-card .group-chat-heading--compact p { margin-top: 2px; font-size: 10px; }
 body.finance-ui .summary-target-caption { color: #367454; }
+/* About has been retired from the member experience. */
+body.finance-ui #aboutPanel,
+body.finance-ui .sidebar-link[data-panel="about"],
+body.finance-ui #tabBar .tab[data-panel="about"] { display: none !important; }
+body.finance-ui .nav-unread-badge {
+    display: inline;
+    min-width: 0;
+    height: auto;
+    margin-left: 3px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #c43f38;
+    font-size: 8px;
+    font-weight: 800;
+    line-height: 1;
+    vertical-align: super;
+}
+body.finance-ui .nav-unread-badge[hidden] { display: none !important; }
+body.finance-ui #tabBar .tab .nav-unread-badge {
+    position: static;
+    margin-left: 2px;
+    font-size: 8px;
+}
 @media (max-width: 560px) {
     body.finance-ui .group-chat-modal {
         align-items: center;

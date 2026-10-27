@@ -83,7 +83,8 @@ function getInitials(name) {
 function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 function unreadStorageKey(kind) {
-    return `legacy_${kind}_seen_${String(currentUserEmail || currentUser || 'member').toLowerCase()}`;
+    const version = kind === 'group_messages' ? '_v2' : '';
+    return `legacy_${kind}_seen${version}_${String(currentUserEmail || currentUser || 'member').toLowerCase()}`;
 }
 
 function updateUnreadIndicators() {
@@ -501,6 +502,7 @@ async function resendOtpCode() {
 function activateCurrentTab() {
     initializeAppBackNavigation();
     if (currentTab === 'groupChat') currentTab = 'meetings';
+    if (currentTab === 'about') currentTab = 'transactions';
     if ((currentTab === 'developer' && !isDeveloper()) || (currentTab === 'pending' && !hasAdminPortalAccess())) {
         currentTab = 'transactions';
     }
@@ -3445,6 +3447,7 @@ function ensureFullscreenBar(panel, tabId) {
 
 function activateTab(tabId) {
     if (tabId === 'groupChat') tabId = 'meetings';
+    if (tabId === 'about') tabId = 'transactions';
     if (tabId !== 'meetings') toggleGroupChat(false);
     if (tabId === 'developer' && !isDeveloper()) {
         showToast('Developer portal access is restricted.', 'error');
@@ -3885,6 +3888,8 @@ async function loadGroupMessages() {
         const requestContainer = document.getElementById('groupInboxRequests');
         if (requestContainer) requestContainer.innerHTML = '';
         container.innerHTML = '<div class="empty-state">No group messages yet.</div>';
+        unreadGroupMessages = 0;
+        updateUnreadIndicators();
         return;
     }
     const res = await callAPI('getGroupMessages');
@@ -3892,6 +3897,8 @@ async function loadGroupMessages() {
         const requestContainer = document.getElementById('groupInboxRequests');
         if (requestContainer) requestContainer.innerHTML = '';
         container.innerHTML = `<div class="empty-state">${escapeHtml(res.error || 'Could not load group messages.')}</div>`;
+        unreadGroupMessages = 0;
+        updateUnreadIndicators();
         return;
     }
 
@@ -3911,10 +3918,19 @@ async function loadGroupMessages() {
     ` : '';
 
     const messages = Array.isArray(res.messages) ? res.messages : [];
-    const messagesSeenAt = localStorage.getItem(unreadStorageKey('group_messages')) || '';
-    unreadGroupMessages = messages.filter(message => message.created_at && String(message.created_at) > messagesSeenAt).length;
+    let messagesSeenAt = localStorage.getItem(unreadStorageKey('group_messages')) || '';
+    const latestMessageAt = messages.reduce((latest, message) => String(message.created_at || '') > latest ? String(message.created_at || '') : latest, '');
+    if (!messagesSeenAt && latestMessageAt) {
+        messagesSeenAt = latestMessageAt;
+        localStorage.setItem(unreadStorageKey('group_messages'), messagesSeenAt);
+    }
+    unreadGroupMessages = messages.filter(message =>
+        message.email !== currentUserEmail && message.created_at && String(message.created_at) > messagesSeenAt
+    ).length;
     updateUnreadIndicators();
     if (!messages.length) {
+        unreadGroupMessages = 0;
+        updateUnreadIndicators();
         container.innerHTML = '<div class="empty-state">No messages yet. Start the group conversation.</div>';
         return;
     }
@@ -4279,6 +4295,8 @@ function initializeDevelopmentPreview() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('aboutPanel')?.remove();
+    document.querySelectorAll('[data-panel="about"]').forEach(element => element.remove());
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', syncChatViewport);
         window.visualViewport.addEventListener('scroll', syncChatViewport);
