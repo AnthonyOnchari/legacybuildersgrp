@@ -21,6 +21,8 @@ let appBackNavigationInitialized = false;
 const memberPhotoCache = {};
 let serviceWorkerRegistered = false, pushSubscription = null;
 const countUpFrames = new WeakMap();
+let memberRollContainer = null, memberRollObserver = null, memberRollAnimationFrame = 0;
+const memberRollReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 // ============================================================
 // UTILITY FUNCTIONS
@@ -2161,12 +2163,17 @@ async function loadMembersList() {
 function renderMembersList(members) {
     const container = document.getElementById('membersList');
     if (!container) return;
+    if (memberRollObserver) memberRollObserver.disconnect();
+    if (memberRollAnimationFrame) cancelAnimationFrame(memberRollAnimationFrame);
+    memberRollAnimationFrame = 0;
+    memberRollContainer = null;
     if (!members || members.length === 0) {
+        container.classList.remove('is-auto-scrolling', 'is-paused');
         container.innerHTML = '<div class="empty-state">No members found</div>';
         return;
     }
     const sortedMembers = [...members].sort((a, b) => a.name.localeCompare(b.name));
-    container.innerHTML = sortedMembers.map(member => {
+    const memberCards = sortedMembers.map(member => {
         const initial = getInitials(member.name);
         const isTreas = member.name === TREASURER_NAME;
         const memberStats = getUserStats(member.name);
@@ -2174,17 +2181,40 @@ function renderMembersList(members) {
         const cachedPhoto = memberPhotoCache[member.email?.toLowerCase()];
         const avatarContent = cachedPhoto ? `<img src="${cachedPhoto}" alt="${escapeHtml(member.name)}">` : initial;
         return `<div class="member-card" onclick="viewMemberProfile('${escapeHtml(member.name)}', '${escapeHtml(member.email || '')}')">
-            <div class="member-avatar" id="memberAvatar-${escapeHtml(member.email || '')}">${avatarContent}</div>
+            <div class="member-avatar" id="memberAvatar-${escapeHtml(member.email || '')}" data-member-email="${escapeHtml(member.email || '')}">${avatarContent}</div>
             <div class="member-card-info">
                 <div class="member-name">${escapeHtml(member.name)}</div>
                 <div class="member-role ${isTreas ? 'treasurer' : ''}">${isTreas ? 'Treasurer' : 'Member'}</div>
             </div>
             <div class="member-stats">
-                <span> KES ${(memberStats.savings || 0).toLocaleString()}</span>
-                <span> KES ${(memberStats.loans || 0).toLocaleString()}</span>
+                <span class="member-stat"><span class="member-stat-label">Saved</span><strong>KES ${(memberStats.savings || 0).toLocaleString()}</strong></span>
+                <span class="member-stat"><span class="member-stat-label">Loan balance</span><strong>KES ${(memberStats.loans || 0).toLocaleString()}</strong></span>
             </div>
         </div>`;
     }).join('');
+    container.innerHTML = `<div class="members-track-group">${memberCards}</div>`;
+    const duplicateGroup = container.firstElementChild.cloneNode(true);
+    duplicateGroup.classList.add('members-track-group--duplicate');
+    duplicateGroup.setAttribute('aria-hidden', 'true');
+    duplicateGroup.querySelectorAll('[id]').forEach(element => element.removeAttribute('id'));
+    duplicateGroup.querySelectorAll('[onclick]').forEach(element => element.removeAttribute('onclick'));
+    container.appendChild(duplicateGroup);
+    container.style.setProperty('--members-scroll-duration', `${Math.max(24, sortedMembers.length * 8)}s`);
+    container.classList.add('is-auto-scrolling');
+    memberRollContainer = container;
+    if ('IntersectionObserver' in window) {
+        memberRollObserver = new IntersectionObserver(entries => {
+            if (entries.some(entry => entry.isIntersecting)) {
+                scheduleMemberRollFocus();
+            } else if (memberRollAnimationFrame) {
+                cancelAnimationFrame(memberRollAnimationFrame);
+                memberRollAnimationFrame = 0;
+            }
+        });
+        memberRollObserver.observe(container.parentElement);
+    } else {
+        scheduleMemberRollFocus();
+    }
     let photoFetchDelay = 0;
     sortedMembers.forEach(member => {
         if (!member.hasImage || !member.email) return;
@@ -2195,13 +2225,83 @@ function renderMembersList(members) {
     });
 }
 
+function scheduleMemberRollFocus() {
+    if (memberRollAnimationFrame || !memberRollContainer) return;
+    memberRollAnimationFrame = requestAnimationFrame(updateMemberRollFocus);
+}
+
+function updateMemberRollFocus() {
+    memberRollAnimationFrame = 0;
+    const container = memberRollContainer;
+    if (!container
+        || document.hidden
+        || memberRollReducedMotion.matches
+        || container.classList.contains('is-paused')
+        || !container.closest('.panel')?.classList.contains('active-panel')) return;
+
+    const wrapper = container.parentElement;
+    const center = wrapper.getBoundingClientRect().left + wrapper.clientWidth / 2;
+    const focusStates = [...container.querySelectorAll('.member-card')].map(card => {
+        const bounds = card.getBoundingClientRect();
+        const distance = Math.abs(bounds.left + bounds.width / 2 - center);
+        const proximity = Math.max(0, 1 - distance / (card.offsetWidth * 0.9));
+        const focus = proximity * proximity * (3 - 2 * proximity);
+        return { card, focus };
+    });
+    focusStates.forEach(({ card, focus }) => {
+        card.style.setProperty('--member-focus-scale', (1 + focus * 0.28).toFixed(3));
+        card.style.setProperty('--member-focus-lift', `${(-focus * 10).toFixed(2)}px`);
+        card.style.setProperty('--member-focus-depth', `${(focus * 48).toFixed(2)}px`);
+        card.style.setProperty('--member-focus-shadow', `0 24px 42px rgba(31, 63, 40, ${(0.05 + focus * 0.18).toFixed(3)})`);
+        card.style.setProperty('--member-focus-border', `rgba(94, 135, 82, ${(0.12 + focus * 0.48).toFixed(3)})`);
+        card.style.zIndex = focus > 0.05 ? '2' : '0';
+    });
+    scheduleMemberRollFocus();
+}
+
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden && memberRollAnimationFrame) {
+        cancelAnimationFrame(memberRollAnimationFrame);
+        memberRollAnimationFrame = 0;
+    } else {
+        scheduleMemberRollFocus();
+    }
+});
+
+memberRollReducedMotion.addEventListener?.('change', () => {
+    if (memberRollReducedMotion.matches && memberRollAnimationFrame) {
+        cancelAnimationFrame(memberRollAnimationFrame);
+        memberRollAnimationFrame = 0;
+    } else {
+        scheduleMemberRollFocus();
+    }
+});
+
+function toggleMemberAutoScroll(button) {
+    const container = document.getElementById('membersList');
+    if (!container) return;
+    const isPaused = container.classList.toggle('is-paused');
+    if (isPaused && memberRollAnimationFrame) {
+        cancelAnimationFrame(memberRollAnimationFrame);
+        memberRollAnimationFrame = 0;
+    } else {
+        scheduleMemberRollFocus();
+    }
+    button.setAttribute('aria-pressed', String(isPaused));
+    button.setAttribute('aria-label', isPaused ? 'Resume member auto-scroll' : 'Pause member auto-scroll');
+    button.textContent = isPaused ? 'Resume' : 'Pause';
+}
+
 async function loadMemberPhoto(email) {
     try {
         const res = await callAPI('getProfileImage', { email });
         if (res.success && res.image) {
             memberPhotoCache[email.toLowerCase()] = res.image;
-            const avatarEl = document.getElementById(`memberAvatar-${email}`);
-            if (avatarEl) avatarEl.innerHTML = `<img src="${res.image}" alt="${escapeHtml(email)}">`;
+            document.querySelectorAll('#membersList .member-avatar').forEach(avatarEl => {
+                if (avatarEl.dataset.memberEmail?.toLowerCase() === email.toLowerCase()) {
+                    avatarEl.innerHTML = `<img src="${res.image}" alt="${escapeHtml(email)}">`;
+                }
+            });
         }
     } catch (e) { console.error('Failed to load photo for', email, e); }
 }
@@ -3283,6 +3383,7 @@ function ensureFullscreenBar(panel, tabId) {
 
 function activateTab(tabId) {
     if (tabId === 'groupChat') tabId = 'meetings';
+    if (tabId !== 'meetings') toggleGroupChat(false);
     if (tabId === 'developer' && !isDeveloper()) {
         showToast('Developer portal access is restricted.', 'error');
         return;
@@ -3749,15 +3850,50 @@ async function loadGroupMessages() {
         container.innerHTML = '<div class="empty-state">No messages yet. Start the group conversation.</div>';
         return;
     }
+    const canDeleteMessages = hasAdminPortalAccess();
     container.innerHTML = messages.map(message => `
-        <article class="group-message${message.email === currentUserEmail ? 'own-message' : ''}">
+        <article class="group-message${message.email === currentUserEmail ? ' own-message' : ''}">
             <div class="group-message-meta">
                 <strong>${escapeHtml(message.member || 'Group member')}</strong>
                 <time>${message.created_at ? new Date(message.created_at).toLocaleString() : ''}</time>
+                ${canDeleteMessages && message.id ? `<button type="button" class="group-message-delete" data-group-message-id="${escapeHtml(message.id)}" aria-label="Delete message from ${escapeHtml(message.member || 'group member')}" title="Delete message">Delete</button>` : ''}
             </div>
             <p>${escapeHtml(message.message)}</p>
         </article>
     `).join('');
+    container.querySelectorAll('.group-message-delete').forEach(button => {
+        button.addEventListener('click', () => deleteGroupMessage(button));
+    });
+}
+
+async function deleteGroupMessage(button) {
+    if (!hasAdminPortalAccess()) {
+        showToast('Only administrators or developers can delete group messages.', 'error');
+        return;
+    }
+    const id = button?.dataset.groupMessageId;
+    if (!id) {
+        showToast('Could not identify this group message.', 'error');
+        return;
+    }
+    const confirmed = await showAppConfirmation({
+        title: 'Delete this group message?',
+        message: 'This will permanently remove the message from the group inbox for everyone.',
+        confirmLabel: 'Delete message',
+        destructive: true
+    });
+    if (!confirmed) return;
+
+    button.disabled = true;
+    try {
+        const res = await callAPI('deleteGroupMessage', { id });
+        if (!res.success) throw new Error(res.error || 'Could not delete the group message.');
+        await loadGroupMessages();
+        showToast('Group message deleted.', 'success');
+    } catch (error) {
+        button.disabled = false;
+        showToast(error.message || 'Could not delete the group message.', 'error');
+    }
 }
 
 async function sendGroupMessage(event) {
@@ -3780,6 +3916,66 @@ async function sendGroupMessage(event) {
         showToast(error.message, 'error');
     } finally {
         button.disabled = false;
+    }
+}
+
+let groupChatReturnMarker = null;
+let groupChatReturnFocus = null;
+let groupChatPreviousOverflow = '';
+
+function toggleGroupChat(open, opener = null) {
+    const modal = document.getElementById('groupChatModal');
+    if (!modal) return;
+
+    if (open) {
+        if (modal.style.display !== 'none') return;
+        groupChatReturnFocus = opener || document.activeElement;
+        groupChatReturnMarker = document.createComment('Group chat modal position');
+        modal.parentNode.insertBefore(groupChatReturnMarker, modal);
+        document.body.appendChild(modal);
+        modal.style.display = 'grid';
+        modal.setAttribute('aria-hidden', 'false');
+        groupChatPreviousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        document.addEventListener('keydown', handleGroupChatKeydown);
+        modal.querySelector('.group-chat-modal-dialog')?.focus({ preventScroll: true });
+        document.getElementById('groupMessageInput')?.focus({ preventScroll: true });
+        return;
+    }
+
+    if (modal.style.display === 'none') return;
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    if (groupChatReturnMarker?.parentNode) {
+        groupChatReturnMarker.parentNode.replaceChild(modal, groupChatReturnMarker);
+    }
+    groupChatReturnMarker = null;
+    document.body.style.overflow = groupChatPreviousOverflow;
+    document.removeEventListener('keydown', handleGroupChatKeydown);
+    if (groupChatReturnFocus?.isConnected && currentTab === 'meetings') {
+        groupChatReturnFocus.focus({ preventScroll: true });
+    }
+    groupChatReturnFocus = null;
+}
+
+function handleGroupChatKeydown(event) {
+    if (event.key === 'Escape') {
+        toggleGroupChat(false);
+        return;
+    }
+    if (event.key !== 'Tab') return;
+    const modal = document.getElementById('groupChatModal');
+    const focusable = [...modal.querySelectorAll('button:not(:disabled), textarea:not(:disabled), [href], [tabindex]:not([tabindex="-1"])')]
+        .filter(element => element.getClientRects().length);
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
     }
 }
 
@@ -4063,6 +4259,8 @@ window.loadDeveloperPortal = loadDeveloperPortal;
 window.loadAllUsersFull = loadAllUsersFull;
 window.updateUserRole = updateUserRole;
 window.deleteUser = deleteUser;
+window.deleteGroupMessage = deleteGroupMessage;
+window.toggleGroupChat = toggleGroupChat;
 window.approveRegistration = approveRegistration;
 window.rejectRegistration = rejectRegistration;
 window.refreshAllData = refreshAllData;

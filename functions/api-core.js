@@ -444,7 +444,7 @@ async function handleAction(action, params, user) {
         }
         case "getGroupMessages": {
             const [messageSnapshot, requestSnapshot] = await Promise.all([
-                db.collection("groupMessages").orderBy("created_at", "desc").limit(100).get(),
+                db.collection("groupMessages").orderBy("created_at", "desc").get(),
                 db.collection("registrationRequests").where("status", "==", "pending").limit(50).get()
             ]);
             const messages = messageSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -456,6 +456,17 @@ async function handleAction(action, params, user) {
                 messages,
                 joinRequests
             };
+        }
+        case "deleteGroupMessage": {
+            requireAdmin(user);
+            const id = String(params.id || "").trim();
+            if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Choose a valid group message.");
+            const ref = recordRef("groupMessages", id);
+            const snapshot = await ref.get();
+            if (!snapshot.exists) throw new Error("Group message not found.");
+            await ref.delete();
+            await audit(name, "Deleted group message", `${id} — ${snapshot.data().member || "Group member"}`);
+            return { success: true, id };
         }
         case "sendGroupMessage": {
             const message = String(params.message || "").trim();

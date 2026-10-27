@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=77">
+    <link rel="stylesheet" href="style.css?v=91">
 </head>
 <body class="finance-ui app-loading">
 
@@ -413,7 +413,9 @@
         <div id="meetingsPanel" class="panel fullscreen-panel communications-page">
             <header class="communications-hero">
                 <div class="communications-hero-copy"><span class="section-kicker">GROUP SPACE</span><h1>Meetings &amp; inbox</h1><p>Plan together. Stay in touch.</p></div>
-                <button type="button" class="meeting-primary-action" onclick="openScheduleMeetingModal()">Schedule a meeting</button>
+                <div class="communications-hero-actions">
+                    <button type="button" class="meeting-primary-action" onclick="openScheduleMeetingModal()">Schedule a meeting</button>
+                </div>
             </header>
             <div class="communications-grid">
                 <div class="communications-meetings">
@@ -439,22 +441,36 @@
                             <span class="meeting-action-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19.5h16M6.5 16v-4m5 4V7m5 9v-6"/></svg></span>
                             <span class="meeting-action-text"><span class="meeting-action-title">Group activity</span><span class="meeting-action-sub">See what has happened recently</span></span>
                         </button>
+                        <button type="button" class="meeting-action-row" onclick="toggleGroupChat(true, this)" aria-haspopup="dialog" aria-controls="groupChatModal">
+                            <span class="meeting-action-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5 8 8 0 0 1-3.4-.8L4 20l1.5-4.1a7.4 7.4 0 0 1-1-3.9 7.5 7.5 0 1 1 15.5-.5Z"/><path d="M8 11.5h8M8 14.5h5"/></svg></span>
+                            <span class="meeting-action-text"><span class="meeting-action-title">Group inbox</span><span class="meeting-action-sub">Open the shared group conversation</span></span>
+                        </button>
                     </div>
                 </div>
-                <section class="card communications-inbox-card">
-                    <div class="group-chat-heading">
-                        <div><span class="section-kicker">GROUP INBOX</span><h2>Messages</h2><p>Messages shared with the group.</p></div>
-                        <button type="button" class="group-refresh-btn" onclick="loadGroupMessages()" aria-label="Refresh messages">Refresh</button>
+            </div>
+            <div class="group-chat-modal" id="groupChatModal" aria-hidden="true" style="display: none;" onclick="if(event.target===this)toggleGroupChat(false)">
+                <section class="group-chat-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="groupChatModalTitle" tabindex="-1">
+                    <div class="group-chat-modal-topbar">
+                        <div><span class="section-kicker">NBFA GROUP</span><h2 id="groupChatModalTitle">Group chat</h2></div>
+                        <button type="button" class="group-chat-modal-close" onclick="toggleGroupChat(false)" aria-label="Close group chat">&times;</button>
                     </div>
-                    <div class="group-inbox-requests" id="groupInboxRequests"></div>
-                    <div class="group-messages" id="groupMessages" aria-live="polite">
-                        <div class="empty-state">Loading group conversation...</div>
+                    <div class="group-chat-modal-content" id="groupChatModalContent">
+                        <section class="card communications-inbox-card">
+                            <div class="group-chat-heading">
+                                <div><span class="section-kicker">GROUP INBOX</span><h2>Messages</h2><p>Messages shared with the group.</p></div>
+                                <button type="button" class="group-refresh-btn" onclick="loadGroupMessages()" aria-label="Refresh messages">Refresh</button>
+                            </div>
+                            <div class="group-inbox-requests" id="groupInboxRequests"></div>
+                            <div class="group-messages" id="groupMessages" aria-live="polite">
+                                <div class="empty-state">Loading group conversation...</div>
+                            </div>
+                            <form class="group-message-form" onsubmit="sendGroupMessage(event)">
+                                <label class="sr-only" for="groupMessageInput">Message to the group</label>
+                                <textarea id="groupMessageInput" maxlength="1000" rows="2" placeholder="Write a message to everyone..."></textarea>
+                                <button type="submit" id="groupMessageSendBtn">Send message</button>
+                            </form>
+                        </section>
                     </div>
-                    <form class="group-message-form" onsubmit="sendGroupMessage(event)">
-                        <label class="sr-only" for="groupMessageInput">Message to the group</label>
-                        <textarea id="groupMessageInput" maxlength="1000" rows="2" placeholder="Write a message to everyone..."></textarea>
-                        <button type="submit" id="groupMessageSendBtn">Send message</button>
-                    </form>
                 </section>
             </div>
         </div>
@@ -474,43 +490,29 @@
 
         <!-- About Panel -->
         <div id="aboutPanel" class="panel fullscreen-panel">
-            <div class="about-hero-card">
-                <div class="about-image-wrapper">
-                    <img src="https://lh3.googleusercontent.com/d/1cxOVKU7CkgQUaSpB6m_KYVxNKDfBL_yS=s800" alt="Legacy Builders Group" class="about-hero-image" onerror="this.style.display='none'">
-                </div>
-                <div class="about-hero-copy">
-                    <span class="section-kicker">OUR COMMUNITY</span>
-                    <h1>Progress is stronger when we build it together.</h1>
-                    <p class="about-tagline">NBFA GROUP brings members together around shared saving, transparent decisions and steady progress toward the future.</p>
-                    <div class="about-values-row"><span class="about-value-chip">Shared responsibility</span><span class="about-value-chip">Clear decisions</span><span class="about-value-chip">Long-term progress</span></div>
-                </div>
-            </div>
+            <section class="about-intro" aria-labelledby="aboutIntroTitle">
+                <h2 id="aboutIntroTitle">About Us</h2>
+                <p>NBFA Group brings members together to save consistently, support one another and make transparent financial decisions—building lasting progress, together.</p>
+            </section>
             <div class="about-stats-row" aria-label="Group statistics">
                 <div class="about-stat"><div class="about-stat-value" id="aboutStatMembers">--</div><div class="about-stat-label">Members</div></div>
                 <div class="about-stat"><div class="about-stat-value" id="aboutStatSavings">--</div><div class="about-stat-label">Total Saved</div></div>
                 <div class="about-stat"><div class="about-stat-value" id="aboutStatTxns">--</div><div class="about-stat-label">Transactions</div></div>
             </div>
             <section class="about-purpose-grid" aria-label="How we work together">
-                <article class="about-purpose-card about-purpose-card--lead">
-                    <span class="section-kicker">WHY WE COME TOGETHER</span>
-                    <h2>A shared place to save, plan and move forward.</h2>
-                    <p>Our group space keeps everyday finances and communication in one place, helping members stay informed and take part in decisions together.</p>
+                <article class="about-purpose-card">
+                    <span class="about-purpose-number" aria-hidden="true">01</span>
+                    <div class="about-purpose-copy"><h3>Make progress together</h3><p>Members contribute toward goals through consistent saving and participation.</p></div>
                 </article>
                 <article class="about-purpose-card">
-                    <span class="about-purpose-number">01</span>
-                    <h3>Make progress together</h3>
-                    <p>Members contribute toward goals through consistent saving and participation.</p>
-                </article>
-                <article class="about-purpose-card">
-                    <span class="about-purpose-number">02</span>
-                    <h3>Keep decisions visible</h3>
-                    <p>Shared records and group updates help everyone follow what is happening.</p>
+                    <span class="about-purpose-number" aria-hidden="true">02</span>
+                    <div class="about-purpose-copy"><h3>Keep decisions visible</h3><p>Shared records and group updates help everyone follow what is happening.</p></div>
                 </article>
             </section>
             <section class="card about-members-card">
-                <div class="about-members-heading">
-                    <div><span class="section-kicker">THE PEOPLE BEHIND THE PROGRESS</span><h2>Meet the members</h2><p>A community shaped by the people who show up and contribute.</p></div>
+                <div class="about-members-heading" aria-label="Member directory controls">
                     <span class="member-count-badge" id="memberCountBadge">0 Members</span>
+                    <button class="member-scroll-toggle" type="button" aria-pressed="false" aria-label="Pause member auto-scroll" onclick="toggleMemberAutoScroll(this)">Pause</button>
                 </div>
                 <div class="members-grid-wrapper">
                     <div id="membersList" class="members-grid">
@@ -587,6 +589,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://accounts.google.com/gsi/client" defer></script>
     <script src="firebase-config.js?v=36"></script>
-    <script src="app.js?v=67"></script>
+    <script src="app.js?v=71"></script>
 </body>
 </html>
