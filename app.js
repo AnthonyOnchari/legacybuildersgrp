@@ -505,7 +505,9 @@ function activateCurrentTab() {
     initializeAppBackNavigation();
     if (currentTab === 'groupChat') currentTab = 'meetings';
     if (currentTab === 'about') currentTab = 'transactions';
-    if ((currentTab === 'developer' && !isDeveloper()) || (currentTab === 'pending' && !hasAdminPortalAccess())) {
+    // Developer tools are opened from the protected header button, never as the Home tab.
+    if (currentTab === 'developer') currentTab = 'transactions';
+    if (currentTab === 'pending' && !hasAdminPortalAccess()) {
         currentTab = 'transactions';
     }
     document.querySelectorAll('.tab, .sidebar-link').forEach(t => t.classList.remove('active'));
@@ -609,24 +611,84 @@ function showHideDeveloperPortal() {
     const devSidebar = document.getElementById('developerSidebarLink');
     const portalButton = document.getElementById('adminPortalButton');
     const portalLabel = document.getElementById('adminPortalButtonLabel');
-    if (portalButton) portalButton.style.display = hasAdminPortalAccess() ? 'inline-flex' : 'none';
+    if (portalButton) {
+        portalButton.style.display = hasAdminPortalAccess() ? 'inline-flex' : 'none';
+        portalButton.setAttribute('aria-haspopup', isDev ? 'dialog' : 'false');
+    }
     if (portalLabel) portalLabel.textContent = isDev ? 'Developer Portal' : 'Admin Portal';
 
-    if (isDev) {
-        if (devTab) {
-            devTab.style.display = 'flex';
-        }
-        if (devSidebar) {
-            devSidebar.style.display = 'flex';
-        }
-    } else {
-        if (devTab) {
-            devTab.style.display = 'none';
-        }
-        if (devSidebar) {
-            devSidebar.style.display = 'none';
-        }
+    // Keep developer data out of Home and the regular navigation. It is available
+    // through the protected Developer Portal button only.
+    if (devTab) devTab.style.display = 'none';
+    if (devSidebar) devSidebar.style.display = 'none';
+}
+
+let developerPortalModal = null;
+
+function openDeveloperPortalModal() {
+    if (!isDeveloper()) {
+        showToast('Developer portal access is restricted.', 'error');
+        return;
     }
+    if (developerPortalModal) {
+        developerPortalModal.dialog?.querySelector('.developer-modal-close')?.focus();
+        return;
+    }
+
+    const panel = document.getElementById('developerPanel');
+    if (!panel) return;
+    const originalParent = panel.parentNode;
+    const originalNextSibling = panel.nextSibling;
+    const placeholder = document.createComment('developer-portal-placeholder');
+    originalParent?.insertBefore(placeholder, panel);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'developer-modal-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-labelledby', 'developerModalTitle');
+    const dialog = document.createElement('section');
+    dialog.className = 'developer-modal-dialog';
+    dialog.innerHTML = `
+        <div class="developer-modal-header">
+            <div><span class="developer-portal-kicker">PRIVATE ACCESS</span><h2 id="developerModalTitle">Developer portal</h2></div>
+            <button type="button" class="developer-modal-close" aria-label="Close developer portal">Close</button>
+        </div>`;
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+
+    panel.classList.remove('fullscreen-panel', 'active-panel', 'panel-enter');
+    panel.classList.add('developer-portal-modal-content', 'active-panel');
+    dialog.appendChild(panel);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    developerPortalModal = { overlay, dialog, panel, placeholder, originalParent, originalNextSibling, previousOverflow };
+
+    const close = () => closeDeveloperPortalModal();
+    dialog.querySelector('.developer-modal-close').addEventListener('click', close);
+    overlay.addEventListener('click', event => { if (event.target === overlay) close(); });
+    overlay._onKeyDown = event => { if (event.key === 'Escape') close(); };
+    document.addEventListener('keydown', overlay._onKeyDown);
+    if (typeof loadAdminMemberProfiles === 'function') loadAdminMemberProfiles('developerPhoneProfiles');
+    if (typeof loadDeveloperPortal === 'function') loadDeveloperPortal();
+    requestAnimationFrame(() => dialog.querySelector('.developer-modal-close')?.focus());
+}
+
+function closeDeveloperPortalModal() {
+    if (!developerPortalModal) return;
+    const state = developerPortalModal;
+    document.removeEventListener('keydown', state.overlay._onKeyDown);
+    state.panel.classList.remove('developer-portal-modal-content', 'active-panel', 'panel-enter');
+    state.panel.classList.add('fullscreen-panel');
+    if (state.placeholder.parentNode) {
+        state.placeholder.parentNode.replaceChild(state.panel, state.placeholder);
+    } else if (state.originalParent) {
+        state.originalParent.insertBefore(state.panel, state.originalNextSibling);
+    }
+    state.overlay.remove();
+    document.body.style.overflow = state.previousOverflow;
+    developerPortalModal = null;
+    document.getElementById('adminPortalButton')?.focus();
 }
 
 function showHidePendingTab() {
@@ -641,7 +703,11 @@ function openAdminPortal() {
         showToast('The admin portal is available to approved administrators only.', 'error');
         return;
     }
-    activateTab(isDeveloper() ? 'developer' : 'pending');
+    if (isDeveloper()) {
+        openDeveloperPortalModal();
+        return;
+    }
+    activateTab('pending');
 }
 
 // ============================================================
@@ -4440,6 +4506,8 @@ window.requestPasswordReset = requestPasswordReset;
 window.openProfileModal = openProfileModal;
 window.saveOwnProfile = saveOwnProfile;
 window.openAdminPortal = openAdminPortal;
+window.openDeveloperPortalModal = openDeveloperPortalModal;
+window.closeDeveloperPortalModal = closeDeveloperPortalModal;
 window.saveMemberPhone = saveMemberPhone;
 window.handleProfileImageUpload = handleProfileImageUpload;
 window.viewMemberProfile = viewMemberProfile;
