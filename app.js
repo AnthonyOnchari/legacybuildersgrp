@@ -3706,7 +3706,7 @@ function showAppConfirmation({ title, message, confirmLabel = 'Continue', destru
 // ============================================================
 let GROUP_MEMORY_PHOTOS = [];
 let memoriesIndex = 0, memoriesInterval = null;
-let pendingMemoryPhoto = null, pendingMemoryPhotoFile = null, memoryPreviewUrl = null;
+let pendingMemoryPhoto = null, pendingMemoryPhotoFile = null, pendingMemoryPhotoFiles = [], pendingMemoryPhotos = [], memoryPreviewUrl = null;
 let memoryComposerPreviousOverflow = '';
 const GROUP_MEMORIES_CACHE_KEY = 'nbfa_group_memories_cache_v1';
 
@@ -3938,6 +3938,8 @@ function toggleMemoryComposer(forceOpen) {
         document.body.style.overflow = memoryComposerPreviousOverflow;
         pendingMemoryPhoto = null;
         pendingMemoryPhotoFile = null;
+        pendingMemoryPhotoFiles = [];
+        pendingMemoryPhotos = [];
         if (memoryPreviewUrl) URL.revokeObjectURL(memoryPreviewUrl);
         memoryPreviewUrl = null;
         const preview = document.getElementById('memoryPhotoPreviewWrap');
@@ -3952,40 +3954,56 @@ function toggleMemoryComposer(forceOpen) {
 
 async function prepareMemoryPhoto(event) {
     const input = event.currentTarget;
-    const file = input.files && input.files[0];
-    if (!file) return;
+    const files = Array.from(input.files || []);
+    if (!files.length) return;
     const status = document.getElementById('memoryUploadStatus');
-    if (!ALLOWED_CLOUDINARY_IMAGE_TYPES.has(file.type)) {
-        showToast('Choose a JPG, PNG, or WebP photo.', 'error');
+    if (files.some(file => !ALLOWED_CLOUDINARY_IMAGE_TYPES.has(file.type))) {
+        if (status) status.textContent = 'Use JPG, PNG, or WebP images only.';
         input.value = '';
         return;
     }
-    if (file.size > MAX_CLOUDINARY_IMAGE_SIZE) {
-        showToast('Choose a photo smaller than 5 MB.', 'error');
+    if (files.some(file => file.size > MAX_CLOUDINARY_IMAGE_SIZE)) {
+        if (status) status.textContent = 'Each photo must be smaller than 5 MB.';
         input.value = '';
         return;
     }
-    pendingMemoryPhotoFile = file;
-    await cropMemoryPhoto(file);
-    if (status) status.textContent = pendingMemoryPhoto ? 'Photo ready to share.' : '';
+    pendingMemoryPhotoFiles = files;
+    pendingMemoryPhotoFile = files[0];
+    pendingMemoryPhotos = [];
+    for (let index = 0; index < files.length; index += 1) {
+        if (status) status.textContent = `Adjusting photo ${index + 1} of ${files.length}...`;
+        const accepted = await cropMemoryPhoto(files[index]);
+        if (!accepted) break;
+    }
+    if (status) status.textContent = pendingMemoryPhotos.length
+        ? `${pendingMemoryPhotos.length} photo${pendingMemoryPhotos.length === 1 ? '' : 's'} ready to share.`
+        : '';
 }
 
-async function cropMemoryPhoto(file) {
+async function cropMemoryPhoto(file, replaceIndex = null) {
     try {
-        pendingMemoryPhoto = await openImageCropper(file, 'memory');
+        const cropped = await openImageCropper(file, 'memory');
+        if (replaceIndex === null) pendingMemoryPhotos.push(cropped);
+        else pendingMemoryPhotos[replaceIndex] = cropped;
+        pendingMemoryPhoto = pendingMemoryPhotos[0] || null;
         if (memoryPreviewUrl) URL.revokeObjectURL(memoryPreviewUrl);
-        memoryPreviewUrl = URL.createObjectURL(pendingMemoryPhoto);
+        memoryPreviewUrl = URL.createObjectURL(pendingMemoryPhotos[0]);
         const preview = document.getElementById('memoryPhotoPreview');
         if (preview) preview.src = memoryPreviewUrl;
         const wrap = document.getElementById('memoryPhotoPreviewWrap');
         if (wrap) wrap.hidden = false;
+        return true;
     } catch (error) {
-        if (error.name !== 'AbortError') showToast(error.message || 'Could not crop this photo.', 'error');
+        if (error.name !== 'AbortError') {
+            const status = document.getElementById('memoryUploadStatus');
+            if (status) status.textContent = error.message || 'Could not crop this photo.';
+        }
+        return false;
     }
 }
 
 function recropMemoryPhoto() {
-    if (pendingMemoryPhotoFile) cropMemoryPhoto(pendingMemoryPhotoFile);
+    if (pendingMemoryPhotoFile) cropMemoryPhoto(pendingMemoryPhotoFile, 0);
 }
 
 async function postGroupMemory() {
@@ -3993,7 +4011,7 @@ async function postGroupMemory() {
     const captionInput = document.getElementById('memoryCaptionInput');
     const status = document.getElementById('memoryUploadStatus');
     const button = document.getElementById('memorySubmitBtn');
-    if (!pendingMemoryPhoto) {
+    if (!pendingMemoryPhotos.length) {
         status.textContent = 'Choose a photo and adjust its crop to share.';
         return;
     }
@@ -4001,23 +4019,27 @@ async function postGroupMemory() {
     status.textContent = 'Uploading photo...';
     try {
         const config = window.cloudinaryConfig || {};
-        const uploaded = await uploadBlobToCloudinary(pendingMemoryPhoto, 'group-memory.jpg', config.memoryUploadPreset);
-        status.textContent = 'Saving memory...';
-        const res = await callAPI('saveGroupMemory', {
-            image: uploaded.image,
-            publicId: uploaded.publicId,
-            caption: captionInput.value.trim()
-        });
-        if (!res.success) throw new Error(res.error || 'Could not save this memory.');
-        GROUP_MEMORY_PHOTOS.unshift(res.memory);
+        const savedMemories = [];
+        for (let index = 0; index < pendingMemoryPhotos.length; index += 1) {
+            status.textContent = `Uploading photo ${index + 1} of ${pendingMemoryPhotos.length}...`;
+            const uploaded = await uploadBlobToCloudinary(pendingMemoryPhotos[index], `group-memory-${index + 1}.jpg`, config.memoryUploadPreset);
+            status.textContent = `Saving photo ${index + 1} of ${pendingMemoryPhotos.length}...`;
+            const res = await callAPI('saveGroupMemory', {
+                image: uploaded.image,
+                publicId: uploaded.publicId,
+                caption: captionInput.value.trim()
+            });
+            if (!res.success) throw new Error(res.error || `Could not save photo ${index + 1}.`);
+            savedMemories.push(res.memory);
+        }
+        GROUP_MEMORY_PHOTOS.unshift(...savedMemories);
         GROUP_MEMORY_PHOTOS = GROUP_MEMORY_PHOTOS.slice(0, 50);
         saveGroupMemoriesCache();
         initMemoriesCarousel();
         toggleMemoryComposer(false);
-        showToast('Memory shared with the group.', 'success');
+        showToast(`${savedMemories.length} photo${savedMemories.length === 1 ? '' : 's'} shared with the group.`, 'success');
     } catch (error) {
         status.textContent = error.message;
-        showToast(error.message, 'error');
     } finally {
         button.disabled = false;
     }

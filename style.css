@@ -9604,13 +9604,26 @@ body.finance-ui .memory-composer-dialog {
     border-radius: 24px;
     background: linear-gradient(155deg, #fff 15%, #f6faf4 100%);
     box-shadow: 0 26px 90px rgba(10, 25, 15, .3);
+    animation: memoryDialogReveal .34s cubic-bezier(.22, 1, .36, 1);
+}
+@keyframes memoryDialogReveal {
+    from { opacity: 0; transform: translateY(22px) scale(.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 body.finance-ui .memory-composer-heading {
+    display: flex;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 18px;
     margin-bottom: 20px;
+    position: sticky;
+    top: -26px;
+    z-index: 3;
+    margin-top: -26px;
+    padding: 26px 0 15px;
+    background: linear-gradient(180deg, #fff 0%, #f8fbf6 92%, rgba(248,251,246,0) 100%);
+    border-bottom: 1px solid #e4ece1;
 }
 body.finance-ui .memory-composer-heading .section-kicker,
 body.finance-ui .image-crop-heading .section-kicker {
@@ -9726,6 +9739,15 @@ body.finance-ui .memory-composer-actions { margin-top: 16px; }
 body.finance-ui .memory-composer-actions button { min-height: 40px; border-radius: 11px; }
 body.finance-ui .memory-composer-actions .memory-cancel-btn { border-color: #e0e7de; }
 body.finance-ui .memory-upload-status { margin-top: 10px; }
+body.finance-ui .memory-upload-status:empty { display: none; }
+body.finance-ui .memory-upload-status {
+    padding: 9px 11px;
+    border-radius: 10px;
+    background: #edf6eb;
+    color: #386744;
+    font-size: 11px;
+    line-height: 1.4;
+}
 
 body.finance-ui .image-crop-overlay,
 body.finance-ui .memory-caption-overlay {
@@ -9749,6 +9771,11 @@ body.finance-ui .memory-caption-dialog {
     border-radius: 22px;
     background: #fff;
     box-shadow: 0 28px 90px rgba(10, 25, 15, .35);
+    animation: cropDialogReveal .28s cubic-bezier(.22, 1, .36, 1);
+}
+@keyframes cropDialogReveal {
+    from { opacity: 0; transform: translateY(14px) rotateX(4deg) scale(.98); }
+    to { opacity: 1; transform: translateY(0) rotateX(0) scale(1); }
 }
 body.finance-ui .image-crop-heading {
     display: flex;

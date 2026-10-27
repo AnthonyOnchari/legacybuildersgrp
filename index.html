@@ -246,15 +246,15 @@
                 <div class="memory-composer" id="memoryComposer" role="presentation" aria-hidden="true" style="display:none;" onclick="if(event.target===this)toggleMemoryComposer(false)">
                     <div class="memory-composer-dialog" role="dialog" aria-modal="true" aria-labelledby="memoryComposerTitle" tabindex="-1">
                         <div class="memory-composer-heading">
-                            <div><span class="section-kicker">GROUP MEMORIES</span><h3 id="memoryComposerTitle">Share a photo</h3><p>Choose a moment and frame it just the way you want.</p></div>
+                            <div><span class="section-kicker">GROUP MEMORIES</span><h3 id="memoryComposerTitle">Share photos</h3><p>Choose one or several moments and frame them just the way you want.</p></div>
                             <button type="button" class="memory-dialog-close" onclick="toggleMemoryComposer(false)" aria-label="Close photo sharing dialog">&times;</button>
                         </div>
                         <label class="memory-photo-picker" for="memoryPhotoInput">
                             <span class="memory-picker-icon" aria-hidden="true">＋</span>
-                            <strong>Choose a photo</strong>
+                            <strong>Choose photos</strong>
                             <span>JPG, PNG or WebP · up to 5 MB</span>
                         </label>
-                        <input type="file" id="memoryPhotoInput" accept="image/jpeg,image/png,image/webp" onchange="prepareMemoryPhoto(event)">
+                        <input type="file" id="memoryPhotoInput" accept="image/jpeg,image/png,image/webp" multiple onchange="prepareMemoryPhoto(event)">
                         <div class="memory-photo-preview-wrap" id="memoryPhotoPreviewWrap" hidden>
                             <img id="memoryPhotoPreview" alt="Preview of the cropped group photo">
                             <button type="button" class="memory-recrop-btn" onclick="recropMemoryPhoto()">Adjust crop</button>
@@ -598,6 +598,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://accounts.google.com/gsi/client" defer></script>
     <script src="firebase-config.js?v=36"></script>
-    <script src="app.js?v=76"></script>
+    <script src="app.js?v=77"></script>
 </body>
 </html>
