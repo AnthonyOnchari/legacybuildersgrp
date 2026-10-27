@@ -12670,6 +12670,69 @@ body.finance-ui .developer-contacts-card .admin-verified-pill { width: fit-conte
     body.finance-ui .developer-contacts-card .admin-phone-editor-fields { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* Keep both protected workspaces on the same portal design system. */
+body.finance-ui #pendingPanel.active-panel > .admin-queue-card,
+body.finance-ui #pendingPanel.active-panel > .admin-user-management-card,
+body.finance-ui #pendingPanel.active-panel > .admin-audit-download-card,
+body.finance-ui .developer-portal .developer-section {
+    border: 1px solid #e2ebe1;
+    border-radius: 19px;
+    background: #fff;
+    box-shadow: 0 8px 22px rgba(37, 63, 45, .045);
+}
+body.finance-ui #pendingPanel .admin-queue-card,
+body.finance-ui .developer-portal .developer-users-card,
+body.finance-ui .developer-portal .developer-pending-card,
+body.finance-ui .developer-portal .developer-audit-card {
+    min-height: 230px;
+}
+body.finance-ui #pendingPanel .admin-queue-card h2,
+body.finance-ui .developer-portal .developer-section-heading h2 {
+    margin: 0 0 15px;
+    color: #244b38;
+    font-size: 18px;
+    letter-spacing: -.035em;
+}
+body.finance-ui #pendingPanel .admin-queue-card .loading-container,
+body.finance-ui .developer-portal .loading-container {
+    min-height: 110px;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 15px 0;
+    text-align: left;
+}
+body.finance-ui #pendingPanel .portal-section-heading,
+body.finance-ui .developer-portal .developer-section-heading {
+    min-width: 0;
+}
+body.finance-ui #pendingPanel .portal-section-heading > div,
+body.finance-ui .developer-portal .developer-section-heading > div { min-width: 0; }
+
+/* Auth card is 10% narrower, and the Google control can never escape it. */
+body.finance-ui .login-box {
+    width: min(100%, 387px);
+    max-width: 387px;
+}
+body.finance-ui #googleSignInControl,
+body.finance-ui #googleSignInButton {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+body.finance-ui #googleSignInButton > div,
+body.finance-ui #googleSignInButton iframe {
+    display: block;
+    max-width: 100% !important;
+}
+@media (max-width: 700px) {
+    body.finance-ui .login-box {
+        width: min(100%, 348px);
+        max-width: 348px;
+    }
+    body.finance-ui .login-form-area { padding-right: 20px; padding-left: 20px; }
+}
+
 /* Use the supplied chip blueprint as the card's top-right contact surface. */
 body.finance-ui .wallet-card-chip {
     width: 37px;

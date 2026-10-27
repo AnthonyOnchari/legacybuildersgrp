@@ -395,9 +395,9 @@ function initializeGoogleSignIn() {
         const availableWidth = Math.floor(
             button.parentElement?.getBoundingClientRect().width
             || document.querySelector('.login-box')?.getBoundingClientRect().width
-            || 340
+            || 280
         );
-        const width = Math.max(240, Math.min(390, availableWidth));
+        const width = Math.max(200, Math.min(390, availableWidth));
         button.replaceChildren();
         window.google.accounts.id.renderButton(button, {
             type: 'standard',
@@ -410,6 +410,14 @@ function initializeGoogleSignIn() {
     };
     renderGoogleButton();
     window.requestAnimationFrame(renderGoogleButton);
+    const loginOverlay = document.getElementById('loginOverlay');
+    if (loginOverlay) {
+        const visibilityObserver = new MutationObserver(() => {
+            if (loginOverlay.classList.contains('active')) renderGoogleButton();
+        });
+        visibilityObserver.observe(loginOverlay, { attributes: true, attributeFilter: ['class'] });
+        window.setTimeout(() => visibilityObserver.disconnect(), 5000);
+    }
     window.addEventListener('resize', renderGoogleButton, { passive: true });
 }
 
