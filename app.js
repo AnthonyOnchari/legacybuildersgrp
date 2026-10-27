@@ -3108,7 +3108,7 @@ function renderChart(summary) {
     animateCountUp(chartRemaining, remainingTarget);
     animateCountUp(chartTarget, contributionTarget);
     if (chartProgressFill) chartProgressFill.style.width = `${progress}%`;
-    if (chartProgressNote) chartProgressNote.textContent = `${progress.toFixed(0)}% of the year-end contribution goal is on track.`;
+    if (chartProgressNote) chartProgressNote.textContent = `Savings growth from April · ${progress.toFixed(0)}% of the year-end goal reached.`;
 
     animateCountUp(document.getElementById('summaryStatAvailable'), savings);
     animateCountUp(document.getElementById('summaryStatOutstanding'), summary.outstanding || 0);
@@ -3116,67 +3116,63 @@ function renderChart(summary) {
 
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
     const ctx = canvas.getContext('2d');
-    const total = savings + remainingTarget;
-
-    const centerTextPlugin = {
-        id: 'centerText',
-        afterDraw(chart) {
-            const { ctx, chartArea } = chart;
-            if (!chartArea) return;
-            const cx = (chartArea.left + chartArea.right) / 2;
-            const cy = (chartArea.top + chartArea.bottom) / 2;
-            ctx.save();
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#7C8AA5';
-            ctx.font = `600 ${window.innerWidth < 500 ? 10 : 12}px "DM Sans", sans-serif`;
-            ctx.fillText('STILL TO GO', cx, cy - 14);
-            ctx.fillStyle = '#14213D';
-            ctx.font = `700 ${window.innerWidth < 500 ? 17 : 21}px "DM Sans", sans-serif`;
-            ctx.fillText('KES ' + Math.round(remainingTarget).toLocaleString('en-KE'), cx, cy + 7);
-            ctx.fillStyle = '#6D8173';
-            ctx.font = `700 ${window.innerWidth < 500 ? 9 : 10}px "DM Sans", sans-serif`;
-            ctx.fillText(`${progress.toFixed(0)}% complete`, cx, cy + 26);
-            ctx.restore();
-        }
-    };
+    const now = new Date();
+    const startMonth = new Date(now.getFullYear(), 3, 1);
+    const monthCount = Math.max(1, now.getMonth() - startMonth.getMonth() + 1);
+    const months = Array.from({ length: monthCount }, (_, index) => new Date(now.getFullYear(), 3 + index, 1));
+    const monthlySavings = months.map(month => {
+        const key = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`;
+        return allRecords.reduce((total, record) => {
+            const recordDate = String(record.date || '');
+            return total + (record.type === 'Savings' && recordDate.startsWith(key) ? Number(record.amount) || 0 : 0);
+        }, 0);
+    });
+    let runningSavings = 0;
+    const savingsTrend = monthlySavings.map(amount => (runningSavings += amount));
+    if (savingsTrend.length && savings > savingsTrend[savingsTrend.length - 1]) savingsTrend[savingsTrend.length - 1] = savings;
+    const targetTrend = months.map((_, index) => Math.min(contributionTarget, (index + 1) * 2500 * 4));
+    const labels = months.map(month => month.toLocaleDateString('en-KE', { month: 'short' }));
+    const savingsGradient = ctx.createLinearGradient(0, 0, 0, 280);
+    savingsGradient.addColorStop(0, 'rgba(54, 116, 84, .32)');
+    savingsGradient.addColorStop(1, 'rgba(54, 116, 84, .015)');
 
     chartInstance = new Chart(ctx, {
-        type: 'doughnut',
+        type: 'line',
         data: {
-            labels: ['Contributed', 'Still to go'],
+            labels,
             datasets: [{
-                data: [contributed, remainingTarget],
-                backgroundColor: ['#367454', '#D8EAD8'],
-                borderColor: '#FFFFFF',
-                borderWidth: 3,
-                borderRadius: 14,
-                spacing: 4,
-                hoverOffset: 10
+                label: 'Savings', data: savingsTrend, borderColor: '#367454', backgroundColor: savingsGradient,
+                fill: true, borderWidth: 3, tension: .38, pointRadius: 4, pointHoverRadius: 7,
+                pointBackgroundColor: '#fff', pointBorderColor: '#367454', pointBorderWidth: 2
+            }, {
+                label: 'Contribution pace', data: targetTrend, borderColor: '#8DA9D8', borderDash: [6, 5],
+                borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, tension: .2, fill: false
             }]
         },
-        plugins: [centerTextPlugin],
         options: {
             responsive: true,
-            maintainAspectRatio: true,
-            cutout: '68%',
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: true,
                     position: 'bottom',
-                    labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 9, boxHeight: 9, padding: 16, font: { family: '"DM Sans", sans-serif', size: window.innerWidth < 500 ? 10 : 11, weight: '700' }, color: '#6D8173' }
+                    labels: { usePointStyle: true, pointStyle: 'line', boxWidth: 18, padding: 16, font: { family: '"DM Sans", sans-serif', size: window.innerWidth < 500 ? 10 : 11, weight: '700' }, color: '#6D8173' }
                 },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            const value = context.parsed;
-                            const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
-                            return `${context.label}: KES ${value.toLocaleString('en-KE')} (${pct}%)`;
+                            return `${context.dataset.label}: KES ${Math.round(context.parsed.y).toLocaleString('en-KE')}`;
                         }
                     }
                 }
             },
-            animation: { animateRotate: true, animateScale: true, duration: 1400, easing: 'easeOutQuart' },
-            layout: { padding: 8 }
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#84958A', font: { family: '"DM Sans", sans-serif', size: 10, weight: '700' } } },
+                y: { beginAtZero: true, grid: { color: 'rgba(123, 151, 130, .13)' }, ticks: { color: '#84958A', padding: 8, callback: value => `KES ${Number(value).toLocaleString('en-KE')}`, font: { family: '"DM Sans", sans-serif', size: 9 } } }
+            },
+            animation: { duration: 1400, easing: 'easeOutQuart' },
+            interaction: { intersect: false, mode: 'index' },
+            layout: { padding: { top: 10, right: 12, bottom: 4, left: 2 } }
         }
     });
 }

@@ -3566,6 +3566,7 @@ body.finance-ui .summary-card-caption {
 }
 body.finance-ui .summary-chart-card .chart-wrapper {
     min-height: 280px;
+    height: 320px;
     margin-top: 15px;
     padding: 15px 12px 10px;
     border: 1px solid #E9EEE8;
@@ -3574,7 +3575,9 @@ body.finance-ui .summary-chart-card .chart-wrapper {
 }
 body.finance-ui .summary-chart-card canvas {
     display: block;
-    max-height: 300px;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: none;
     margin: 0 auto;
 }
 body.finance-ui .chart-progress-stats {
@@ -3632,6 +3635,7 @@ body.finance-ui .summary-target-caption { display: none; }
 body.finance-ui .chart-progress-stats > div:nth-child(2) strong { color: #c3443d; }
 body.finance-ui .chart-progress-stats > div:nth-child(3) strong { color: #3567bd; }
 @media (max-width: 560px) {
+    body.finance-ui .summary-chart-card .chart-wrapper { height: 275px; min-height: 275px; }
     body.finance-ui .chart-progress-stats { gap: 5px; }
     body.finance-ui .chart-progress-stats > div { padding: 8px 7px; }
     body.finance-ui .chart-progress-stats span { font-size: 7px; }
