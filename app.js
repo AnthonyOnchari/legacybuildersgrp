@@ -3706,6 +3706,7 @@ function showAppConfirmation({ title, message, confirmLabel = 'Continue', destru
 // ============================================================
 let GROUP_MEMORY_PHOTOS = [];
 let memoriesIndex = 0, memoriesInterval = null;
+let memoryTransitionTimer = null;
 let pendingMemoryPhoto = null, pendingMemoryPhotoFile = null, pendingMemoryPhotoFiles = [], pendingMemoryPhotos = [], memoryPreviewUrl = null;
 let memoryComposerPreviousOverflow = '';
 const GROUP_MEMORIES_CACHE_KEY = 'nbfa_group_memories_cache_v1';
@@ -4047,7 +4048,29 @@ async function postGroupMemory() {
 
 function updateMemoriesPosition() {
     const track = document.getElementById('memoriesCarousel');
-    if (track) track.style.transform = `translateX(-${memoriesIndex * 100}%)`;
+    if (track) {
+        const slides = [...track.querySelectorAll('.memory-slide')];
+        const nextSlide = slides[memoriesIndex];
+        const previousSlide = slides.find(slide => slide.classList.contains('is-active'));
+        if (nextSlide && previousSlide !== nextSlide) {
+            const effects = ['fade', 'zoom', 'lift', 'flip'];
+            const effect = effects[Math.floor(Math.random() * effects.length)];
+            slides.forEach(slide => slide.classList.remove('memory-is-leaving', 'memory-effect-fade', 'memory-effect-zoom', 'memory-effect-lift', 'memory-effect-flip'));
+            if (previousSlide) {
+                previousSlide.classList.remove('is-active');
+                previousSlide.classList.add('memory-is-leaving');
+            }
+            nextSlide.classList.add('is-active', `memory-effect-${effect}`);
+            slides.filter(slide => slide !== nextSlide && slide !== previousSlide).forEach(slide => slide.classList.remove('is-active'));
+            if (memoryTransitionTimer) clearTimeout(memoryTransitionTimer);
+            memoryTransitionTimer = setTimeout(() => {
+                slides.forEach(slide => slide.classList.remove('memory-is-leaving', 'memory-effect-fade', 'memory-effect-zoom', 'memory-effect-lift', 'memory-effect-flip'));
+                memoryTransitionTimer = null;
+            }, 720);
+        } else if (nextSlide) {
+            slides.forEach(slide => slide.classList.toggle('is-active', slide === nextSlide));
+        }
+    }
     document.querySelectorAll('.memories-dot').forEach((dot, i) => {
         const active = i === memoriesIndex;
         dot.classList.toggle('active', active);

@@ -11735,6 +11735,49 @@ body.finance-ui .developer-portal-modal-content .developer-actions-card { grid-c
     body.finance-ui .developer-portal-modal-content .developer-stats-card,
     body.finance-ui .developer-portal-modal-content .developer-actions-card { grid-column: auto; }
 }
+
+/* Memories use layered shuffled transitions instead of horizontal scrolling. */
+body.finance-ui #memoriesCard .memories-carousel {
+    display: grid;
+    position: relative;
+    transform: none !important;
+    transition: none !important;
+}
+body.finance-ui #memoriesCard .memory-slide {
+    grid-area: 1 / 1;
+    min-width: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(.985);
+    transition: opacity .28s ease, transform .28s ease;
+    z-index: 0;
+}
+body.finance-ui #memoriesCard .memory-slide.is-active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+    z-index: 2;
+}
+body.finance-ui #memoriesCard .memory-slide.memory-is-leaving {
+    opacity: 1;
+    pointer-events: none;
+    z-index: 1;
+    animation: memoryShuffleOut .62s ease both;
+}
+body.finance-ui #memoriesCard .memory-slide.memory-effect-fade { animation: memoryShuffleFade .62s ease both; }
+body.finance-ui #memoriesCard .memory-slide.memory-effect-zoom { animation: memoryShuffleZoom .68s cubic-bezier(.22,1,.36,1) both; }
+body.finance-ui #memoriesCard .memory-slide.memory-effect-lift { animation: memoryShuffleLift .68s cubic-bezier(.22,1,.36,1) both; }
+body.finance-ui #memoriesCard .memory-slide.memory-effect-flip { animation: memoryShuffleFlip .68s cubic-bezier(.22,1,.36,1) both; transform-origin: 50% 80%; }
+@keyframes memoryShuffleFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes memoryShuffleZoom { from { opacity: 0; transform: scale(1.08); } to { opacity: 1; transform: scale(1); } }
+@keyframes memoryShuffleLift { from { opacity: 0; transform: translateY(24px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes memoryShuffleFlip { from { opacity: 0; transform: perspective(700px) rotateY(-18deg) scale(.98); } to { opacity: 1; transform: perspective(700px) rotateY(0) scale(1); } }
+@keyframes memoryShuffleOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(.985); } }
+@media (prefers-reduced-motion: reduce) {
+    body.finance-ui #memoriesCard .memory-slide,
+    body.finance-ui #memoriesCard .memory-slide.memory-is-leaving,
+    body.finance-ui #memoriesCard .memory-slide[class*="memory-effect-"] { animation: none !important; transition: none !important; }
+}
 @media (max-width: 760px) {
     body.finance-ui .developer-portal { grid-template-columns: minmax(0, 1fr); gap: 12px; }
     body.finance-ui .developer-portal-hero { align-items: flex-start; flex-direction: column; min-height: 0; padding: 23px 20px; }
