@@ -3372,9 +3372,9 @@ function renderChart(summary) {
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     const formatKes = value => `KES ${Math.round(value).toLocaleString('en-KE')}`;
     const drawDuration = 3600;
-    const eraseDuration = 2300;
     const pauseDuration = 5000;
-    const cycleDuration = drawDuration + eraseDuration + pauseDuration;
+    const eraseDuration = 2300;
+    const cycleDuration = drawDuration + pauseDuration + eraseDuration;
     const revealStartedAt = performance.now();
     const revealChart = timestamp => {
         if (!chartInstance) return;
@@ -3383,11 +3383,11 @@ function renderChart(summary) {
         if (!reducedMotion && elapsed < drawDuration) {
             const drawProgress = elapsed / drawDuration;
             easedProgress = 1 - Math.pow(1 - drawProgress, 3);
-        } else if (!reducedMotion && elapsed < drawDuration + eraseDuration) {
-            const eraseProgress = (elapsed - drawDuration) / eraseDuration;
+        } else if (!reducedMotion && elapsed < drawDuration + pauseDuration) {
+            easedProgress = 1;
+        } else if (!reducedMotion) {
+            const eraseProgress = (elapsed - drawDuration - pauseDuration) / eraseDuration;
             easedProgress = 1 - Math.pow(eraseProgress, 2);
-        } else if (!reducedMotion && elapsed >= drawDuration + eraseDuration) {
-            easedProgress = 0;
         }
         chartInstance.$summaryRevealProgress = easedProgress;
         const animatedContributed = contributed * easedProgress;
