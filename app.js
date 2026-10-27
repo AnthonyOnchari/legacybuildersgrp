@@ -4042,6 +4042,8 @@ function toggleMemoryComposer(forceOpen) {
     }
     if (!open) {
         document.getElementById('memoryPhotoInput').value = '';
+        const pickerTitle = document.getElementById('memoryPhotoPickerTitle');
+        if (pickerTitle) pickerTitle.textContent = 'Choose photos';
         document.getElementById('memoryCaptionInput').value = '';
         document.getElementById('memoryUploadStatus').textContent = '';
     }
@@ -4052,14 +4054,18 @@ async function prepareMemoryPhoto(event) {
     const files = Array.from(input.files || []);
     if (!files.length) return;
     const status = document.getElementById('memoryUploadStatus');
+    const pickerTitle = document.getElementById('memoryPhotoPickerTitle');
+    if (pickerTitle) pickerTitle.textContent = files.length === 1 ? files[0].name : `${files.length} photos selected`;
     if (files.some(file => !ALLOWED_CLOUDINARY_IMAGE_TYPES.has(file.type))) {
         if (status) status.textContent = 'Use JPG, PNG, or WebP images only.';
         input.value = '';
+        if (pickerTitle) pickerTitle.textContent = 'Choose photos';
         return;
     }
     if (files.some(file => file.size > MAX_CLOUDINARY_IMAGE_SIZE)) {
         if (status) status.textContent = 'Each photo must be smaller than 5 MB.';
         input.value = '';
+        if (pickerTitle) pickerTitle.textContent = 'Choose photos';
         return;
     }
     pendingMemoryPhotoFiles = files;
