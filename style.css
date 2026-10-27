@@ -12270,6 +12270,12 @@ body.finance-ui .developer-modal-dialog {
     max-height: min(94vh, 980px);
     border-radius: 20px;
 }
+body.finance-ui .developer-modal-dialog .developer-portal-hero {
+    display: none;
+}
+body.finance-ui .developer-modal-dialog .developer-portal-modal-content.active-panel {
+    padding-top: 18px;
+}
 body.finance-ui .developer-portal-modal-content.active-panel {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
@@ -12284,6 +12290,8 @@ body.finance-ui .developer-portal-modal-content .developer-users-card,
 body.finance-ui .developer-portal-modal-content .developer-pending-card,
 body.finance-ui .developer-portal-modal-content .developer-audit-card { min-height: 220px; }
 body.finance-ui .admin-phone-row { padding: 14px 0; }
+body.finance-ui #pendingPanel #adminPhoneProfiles,
+body.finance-ui #pendingPanel #adminAllUsersList { min-height: 112px; }
 body.finance-ui .admin-phone-member strong { color: #244b38; font-size: 13px; }
 body.finance-ui .admin-phone-member > span:not(.admin-verified-pill):not(.profile-phone-pending) { color: #849187; font-size: 10px; }
 @media (max-width: 760px) {
