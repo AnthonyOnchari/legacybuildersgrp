@@ -12051,3 +12051,94 @@ body.finance-ui .sticky-top {
     }
     body.finance-ui .sticky-top { padding-top: 64px; }
 }
+
+/* Portal workspace refresh: clear hierarchy, generous left alignment, and compact data surfaces. */
+body.finance-ui #pendingPanel.active-panel {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    align-content: start;
+    padding: 8px 0 48px;
+    text-align: left;
+}
+body.finance-ui #pendingPanel.active-panel > * { min-width: 0; margin: 0; }
+body.finance-ui .admin-portal-hero {
+    display: flex;
+    grid-column: 1 / -1;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 22px;
+    min-height: 156px;
+    padding: 28px 30px;
+    border-radius: 24px;
+    background: linear-gradient(118deg, #173b2e 0%, #286a4d 62%, #739b70 150%);
+    color: #fff;
+    box-shadow: 0 18px 34px rgba(29, 78, 51, .16);
+}
+body.finance-ui .admin-portal-hero h1 { margin: 7px 0 5px; color: #fff; font-size: 28px; letter-spacing: -.045em; }
+body.finance-ui .admin-portal-hero p { max-width: 470px; margin: 0; color: rgba(255,255,255,.78); font-size: 11px; line-height: 1.55; }
+body.finance-ui .admin-portal-kicker { color: #cbe6c7; font-size: 8px; font-weight: 800; letter-spacing: .16em; }
+body.finance-ui .admin-portal-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 999px;
+    background: rgba(255,255,255,.1);
+    color: #edf8eb;
+    font-size: 9px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+body.finance-ui .admin-portal-status span { width: 7px; height: 7px; border-radius: 50%; background: #b9e99d; box-shadow: 0 0 0 4px rgba(185,233,157,.15); }
+body.finance-ui #pendingPanel.active-panel > .card {
+    padding: 22px;
+    border: 1px solid #e4ebe3;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 22px rgba(37, 63, 45, .045);
+    text-align: left;
+}
+body.finance-ui #pendingPanel.active-panel > .admin-phone-directory-card,
+body.finance-ui #pendingPanel.active-panel > .admin-user-management-card,
+body.finance-ui #pendingPanel.active-panel > .admin-audit-download-card { grid-column: 1 / -1; }
+body.finance-ui #pendingPanel .admin-queue-card h2 { margin: 0 0 15px; color: #264b38; font-size: 17px; letter-spacing: -.025em; }
+body.finance-ui #pendingPanel .admin-queue-card .loading-container { min-height: 96px; justify-content: start; align-items: flex-start; padding: 16px 0; }
+body.finance-ui #pendingPanel .portal-section-heading { margin-bottom: 17px; }
+body.finance-ui #pendingPanel .portal-section-heading h2 { font-size: 20px; }
+body.finance-ui .admin-user-management-card,
+body.finance-ui .admin-audit-download-card { background: linear-gradient(180deg, #fff 0%, #fbfdfb 100%); }
+body.finance-ui .admin-audit-download-card { border-left: 3px solid #315f99 !important; }
+body.finance-ui .developer-portal {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    padding-top: 8px;
+}
+body.finance-ui .developer-portal > .developer-portal-hero,
+body.finance-ui .developer-portal > .developer-contacts-card,
+body.finance-ui .developer-portal > .developer-stats-card,
+body.finance-ui .developer-portal > .developer-actions-card { grid-column: 1 / -1; }
+body.finance-ui .developer-portal .developer-section {
+    border: 1px solid #e2ebe1;
+    box-shadow: 0 8px 22px rgba(37, 63, 45, .045);
+}
+body.finance-ui .developer-portal .developer-users-card,
+body.finance-ui .developer-portal .developer-pending-card,
+body.finance-ui .developer-portal .developer-audit-card { min-height: 210px; }
+body.finance-ui .developer-portal .developer-actions-card { background: #f7fbf6; }
+body.finance-ui .developer-portal .developer-actions { justify-content: flex-start; gap: 9px; }
+body.finance-ui .developer-portal .developer-actions button { min-height: 38px; border-radius: 10px; }
+@media (max-width: 700px) {
+    body.finance-ui #pendingPanel.active-panel,
+    body.finance-ui .developer-portal { grid-template-columns: minmax(0, 1fr); }
+    body.finance-ui #pendingPanel.active-panel > .admin-phone-directory-card,
+    body.finance-ui #pendingPanel.active-panel > .admin-user-management-card,
+    body.finance-ui #pendingPanel.active-panel > .admin-audit-download-card,
+    body.finance-ui .developer-portal > .developer-portal-hero,
+    body.finance-ui .developer-portal > .developer-contacts-card,
+    body.finance-ui .developer-portal > .developer-stats-card,
+    body.finance-ui .developer-portal > .developer-actions-card { grid-column: auto; }
+    body.finance-ui .admin-portal-hero { min-height: 142px; padding: 22px; align-items: flex-start; flex-direction: column; }
+    body.finance-ui .admin-portal-hero h1 { font-size: 25px; }
+}

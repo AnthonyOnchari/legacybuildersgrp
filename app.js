@@ -3241,10 +3241,8 @@ function renderChart(summary) {
     const chartTarget = document.getElementById('summaryChartTarget');
     const chartProgressFill = document.getElementById('summaryChartProgressFill');
     const chartProgressNote = document.getElementById('summaryChartProgressNote');
-    animateCountUp(chartContributed, contributed);
-    animateCountUp(chartRemaining, remainingTarget);
     animateCountUp(chartTarget, contributionTarget);
-    if (chartProgressFill) chartProgressFill.style.width = `${progress}%`;
+    if (chartProgressFill) chartProgressFill.style.width = '0%';
     if (chartProgressNote) chartProgressNote.textContent = `Savings growth from April · ${progress.toFixed(0)}% of the year-end goal reached.`;
 
     animateCountUp(document.getElementById('summaryStatAvailable'), savings);
@@ -3338,19 +3336,36 @@ function renderChart(summary) {
     });
 
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    const revealDuration = reducedMotion ? 0 : 1250;
+    const formatKes = value => `KES ${Math.round(value).toLocaleString('en-KE')}`;
+    const cycleDuration = 7200;
+    const drawDuration = 3600;
+    const eraseDuration = 2300;
     const revealStartedAt = performance.now();
     const revealChart = timestamp => {
         if (!chartInstance) return;
-        const elapsed = timestamp - revealStartedAt;
-        const rawProgress = revealDuration ? Math.min(1, elapsed / revealDuration) : 1;
-        const easedProgress = 1 - Math.pow(1 - rawProgress, 3);
+        const elapsed = reducedMotion ? drawDuration : (timestamp - revealStartedAt) % cycleDuration;
+        let easedProgress = 1;
+        if (!reducedMotion && elapsed < drawDuration) {
+            const drawProgress = elapsed / drawDuration;
+            easedProgress = 1 - Math.pow(1 - drawProgress, 3);
+        } else if (!reducedMotion && elapsed < drawDuration + eraseDuration) {
+            const eraseProgress = (elapsed - drawDuration) / eraseDuration;
+            easedProgress = 1 - Math.pow(eraseProgress, 2);
+        } else if (!reducedMotion && elapsed >= drawDuration + eraseDuration) {
+            easedProgress = 0;
+        }
         chartInstance.$summaryRevealProgress = easedProgress;
+        const animatedContributed = contributed * easedProgress;
+        if (chartContributed) chartContributed.textContent = formatKes(animatedContributed);
+        if (chartRemaining) chartRemaining.textContent = formatKes(Math.max(0, contributionTarget - animatedContributed));
+        if (chartProgressFill) chartProgressFill.style.width = `${progress * easedProgress}%`;
         chartInstance.draw();
-        if (rawProgress < 1) chartRevealFrame = requestAnimationFrame(revealChart);
+        if (!reducedMotion) chartRevealFrame = requestAnimationFrame(revealChart);
         else chartRevealFrame = null;
     };
     chartInstance.$summaryRevealProgress = 0;
+    if (chartContributed) chartContributed.textContent = formatKes(0);
+    if (chartRemaining) chartRemaining.textContent = formatKes(contributionTarget);
     chartInstance.draw();
     chartRevealFrame = requestAnimationFrame(revealChart);
 }
