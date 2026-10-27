@@ -3577,6 +3577,63 @@ body.finance-ui .summary-chart-card canvas {
     max-height: 300px;
     margin: 0 auto;
 }
+body.finance-ui .chart-progress-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+}
+body.finance-ui .chart-progress-stats > div {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    padding: 10px 11px;
+    border: 1px solid #e6eee4;
+    border-radius: 13px;
+    background: #f8fbf7;
+}
+body.finance-ui .chart-progress-stats span {
+    color: #8a9a8e;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+body.finance-ui .chart-progress-stats strong {
+    overflow: hidden;
+    color: #285b40;
+    font-size: 12px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+body.finance-ui .chart-progress-track {
+    height: 7px;
+    margin-top: 13px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e5efe3;
+}
+body.finance-ui .chart-progress-track span {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #285f40, #72ad79);
+    transition: width .8s cubic-bezier(.2,.8,.2,1);
+}
+body.finance-ui .chart-progress-note {
+    margin: 8px 0 0;
+    color: #829187;
+    font-size: 9px;
+    font-weight: 650;
+}
+@media (max-width: 560px) {
+    body.finance-ui .chart-progress-stats { gap: 5px; }
+    body.finance-ui .chart-progress-stats > div { padding: 8px 7px; }
+    body.finance-ui .chart-progress-stats span { font-size: 7px; }
+    body.finance-ui .chart-progress-stats strong { font-size: 10px; }
+}
 body.finance-ui .summary-export-intro {
     margin: 13px 0 16px;
     color: #77857A;

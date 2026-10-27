@@ -340,6 +340,13 @@
                             <div><h3>How funds are moving</h3></div>
                         </div>
                         <div class="chart-wrapper"><canvas id="financialChart"></canvas></div>
+                        <div class="chart-progress-stats" aria-label="Contribution progress">
+                            <div><span>Contributed</span><strong id="summaryChartContributed">KES --</strong></div>
+                            <div><span>Still to go</span><strong id="summaryChartRemaining">KES --</strong></div>
+                            <div><span>Year-end goal</span><strong id="summaryChartTarget">KES 90,000</strong></div>
+                        </div>
+                        <div class="chart-progress-track" aria-hidden="true"><span id="summaryChartProgressFill"></span></div>
+                        <p class="chart-progress-note" id="summaryChartProgressNote">Calculating contribution progress...</p>
                     </section>
                     <section class="summary-card summary-export-card">
                         <div class="summary-card-heading">

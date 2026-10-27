@@ -3094,6 +3094,20 @@ function renderChart(summary) {
     const contributionTarget = 2500 * 4 * 9;
     const remainingTarget = Math.max(0, contributionTarget - savings);
     const outstanding = Number(summary.outstanding);
+    const contributed = Math.min(savings, contributionTarget);
+    const progress = contributionTarget > 0 ? Math.min(100, (contributed / contributionTarget) * 100) : 0;
+
+    const chartAmount = (value) => `KES ${Math.round(value).toLocaleString('en-KE')}`;
+    const chartContributed = document.getElementById('summaryChartContributed');
+    const chartRemaining = document.getElementById('summaryChartRemaining');
+    const chartTarget = document.getElementById('summaryChartTarget');
+    const chartProgressFill = document.getElementById('summaryChartProgressFill');
+    const chartProgressNote = document.getElementById('summaryChartProgressNote');
+    if (chartContributed) chartContributed.textContent = chartAmount(contributed);
+    if (chartRemaining) chartRemaining.textContent = chartAmount(remainingTarget);
+    if (chartTarget) chartTarget.textContent = chartAmount(contributionTarget);
+    if (chartProgressFill) chartProgressFill.style.width = `${progress}%`;
+    if (chartProgressNote) chartProgressNote.textContent = `${progress.toFixed(0)}% of the year-end contribution goal is on track.`;
 
     animateCountUp(document.getElementById('summaryStatAvailable'), savings);
     animateCountUp(document.getElementById('summaryStatOutstanding'), summary.outstanding || 0);
@@ -3117,7 +3131,10 @@ function renderChart(summary) {
             ctx.fillText('STILL TO GO', cx, cy - 14);
             ctx.fillStyle = '#14213D';
             ctx.font = `700 ${window.innerWidth < 500 ? 17 : 21}px "DM Sans", sans-serif`;
-            ctx.fillText('KES ' + Math.round(remainingTarget).toLocaleString('en-KE'), cx, cy + 8);
+            ctx.fillText('KES ' + Math.round(remainingTarget).toLocaleString('en-KE'), cx, cy + 7);
+            ctx.fillStyle = '#6D8173';
+            ctx.font = `700 ${window.innerWidth < 500 ? 9 : 10}px "DM Sans", sans-serif`;
+            ctx.fillText(`${progress.toFixed(0)}% complete`, cx, cy + 26);
             ctx.restore();
         }
     };
@@ -3127,11 +3144,13 @@ function renderChart(summary) {
         data: {
             labels: ['Contributed', 'Still to go'],
             datasets: [{
-                data: [Math.min(savings, contributionTarget), remainingTarget],
-                backgroundColor: ['rgba(54, 116, 84, 0.9)', 'rgba(211, 226, 207, 0.95)'],
-                borderColor: ['#FFFFFF', '#FFFFFF'],
-                borderWidth: 2,
-                hoverOffset: 8
+                data: [contributed, remainingTarget],
+                backgroundColor: ['#367454', '#D8EAD8'],
+                borderColor: '#FFFFFF',
+                borderWidth: 3,
+                borderRadius: 14,
+                spacing: 4,
+                hoverOffset: 10
             }]
         },
         plugins: [centerTextPlugin],
@@ -3143,7 +3162,7 @@ function renderChart(summary) {
                 legend: {
                     display: true,
                     position: 'bottom',
-                    labels: { boxWidth: 12, boxHeight: 12, padding: 14, font: { family: '"DM Sans", sans-serif', size: window.innerWidth < 500 ? 11 : 12, weight: '600' }, color: '#7C8AA5' }
+                    labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 9, boxHeight: 9, padding: 16, font: { family: '"DM Sans", sans-serif', size: window.innerWidth < 500 ? 10 : 11, weight: '700' }, color: '#6D8173' }
                 },
                 tooltip: {
                     callbacks: {
@@ -3155,7 +3174,8 @@ function renderChart(summary) {
                     }
                 }
             },
-            animation: false
+            animation: { animateRotate: true, animateScale: true, duration: 900, easing: 'easeOutQuart' },
+            layout: { padding: 8 }
         }
     });
 }
