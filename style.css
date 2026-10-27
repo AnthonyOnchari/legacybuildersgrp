@@ -12200,3 +12200,101 @@ body.finance-ui .user-photo-edit-button:hover { border-color: #78a982; backgroun
     body.finance-ui #pendingPanel .history-table,
     body.finance-ui #developerPanel .history-table { min-width: 680px; }
 }
+
+/* Senior-operator portal surfaces: tighter rhythm, stronger grouping, and useful density. */
+body.finance-ui #pendingPanel.active-panel,
+body.finance-ui .developer-portal-modal-content.active-panel {
+    background: #f1f5f1;
+}
+body.finance-ui .admin-portal-hero,
+body.finance-ui .developer-portal-hero {
+    min-height: 132px;
+    padding: 25px 28px;
+    border: 1px solid rgba(205, 231, 207, .2);
+    box-shadow: 0 14px 30px rgba(25, 67, 43, .12);
+}
+body.finance-ui .admin-portal-hero h1,
+body.finance-ui .developer-portal-hero h1 { font-size: clamp(24px, 3vw, 30px); }
+body.finance-ui #pendingPanel.active-panel > .card,
+body.finance-ui .developer-portal .developer-section {
+    position: relative;
+    overflow: hidden;
+}
+body.finance-ui #pendingPanel.active-panel > .card::before,
+body.finance-ui .developer-portal .developer-section::before {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 3px;
+    background: #dcebdd;
+    content: "";
+}
+body.finance-ui #pendingPanel .admin-phone-directory-card::before,
+body.finance-ui .developer-portal .developer-contacts-card::before { background: #5f9e72; }
+body.finance-ui #pendingPanel .admin-queue-card::before,
+body.finance-ui .developer-portal .developer-pending-card::before { background: #d5a154; }
+body.finance-ui #pendingPanel .admin-user-management-card::before,
+body.finance-ui .developer-portal .developer-users-card::before { background: #6e8fc9; }
+body.finance-ui #pendingPanel .admin-audit-download-card::before,
+body.finance-ui .developer-portal .developer-audit-card::before { background: #9877b8; }
+body.finance-ui #pendingPanel.active-panel > .card,
+body.finance-ui .developer-portal .developer-section { padding: 23px 24px; }
+body.finance-ui .portal-section-heading,
+body.finance-ui .developer-section-heading { align-items: center; }
+body.finance-ui .portal-section-heading p { max-width: 620px; line-height: 1.5; }
+body.finance-ui #pendingPanel .admin-queue-card,
+body.finance-ui .developer-portal .developer-users-card,
+body.finance-ui .developer-portal .developer-pending-card,
+body.finance-ui .developer-portal .developer-audit-card { min-height: 230px; }
+body.finance-ui #pendingPanel .admin-queue-card .loading-container,
+body.finance-ui .developer-portal .loading-container { min-height: 110px; align-items: flex-start; justify-content: flex-start; padding: 15px 0; text-align: left; }
+body.finance-ui .developer-portal .developer-stats-card { background: #f9fcf8; }
+body.finance-ui .developer-portal .developer-stats-card > div:last-child > div,
+body.finance-ui .developer-portal #systemStats > div {
+    gap: 10px !important;
+}
+body.finance-ui .developer-portal .summary-stat {
+    min-height: 78px;
+    padding: 15px 16px;
+    border: 1px solid #e0eae0;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(37, 63, 45, .035);
+}
+body.finance-ui .developer-portal .summary-stat-value { font-size: 21px; }
+body.finance-ui .developer-portal .developer-actions { padding-top: 2px; }
+body.finance-ui .developer-portal .developer-actions button { padding: 0 15px; font-weight: 800; }
+body.finance-ui .developer-modal-dialog {
+    width: min(1160px, calc(100vw - 32px));
+    max-height: min(94vh, 980px);
+    border-radius: 20px;
+}
+body.finance-ui .developer-portal-modal-content.active-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    padding: 16px 20px 24px;
+}
+body.finance-ui .developer-portal-modal-content .developer-portal-hero,
+body.finance-ui .developer-portal-modal-content .developer-contacts-card,
+body.finance-ui .developer-portal-modal-content .developer-stats-card,
+body.finance-ui .developer-portal-modal-content .developer-actions-card { grid-column: 1 / -1; }
+body.finance-ui .developer-portal-modal-content .developer-section { padding: 20px 21px; }
+body.finance-ui .developer-portal-modal-content .developer-users-card,
+body.finance-ui .developer-portal-modal-content .developer-pending-card,
+body.finance-ui .developer-portal-modal-content .developer-audit-card { min-height: 220px; }
+body.finance-ui .admin-phone-row { padding: 14px 0; }
+body.finance-ui .admin-phone-member strong { color: #244b38; font-size: 13px; }
+body.finance-ui .admin-phone-member > span:not(.admin-verified-pill):not(.profile-phone-pending) { color: #849187; font-size: 10px; }
+@media (max-width: 760px) {
+    body.finance-ui .admin-portal-hero,
+    body.finance-ui .developer-portal-hero { min-height: 128px; padding: 22px; }
+    body.finance-ui #pendingPanel.active-panel > .card,
+    body.finance-ui .developer-portal .developer-section { padding: 20px 18px; }
+    body.finance-ui .developer-portal-modal-content.active-panel { grid-template-columns: minmax(0, 1fr); padding: 12px 13px 20px; }
+    body.finance-ui .developer-portal-modal-content .developer-portal-hero,
+    body.finance-ui .developer-portal-modal-content .developer-contacts-card,
+    body.finance-ui .developer-portal-modal-content .developer-stats-card,
+    body.finance-ui .developer-portal-modal-content .developer-actions-card { grid-column: auto; }
+    body.finance-ui .developer-modal-dialog { width: 100%; border-radius: 20px 20px 0 0; }
+}
