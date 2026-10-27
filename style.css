@@ -7964,15 +7964,23 @@ body.finance-ui .recent-activity-card .empty-state {
 
 body.finance-ui .header-row-1 {
     display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 100;
     align-items: center;
     gap: 10px;
+    align-self: stretch;
+    width: 100%;
+    box-sizing: border-box;
     min-height: 58px;
-    margin: 0;
-    padding: 9px 12px;
-    border: 1px solid #e5ebe3;
-    border-radius: 17px;
-    background: rgba(255, 255, 255, .94);
-    box-shadow: 0 5px 18px rgba(30, 61, 41, .045);
+    margin: 0 0 12px;
+    padding: 9px 14px;
+    border: 1px solid rgba(221, 234, 221, .96);
+    border-radius: 0 0 19px 19px;
+    background: rgba(255, 255, 255, .9);
+    box-shadow: 0 9px 26px rgba(30, 61, 41, .1);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
 }
 body.finance-ui .header-row-1 .user-name-badge {
     display: inline-flex;
@@ -8083,6 +8091,19 @@ body.finance-ui .header-row-1 > .logout-btn svg {
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 1.8;
+}
+@media (max-width: 560px) {
+    body.finance-ui .header-row-1 {
+        top: 0;
+        min-height: 54px;
+        margin-right: -1px;
+        margin-left: -1px;
+        padding: 7px 10px;
+        border-radius: 0 0 16px 16px;
+    }
+    body.finance-ui .header-row-1 .user-name-badge strong { max-width: 32vw; }
+    body.finance-ui .header-row-1 > .logout-btn { min-width: 40px; padding: 0 10px; }
+    body.finance-ui .header-row-1 > .logout-btn span { display: none; }
 }
 body.finance-ui .dashboard-intro {
     position: relative;
@@ -11952,4 +11973,28 @@ body.finance-ui #devAuditLog { width: 100%; text-align: left; }
     body.finance-ui .admin-phone-editor-fields .admin-phone-save { justify-self: start; }
     body.finance-ui .admin-user-management-card .portal-section-heading,
     body.finance-ui .admin-audit-download-card .portal-section-heading { align-items: flex-start; flex-direction: column; }
+}
+
+/* Final header treatment: pinned to the page and stretched across the content. */
+body.finance-ui .header-row-1 {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    align-self: stretch;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 0 0 19px 19px;
+    background: rgba(255, 255, 255, .92);
+    box-shadow: 0 9px 26px rgba(30, 61, 41, .1);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+@media (max-width: 560px) {
+    body.finance-ui .header-row-1 {
+        min-height: 54px;
+        margin-right: -1px;
+        margin-left: -1px;
+        padding: 7px 10px;
+        border-radius: 0 0 16px 16px;
+    }
 }
