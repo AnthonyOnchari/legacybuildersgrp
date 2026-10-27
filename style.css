@@ -12308,6 +12308,37 @@ body.finance-ui #pendingPanel #adminPhoneProfiles,
 body.finance-ui #pendingPanel #adminAllUsersList { min-height: 112px; }
 body.finance-ui .admin-phone-member strong { color: #244b38; font-size: 13px; }
 body.finance-ui .admin-phone-member > span:not(.admin-verified-pill):not(.profile-phone-pending) { color: #849187; font-size: 10px; }
+body.finance-ui .developer-portal .admin-phone-row {
+    display: grid;
+    grid-template-columns: minmax(220px, .8fr) minmax(0, 1.2fr);
+    align-items: start;
+    gap: 22px;
+    padding: 16px 0;
+    border-bottom: 1px solid #e5ece5;
+}
+body.finance-ui .developer-portal .admin-phone-member {
+    align-content: start;
+    min-height: 74px;
+    padding: 4px 0;
+}
+body.finance-ui .developer-portal .admin-phone-editor {
+    display: block;
+    min-width: 0;
+    margin: 0;
+    border: 1px solid #dfe9df;
+    border-radius: 12px;
+    background: #f8fbf8;
+}
+body.finance-ui .developer-portal .admin-phone-editor-fields {
+    grid-template-columns: minmax(135px, .9fr) minmax(150px, 1fr) auto;
+    align-items: end;
+}
+@media (max-width: 760px) {
+    body.finance-ui .developer-portal .admin-phone-row { grid-template-columns: minmax(0, 1fr); gap: 11px; }
+    body.finance-ui .developer-portal .admin-phone-member { min-height: 0; }
+    body.finance-ui .developer-portal .admin-phone-editor-fields { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    body.finance-ui .developer-portal .admin-phone-editor-fields .admin-phone-save { grid-column: 1 / -1; justify-self: stretch; }
+}
 @media (max-width: 760px) {
     body.finance-ui .admin-portal-hero,
     body.finance-ui .developer-portal-hero { min-height: 128px; padding: 22px; }
