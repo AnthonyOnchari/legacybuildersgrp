@@ -73,13 +73,13 @@ html { overflow-x: hidden; }
     content: "";
 }
 .startup-loading-spinner img {
-    width: 45px;
-    height: 45px;
+    width: 62px;
+    height: 62px;
     border: 4px solid rgba(255,255,255,.94);
     border-radius: 50%;
     background: #fff;
     box-shadow: 0 5px 16px rgba(33, 73, 44, .18);
-    object-fit: cover;
+    object-fit: contain;
 }
 body.app-loading .app-shell,
 body.app-loading #tabBar {
