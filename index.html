@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=98">
+    <link rel="stylesheet" href="style.css?v=99">
 </head>
 <body class="finance-ui app-loading">
 
@@ -249,6 +249,7 @@
                             <div><span class="section-kicker">GROUP MEMORIES</span><h3 id="memoryComposerTitle">Share photos</h3><p>Choose one or several moments and frame them just the way you want.</p></div>
                             <button type="button" class="memory-dialog-close" onclick="toggleMemoryComposer(false)" aria-label="Close photo sharing dialog">&times;</button>
                         </div>
+                        <div class="memory-composer-body">
                         <label class="memory-photo-picker" for="memoryPhotoInput">
                             <span class="memory-picker-icon" aria-hidden="true">＋</span>
                             <strong>Choose photos</strong>
@@ -266,6 +267,7 @@
                             <button type="button" id="memorySubmitBtn" onclick="postGroupMemory()">Share photo</button>
                         </div>
                         <div class="memory-upload-status" id="memoryUploadStatus" role="status"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="memory-empty-state" id="memoryEmptyState">Share a group photo to start your memories.</div>
@@ -598,6 +600,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://accounts.google.com/gsi/client" defer></script>
     <script src="firebase-config.js?v=36"></script>
-    <script src="app.js?v=78"></script>
+    <script src="app.js?v=79"></script>
 </body>
 </html>

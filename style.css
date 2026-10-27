@@ -11778,6 +11778,40 @@ body.finance-ui #memoriesCard .memory-slide.memory-effect-flip { animation: memo
     body.finance-ui #memoriesCard .memory-slide.memory-is-leaving,
     body.finance-ui #memoriesCard .memory-slide[class*="memory-effect-"] { animation: none !important; transition: none !important; }
 }
+
+/* Keep the photo-share header locked while only its form body scrolls. */
+body.finance-ui .memory-composer-dialog {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+}
+body.finance-ui .memory-composer-heading {
+    position: relative;
+    top: auto;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 26px 26px 17px;
+    background: linear-gradient(135deg, #f5fbf1 0%, #fff 72%);
+}
+body.finance-ui .memory-composer-body {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 26px 26px;
+    overscroll-behavior: contain;
+}
+body.finance-ui .memories-carousel-wrapper {
+    aspect-ratio: 4 / 3;
+    background: #dfe8df;
+}
+body.finance-ui #memoriesCard .memory-slide img {
+    object-fit: contain;
+    background: linear-gradient(145deg, #dfe8df, #f4f7f1);
+}
+@media (max-width: 560px) {
+    body.finance-ui .memory-composer-heading { padding: 20px 17px 14px; }
+    body.finance-ui .memory-composer-body { padding: 0 17px 20px; }
+}
 @media (max-width: 760px) {
     body.finance-ui .developer-portal { grid-template-columns: minmax(0, 1fr); gap: 12px; }
     body.finance-ui .developer-portal-hero { align-items: flex-start; flex-direction: column; min-height: 0; padding: 23px 20px; }
