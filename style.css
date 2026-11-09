@@ -14688,3 +14688,18 @@ body.finance-ui.dark-mode .developer-portal .developer-loading-state i::after {
         transition-duration: 420ms, 350ms, 420ms, 420ms, 350ms, 350ms !important;
         transition-timing-function: cubic-bezier(.22, .61, .36, 1) !important;
     }
+    .developer-load-retry {
+        display: block;
+        margin: 0 auto 16px;
+        padding: 8px 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--ink);
+        font: inherit;
+        cursor: pointer;
+    }
+    .developer-load-retry:disabled {
+        cursor: wait;
+        opacity: .7;
+    }

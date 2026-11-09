@@ -191,40 +191,58 @@ function markMeetingUpdatesRead() {
 // ============================================================
 // API CALL
 // ============================================================
+const API_REQUEST_TIMEOUT_MS = 30000;
+
 async function callAPI(action, data = {}, _retryCount = 0) {
     if (DEVELOPMENT_PREVIEW_ENABLED) {
         return { success: false, error: 'API actions are disabled in the local sample-data preview.' };
     }
+    const controller = new AbortController();
+    let requestTimeout;
+    let timedOut = false;
     try {
-        const firebaseUser = window.firebaseAuth && window.firebaseAuth.currentUser;
-        if (!firebaseUser) throw new Error('Please sign in with Google first.');
-        const idToken = await firebaseUser.getIdToken(_retryCount > 0);
-        const response = await fetch(window.FIREBASE_API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${idToken}`
-            },
-            body: JSON.stringify({ action, ...data })
+        const request = (async () => {
+            const firebaseUser = window.firebaseAuth && window.firebaseAuth.currentUser;
+            if (!firebaseUser) throw new Error('Please sign in with Google first.');
+            const idToken = await firebaseUser.getIdToken(_retryCount > 0);
+            const response = await fetch(window.FIREBASE_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`
+                },
+                body: JSON.stringify({ action, ...data }),
+                signal: controller.signal
+            });
+            const responseBody = await response.text();
+            let result;
+            try {
+                result = JSON.parse(responseBody);
+            } catch {
+                throw new Error(`The API returned an invalid response (HTTP ${response.status}). Please check the server deployment.`);
+            }
+            if (!response.ok || !result.success) {
+                throw new Error(result.error || `Firebase request failed (${response.status})`);
+            }
+            return result;
+        })();
+        const timeout = new Promise((resolve, reject) => {
+            requestTimeout = setTimeout(() => {
+                timedOut = true;
+                controller.abort();
+                reject(new Error('The request timed out. Check your connection and try again.'));
+            }, API_REQUEST_TIMEOUT_MS);
         });
-        const responseBody = await response.text();
-        let result;
-        try {
-            result = JSON.parse(responseBody);
-        } catch {
-            throw new Error(`The API returned an invalid response (HTTP ${response.status}). Please check the server deployment.`);
-        }
-        if (!response.ok || !result.success) {
-            throw new Error(result.error || `Firebase request failed (${response.status})`);
-        }
-        return result;
+        return await Promise.race([request, timeout]);
     } catch (e) {
-        if (e instanceof TypeError && _retryCount < 2) {
+        if (!timedOut && e instanceof TypeError && _retryCount < 2) {
             await delay(500 * (2 ** _retryCount));
             return callAPI(action, data, _retryCount + 1);
         }
         console.error('API Error:', e);
         return { success: false, error: e.message };
+    } finally {
+        clearTimeout(requestTimeout);
     }
 }
 
@@ -971,6 +989,25 @@ function updateDashboardGreeting() {
 // ============================================================
 // DEVELOPER PORTAL FUNCTIONS
 // ============================================================
+function showDeveloperLoadError(container, error, retry) {
+    container.removeAttribute('aria-label');
+    container.setAttribute('role', 'alert');
+    container.setAttribute('aria-busy', 'false');
+    const message = document.createElement('div');
+    message.className = 'empty-state';
+    message.textContent = error?.message || 'Could not load this section.';
+    const button = document.createElement('button');
+    button.className = 'developer-load-retry';
+    button.type = 'button';
+    button.textContent = 'Try again';
+    button.addEventListener('click', () => {
+        button.disabled = true;
+        button.textContent = 'Retrying...';
+        retry();
+    });
+    container.replaceChildren(message, button);
+}
+
 async function loadDeveloperPortal() {
     if (!isDeveloper()) return;
     await Promise.all([
@@ -1054,10 +1091,7 @@ async function loadAllUsersFull(containerId = 'allUsersList') {
             throw new Error(res.error || 'Could not load users.');
         }
     } catch (e) {
-        container.removeAttribute('role');
-        container.removeAttribute('aria-label');
-        container.setAttribute('aria-busy', 'false');
-        container.innerHTML = '<div class="empty-state">Error loading users</div>';
+        showDeveloperLoadError(container, e, () => loadAllUsersFull(containerId));
     }
 }
 
@@ -1123,10 +1157,7 @@ async function loadDevPendingRegistrations() {
             throw new Error(res.error || 'Could not load pending registrations.');
         }
     } catch (e) {
-        container.removeAttribute('role');
-        container.removeAttribute('aria-label');
-        container.setAttribute('aria-busy', 'false');
-        container.innerHTML = '<div class="empty-state">Error loading registrations</div>';
+        showDeveloperLoadError(container, e, loadDevPendingRegistrations);
     }
 }
 
@@ -1153,10 +1184,7 @@ async function loadDevAuditLog() {
             throw new Error(res.error || 'Could not load audit log.');
         }
     } catch (e) {
-        container.removeAttribute('role');
-        container.removeAttribute('aria-label');
-        container.setAttribute('aria-busy', 'false');
-        container.innerHTML = '<div class="empty-state">Error loading audit log</div>';
+        showDeveloperLoadError(container, e, loadDevAuditLog);
     }
 }
 
