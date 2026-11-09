@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=144">
+    <link rel="stylesheet" href="style.css?v=148">
 </head>
 <body class="finance-ui app-loading">
 
@@ -355,6 +355,14 @@
                         <p class="chart-progress-note" id="summaryChartProgressNote">Calculating contribution progress...</p>
                     </section>
                     <section class="summary-card summary-export-card">
+                        <div class="summary-bank-interest" aria-label="I&M Bank interest earned">
+                            <span class="summary-bank-interest-mark" aria-hidden="true">I&amp;M</span>
+                            <div class="summary-bank-interest-copy">
+                                <span class="summary-bank-interest-label" id="bankInterestRate">I&amp;M BANK · 4% P.A.</span>
+                                <strong id="bankInterestAmount">KES 252.90</strong>
+                                <small id="bankInterestTerms">Actual credit · daily cleared balances from KES 50,000, compounded monthly.</small>
+                            </div>
+                        </div>
                         <div class="summary-card-heading">
                             <div><h3>Download a report</h3></div>
                         </div>
@@ -364,7 +372,7 @@
                             <span class="summary-export-copy"><strong>Financial report</strong><small>Print-ready PDF · overview and activity</small></span>
                         </button>
                         <button id="exportCsvBtn" class="summary-export-button summary-export-button--csv" type="button" onclick="exportToCSV()">
-                            <span class="summary-export-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H7zM14 3.5v4h4M9.5 13h5m-5 3h5"/></svg></span>
+                            <span class="summary-export-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16M4 14.5h16M9.5 10v9M15 10v9"/></svg></span>
                             <span class="summary-export-copy"><strong>Transactions spreadsheet</strong><small>CSV · opens in Excel and Sheets</small></span>
                         </button>
                     </section>

@@ -3705,6 +3705,52 @@ body.finance-ui .summary-export-intro {
     font-size: 11px;
     line-height: 1.55;
 }
+body.finance-ui .summary-bank-interest {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 14px;
+    border: 1px solid #DDE9DC;
+    border-radius: 16px;
+    background: #F4F8F2;
+}
+body.finance-ui .summary-bank-interest-mark {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border: 1px solid #D7E4D5;
+    border-radius: 13px;
+    background: #E8F0E5;
+    color: #285B40;
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: -.04em;
+}
+body.finance-ui .summary-bank-interest-copy {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+}
+body.finance-ui .summary-bank-interest-label {
+    color: #718078;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: .1em;
+}
+body.finance-ui .summary-bank-interest-copy strong {
+    color: #214D35;
+    font-size: 20px;
+    font-weight: 850;
+    font-variant-numeric: tabular-nums;
+}
+body.finance-ui .summary-bank-interest-copy small {
+    color: #78857B;
+    font-size: 9px;
+    line-height: 1.45;
+}
 body.finance-ui .summary-export-card { display: flex; flex-direction: column; }
 body.finance-ui .summary-export-button {
     display: grid;
@@ -13724,6 +13770,96 @@ body.finance-ui.dark-mode .memory-download-btn:hover,
 body.finance-ui.dark-mode .wallet-chip:hover {
     border-color: #444 !important;
     background: #181818 !important;
+}
+body.finance-ui.dark-mode .fullscreen-panel-bar {
+    border-color: #292929;
+    background: rgba(8, 8, 8, .97);
+}
+body.finance-ui.dark-mode .fullscreen-panel-back,
+body.finance-ui.dark-mode .fullscreen-panel-bar .fullscreen-panel-logout {
+    border-color: #333;
+    background: #171717;
+    color: #f2f2f2;
+}
+body.finance-ui.dark-mode .chart-wrapper,
+body.finance-ui.dark-mode .chart-progress-stats > div {
+    border-color: #292929 !important;
+    background: #111 !important;
+}
+body.finance-ui.dark-mode .chart-progress-track {
+    background: #242424 !important;
+}
+body.finance-ui.dark-mode .summary-export-button {
+    border-color: #333 !important;
+    background: #151515 !important;
+    color: #f2f2f2 !important;
+}
+body.finance-ui.dark-mode .summary-export-icon,
+body.finance-ui.dark-mode .summary-export-button--csv .summary-export-icon {
+    border: 1px solid #3a3a3a;
+    background: #222 !important;
+    color: #f2f2f2 !important;
+}
+body.finance-ui.dark-mode .summary-export-icon svg {
+    stroke: currentColor !important;
+}
+body.finance-ui.dark-mode .summary-bank-interest {
+    border-color: #303030 !important;
+    background: #111 !important;
+}
+body.finance-ui.dark-mode .summary-bank-interest-mark {
+    border-color: #393939 !important;
+    background: #202020 !important;
+    color: #f2f2f2 !important;
+}
+body.finance-ui.dark-mode .summary-bank-interest-label,
+body.finance-ui.dark-mode .summary-bank-interest-copy small {
+    color: #bdbdbd !important;
+}
+body.finance-ui.dark-mode .summary-bank-interest-copy strong {
+    color: #f2f2f2 !important;
+}
+body.finance-ui.dark-mode .loan-estimator-card {
+    border-color: #292929 !important;
+    background: #0b0b0b !important;
+    color: #f2f2f2;
+}
+body.finance-ui.dark-mode .loan-estimator-card > label,
+body.finance-ui.dark-mode .loan-estimator-card > p,
+body.finance-ui.dark-mode .loan-estimate-breakdown > div,
+body.finance-ui.dark-mode .loan-estimate-breakdown strong,
+body.finance-ui.dark-mode .loan-estimate-breakdown .loan-estimate-total {
+    color: #d0d0d0 !important;
+}
+body.finance-ui.dark-mode .loan-planning-heading h2,
+body.finance-ui.dark-mode .loan-estimate-breakdown .loan-estimate-total strong {
+    color: #f2f2f2 !important;
+}
+body.finance-ui.dark-mode .loan-planning-icon {
+    border-color: #333;
+    background: #171717 !important;
+    color: #f2f2f2 !important;
+}
+body.finance-ui.dark-mode .loan-estimator-card > input {
+    border-color: #393939 !important;
+    background: #111 !important;
+    color: #f2f2f2 !important;
+}
+body.finance-ui.dark-mode .loans-request-button {
+    border-color: #333 !important;
+    background: #171717 !important;
+    color: #f2f2f2 !important;
+}
+body.finance-ui.dark-mode .communications-hero-actions .meeting-primary-action,
+body.finance-ui.dark-mode .communications-hero-actions .meeting-secondary-action {
+    border-color: #333 !important;
+    background: #171717 !important;
+    color: #f2f2f2 !important;
+}
+body.finance-ui.dark-mode .communications-page .meeting-action-icon {
+    border-color: #303030;
+    background: #171717 !important;
+    color: #f2f2f2 !important;
 }
 @media (max-width: 560px) {
     body.finance-ui .theme-toggle {

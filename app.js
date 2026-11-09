@@ -2,6 +2,9 @@
 // CONFIGURATION
 // ============================================================
 const TREASURER_NAME = "Mrs. Kithinji";
+const BANK_INTEREST_EARNED = 252.90;
+const BANK_INTEREST_RATE_PERCENT = 4;
+const BANK_INTEREST_MINIMUM_BALANCE = 50000;
 const VAPID_PUBLIC_KEY = 'BB4N47xyKjLw-K29lXDolpcht45pVZcqV4m-Iw-8tJBk8g21yE66KVJmxbNOIDEIRBun-JDACI0lK4MRIvVwYH0';
 const DEVELOPMENT_PREVIEW_PROFILE_IMAGE = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80';
 const DEVELOPMENT_PREVIEW_ENABLED = ['localhost', '127.0.0.1'].includes(window.location.hostname)
@@ -34,6 +37,24 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function renderBankInterestEarned() {
+    const amount = document.getElementById('bankInterestAmount');
+    if (!amount) {
+        console.error('Bank interest summary amount element was not found.');
+        return;
+    }
+    amount.textContent = `KES ${BANK_INTEREST_EARNED.toLocaleString('en-KE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    })}`;
+    const rate = document.getElementById('bankInterestRate');
+    if (rate) rate.textContent = `I&M BANK · ${BANK_INTEREST_RATE_PERCENT}% P.A.`;
+    const terms = document.getElementById('bankInterestTerms');
+    if (terms) {
+        terms.textContent = `Actual credit · daily cleared balances from KES ${BANK_INTEREST_MINIMUM_BALANCE.toLocaleString('en-KE')}, compounded monthly.`;
+    }
 }
 
 function getLocalDateInputValue(date = new Date()) {
@@ -3550,7 +3571,11 @@ function exportToPDF() {
     const transactionRows = recentRecords.length
         ? recentRecords.map(r => `<tr style="border-bottom:1px solid #E7EBF5;"><td style="padding:7px 8px;">${new Date(r.date).toLocaleDateString('en-KE')}</td><td style="padding:7px 8px;font-weight:500;">${escapeHtml(r.member)}</td><td style="padding:7px 8px;">${escapeHtml(r.type)}</td><td style="padding:7px 8px;text-align:right;">${r.type === 'Loan Taken' ? '-' : '+'} ${formatAmount(r.amount)}</td></tr>`).join('')
         : '<tr><td colspan="4" style="padding:16px;text-align:center;color:#7C8AA5;">No transactions have been recorded yet.</td></tr>';
-    const metric = (label, value) => `<div style="padding:10px 8px;text-align:center;"><div style="font-size:9px;color:#718078;margin-bottom:4px;">${label}</div><div style="font-size:13px;font-weight:700;color:#18392F;">${formatAmount(value)}</div></div>`;
+    const metric = (label, value, formatter = formatAmount) => `<div style="padding:10px 8px;text-align:center;"><div style="font-size:9px;color:#718078;margin-bottom:4px;">${label}</div><div style="font-size:13px;font-weight:700;color:#18392F;">${formatter(value)}</div></div>`;
+    const formatInterestAmount = value => `KES ${Number(value).toLocaleString('en-KE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    })}`;
     generator.classList.add('active');
     preview.innerHTML = `
             <div id="pdfReportContent" style="max-width:800px;margin:0 auto;font-family:Arial,sans-serif;color:#18392F;font-size:12px;padding:10px;">
@@ -3560,11 +3585,13 @@ function exportToPDF() {
                 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin:18px 0;background:#E3EAE2;border:1px solid #E3EAE2;border-radius:8px;overflow:hidden;">
                     ${metric('Available balance', savings)}
                     ${metric('Outstanding principal', outstanding)}
-                    ${metric('Interest earned', interestEarned)}
+                    ${metric('Loan interest earned', interestEarned)}
+                    ${metric(`I&M Bank interest · ${BANK_INTEREST_RATE_PERCENT}% p.a.`, BANK_INTEREST_EARNED, formatInterestAmount)}
                     ${metric('Loans taken', loansTaken)}
                     ${metric('Repayments', repaid)}
                     ${metric('Net position', net)}
                 </div>
+                <p style="margin:-8px 0 14px;color:#718078;font-size:9px;">I&amp;M Bank interest is calculated on daily cleared balances from ${formatAmount(BANK_INTEREST_MINIMUM_BALANCE)} and compounded monthly.</p>
                 ${financialChartImg ? `<div style="margin:14px 0;padding:12px;border:1px solid #E3EAE2;border-radius:8px;text-align:center;"><h3 style="margin:0 0 8px;font-size:12px;">Financial activity breakdown</h3><img src="${financialChartImg}" style="display:block;max-width:100%;max-height:240px;margin:0 auto;" /></div>` : ''}
                 <h3 style="margin:16px 0 6px;font-size:13px;">Recent transactions</h3>
                 <table style="width:100%;border-collapse:collapse;font-size:10px;">
@@ -4563,6 +4590,7 @@ function initializeModalScrollLock() {
 
 const initializeApp = async () => {
     initializeModalScrollLock();
+    renderBankInterestEarned();
     if (DEVELOPMENT_PREVIEW_ENABLED) {
         initializeDevelopmentPreview();
         return;
