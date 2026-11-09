@@ -57,6 +57,28 @@ function isDeveloper() { return currentUserRole === 'developer'; }
 
 function hasAdminPortalAccess() { return currentUserRole === 'admin' || isDeveloper(); }
 
+function setDarkMode(enabled, persist = true) {
+    const themeToggle = document.getElementById('themeToggle');
+    document.body.classList.toggle('dark-mode', enabled);
+    if (themeToggle) {
+        const label = enabled ? 'Switch to light mode' : 'Switch to dark mode';
+        themeToggle.setAttribute('aria-label', label);
+        themeToggle.setAttribute('title', label);
+        themeToggle.setAttribute('aria-pressed', String(enabled));
+    }
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', enabled ? '#101713' : '#F4F7FF');
+    if (persist) localStorage.setItem('legacy_theme', enabled ? 'dark' : 'light');
+}
+
+function initializeThemeToggle() {
+    const themeToggle = document.getElementById('themeToggle');
+    const savedTheme = localStorage.getItem('legacy_theme');
+    setDarkMode(savedTheme === 'dark', false);
+    themeToggle?.addEventListener('click', () => {
+        setDarkMode(!document.body.classList.contains('dark-mode'));
+    });
+}
+
 function showToast(message, type) {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
@@ -2392,15 +2414,16 @@ async function loadAuditLog() {
 async function loadMembersList() {
     const container = document.getElementById('membersList');
     if (!container) return;
+    const memberCountBadge = document.getElementById('memberCountBadge');
     try {
         const res = await callAPI('getMembersWithImages');
         if (res.success && res.members && res.members.length > 0) {
             allMembersData = res.members;
             renderMembersList(allMembersData);
-            document.getElementById('memberCountBadge').textContent = `${allMembersData.length} Members`;
+            if (memberCountBadge) memberCountBadge.textContent = `${allMembersData.length} Members`;
         } else {
             container.innerHTML = '<div class="empty-state">No members found.</div>';
-            document.getElementById('memberCountBadge').textContent = '0 Members';
+            if (memberCountBadge) memberCountBadge.textContent = '0 Members';
         }
         updateAboutStats();
     } catch (e) {
@@ -4691,7 +4714,8 @@ function initializeDevelopmentPreview() {
     renderRecentActivity();
     updateAboutStats();
     renderMembersList(allMembersData);
-    document.getElementById('memberCountBadge').textContent = `${allMembersData.length} Members`;
+    const memberCountBadge = document.getElementById('memberCountBadge');
+    if (memberCountBadge) memberCountBadge.textContent = `${allMembersData.length} Members`;
     document.getElementById('summarySkeleton').style.display = 'none';
     document.getElementById('summaryContent').style.display = 'block';
     if (typeof Chart !== 'undefined') renderChart(lastGroupSummary);
@@ -4704,6 +4728,7 @@ function initializeDevelopmentPreview() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    initializeThemeToggle();
     document.getElementById('aboutPanel')?.remove();
     document.querySelectorAll('[data-panel="about"]').forEach(element => element.remove());
     if (window.visualViewport) {
