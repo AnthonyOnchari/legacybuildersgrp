@@ -13663,6 +13663,23 @@ body.finance-ui.dark-mode #tabBar .tab.active .tab-icon {
     box-shadow: none !important;
     color: #f2f2f2 !important;
 }
+body.finance-ui.dark-mode #tabBar .tab:hover,
+body.finance-ui.dark-mode #tabBar .tab:focus-visible {
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+body.finance-ui.dark-mode #tabBar .tab:hover .tab-icon,
+body.finance-ui.dark-mode #tabBar .tab:focus-visible .tab-icon {
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #f2f2f2 !important;
+}
+body.finance-ui.dark-mode #tabBar .tab:hover::before,
+body.finance-ui.dark-mode #tabBar .tab:focus-visible::before {
+    background: transparent !important;
+}
 body.finance-ui.dark-mode .quick-action {
     border-color: #292929 !important;
     background: #111 !important;
