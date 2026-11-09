@@ -13663,6 +13663,51 @@ body.finance-ui.dark-mode #tabBar .tab.active .tab-icon {
     box-shadow: none !important;
     color: #f2f2f2 !important;
 }
+body.finance-ui.dark-mode .quick-action {
+    border-color: #292929 !important;
+    background: #111 !important;
+    color: #f2f2f2 !important;
+}
+body.finance-ui.dark-mode .quick-action-icon,
+body.finance-ui.dark-mode .quick-action:hover .quick-action-icon {
+    border-color: #303030 !important;
+    background: #1b1b1b !important;
+    box-shadow: none !important;
+    color: #f2f2f2 !important;
+}
+body.finance-ui.dark-mode #memoriesCard .memory-heading {
+    border-color: #292929 !important;
+    background: rgba(11, 11, 11, .97) !important;
+    color: #f2f2f2 !important;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .35);
+}
+body.finance-ui.dark-mode #memoriesCard .memory-heading-copy h2,
+body.finance-ui.dark-mode #memoriesCard .memory-heading-copy p,
+body.finance-ui.dark-mode #memoriesCard .memory-heading-copy .section-kicker,
+body.finance-ui.dark-mode #memoriesCard .memory-photo-count {
+    color: #f2f2f2 !important;
+}
+body.finance-ui.dark-mode .empty-state,
+body.finance-ui.dark-mode .memory-empty-state {
+    border-color: #303030 !important;
+    background: #111 !important;
+    color: #ccc !important;
+}
+body.finance-ui.dark-mode #memoriesCard .memory-share-btn,
+body.finance-ui.dark-mode .memory-carousel-control,
+body.finance-ui.dark-mode .memory-download-btn,
+body.finance-ui.dark-mode .wallet-chip {
+    border-color: #333 !important;
+    background: #111 !important;
+    color: #f2f2f2 !important;
+}
+body.finance-ui.dark-mode #memoriesCard .memory-share-btn:hover,
+body.finance-ui.dark-mode .memory-carousel-control:hover,
+body.finance-ui.dark-mode .memory-download-btn:hover,
+body.finance-ui.dark-mode .wallet-chip:hover {
+    border-color: #444 !important;
+    background: #181818 !important;
+}
 @media (max-width: 560px) {
     body.finance-ui .theme-toggle {
         width: 36px;
