@@ -620,7 +620,6 @@ function activateCurrentTab() {
         loadAdminMemberProfiles('adminPhoneProfiles');
         loadAllUsersFull('adminAllUsersList');
     }
-    if (currentTab === 'developer') loadAdminMemberProfiles('developerPhoneProfiles');
     if (currentTab === 'loans') loadLoansDashboard();
     if (currentTab === 'meetings') loadGroupMessages();
 }
@@ -754,7 +753,6 @@ function openDeveloperPortalModal() {
     overlay.addEventListener('click', event => { if (event.target === overlay) close(); });
     overlay._onKeyDown = event => { if (event.key === 'Escape') close(); };
     document.addEventListener('keydown', overlay._onKeyDown);
-    if (typeof loadAdminMemberProfiles === 'function') loadAdminMemberProfiles('developerPhoneProfiles');
     if (typeof loadDeveloperPortal === 'function') loadDeveloperPortal();
     requestAnimationFrame(() => dialog.querySelector('.developer-modal-close')?.focus());
 }
@@ -989,6 +987,8 @@ function updateDashboardGreeting() {
 // ============================================================
 // DEVELOPER PORTAL FUNCTIONS
 // ============================================================
+let developerPortalLoadPromise = null;
+
 function showDeveloperLoadError(container, error, retry) {
     container.removeAttribute('aria-label');
     container.setAttribute('role', 'alert');
@@ -1010,18 +1010,42 @@ function showDeveloperLoadError(container, error, retry) {
 
 async function loadDeveloperPortal() {
     if (!isDeveloper()) return;
-    await Promise.all([
-        loadSystemStats(),
-        loadAllUsersFull(),
-        loadDevPendingRegistrations(),
-        loadDevAuditLog()
-    ]);
+    if (developerPortalLoadPromise) return developerPortalLoadPromise;
+    developerPortalLoadPromise = (async () => {
+        try {
+            const res = await callAPI('getDeveloperPortalData', { email: currentUserEmail });
+            if (!res.success) throw new Error(res.error || 'Could not load developer portal data.');
+            await Promise.all([
+                loadSystemStats({ success: true, stats: res.stats }),
+                loadAllUsersFull('allUsersList', { success: true, users: res.users }),
+                loadDevPendingRegistrations({ success: true, registrations: res.registrations, joinRequests: res.joinRequests }),
+                loadDevAuditLog({ success: true, entries: res.entries }),
+                loadAdminMemberProfiles('developerPhoneProfiles', { success: true, profiles: res.profiles })
+            ]);
+        } catch (error) {
+            [
+                'systemStats',
+                'allUsersList',
+                'devPendingRegistrations',
+                'devAuditLog',
+                'developerPhoneProfiles'
+            ].forEach(id => {
+                const container = document.getElementById(id);
+                if (container) showDeveloperLoadError(container, error, loadDeveloperPortal);
+            });
+        }
+    })();
+    try {
+        await developerPortalLoadPromise;
+    } finally {
+        developerPortalLoadPromise = null;
+    }
 }
 
-async function loadSystemStats() {
+async function loadSystemStats(data = null) {
     const container = document.getElementById('systemStats');
     try {
-        const res = await callAPI('getSystemStats', { email: currentUserEmail });
+        const res = data || await callAPI('getSystemStats', { email: currentUserEmail });
         if (res.success && res.stats) {
             const s = res.stats;
             container.classList.remove('loading-container');
@@ -1045,18 +1069,20 @@ async function loadSystemStats() {
             animateCountUp(document.getElementById('devStatSavings'), s.totalSavings || 0);
             animateCountUp(document.getElementById('devStatOutstanding'), s.outstandingLoans || 0);
             animateCountUp(document.getElementById('devStatSubscriptions'), s.pushSubscriptions, '');
+        } else {
+            throw new Error(res.error || 'Could not load system statistics.');
         }
     } catch (e) {
         container.classList.remove('loading-container');
-        container.innerHTML = '<div class="empty-state">Error loading stats</div>';
+        showDeveloperLoadError(container, e, () => loadSystemStats());
     }
 }
 
-async function loadAllUsersFull(containerId = 'allUsersList') {
+async function loadAllUsersFull(containerId = 'allUsersList', data = null) {
     const container = document.getElementById(containerId);
     if (!container) return;
     try {
-        const res = await callAPI('getAllUsersFull', { email: currentUserEmail });
+        const res = data || await callAPI('getAllUsersFull', { email: currentUserEmail });
         if (res.success && res.users) {
             container.removeAttribute('role');
             container.removeAttribute('aria-label');
@@ -1126,11 +1152,11 @@ async function editUserProfilePhoto(email) {
     input.click();
 }
 
-async function loadDevPendingRegistrations() {
+async function loadDevPendingRegistrations(data = null) {
     const container = document.getElementById('devPendingRegistrations');
     if (!container) return;
     try {
-        const res = await callAPI('getPendingRegistrations', { email: currentUserEmail });
+        const res = data || await callAPI('getPendingRegistrations', { email: currentUserEmail });
         if (res.success && res.registrations) {
             container.removeAttribute('role');
             container.removeAttribute('aria-label');
@@ -1161,11 +1187,11 @@ async function loadDevPendingRegistrations() {
     }
 }
 
-async function loadDevAuditLog() {
+async function loadDevAuditLog(data = null) {
     const container = document.getElementById('devAuditLog');
     if (!container) return;
     try {
-        const res = await callAPI('getDeveloperAuditLog', { email: currentUserEmail, limit: 50 });
+        const res = data || await callAPI('getDeveloperAuditLog', { email: currentUserEmail, limit: 50 });
         if (res.success && res.entries) {
             container.removeAttribute('role');
             container.removeAttribute('aria-label');
@@ -3021,12 +3047,12 @@ async function saveOwnProfile() {
     }
 }
 
-async function loadAdminMemberProfiles(containerId) {
+async function loadAdminMemberProfiles(containerId, data = null) {
     const container = document.getElementById(containerId);
     if (!container || !hasAdminPortalAccess()) return;
-    container.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div><div>Loading member contacts...</div></div>';
+    if (!data) container.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div><div>Loading member contacts...</div></div>';
     try {
-        const result = await callAPI('getAdminMemberProfiles');
+        const result = data || await callAPI('getAdminMemberProfiles');
         if (!result.success) throw new Error(result.error || 'Could not load member contacts.');
         if (!result.profiles.length) {
             container.innerHTML = '<div class="empty-state">No approved members found.</div>';
@@ -3894,7 +3920,6 @@ function activateTab(tabId) {
         loadAllUsersFull('adminAllUsersList');
     }
     if (tabId === 'developer') {
-        loadAdminMemberProfiles('developerPhoneProfiles');
         if (typeof loadDeveloperPortal === 'function') loadDeveloperPortal();
     }
 }

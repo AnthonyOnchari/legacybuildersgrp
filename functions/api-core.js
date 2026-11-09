@@ -974,6 +974,7 @@ async function handleAction(action, params, user) {
         case "getMeetingMinutes":
         case "getAuditLog":
         case "getDeveloperAuditLog":
+        case "getDeveloperPortalData":
         case "getAllUsersFull":
         case "getSystemStats":
         case "getScheduledMeeting":
@@ -982,7 +983,7 @@ async function handleAction(action, params, user) {
         case "exportAuditLog": {
             if (["getPendingRegistrations", "getPendingTransactions", "getLoansAwaitingDueDate"].includes(action)) requireAdmin(user);
             if (["getAllUsersFull", "exportAuditLog"].includes(action)) requireAdmin(user);
-            if (["getDeveloperAuditLog", "getSystemStats", "getSubscriptions"].includes(action)) requireDeveloper(user);
+            if (["getDeveloperAuditLog", "getDeveloperPortalData", "getSystemStats", "getSubscriptions"].includes(action)) requireDeveloper(user);
             if (action === "getAuditLog") requireAdmin(user);
             if (action === "getPendingRegistrations") {
                 const [users, joinRequests] = await Promise.all([
@@ -993,6 +994,54 @@ async function handleAction(action, params, user) {
                     success: true,
                     registrations: users.filter((item) => item.status === "pending").map(publicUser),
                     joinRequests: joinRequests.filter((item) => item.status === "pending")
+                };
+            }
+            if (action === "getDeveloperPortalData") {
+                const [users, joinRequests, pendingTransactions, pendingLoans, activeLoans, subscriptions, transactions, auditSnapshot] = await Promise.all([
+                    rows("users"),
+                    rows("registrationRequests"),
+                    rows("pendingTransactions"),
+                    rows("pendingLoans"),
+                    rows("activeLoans"),
+                    rows("subscriptions"),
+                    rows("transactions"),
+                    db.collection("auditLog").orderBy("timestamp", "desc").limit(50).get()
+                ]);
+                const pendingUserEmails = new Set(users
+                    .filter((item) => item.status === "pending")
+                    .map((item) => emailKey(item.email)));
+                const summary = summarizeData(transactions, activeLoans);
+                return {
+                    success: true,
+                    users: users.map(publicUser),
+                    profiles: users
+                        .filter((profile) => profile.status === "approved")
+                        .map((profile) => ({
+                            email: emailKey(profile.email || profile.id),
+                            name: String(profile.displayName || profile.name || ""),
+                            phone: String(profile.phone || ""),
+                            phoneCountry: String(profile.phoneCountry || ""),
+                            phoneDialCode: String(profile.phoneDialCode || ""),
+                            phoneVerifiedAt: String(profile.phoneVerifiedAt || ""),
+                            phoneVerifiedBy: String(profile.phoneVerifiedBy || "")
+                        }))
+                        .filter((profile) => profile.email),
+                    registrations: users.filter((item) => item.status === "pending").map(publicUser),
+                    joinRequests: joinRequests.filter((item) => item.status === "pending"),
+                    entries: auditSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+                    stats: {
+                        totalUsers: users.length,
+                        pendingRegistrations: pendingUserEmails.size + joinRequests.filter((item) =>
+                            item.status === "pending" && !pendingUserEmails.has(emailKey(item.email))
+                        ).length,
+                        pendingTransactions: pendingTransactions.length,
+                        pendingLoans: pendingLoans.length,
+                        activeLoans: activeLoans.filter((item) => item.status !== "paid_off").length,
+                        pushSubscriptions: subscriptions.length,
+                        totalSavings: summary.savings,
+                        outstandingLoans: summary.outstanding,
+                        interestEarned: summary.interestEarned
+                    }
                 };
             }
             if (action === "getPendingTransactions") return { success: true, transactions: await rows("pendingTransactions") };
