@@ -1,6 +1,6 @@
 const { cert, getApps, initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
-const { getFirestore } = require("firebase-admin/firestore");
+const { AggregateField, getFirestore } = require("firebase-admin/firestore");
 const crypto = require("node:crypto");
 
 let db;
@@ -500,8 +500,10 @@ async function handleAction(action, params, user) {
         }
         case "getGroupMessages": {
             const [messageSnapshot, requestSnapshot] = await Promise.all([
-                db.collection("groupMessages").orderBy("created_at", "desc").get(),
-                db.collection("registrationRequests").where("status", "==", "pending").limit(50).get()
+                db.collection("groupMessages").orderBy("created_at", "desc").limit(50).get(),
+                isAdmin(user)
+                    ? db.collection("registrationRequests").where("status", "==", "pending").limit(50).get()
+                    : Promise.resolve({ docs: [] })
             ]);
             const messages = messageSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
             const joinRequests = requestSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -997,20 +999,25 @@ async function handleAction(action, params, user) {
                 };
             }
             if (action === "getDeveloperPortalData") {
-                const [users, joinRequests, pendingTransactions, pendingLoans, activeLoans, subscriptions, transactions, auditSnapshot] = await Promise.all([
+                const [users, joinRequestsSnapshot, pendingTransactionsSnapshot, pendingLoansSnapshot, activeLoans, subscriptionsSnapshot, savingsSnapshot, auditSnapshot] = await Promise.all([
                     rows("users"),
-                    rows("registrationRequests"),
-                    rows("pendingTransactions"),
-                    rows("pendingLoans"),
+                    db.collection("registrationRequests").where("status", "==", "pending").get(),
+                    db.collection("pendingTransactions").count().get(),
+                    db.collection("pendingLoans").count().get(),
                     rows("activeLoans"),
-                    rows("subscriptions"),
-                    rows("transactions"),
+                    db.collection("subscriptions").count().get(),
+                    db.collection("transactions").where("type", "==", "Savings")
+                        .aggregate({ total: AggregateField.sum("amount") }).get(),
                     db.collection("auditLog").orderBy("timestamp", "desc").limit(50).get()
                 ]);
+                const joinRequests = joinRequestsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
                 const pendingUserEmails = new Set(users
                     .filter((item) => item.status === "pending")
                     .map((item) => emailKey(item.email)));
-                const summary = summarizeData(transactions, activeLoans);
+                const summary = summarizeData([{
+                    type: "Savings",
+                    amount: savingsSnapshot.data().total || 0
+                }], activeLoans);
                 return {
                     success: true,
                     users: users.map(publicUser),
@@ -1034,10 +1041,10 @@ async function handleAction(action, params, user) {
                         pendingRegistrations: pendingUserEmails.size + joinRequests.filter((item) =>
                             item.status === "pending" && !pendingUserEmails.has(emailKey(item.email))
                         ).length,
-                        pendingTransactions: pendingTransactions.length,
-                        pendingLoans: pendingLoans.length,
+                        pendingTransactions: pendingTransactionsSnapshot.data().count,
+                        pendingLoans: pendingLoansSnapshot.data().count,
                         activeLoans: activeLoans.filter((item) => item.status !== "paid_off").length,
-                        pushSubscriptions: subscriptions.length,
+                        pushSubscriptions: subscriptionsSnapshot.data().count,
                         totalSavings: summary.savings,
                         outstandingLoans: summary.outstanding,
                         interestEarned: summary.interestEarned
@@ -1166,9 +1173,9 @@ async function handleAction(action, params, user) {
                 return { success: true, meetings };
             }
             if (action === "getAuditLog" || action === "getDeveloperAuditLog") {
-                const entries = await rows("auditLog");
-                entries.sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)));
-                return { success: true, entries: entries.slice(0, Math.min(Number(params.limit) || 50, 200)) };
+                const limit = Math.min(Number(params.limit) || 50, 200);
+                const snapshot = await db.collection("auditLog").orderBy("timestamp", "desc").limit(limit).get();
+                return { success: true, entries: snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) };
             }
             if (action === "exportAuditLog") {
                 const entries = await rows("auditLog");
@@ -1537,13 +1544,18 @@ async function handleApiRequest(req, res) {
         const result = await handleAction(action, params, user);
         return sendJson(res, 200, result);
     } catch (error) {
-        const message = error && error.message ? error.message : "Unexpected Firebase API error";
+        const rawMessage = error && error.message ? error.message : "Unexpected Firebase API error";
+        const quotaExceeded = error && (error.code === 8 || error.code === "8" || error.code === "RESOURCE_EXHAUSTED")
+            || /RESOURCE_EXHAUSTED|quota exceeded/i.test(rawMessage);
+        const message = quotaExceeded
+            ? "The database read quota is exhausted. Please try again after it resets, or ask the site administrator to check Firebase/Google Cloud billing and quota."
+            : rawMessage;
         if (message.startsWith("Firebase Admin")) {
             return sendJson(res, 500, { success: false, error: message });
         }
         const unauthenticated = message.includes("Authentication") || message.includes("verified Google");
         if (!unauthenticated) console.error("Firebase API request failed:", error);
-        return sendJson(res, unauthenticated ? 401 : 200, { success: false, error: message });
+        return sendJson(res, quotaExceeded ? 503 : unauthenticated ? 401 : 200, { success: false, error: message });
     }
 }
 

@@ -22,6 +22,7 @@ let isLoading = false, chartInstance = null;
 let dashboardLoaded = false;
 let appBackNavigationInitialized = false;
 let unreadGroupMessages = 0;
+let groupMessagesLoading = false, groupMessageRetryDelay = 60000, nextGroupMessageRetryAt = 0;
 let unreadMeetingUpdates = false;
 const memberPhotoCache = {};
 let serviceWorkerRegistered = false, pushSubscription = null;
@@ -668,9 +669,7 @@ async function completeLogin(name, email, profile = {}) {
         loadAllData(),
         loadGroupMemories(),
         profileImageLoad,
-        loadMeetingMinutes(),
-        loadScheduledMeeting(),
-        loadMembersList()
+        loadScheduledMeeting()
     ]);
 
     showBalanceLoading(false);
@@ -681,16 +680,16 @@ async function completeLogin(name, email, profile = {}) {
         registerServiceWorker();
     }, 3000);
 
+    startBackgroundRefresh();
+}
+
+function startBackgroundRefresh() {
     if (refreshInterval) clearInterval(refreshInterval);
     refreshInterval = setInterval(() => {
-        if (currentUser) {
-            loadAllData(true);
-            loadGroupMessages();
-            loadGroupMemories();
-            loadScheduledMeeting();
-            loadMembersList();
-        }
-    }, 30000);
+        if (!currentUser || document.hidden || Date.now() < nextGroupMessageRetryAt) return;
+        const chatOpen = document.getElementById('groupChatModal')?.style.display !== 'none';
+        if (currentTab === 'meetings' || chatOpen) loadGroupMessages();
+    }, 60000);
 }
 
 // ============================================================
@@ -3910,9 +3909,10 @@ function activateTab(tabId) {
     localStorage.setItem('legacy_active_tab', tabId);
     currentTab = tabId;
     if (tabId === 'loans') loadLoansDashboard();
-    else if (tabId !== 'transactions' || !dashboardLoaded) loadAllData(false, true);
+    else if (!dashboardLoaded) loadAllData(false, true);
     if (tabId === 'meetings') {
         loadGroupMessages();
+        loadMeetingMinutes();
         markMeetingUpdatesRead();
     }
     if (tabId === 'pending' && hasAdminPortalAccess()) {
@@ -4457,30 +4457,46 @@ function updateMemoriesPosition(instant = false) {
     });
 }
 
-async function loadGroupMessages() {
+async function loadGroupMessages(force = false) {
     const container = document.getElementById('groupMessages');
-    if (!container) return;
-    if (DEVELOPMENT_PREVIEW_ENABLED) {
-        const requestContainer = document.getElementById('groupInboxRequests');
-        if (requestContainer) requestContainer.innerHTML = '';
-        container.innerHTML = '<div class="empty-state">No group messages yet.</div>';
-        unreadGroupMessages = 0;
-        updateUnreadIndicators();
-        return;
-    }
-    const res = await callAPI('getGroupMessages');
-    if (!res.success) {
-        const requestContainer = document.getElementById('groupInboxRequests');
-        if (requestContainer) requestContainer.innerHTML = '';
-        container.innerHTML = `<div class="empty-state">${escapeHtml(res.error || 'Could not load group messages.')}</div>`;
-        unreadGroupMessages = 0;
-        updateUnreadIndicators();
-        return;
-    }
+    if (!container || groupMessagesLoading || (!force && Date.now() < nextGroupMessageRetryAt)) return;
+    groupMessagesLoading = true;
+    try {
+        if (DEVELOPMENT_PREVIEW_ENABLED) {
+            const requestContainer = document.getElementById('groupInboxRequests');
+            if (requestContainer) requestContainer.innerHTML = '';
+            container.innerHTML = '<div class="empty-state">No group messages yet.</div>';
+            unreadGroupMessages = 0;
+            updateUnreadIndicators();
+            return;
+        }
+        const res = await callAPI('getGroupMessages');
+        if (!res.success) {
+            nextGroupMessageRetryAt = Date.now() + groupMessageRetryDelay;
+            groupMessageRetryDelay = Math.min(groupMessageRetryDelay * 2, 15 * 60 * 1000);
+            let notice = container.querySelector('.group-message-load-error');
+            if (!notice) {
+                notice = document.createElement('div');
+                notice.className = 'group-message-load-error';
+                notice.setAttribute('role', 'alert');
+                container.prepend(notice);
+            }
+            const message = document.createElement('span');
+            message.textContent = res.error || 'Could not refresh group messages.';
+            const retryButton = document.createElement('button');
+            retryButton.type = 'button';
+            retryButton.textContent = 'Retry';
+            retryButton.addEventListener('click', () => loadGroupMessages(true));
+            notice.replaceChildren(message, retryButton);
+            return;
+        }
+        nextGroupMessageRetryAt = 0;
+        groupMessageRetryDelay = 60000;
+        container.querySelector('.group-message-load-error')?.remove();
 
-    const requests = Array.isArray(res.joinRequests) ? res.joinRequests : [];
-    const requestContainer = document.getElementById('groupInboxRequests');
-    requestContainer.innerHTML = requests.length ? `
+        const requests = Array.isArray(res.joinRequests) ? res.joinRequests : [];
+        const requestContainer = document.getElementById('groupInboxRequests');
+        requestContainer.innerHTML = requests.length ? `
         <section class="group-request-feed">
             <h3>Requests to join</h3>
             ${requests.map(request => `
@@ -4493,33 +4509,33 @@ async function loadGroupMessages() {
         </section>
     ` : '';
 
-    const messages = Array.isArray(res.messages) ? res.messages : [];
-    let messagesSeenAt = localStorage.getItem(unreadStorageKey('group_messages')) || '';
-    const latestMessageAt = messages.reduce((latest, message) => String(message.created_at || '') > latest ? String(message.created_at || '') : latest, '');
-    if (!messagesSeenAt && latestMessageAt) {
-        messagesSeenAt = latestMessageAt;
-        localStorage.setItem(unreadStorageKey('group_messages'), messagesSeenAt);
-    }
-    unreadGroupMessages = messages.filter(message =>
-        message.email !== currentUserEmail && message.created_at && String(message.created_at) > messagesSeenAt
-    ).length;
-    updateUnreadIndicators();
-    if (!messages.length) {
-        unreadGroupMessages = 0;
+        const messages = Array.isArray(res.messages) ? res.messages : [];
+        let messagesSeenAt = localStorage.getItem(unreadStorageKey('group_messages')) || '';
+        const latestMessageAt = messages.reduce((latest, message) => String(message.created_at || '') > latest ? String(message.created_at || '') : latest, '');
+        if (!messagesSeenAt && latestMessageAt) {
+            messagesSeenAt = latestMessageAt;
+            localStorage.setItem(unreadStorageKey('group_messages'), messagesSeenAt);
+        }
+        unreadGroupMessages = messages.filter(message =>
+            message.email !== currentUserEmail && message.created_at && String(message.created_at) > messagesSeenAt
+        ).length;
         updateUnreadIndicators();
-        container.innerHTML = '<div class="empty-state">No messages yet. Start the group conversation.</div>';
-        return;
-    }
-    const chronologicalMessages = messages
-        .map((message, index) => ({ message, index, timestamp: Date.parse(message.created_at || '') }))
-        .sort((a, b) => {
-            const aTimestamp = Number.isNaN(a.timestamp) ? Number.NEGATIVE_INFINITY : a.timestamp;
-            const bTimestamp = Number.isNaN(b.timestamp) ? Number.NEGATIVE_INFINITY : b.timestamp;
-            return aTimestamp - bTimestamp || a.index - b.index;
-        })
-        .map(({ message }) => message);
-    const canDeleteMessages = hasAdminPortalAccess();
-    container.innerHTML = chronologicalMessages.map(message => `
+        if (!messages.length) {
+            unreadGroupMessages = 0;
+            updateUnreadIndicators();
+            container.innerHTML = '<div class="empty-state">No messages yet. Start the group conversation.</div>';
+            return;
+        }
+        const chronologicalMessages = messages
+            .map((message, index) => ({ message, index, timestamp: Date.parse(message.created_at || '') }))
+            .sort((a, b) => {
+                const aTimestamp = Number.isNaN(a.timestamp) ? Number.NEGATIVE_INFINITY : a.timestamp;
+                const bTimestamp = Number.isNaN(b.timestamp) ? Number.NEGATIVE_INFINITY : b.timestamp;
+                return aTimestamp - bTimestamp || a.index - b.index;
+            })
+            .map(({ message }) => message);
+        const canDeleteMessages = hasAdminPortalAccess();
+        container.innerHTML = chronologicalMessages.map(message => `
         <article class="group-message${message.email === currentUserEmail ? ' own-message' : ''}">
             <div class="group-message-meta">
                 <strong>${escapeHtml(message.member || 'Group member')}</strong>
@@ -4529,11 +4545,14 @@ async function loadGroupMessages() {
             <p>${escapeHtml(message.message)}</p>
         </article>
     `).join('');
-    container.querySelectorAll('.group-message-delete').forEach(button => {
-        button.addEventListener('click', () => deleteGroupMessage(button));
-    });
-    scrollGroupMessagesToBottom();
-    if (document.getElementById('groupChatModal')?.style.display !== 'none') markGroupMessagesRead();
+        container.querySelectorAll('.group-message-delete').forEach(button => {
+            button.addEventListener('click', () => deleteGroupMessage(button));
+        });
+        scrollGroupMessagesToBottom();
+        if (document.getElementById('groupChatModal')?.style.display !== 'none') markGroupMessagesRead();
+    } finally {
+        groupMessagesLoading = false;
+    }
 }
 
 async function deleteGroupMessage(button) {
@@ -4791,22 +4810,11 @@ const initializeApp = async () => {
             ...(currentTab === 'loans' ? [] : [loadAllData()]),
             loadGroupMemories(),
             profileImageLoad,
-            loadMeetingMinutes(),
-            loadScheduledMeeting(),
-            loadMembersList()
+            loadScheduledMeeting()
         ]);
         showBalanceLoading(false);
         setTimeout(() => checkAndShowNotificationPrompt(), 3000);
-        if (refreshInterval) clearInterval(refreshInterval);
-        refreshInterval = setInterval(() => {
-            if (currentUser) {
-                loadAllData(true);
-                loadGroupMessages();
-                loadGroupMemories();
-                loadScheduledMeeting();
-                loadMembersList();
-            }
-        }, 30000);
+        startBackgroundRefresh();
     } else {
         document.getElementById('loginOverlay').classList.add('active');
     }

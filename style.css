@@ -14703,3 +14703,35 @@ body.finance-ui.dark-mode .developer-portal .developer-loading-state i::after {
         cursor: wait;
         opacity: .7;
     }
+    .group-message-load-error {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 8px;
+        padding: 10px 12px;
+        border: 1px solid #d6a5a5;
+        border-radius: 10px;
+        background: #fff3f3;
+        color: #742d2d;
+        font-size: 13px;
+    }
+    .group-message-load-error button {
+        flex: 0 0 auto;
+        padding: 6px 12px;
+        border: 0;
+        border-radius: 7px;
+        background: #742d2d;
+        color: #fff;
+        font: inherit;
+        cursor: pointer;
+    }
+    body.finance-ui.dark-mode .group-message-load-error {
+        border-color: #754848;
+        background: #2a1717;
+        color: #ffdada;
+    }
+    body.finance-ui.dark-mode .group-message-load-error button {
+        background: #a64c4c;
+        color: #fff;
+    }
