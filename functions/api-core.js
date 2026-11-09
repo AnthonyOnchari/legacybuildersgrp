@@ -95,6 +95,19 @@ const isAdmin = (user) => ["admin", "developer"].includes(user.profile.role);
 const requireAdmin = (user) => {
     if (!isAdmin(user)) throw new Error("Access denied. Treasurer or developer privileges required.");
 };
+const normalizedName = (value) => String(value || "").trim().toLocaleLowerCase();
+async function canApproveTransactions(user) {
+    if (isAdmin(user)) return true;
+    const userNames = [user.profile.name, user.profile.displayName, user.auth.name]
+        .map(normalizedName)
+        .filter(Boolean);
+    return userNames.includes(normalizedName(await getTreasurerName()));
+}
+async function requireTransactionApprover(user) {
+    if (!await canApproveTransactions(user)) {
+        throw new Error("Access denied. Treasurer, administrator, or developer privileges required.");
+    }
+}
 const requireDeveloper = (user) => {
     if (!isDeveloper(user)) throw new Error("Access denied. Developer privileges required.");
 };
@@ -191,7 +204,13 @@ async function getSummaryData() {
 
 async function getDashboard(user, params) {
     const collections = ["transactions", "users", "pendingLoans", "activeLoans"];
-    if (isAdmin(user)) collections.push("pendingTransactions", "pendingEdits", "loansAwaitingDueDate");
+    const treasurerName = await getTreasurerName();
+    const userNames = [user.profile.name, user.profile.displayName, user.auth.name]
+        .map(normalizedName)
+        .filter(Boolean);
+    const transactionApprover = isAdmin(user) || userNames.includes(normalizedName(treasurerName));
+    if (transactionApprover) collections.push("pendingTransactions", "pendingEdits");
+    if (isAdmin(user)) collections.push("loansAwaitingDueDate");
     const values = await Promise.all(collections.map(rows));
     const data = Object.fromEntries(collections.map((name, index) => [name, values[index]]));
     const allTransactions = data.transactions || [];
@@ -266,10 +285,10 @@ async function getDashboard(user, params) {
         summary,
         members,
         loans,
-        pendingTransactions: isAdmin(user) ? (data.pendingTransactions || []) : [],
-        pendingEditsMap: isAdmin(user) ? pendingEditsMap : {},
+        pendingTransactions: transactionApprover ? (data.pendingTransactions || []) : [],
+        pendingEditsMap: transactionApprover ? pendingEditsMap : {},
         activeLoans: params.includeLoanTracking === "false" ? [] : activeLoans,
-        treasurerName: await getTreasurerName()
+        treasurerName
     };
     if (isAdmin(user) && params.includeLoanTracking !== "false") {
         result.loansAwaitingDueDate = data.loansAwaitingDueDate || [];
@@ -564,14 +583,22 @@ async function handleAction(action, params, user) {
             return { success: true, id };
         }
         case "approveTransaction": {
-            requireAdmin(user);
+            await requireTransactionApprover(user);
             const id = String(params.id || "");
             const ref = recordRef("pendingTransactions", id);
             let transaction;
+            const approvedAt = nowIso();
+            const groupMessageRef = db.collection("groupMessages").doc();
             await db.runTransaction(async (tx) => {
                 const snapshot = await tx.get(ref);
                 if (!snapshot.exists) throw new Error("Pending transaction not found.");
                 transaction = snapshot.data();
+                let loanRef;
+                let loanSnapshot;
+                if (!transaction.editId && transaction.type === "Loan Repayment" && transaction.loanId) {
+                    loanRef = recordRef("activeLoans", transaction.loanId);
+                    loanSnapshot = await tx.get(loanRef);
+                }
                 if (transaction.editId) {
                     const editRef = recordRef("pendingEdits", transaction.editId);
                     const editSnapshot = await tx.get(editRef);
@@ -584,7 +611,7 @@ async function handleAction(action, params, user) {
                         amount: asNumber(edit.newAmount),
                         message: edit.newMessage || "",
                         approvedBy: name,
-                        approvalDate: nowIso()
+                        approvalDate: approvedAt
                     });
                     tx.delete(editRef);
                 } else {
@@ -597,28 +624,35 @@ async function handleAction(action, params, user) {
                         message: transaction.message || "",
                         status: "Approved",
                         approvedBy: name,
-                        approvalDate: nowIso(),
+                        approvalDate: approvedAt,
                         balanceAfter: 0,
                         loanId: transaction.loanId || ""
                     });
                 }
                 tx.delete(ref);
-                if (!transaction.editId && transaction.type === "Loan Repayment" && transaction.loanId) {
-                    const loanRef = recordRef("activeLoans", transaction.loanId);
-                    const loanSnap = await tx.get(loanRef);
-                    if (loanSnap.exists) {
-                        const loan = loanSnap.data();
-                        const repaid = asNumber(loan.amountRepaid) + asNumber(transaction.amount);
-                        tx.update(loanRef, { amountRepaid: repaid, status: repaid >= asNumber(loan.totalDue) ? "paid_off" : "active" });
-                    }
+                if (loanSnapshot?.exists) {
+                    const loan = loanSnapshot.data();
+                    const repaid = asNumber(loan.amountRepaid) + asNumber(transaction.amount);
+                    tx.update(loanRef, { amountRepaid: repaid, status: repaid >= asNumber(loan.totalDue) ? "paid_off" : "active" });
                 }
+                const actionDescription = transaction.editId
+                    ? `approved a transaction update for ${transaction.member}'s ${transaction.type} (KES ${asNumber(transaction.amount).toLocaleString()})`
+                    : `approved ${transaction.member}'s ${transaction.type} of KES ${asNumber(transaction.amount).toLocaleString()}`;
+                tx.create(groupMessageRef, {
+                    id: groupMessageRef.id,
+                    message: `${name} ${actionDescription}.`,
+                    member: name,
+                    email: user.email,
+                    type: "transaction_approved",
+                    created_at: approvedAt
+                });
             });
             await audit(name, transaction.editId ? "Approved transaction edit" : `Approved ${transaction.type}`, `${transaction.member}'s KES ${asNumber(transaction.amount).toLocaleString()}`);
             await sendPush("Transaction Approved", `Your ${transaction.type} of KES ${asNumber(transaction.amount).toLocaleString()} has been approved by ${name}.`, transaction.member, name, { type: "transaction_approved" });
             return { success: true };
         }
         case "rejectTransaction": {
-            requireAdmin(user);
+            await requireTransactionApprover(user);
             const ref = recordRef("pendingTransactions", params.id);
             const snapshot = await ref.get();
             if (!snapshot.exists) throw new Error("Pending transaction not found.");
@@ -1318,7 +1352,7 @@ async function handleAction(action, params, user) {
             return { success: true, id };
         }
         case "rejectTransactionEdit": {
-            requireAdmin(user);
+            await requireTransactionApprover(user);
             const ref = recordRef("pendingEdits", params.editId);
             const snapshot = await ref.get();
             if (!snapshot.exists) throw new Error("Pending edit not found.");

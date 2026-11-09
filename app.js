@@ -14,7 +14,7 @@ let allRecords = [], allMembers = [], allMembersData = [], pendingLoans = [], co
 let pendingTransactions = [], pendingEditsMap = {}, activeLoans = [], loansAwaitingDueDate = [];
 let currentUser = null, currentUserDisplayName = null, currentUserEmail = null, currentUserRole = null;
 let currentTab = localStorage.getItem('legacy_active_tab') || 'transactions';
-let countdownInterval = null, refreshInterval = null;
+let countdownInterval = null, refreshInterval = null, themeTransitionTimeout = null;
 let userProfileImage = null;
 let currentUserPhone = '', currentUserPhoneCountry = '', currentUserPhoneDialCode = '';
 let currentUserPhoneVerifiedAt = '', currentUserPhoneVerifiedBy = '';
@@ -72,7 +72,9 @@ function updateLoanRequestedDueDateMinimum() {
     dueDateInput.min = getLocalDateInputValue(minimumDate);
 }
 
-function isTreasurer() { return currentUser === TREASURER_NAME; }
+function isTreasurer() {
+    return String(currentUser || '').trim().toLocaleLowerCase() === TREASURER_NAME.toLocaleLowerCase();
+}
 
 function isDeveloper() { return currentUserRole === 'developer'; }
 
@@ -80,6 +82,14 @@ function hasAdminPortalAccess() { return currentUserRole === 'admin' || isDevelo
 
 function setDarkMode(enabled, persist = true) {
     const themeToggle = document.getElementById('themeToggle');
+    if (persist && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        clearTimeout(themeTransitionTimeout);
+        document.body.classList.add('theme-transitioning');
+        themeTransitionTimeout = setTimeout(() => {
+            document.body.classList.remove('theme-transitioning');
+            themeTransitionTimeout = null;
+        }, 500);
+    }
     document.body.classList.toggle('dark-mode', enabled);
     if (themeToggle) {
         const label = enabled ? 'Switch to light mode' : 'Switch to dark mode';
@@ -571,7 +581,7 @@ function activateCurrentTab() {
     if (currentTab === 'developer' && !isDeveloper()) {
         currentTab = 'transactions';
     }
-    if (currentTab === 'pending' && currentUserRole !== 'admin') {
+    if (currentTab === 'pending' && currentUserRole !== 'admin' && !isTreasurer()) {
         currentTab = 'transactions';
     }
     document.querySelectorAll('.tab, .sidebar-link').forEach(t => t.classList.remove('active'));
@@ -588,7 +598,7 @@ function activateCurrentTab() {
     const appContainerEl = document.getElementById('appContainer');
     if (appContainerEl) appContainerEl.classList.toggle('dashboard-active', currentTab === 'transactions');
     localStorage.setItem('legacy_active_tab', currentTab);
-    if (currentTab === 'pending') {
+    if (currentTab === 'pending' && hasAdminPortalAccess()) {
         loadAdminMemberProfiles('adminPhoneProfiles');
         loadAllUsersFull('adminAllUsersList');
     }
@@ -749,16 +759,37 @@ function closeDeveloperPortalModal() {
 }
 
 function showHidePendingTab() {
-    const show = currentUserRole === 'admin';
+    const admin = currentUserRole === 'admin';
+    const treasurerOnly = isTreasurer() && !hasAdminPortalAccess();
+    const show = admin || treasurerOnly;
     const pendingTab = document.getElementById('pendingTab');
     pendingTab.style.display = show ? 'flex' : 'none';
-    pendingTab.setAttribute('aria-label', 'Admin portal');
+    pendingTab.setAttribute('aria-label', treasurerOnly ? 'Transaction approvals' : 'Admin portal');
     document.getElementById('pendingSidebarLink').style.display = show ? 'flex' : 'none';
-    if (show) loadPendingRegistrations();
+    const updateLabel = (element, label) => {
+        const labelContainer = element?.querySelector(':scope > span:nth-child(2)');
+        const textNode = [...(labelContainer?.childNodes || [])].find(node => node.nodeType === Node.TEXT_NODE);
+        if (textNode) textNode.textContent = label;
+    };
+    updateLabel(pendingTab, treasurerOnly ? 'Approvals' : 'Admin Portal');
+    updateLabel(document.getElementById('pendingSidebarLink'), treasurerOnly ? 'Approvals' : 'Admin Portal');
+    const portal = document.getElementById('pendingPanel');
+    portal?.querySelector('.admin-portal-hero h1')?.replaceChildren(document.createTextNode(treasurerOnly ? 'Transaction approvals' : 'Admin portal'));
+    portal?.querySelector('.admin-portal-hero p')?.replaceChildren(document.createTextNode(
+        treasurerOnly ? 'Review and approve pending group transactions.' : 'Keep member access, approvals, and group records moving from one clear workspace.'
+    ));
+    const status = portal?.querySelector('.admin-portal-status');
+    if (status) {
+        const statusText = [...status.childNodes].find(node => node.nodeType === Node.TEXT_NODE);
+        if (statusText) statusText.textContent = treasurerOnly ? 'Treasurer workspace' : 'Admin workspace';
+    }
+    portal?.querySelectorAll('.admin-phone-directory-card, .admin-registrations-card, .admin-user-management-card, .admin-audit-download-card')
+        .forEach(section => { section.hidden = treasurerOnly; });
+    if (admin) loadPendingRegistrations();
 }
 
 function openAdminPortal() {
-    if (!hasAdminPortalAccess()) {
+    if (!hasAdminPortalAccess() && !isTreasurer()) {
         showToast('The admin portal is available to approved administrators only.', 'error');
         return;
     }
@@ -956,16 +987,17 @@ async function loadSystemStats() {
         const res = await callAPI('getSystemStats', { email: currentUserEmail });
         if (res.success && res.stats) {
             const s = res.stats;
+            container.classList.remove('loading-container');
             container.innerHTML = `
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
-                    <div class="summary-stat"><div class="summary-stat-value" id="devStatUsers" data-target="0">0</div><div class="summary-stat-label">Total Users</div></div>
-                    <div class="summary-stat"><div class="summary-stat-value" id="devStatRegistrations" data-target="0">0</div><div class="summary-stat-label">Pending Registrations</div></div>
-                    <div class="summary-stat"><div class="summary-stat-value" id="devStatTransactions" data-target="0">0</div><div class="summary-stat-label">Pending Transactions</div></div>
-                    <div class="summary-stat"><div class="summary-stat-value" id="devStatLoans" data-target="0">0</div><div class="summary-stat-label">Pending Loans</div></div>
-                    <div class="summary-stat"><div class="summary-stat-value" id="devStatActiveLoans" data-target="0">0</div><div class="summary-stat-label">Active Loans</div></div>
-                    <div class="summary-stat"><div class="summary-stat-value" id="devStatSavings" data-target="0">KES 0</div><div class="summary-stat-label">Total Savings</div></div>
-                    <div class="summary-stat"><div class="summary-stat-value" id="devStatOutstanding" data-target="0">KES 0</div><div class="summary-stat-label">Outstanding Loans</div></div>
-                    <div class="summary-stat"><div class="summary-stat-value" id="devStatSubscriptions" data-target="0">0</div><div class="summary-stat-label">Push Subscriptions</div></div>
+                <div class="developer-stats-grid">
+                    <div class="developer-stat-tile"><div class="summary-stat-value" id="devStatUsers" data-target="0">0</div><div class="summary-stat-label">Total users</div></div>
+                    <div class="developer-stat-tile"><div class="summary-stat-value" id="devStatRegistrations" data-target="0">0</div><div class="summary-stat-label">Pending registrations</div></div>
+                    <div class="developer-stat-tile"><div class="summary-stat-value" id="devStatTransactions" data-target="0">0</div><div class="summary-stat-label">Pending transactions</div></div>
+                    <div class="developer-stat-tile"><div class="summary-stat-value" id="devStatLoans" data-target="0">0</div><div class="summary-stat-label">Pending loans</div></div>
+                    <div class="developer-stat-tile"><div class="summary-stat-value" id="devStatActiveLoans" data-target="0">0</div><div class="summary-stat-label">Active loans</div></div>
+                    <div class="developer-stat-tile"><div class="summary-stat-value" id="devStatSavings" data-target="KES 0">KES 0</div><div class="summary-stat-label">Total savings</div></div>
+                    <div class="developer-stat-tile"><div class="summary-stat-value" id="devStatOutstanding" data-target="KES 0">KES 0</div><div class="summary-stat-label">Outstanding loans</div></div>
+                    <div class="developer-stat-tile"><div class="summary-stat-value" id="devStatSubscriptions" data-target="0">0</div><div class="summary-stat-label">Push subscriptions</div></div>
                 </div>
             `;
             animateCountUp(document.getElementById('devStatUsers'), s.totalUsers, '');
@@ -978,6 +1010,7 @@ async function loadSystemStats() {
             animateCountUp(document.getElementById('devStatSubscriptions'), s.pushSubscriptions, '');
         }
     } catch (e) {
+        container.classList.remove('loading-container');
         container.innerHTML = '<div class="empty-state">Error loading stats</div>';
     }
 }
@@ -988,6 +1021,9 @@ async function loadAllUsersFull(containerId = 'allUsersList') {
     try {
         const res = await callAPI('getAllUsersFull', { email: currentUserEmail });
         if (res.success && res.users) {
+            container.removeAttribute('role');
+            container.removeAttribute('aria-label');
+            container.setAttribute('aria-busy', 'false');
             container.innerHTML = `
                 <div class="developer-user-directory">
                     <table class="history-table developer-user-table">
@@ -1014,8 +1050,13 @@ async function loadAllUsersFull(containerId = 'allUsersList') {
                     </table>
                 </div>
             `;
+        } else {
+            throw new Error(res.error || 'Could not load users.');
         }
     } catch (e) {
+        container.removeAttribute('role');
+        container.removeAttribute('aria-label');
+        container.setAttribute('aria-busy', 'false');
         container.innerHTML = '<div class="empty-state">Error loading users</div>';
     }
 }
@@ -1053,9 +1094,13 @@ async function editUserProfilePhoto(email) {
 
 async function loadDevPendingRegistrations() {
     const container = document.getElementById('devPendingRegistrations');
+    if (!container) return;
     try {
         const res = await callAPI('getPendingRegistrations', { email: currentUserEmail });
         if (res.success && res.registrations) {
+            container.removeAttribute('role');
+            container.removeAttribute('aria-label');
+            container.setAttribute('aria-busy', 'false');
             const registrations = [...res.registrations, ...(res.joinRequests || []).filter(request =>
                 !res.registrations.some(registration => registration.email.toLowerCase() === request.email.toLowerCase())
             )];
@@ -1074,17 +1119,26 @@ async function loadDevPendingRegistrations() {
                     </div>
                 </div>
             `).join('');
+        } else {
+            throw new Error(res.error || 'Could not load pending registrations.');
         }
     } catch (e) {
+        container.removeAttribute('role');
+        container.removeAttribute('aria-label');
+        container.setAttribute('aria-busy', 'false');
         container.innerHTML = '<div class="empty-state">Error loading registrations</div>';
     }
 }
 
 async function loadDevAuditLog() {
     const container = document.getElementById('devAuditLog');
+    if (!container) return;
     try {
         const res = await callAPI('getDeveloperAuditLog', { email: currentUserEmail, limit: 50 });
         if (res.success && res.entries) {
+            container.removeAttribute('role');
+            container.removeAttribute('aria-label');
+            container.setAttribute('aria-busy', 'false');
             container.innerHTML = res.entries.map(entry => `
                 <div class="audit-log-row">
                     <div class="audit-log-icon">${auditIconFor(entry.action)}</div>
@@ -1095,8 +1149,13 @@ async function loadDevAuditLog() {
                     </div>
                 </div>
             `).join('');
+        } else {
+            throw new Error(res.error || 'Could not load audit log.');
         }
     } catch (e) {
+        container.removeAttribute('role');
+        container.removeAttribute('aria-label');
+        container.setAttribute('aria-busy', 'false');
         container.innerHTML = '<div class="empty-state">Error loading audit log</div>';
     }
 }
@@ -1337,8 +1396,8 @@ async function loadAllData(silent = false, skipBalanceUI = false) {
     if (!silent && !skipBalanceUI) showBalanceLoading(true);
     try {
         const dash = await callAPI('getDashboardData', {
-            includePending: (isTreasurer() || isDeveloper()) ? 'true' : 'false',
-            isTreasurer: (isTreasurer() || isDeveloper()) ? 'true' : 'false',
+            includePending: (isTreasurer() || hasAdminPortalAccess()) ? 'true' : 'false',
+            isTreasurer: (isTreasurer() || hasAdminPortalAccess()) ? 'true' : 'false',
             includeLoanTracking: silent ? 'false' : 'true'
         });
         if (!dash.success) throw new Error(dash.error || 'Failed to load dashboard data');
@@ -1380,16 +1439,17 @@ async function loadAllData(silent = false, skipBalanceUI = false) {
                 activeLoans = dash.activeLoans || [];
                 if (!skipBalanceUI) renderActiveLoans();
             }
-            if ((isTreasurer() || isDeveloper()) && dash.loansAwaitingDueDate !== undefined) {
+            if ((isTreasurer() || hasAdminPortalAccess()) && dash.loansAwaitingDueDate !== undefined) {
                 loansAwaitingDueDate = dash.loansAwaitingDueDate || [];
                 if (!skipBalanceUI) renderLoansAwaitingDueDate();
             }
         }
 
-        if (isTreasurer() || isDeveloper()) {
+        if (isTreasurer() || hasAdminPortalAccess()) {
             pendingTransactions = dash.pendingTransactions || [];
             pendingEditsMap = dash.pendingEditsMap || {};
-            renderPendingApprovals();
+            renderPendingApprovals('pendingApprovalsList');
+            if (isDeveloper()) renderPendingApprovals('developerPendingApprovalsList');
             updatePendingCount();
         }
     } catch (e) {
@@ -1798,7 +1858,7 @@ function renderLoansAwaitingDueDate() {
     const container = document.getElementById('awaitingDueDateList');
     const card = document.getElementById('awaitingDueDateCard');
     if (!container) return;
-    if (!isTreasurer() && !isDeveloper()) {
+    if (!isTreasurer() && !hasAdminPortalAccess()) {
         if (card) card.hidden = true;
         return;
     }
@@ -1827,8 +1887,8 @@ function renderLoansAwaitingDueDate() {
     }).join('');
 }
 
-function renderPendingApprovals() {
-    const container = document.getElementById('pendingApprovalsList');
+function renderPendingApprovals(containerId = 'pendingApprovalsList') {
+    const container = document.getElementById(containerId);
     if (!container) return;
     if (!pendingTransactions.length) { container.innerHTML = '<div class="empty-state">No pending approvals</div>'; return; }
     container.innerHTML = pendingTransactions.map(t => {
@@ -2008,7 +2068,11 @@ async function approveTransaction(id) {
     const orig = btn.innerHTML;
     showButtonLoading(btn, 'Approving...');
     const res = await callAPI('approveTransaction', { id, approvedBy: currentUser });
-    if (res.success) { showToast('Transaction approved!', 'success'); await loadAllData(); }
+    if (res.success) {
+        showToast('Transaction approved!', 'success');
+        await loadAllData();
+        await loadGroupMessages();
+    }
     else { showToast(res.error || 'Error', 'error'); }
     hideButtonLoading(btn, orig);
 }
@@ -3770,8 +3834,8 @@ function activateTab(tabId) {
         showToast('Developer portal access is restricted.', 'error');
         return;
     }
-    if (tabId === 'pending' && currentUserRole !== 'admin') {
-        showToast('Admin portal access is restricted.', 'error');
+    if (tabId === 'pending' && currentUserRole !== 'admin' && !isTreasurer()) {
+        showToast('Transaction approval access is restricted.', 'error');
         return;
     }
     document.querySelectorAll('.tab, .sidebar-link').forEach(t => t.classList.remove('active'));
@@ -3797,7 +3861,7 @@ function activateTab(tabId) {
         loadGroupMessages();
         markMeetingUpdatesRead();
     }
-    if (tabId === 'pending') {
+    if (tabId === 'pending' && hasAdminPortalAccess()) {
         loadAdminMemberProfiles('adminPhoneProfiles');
         loadAllUsersFull('adminAllUsersList');
     }
@@ -4393,8 +4457,16 @@ async function loadGroupMessages() {
         container.innerHTML = '<div class="empty-state">No messages yet. Start the group conversation.</div>';
         return;
     }
+    const chronologicalMessages = messages
+        .map((message, index) => ({ message, index, timestamp: Date.parse(message.created_at || '') }))
+        .sort((a, b) => {
+            const aTimestamp = Number.isNaN(a.timestamp) ? Number.NEGATIVE_INFINITY : a.timestamp;
+            const bTimestamp = Number.isNaN(b.timestamp) ? Number.NEGATIVE_INFINITY : b.timestamp;
+            return aTimestamp - bTimestamp || a.index - b.index;
+        })
+        .map(({ message }) => message);
     const canDeleteMessages = hasAdminPortalAccess();
-    container.innerHTML = messages.map(message => `
+    container.innerHTML = chronologicalMessages.map(message => `
         <article class="group-message${message.email === currentUserEmail ? ' own-message' : ''}">
             <div class="group-message-meta">
                 <strong>${escapeHtml(message.member || 'Group member')}</strong>

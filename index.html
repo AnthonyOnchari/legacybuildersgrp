@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=161">
+    <link rel="stylesheet" href="style.css?v=167">
 </head>
 <body class="finance-ui app-loading">
 
@@ -561,17 +561,35 @@
                 <div class="developer-section-heading"><div><span class="developer-portal-kicker">AT A GLANCE</span><h2>System statistics</h2></div></div>
                 <div id="systemStats" class="loading-container"><div class="loading-spinner"></div><div>Loading stats...</div></div>
             </div>
+            <div class="card developer-section developer-approvals-card">
+                <div class="developer-section-heading"><div><span class="developer-portal-kicker">ACTION QUEUE</span><h2>Pending approvals</h2></div></div>
+                <div id="developerPendingApprovalsList" class="loading-container"><div class="loading-spinner"></div><div>Loading pending approvals...</div></div>
+            </div>
             <div class="card developer-section developer-users-card">
                 <div class="developer-section-heading"><div><span class="developer-portal-kicker">ACCESS CONTROL</span><h2>User management</h2></div></div>
-                <div id="allUsersList" class="loading-container"><div class="loading-spinner"></div><div>Loading users...</div></div>
+                <div id="allUsersList" class="developer-loading-state developer-users-loading" role="status" aria-label="Loading users" aria-busy="true">
+                    <div class="developer-skeleton-table" aria-hidden="true">
+                        <div class="developer-skeleton-table-head"><i></i><i></i><i></i></div>
+                        <div class="developer-skeleton-user-row"><i></i><i></i><i></i></div>
+                        <div class="developer-skeleton-user-row"><i></i><i></i><i></i></div>
+                        <div class="developer-skeleton-user-row"><i></i><i></i><i></i></div>
+                    </div>
+                </div>
             </div>
             <div class="card developer-section developer-pending-card">
                 <div class="developer-section-heading"><div><span class="developer-portal-kicker">ACTION QUEUE</span><h2>Pending registrations</h2></div></div>
-                <div id="devPendingRegistrations" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
+                <div id="devPendingRegistrations" class="developer-loading-state developer-registrations-loading" role="status" aria-label="Loading pending registrations" aria-busy="true">
+                    <div class="developer-skeleton-request" aria-hidden="true"><i></i><span><i></i><i></i></span><i></i></div>
+                    <div class="developer-skeleton-request" aria-hidden="true"><i></i><span><i></i><i></i></span><i></i></div>
+                </div>
             </div>
             <div class="card developer-section developer-audit-card">
                 <div class="developer-section-heading"><div><span class="developer-portal-kicker">RECENT ACTIVITY</span><h2>Audit log</h2></div></div>
-                <div id="devAuditLog" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
+                <div id="devAuditLog" class="developer-loading-state developer-audit-loading" role="status" aria-label="Loading audit log" aria-busy="true">
+                    <div class="developer-skeleton-audit-row" aria-hidden="true"><i></i><span><i></i><i></i><i></i></span></div>
+                    <div class="developer-skeleton-audit-row" aria-hidden="true"><i></i><span><i></i><i></i><i></i></span></div>
+                    <div class="developer-skeleton-audit-row" aria-hidden="true"><i></i><span><i></i><i></i><i></i></span></div>
+                </div>
             </div>
             <div class="card developer-section developer-actions-card">
                 <div class="developer-section-heading"><div><span class="developer-portal-kicker">TOOLS</span><h2>Developer actions</h2></div></div>
@@ -610,6 +628,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://accounts.google.com/gsi/client" defer></script>
     <script src="firebase-config.js?v=36"></script>
-    <script src="app.js?v=96"></script>
+    <script src="app.js?v=104"></script>
 </body>
 </html>
