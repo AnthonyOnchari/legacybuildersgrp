@@ -14370,6 +14370,28 @@ body.finance-ui.dark-mode .developer-modal-header .developer-modal-close {
         box-sizing: border-box !important;
     }
 }
+body.finance-ui #developerPanel.fullscreen-panel.active-panel {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+body.finance-ui #developerPanel.fullscreen-panel.active-panel > * {
+    width: 100%;
+    min-width: 0;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    grid-column: auto !important;
+}
+@media (max-width: 700px) {
+    body.finance-ui #developerPanel.fullscreen-panel.active-panel {
+        gap: 12px;
+        padding: 8px 0 calc(96px + env(safe-area-inset-bottom));
+    }
+}
 @media (max-width: 560px) {
     body.finance-ui .theme-toggle {
         width: 36px;

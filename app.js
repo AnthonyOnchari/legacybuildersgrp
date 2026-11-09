@@ -673,13 +673,6 @@ function showHideDeveloperPortal() {
     const isDev = isDeveloper();
     const devTab = document.getElementById('developerTab');
     const devSidebar = document.getElementById('developerSidebarLink');
-    const portalButton = document.getElementById('adminPortalButton');
-    const portalLabel = document.getElementById('adminPortalButtonLabel');
-    if (portalButton) {
-        portalButton.style.display = currentUserRole === 'admin' ? 'inline-flex' : 'none';
-    }
-    if (portalLabel) portalLabel.textContent = 'Admin Portal';
-
     if (devTab) {
         devTab.style.display = isDev ? 'flex' : 'none';
         devTab.setAttribute('aria-label', 'Developer portal');
@@ -752,12 +745,14 @@ function closeDeveloperPortalModal() {
     state.overlay.remove();
     document.body.style.overflow = state.previousOverflow;
     developerPortalModal = null;
-    document.getElementById('adminPortalButton')?.focus();
+    document.getElementById('developerTab')?.focus();
 }
 
 function showHidePendingTab() {
     const show = currentUserRole === 'admin';
-    document.getElementById('pendingTab').style.display = show ? 'flex' : 'none';
+    const pendingTab = document.getElementById('pendingTab');
+    pendingTab.style.display = show ? 'flex' : 'none';
+    pendingTab.setAttribute('aria-label', 'Admin portal');
     document.getElementById('pendingSidebarLink').style.display = show ? 'flex' : 'none';
     if (show) loadPendingRegistrations();
 }
