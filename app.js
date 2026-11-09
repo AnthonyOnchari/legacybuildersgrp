@@ -568,9 +568,10 @@ function activateCurrentTab() {
     initializeAppBackNavigation();
     if (currentTab === 'groupChat') currentTab = 'meetings';
     if (currentTab === 'about') currentTab = 'transactions';
-    // Developer tools are opened from the protected header button, never as the Home tab.
-    if (currentTab === 'developer') currentTab = 'transactions';
-    if (currentTab === 'pending' && !hasAdminPortalAccess()) {
+    if (currentTab === 'developer' && !isDeveloper()) {
+        currentTab = 'transactions';
+    }
+    if (currentTab === 'pending' && currentUserRole !== 'admin') {
         currentTab = 'transactions';
     }
     document.querySelectorAll('.tab, .sidebar-link').forEach(t => t.classList.remove('active'));
@@ -675,14 +676,14 @@ function showHideDeveloperPortal() {
     const portalButton = document.getElementById('adminPortalButton');
     const portalLabel = document.getElementById('adminPortalButtonLabel');
     if (portalButton) {
-        portalButton.style.display = hasAdminPortalAccess() ? 'inline-flex' : 'none';
-        portalButton.setAttribute('aria-haspopup', isDev ? 'dialog' : 'false');
+        portalButton.style.display = currentUserRole === 'admin' ? 'inline-flex' : 'none';
     }
-    if (portalLabel) portalLabel.textContent = isDev ? 'Developer Portal' : 'Admin Portal';
+    if (portalLabel) portalLabel.textContent = 'Admin Portal';
 
-    // Keep developer data out of Home and the regular navigation. It is available
-    // through the protected Developer Portal button only.
-    if (devTab) devTab.style.display = 'none';
+    if (devTab) {
+        devTab.style.display = isDev ? 'flex' : 'none';
+        devTab.setAttribute('aria-label', 'Developer portal');
+    }
     if (devSidebar) devSidebar.style.display = 'none';
 }
 
@@ -755,7 +756,7 @@ function closeDeveloperPortalModal() {
 }
 
 function showHidePendingTab() {
-    const show = hasAdminPortalAccess();
+    const show = currentUserRole === 'admin';
     document.getElementById('pendingTab').style.display = show ? 'flex' : 'none';
     document.getElementById('pendingSidebarLink').style.display = show ? 'flex' : 'none';
     if (show) loadPendingRegistrations();
@@ -3774,7 +3775,7 @@ function activateTab(tabId) {
         showToast('Developer portal access is restricted.', 'error');
         return;
     }
-    if (tabId === 'pending' && !hasAdminPortalAccess()) {
+    if (tabId === 'pending' && currentUserRole !== 'admin') {
         showToast('Admin portal access is restricted.', 'error');
         return;
     }

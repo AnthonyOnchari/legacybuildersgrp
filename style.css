@@ -8861,7 +8861,6 @@ body.finance-ui #aboutPanel > .card { padding: 23px; }
 body.finance-ui #aboutPanel > .card h2 { margin-top: 5px; }
 
 @media (max-width: 899px) {
-    body.finance-ui .tab-bar #developerTab { display: none !important; }
     body.finance-ui .loans-hero {
         align-items: flex-start;
         flex-direction: column;
