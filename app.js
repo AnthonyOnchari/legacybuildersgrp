@@ -989,7 +989,7 @@ async function loadAllUsersFull(containerId = 'allUsersList') {
                                             ${isDeveloper() ? `<option value="developer" ${user.role === 'developer' ? 'selected' : ''}>Developer</option>` : ''}
                                         </select>
                                         ${isDeveloper() ? `<button class="user-photo-edit-button" type="button" onclick="editUserProfilePhoto('${user.email}')">Edit photo</button>` : ''}
-                                        ${user.role === 'developer' ? '<span class="protected-user-label">Protected developer</span>' : `<button class="user-delete-button" aria-label="Delete user" onclick="deleteUser('${user.email}')">Delete</button>`}
+                                        ${user.role === 'developer' ? '<span class="protected-user-label">Protected developer</span>' : isDeveloper() ? `<button class="user-delete-button" aria-label="Deactivate user" onclick="deleteUser('${user.email}')">Deactivate</button>` : ''}
                                     </div>` : '<em class="developer-user-self">You</em>'}</td>
                                 </tr>
                             `).join('')}
@@ -1161,20 +1161,24 @@ async function exportAuditLog() {
 }
 
 async function deleteUser(email) {
-    if (!confirm(`Delete user ${email}? This action cannot be undone!`)) return;
-    if (!confirm(`Are you absolutely sure?`)) return;
+    if (!isDeveloper()) {
+        showToast('Only the developer can deactivate a member.', 'error');
+        return;
+    }
+    if (!confirm(`Deactivate ${email}? They will no longer be able to access the group.`)) return;
+    if (!confirm('Are you absolutely sure?')) return;
     try {
         const res = await callAPI('deleteUser', { email, requesterEmail: currentUserEmail });
         if (res.success) {
-            showToast(` ${email} deleted successfully`, 'success');
+            showToast(`${email} deactivated successfully.`, 'success');
             await loadAllUsersFull();
             await loadAllUsersFull('adminAllUsersList');
             await loadSystemStats();
         } else {
-            showToast(res.error || 'Error deleting user', 'error');
+            showToast(res.error || 'Error deactivating user', 'error');
         }
     } catch (e) {
-        showToast('Error deleting user', 'error');
+        showToast('Error deactivating user', 'error');
     }
 }
 

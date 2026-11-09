@@ -1219,7 +1219,7 @@ async function handleAction(action, params, user) {
             return { success: true, user: publicUser(newUser) };
         }
         case "deleteUser": {
-            requireAdmin(user);
+            requireDeveloper(user);
             const email = emailKey(params.email);
             if (email === user.email) throw new Error("You cannot delete your own account.");
             const ref = db.collection("users").doc(safeDocId(email));
