@@ -13643,3 +13643,30 @@ body.finance-ui.dark-mode .memory-heading-actions .memory-share-btn:hover {
     border-color: #292929 !important;
     background-color: #111 !important;
 }
+body.finance-ui .theme-toggle {
+    box-sizing: border-box;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    padding: 0 !important;
+}
+body.finance-ui .theme-toggle > svg {
+    top: 50%;
+    left: 50%;
+    width: 18px;
+    height: 18px;
+}
+body.finance-ui.dark-mode #tabBar .tab-icon,
+body.finance-ui.dark-mode #tabBar .tab.active .tab-icon {
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #f2f2f2 !important;
+}
+@media (max-width: 560px) {
+    body.finance-ui .theme-toggle {
+        width: 36px;
+        height: 36px;
+        flex-basis: 36px;
+    }
+}
