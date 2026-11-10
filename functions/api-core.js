@@ -597,16 +597,28 @@ async function handleAction(action, params, user) {
             }
             if (type === "Loan Repayment" && !params.loanId) throw new Error("Choose the loan being repaid.");
             const id = crypto.randomUUID();
-            await recordRef("pendingTransactions", id).create({
-                id, date: params.date || "", member: name, type, amount,
-                message: String(params.message || ""), submittedBy: name,
-                submittedAt: nowIso(), loanId: params.loanId || ""
+            const submittedAt = nowIso();
+            const inboxMessageRef = db.collection("groupMessages").doc();
+            await db.runTransaction(async (tx) => {
+                tx.create(recordRef("pendingTransactions", id), {
+                    id, date: params.date || "", member: name, type, amount,
+                    message: String(params.message || ""), submittedBy: name,
+                    submittedAt, loanId: params.loanId || ""
+                });
+                tx.create(inboxMessageRef, {
+                    id: inboxMessageRef.id,
+                    message: `${name} submitted a ${type} of KES ${amount.toLocaleString()} for group approval.`,
+                    member: name,
+                    email: user.email,
+                    type: "transaction_submission",
+                    created_at: submittedAt
+                });
             });
             await audit(name, `Submitted ${type}`, `KES ${amount.toLocaleString()} — awaiting approval`);
             await sendPush(
-                `New Transaction from ${name}`,
-                `${name} submitted a ${type} of KES ${amount.toLocaleString()}. Please approve.`,
-                await emailForName(await getTreasurerName()),
+                `${type} submitted by ${name}`,
+                `${name} submitted KES ${amount.toLocaleString()} as ${type}. It is awaiting group approval.`,
+                null,
                 name,
                 { type: "transaction_submission", amount, member: name, transactionType: type, transactionId: id }
             );
@@ -678,7 +690,13 @@ async function handleAction(action, params, user) {
                 });
             });
             await audit(name, transaction.editId ? "Approved transaction edit" : `Approved ${transaction.type}`, `${transaction.member}'s KES ${asNumber(transaction.amount).toLocaleString()}`);
-            await sendPush("Transaction Approved", `Your ${transaction.type} of KES ${asNumber(transaction.amount).toLocaleString()} has been approved by ${name}.`, transaction.member, name, { type: "transaction_approved" });
+            await sendPush(
+                "Transaction Approved",
+                `${name} approved ${transaction.member}'s ${transaction.type} of KES ${asNumber(transaction.amount).toLocaleString()}.`,
+                null,
+                name,
+                { type: "transaction_approved", member: transaction.member, amount: asNumber(transaction.amount) }
+            );
             return { success: true };
         }
         case "rejectTransaction": {
@@ -702,7 +720,13 @@ async function handleAction(action, params, user) {
                 });
             });
             await audit(name, `Rejected ${transaction.type}`, `${transaction.member}'s KES ${asNumber(transaction.amount).toLocaleString()}`);
-            await sendPush("Transaction Rejected", `Your ${transaction.type} transaction was rejected.`, transaction.member, name, { type: "transaction_rejected" });
+            await sendPush(
+                "Transaction Declined",
+                `${name} declined ${transaction.member}'s ${transaction.type} of KES ${asNumber(transaction.amount).toLocaleString()}.`,
+                null,
+                name,
+                { type: "transaction_rejected", member: transaction.member, amount: asNumber(transaction.amount) }
+            );
             return { success: true };
         }
         case "submitLoan": {
@@ -1308,6 +1332,13 @@ async function handleAction(action, params, user) {
             });
             await batch.commit();
             await audit(name, "Approved registration", email);
+            await sendPush(
+                "Registration Approved",
+                `${name} approved ${targetName}'s registration request.`,
+                null,
+                emailKey(user.email),
+                { type: "registration_approved", member: targetName }
+            );
             return { success: true };
         }
         case "rejectRegistration": {
@@ -1347,6 +1378,13 @@ async function handleAction(action, params, user) {
             });
             await batch.commit();
             await audit(name, "Rejected registration", email);
+            await sendPush(
+                "Registration Declined",
+                `${name} declined ${targetName}'s registration request.`,
+                null,
+                emailKey(user.email),
+                { type: "registration_rejected", member: targetName }
+            );
             return { success: true };
         }
         case "updateUserRole": {
@@ -1519,17 +1557,34 @@ async function handleAction(action, params, user) {
             );
             if (matches.length !== 1) throw new Error("Could not uniquely identify the transaction to edit.");
             const id = crypto.randomUUID();
+            const requestedAt = nowIso();
+            const inboxMessageRef = db.collection("groupMessages").doc();
             const batch = db.batch();
             batch.create(recordRef("pendingEdits", id), {
                 id, member, type, originalAmount: Number(amountValue), newAmount,
                 originalMessage: matches[0].message || "", newMessage: String(params.newMessage || ""),
-                transactionId: matches[0].id, requestedBy: name, requestedAt: nowIso()
+                transactionId: matches[0].id, requestedBy: name, requestedAt
             });
             batch.create(recordRef("pendingTransactions", id), {
                 id, editId: id, date, member, type, amount: newAmount,
-                message: String(params.newMessage || ""), submittedBy: name, submittedAt: nowIso()
+                message: String(params.newMessage || ""), submittedBy: name, submittedAt: requestedAt
+            });
+            batch.create(inboxMessageRef, {
+                id: inboxMessageRef.id,
+                message: `${name} requested an update to their ${type} transaction, changing it from KES ${Number(amountValue).toLocaleString()} to KES ${newAmount.toLocaleString()}.`,
+                member: name,
+                email: user.email,
+                type: "transaction_edit_request",
+                created_at: requestedAt
             });
             await batch.commit();
+            await sendPush(
+                `Transaction Update Requested by ${name}`,
+                `${name} requested an update to a ${type} transaction from KES ${Number(amountValue).toLocaleString()} to KES ${newAmount.toLocaleString()}.`,
+                null,
+                actorEmail,
+                { type: "transaction_edit_request", member: name, transactionType: type, transactionId: matches[0].id }
+            );
             return { success: true, id };
         }
         case "rejectTransactionEdit": {
@@ -1553,6 +1608,13 @@ async function handleAction(action, params, user) {
             });
             await batch.commit();
             await audit(name, "Rejected transaction edit", String(params.editId));
+            await sendPush(
+                "Transaction Update Declined",
+                `${name} declined ${edit.member}'s requested update to their ${edit.type} transaction.`,
+                null,
+                actorEmail,
+                { type: "transaction_edit_rejected", member: edit.member, transactionType: edit.type }
+            );
             return { success: true };
         }
         default:

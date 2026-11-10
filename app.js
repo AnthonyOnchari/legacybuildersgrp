@@ -2500,6 +2500,7 @@ async function addRecord() {
             closeAddTransactionModal();
             await loadAllData();
             await loadLoansDashboard();
+            await refreshGroupInboxIfOpen();
         } else showToast('Error: ' + res.error, 'error');
     } else {
         let loanId = '';
@@ -2514,11 +2515,12 @@ async function addRecord() {
         }
         const res = await callAPI('submitTransaction', { date, member, type, amount, message, submittedBy: currentUser, loanId });
         if (res.success) {
-            showToast(`Transaction submitted! Waiting for ${TREASURER_NAME} approval.`, 'success');
+            showToast('Transaction submitted! It has been shared with the group and is awaiting approval.', 'success');
             document.getElementById('amount').value = '';
             document.getElementById('message').value = '';
             closeAddTransactionModal();
             await loadAllData();
+            await refreshGroupInboxIfOpen();
         } else showToast('Error: ' + (res.error || 'Failed'), 'error');
     }
     hideButtonLoading(btn, orig);
@@ -2648,7 +2650,12 @@ async function cancelLoanRequest(loanId) {
     const orig = btn.innerHTML;
     showButtonLoading(btn, 'Cancelling...');
     const res = await callAPI('cancelLoan', { loanId });
-    if (res.success) { showToast('Loan cancelled!', 'success'); await loadAllData(); await loadLoansDashboard(); }
+    if (res.success) {
+        showToast('Loan cancellation shared with the group.', 'success');
+        await loadAllData();
+        await loadLoansDashboard();
+        await refreshGroupInboxIfOpen();
+    }
     else showToast(res.error || 'Error', 'error');
     hideButtonLoading(btn, orig);
 }
@@ -3348,6 +3355,7 @@ async function submitTransactionEdit(rowKey) {
         document.querySelector('.modal .close-modal')?.closest('.modal')?.remove();
         document.querySelector('.history-modal')?.remove();
         await loadAllData(false, true);
+        await refreshGroupInboxIfOpen();
     } else {
         showToast(res.error || 'Error submitting edit request', 'error');
     }
