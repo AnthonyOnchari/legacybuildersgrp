@@ -15857,3 +15857,37 @@ body.finance-ui.dark-mode .developer-contacts-dialog .developer-phone-card .admi
     }
     body.finance-ui .developer-approval-progress i { animation: none; }
 }
+
+body.finance-ui .communications-page .communications-hero-actions {
+    flex-wrap: nowrap;
+    align-items: stretch;
+}
+body.finance-ui .communications-page .communications-hero-action-container {
+    flex: 0 1 190px;
+    min-width: 0;
+    padding: 5px;
+    border: 1px solid rgba(255, 255, 255, .36);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, .13);
+}
+body.finance-ui .communications-page .communications-hero-action-container > button {
+    width: 100%;
+    height: 100%;
+    white-space: nowrap;
+}
+@media (max-width: 560px) {
+    body.finance-ui .communications-page .communications-hero-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
+    }
+    body.finance-ui .communications-page .communications-hero-action-container {
+        padding: 4px;
+    }
+    body.finance-ui .communications-page .communications-hero-action-container > button {
+        min-height: 40px;
+        padding-right: 6px;
+        padding-left: 6px;
+        font-size: 10px;
+    }
+}

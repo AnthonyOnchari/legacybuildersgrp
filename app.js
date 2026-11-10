@@ -236,7 +236,7 @@ function markMeetingUpdatesRead() {
 // API CALL
 // ============================================================
 const API_REQUEST_TIMEOUT_MS = 30000;
-const DEVELOPER_PORTAL_TIMEOUT_MS = 5000;
+const DEVELOPER_PORTAL_TIMEOUT_MS = API_REQUEST_TIMEOUT_MS;
 
 async function callAPI(action, data = {}, _retryCount = 0, timeoutMs = API_REQUEST_TIMEOUT_MS) {
     if (DEVELOPMENT_PREVIEW_ENABLED) {

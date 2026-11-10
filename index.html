@@ -17,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=180">
+    <link rel="stylesheet" href="style.css?v=181">
 </head>
 <body class="finance-ui app-loading">
 
@@ -436,10 +436,14 @@
         <!-- Meetings Panel -->
         <div id="meetingsPanel" class="panel fullscreen-panel communications-page">
             <header class="communications-hero">
-                <div class="communications-hero-copy"><span class="section-kicker">GROUP SPACE</span><h1>Connect</h1><p>Plan together. Stay in touch.</p></div>
+                <div class="communications-hero-copy"><h1>Connect</h1><p>Plan together. Stay in touch.</p></div>
                 <div class="communications-hero-actions">
-                    <button type="button" class="meeting-secondary-action" onclick="toggleGroupChat(true, this)" aria-haspopup="dialog" aria-controls="groupChatModal">Start chat <span id="heroChatBadge" class="nav-unread-badge" hidden></span></button>
-                    <button type="button" class="meeting-primary-action" onclick="openScheduleMeetingModal()">Schedule a meeting</button>
+                    <div class="communications-hero-action-container">
+                        <button type="button" class="meeting-secondary-action" onclick="toggleGroupChat(true, this)" aria-haspopup="dialog" aria-controls="groupChatModal">Start chat <span id="heroChatBadge" class="nav-unread-badge" hidden></span></button>
+                    </div>
+                    <div class="communications-hero-action-container">
+                        <button type="button" class="meeting-primary-action" onclick="openScheduleMeetingModal()">Schedule a meeting</button>
+                    </div>
                 </div>
             </header>
             <div class="communications-grid">
@@ -663,6 +667,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://accounts.google.com/gsi/client" defer></script>
     <script src="firebase-config.js?v=37"></script>
-    <script src="app.js?v=120"></script>
+    <script src="app.js?v=121"></script>
 </body>
 </html>
