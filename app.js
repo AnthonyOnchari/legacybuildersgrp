@@ -1551,7 +1551,13 @@ async function loadDevPendingRegistrations(data = null) {
             if (registrations.length === 0) {
                 container.innerHTML = `
                     <div class="developer-empty-state">
-                        <span class="developer-empty-icon" aria-hidden="true">✓</span>
+                        <span class="developer-empty-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="8" r="3"></circle>
+                                <path d="M3.5 19v-1a5.5 5.5 0 0 1 11 0v1"></path>
+                                <path d="M16 5.3a3 3 0 0 1 0 5.8M17 14a5 5 0 0 1 3.5 4.8V19"></path>
+                            </svg>
+                        </span>
                         <div><strong>All caught up</strong><p>No pending registrations right now.</p></div>
                     </div>
                 `;

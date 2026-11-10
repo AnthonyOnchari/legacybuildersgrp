@@ -15101,6 +15101,10 @@ body.finance-ui.dark-mode .member-position-badge--member {
         font-size: 15px;
         font-weight: 800;
     }
+    body.finance-ui .developer-empty-icon svg {
+        width: 18px;
+        height: 18px;
+    }
     body.finance-ui .developer-empty-state strong {
         display: block;
         color: #315640;
