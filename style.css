@@ -1581,15 +1581,22 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
    TOASTS & NOTIFICATIONS
    ============================================ */
 .notification-prompt {
-    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    position: fixed; bottom: calc(80px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
     background: var(--navy); color: white; padding: 12px 20px;
     border-radius: 6px; z-index: 2001; display: none;
     align-items: center; gap: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    max-width: 90%; animation: slideUp 0.4s ease;
+    width: calc(100vw - 24px); max-width: 620px; box-sizing: border-box;
+    animation: slideUp 0.4s ease;
 }
 .notification-prompt.active { display: flex; }
-.notification-prompt button { background: var(--gold); color: var(--navy); border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px; width: auto; }
+.notification-prompt span { flex: 1; min-width: 0; line-height: 1.4; }
+.notification-prompt button { background: var(--gold); color: var(--navy); border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px; width: auto; white-space: nowrap; }
 .notification-prompt .dismiss-btn { background: transparent; color: #A88E72; padding: 4px 8px; font-size: 18px; width: auto; }
+
+@media (max-width: 480px) {
+    .notification-prompt { gap: 8px; padding: 10px 12px; }
+    .notification-prompt button:not(.dismiss-btn) { padding: 8px 10px; font-size: 11px; }
+}
 
 .toast {
     position: fixed; bottom: 80px; left: 16px; right: 16px;

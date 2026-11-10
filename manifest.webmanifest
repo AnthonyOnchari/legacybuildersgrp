@@ -1,0 +1,17 @@
+{
+  "name": "NBFA GROUP",
+  "short_name": "NBFA GROUP",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F4F7FF",
+  "theme_color": "#F4F7FF",
+  "icons": [
+    {
+      "src": "/Assets/nobg.png",
+      "sizes": "2000x2000",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

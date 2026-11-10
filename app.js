@@ -522,6 +522,7 @@ async function loginWithGoogle(response) {
     setGoogleSignInLoading(true);
     try {
         if (!response?.credential) throw new Error('Google did not return an account credential. Please try again.');
+        await window.firebaseAuthPersistence;
         const firebaseCredential = firebase.auth.GoogleAuthProvider.credential(response.credential);
         const credential = await window.firebaseAuth.signInWithCredential(firebaseCredential);
         const res = await callAPI('bootstrapProfile');
@@ -676,6 +677,7 @@ async function completeLogin(name, email, profile = {}) {
     updateDashboardGreeting();
     showHideDeveloperPortal();
     showHidePendingTab();
+    window.setTimeout(checkAndShowNotificationPrompt, 1000);
 
     showBalanceLoading(true);
     activateCurrentTab();
@@ -695,11 +697,6 @@ async function completeLogin(name, email, profile = {}) {
 
     showBalanceLoading(false);
     showToast(`Welcome ${currentUserDisplayName}!`, 'success');
-
-    setTimeout(() => {
-        checkAndShowNotificationPrompt();
-        registerServiceWorker();
-    }, 3000);
 
     startBackgroundRefresh();
 }
@@ -4250,41 +4247,82 @@ function exportToPDF() {
 function isNotificationSupported() { return 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window; }
 function getNotificationPermission() { if (!isNotificationSupported()) return 'unsupported'; return Notification.permission; }
 
-function checkAndShowNotificationPrompt() {
-    if (!isNotificationSupported()) return;
-    const permission = getNotificationPermission();
-    if (permission === 'default') {
-        const prompt = document.getElementById('notificationPrompt');
-        if (prompt) { prompt.classList.add('active'); setTimeout(() => prompt.classList.remove('active'), 10000); }
-    } else if (permission === 'granted') { registerServiceWorker(); }
+function getNotificationSupportMessage() {
+    if (!window.isSecureContext) return 'Notifications require a secure HTTPS connection.';
+    const isAppleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isInstalledApp = navigator.standalone === true
+        || window.matchMedia('(display-mode: standalone)').matches;
+    if (isAppleMobile && !isInstalledApp) {
+        return 'On iPhone or iPad, add NBFA GROUP to your Home Screen to enable push notifications.';
+    }
+    if (!isNotificationSupported()) return 'Push notifications are not supported by this browser.';
+    return '';
 }
 
-function dismissNotificationPrompt() { document.getElementById('notificationPrompt').classList.remove('active'); }
+async function checkAndShowNotificationPrompt() {
+    const prompt = document.getElementById('notificationPrompt');
+    const message = document.getElementById('notificationPromptMessage');
+    const enableButton = document.getElementById('enableNotificationsButton');
+    if (!prompt || !message || !enableButton) return;
+    const supportMessage = getNotificationSupportMessage();
+    if (supportMessage) {
+        message.textContent = supportMessage;
+        enableButton.hidden = true;
+        prompt.classList.add('active');
+        return;
+    }
+    enableButton.hidden = false;
+    const permission = getNotificationPermission();
+    if (permission === 'default') {
+        message.textContent = 'Get real-time alerts';
+        prompt.classList.add('active');
+        registerServiceWorker().catch(error => {
+            console.error('Service worker registration failed:', error);
+            showToast(error.message || 'Could not prepare push notifications.', 'error');
+        });
+    } else if (permission === 'denied') {
+        message.textContent = 'Notifications are blocked. Allow them in your browser or phone settings.';
+        enableButton.hidden = true;
+        prompt.classList.add('active');
+    } else if (permission === 'granted') {
+        prompt.classList.remove('active');
+        try {
+            const registration = await registerServiceWorker();
+            await subscribeToPush(registration);
+        } catch (error) {
+            console.error('Push notification setup failed:', error);
+            showToast(error.message || 'Could not set up push notifications.', 'error');
+        }
+    }
+}
+
+function dismissNotificationPrompt() { document.getElementById('notificationPrompt')?.classList.remove('active'); }
 
 async function requestNotificationPermission() {
-    if (!isNotificationSupported()) { showToast('Notifications not supported', 'error'); return; }
+    const supportMessage = getNotificationSupportMessage();
+    if (supportMessage) { showToast(supportMessage, 'error'); return; }
     try {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-            showToast('Notifications enabled!', 'success');
             document.getElementById('notificationPrompt').classList.remove('active');
-            await registerServiceWorker();
-            await subscribeToPush();
+            const registration = await registerServiceWorker();
+            await subscribeToPush(registration);
         } else {
-            showToast('Notification permission denied', 'error');
+            await checkAndShowNotificationPrompt();
+            if (permission === 'denied') showToast('Allow notifications in your browser or phone settings.', 'error');
         }
-    } catch (e) { showToast('Error enabling notifications', 'error'); }
+    } catch (e) {
+        console.error('Could not enable push notifications:', e);
+        showToast(e.message || 'Could not enable push notifications.', 'error');
+    }
 }
 
 async function registerServiceWorker() {
-    try {
-        if ('serviceWorker' in navigator) {
-            const registration = await navigator.serviceWorker.register('/service-worker.js');
-            serviceWorkerRegistered = true;
-            return registration;
-        }
-    } catch (e) { console.error('Service Worker registration failed:', e); }
-    return null;
+    if (!('serviceWorker' in navigator)) throw new Error('Service workers are not supported by this browser.');
+    const registration = await navigator.serviceWorker.register('/service-worker.js');
+    serviceWorkerRegistered = true;
+    return registration;
 }
 
 function urlBase64ToUint8Array(base64String) {
@@ -4296,13 +4334,14 @@ function urlBase64ToUint8Array(base64String) {
     return outputArray;
 }
 
-async function subscribeToPush() {
+async function subscribeToPush(registration = null) {
     try {
-        if (!serviceWorkerRegistered) await registerServiceWorker();
-        const registration = await navigator.serviceWorker.ready;
-        let subscription = await registration.pushManager.getSubscription();
+        const activeRegistration = registration || (serviceWorkerRegistered
+            ? await navigator.serviceWorker.ready
+            : await registerServiceWorker());
+        let subscription = await activeRegistration.pushManager.getSubscription();
         if (!subscription) {
-            subscription = await registration.pushManager.subscribe({
+            subscription = await activeRegistration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
             });
@@ -4312,12 +4351,11 @@ async function subscribeToPush() {
             pushSubscription = subscription;
             showToast('Push notifications enabled!', 'success');
         } else {
-            showToast(res.error || 'Failed to save subscription', 'error');
+            throw new Error(res.error || 'Failed to save the notification subscription.');
         }
         return subscription;
     } catch (e) {
-        showToast('Push subscription failed', 'error');
-        return null;
+        throw new Error(e.message || 'Push subscription failed.');
     }
 }
 
@@ -5235,6 +5273,7 @@ const initializeApp = async () => {
     if (!window.firebaseAuth) {
         throw window.firebaseInitializationError || new Error('Firebase could not be initialized. Check your connection and reload.');
     }
+    await window.firebaseAuthPersistence;
     await new Promise((resolve, reject) => {
         let unsubscribe = () => {};
         unsubscribe = window.firebaseAuth.onAuthStateChanged(
@@ -5304,6 +5343,7 @@ const initializeApp = async () => {
         showBalanceLoading(true);
         updateDashboardGreeting();
         initMemoriesCarousel();
+        window.setTimeout(checkAndShowNotificationPrompt, 1000);
         activateCurrentTab();
         await Promise.all([
             ...(currentTab === 'loans' ? [] : [loadAllData()]),
@@ -5312,7 +5352,6 @@ const initializeApp = async () => {
             loadScheduledMeeting()
         ]);
         showBalanceLoading(false);
-        setTimeout(() => checkAndShowNotificationPrompt(), 3000);
         startBackgroundRefresh();
     } else {
         document.getElementById('loginOverlay').classList.add('active');

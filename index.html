@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#F4F7FF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="NBFA GROUP">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>NBFA GROUP</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/Assets/nobg.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://accounts.google.com">
@@ -12,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=179">
+    <link rel="stylesheet" href="style.css?v=180">
 </head>
 <body class="finance-ui app-loading">
 
@@ -109,8 +114,8 @@
 
     <!-- NOTIFICATION PROMPT -->
     <div class="notification-prompt" id="notificationPrompt">
-        <span>Get real-time alerts</span>
-        <button onclick="requestNotificationPermission()">Enable Notifications</button>
+        <span id="notificationPromptMessage">Get real-time alerts</span>
+        <button id="enableNotificationsButton" onclick="requestNotificationPermission()">Enable Notifications</button>
         <button class="dismiss-btn" onclick="dismissNotificationPrompt()">✕</button>
     </div>
 
@@ -652,7 +657,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://accounts.google.com/gsi/client" defer></script>
-    <script src="firebase-config.js?v=36"></script>
-    <script src="app.js?v=114"></script>
+    <script src="firebase-config.js?v=37"></script>
+    <script src="app.js?v=115"></script>
 </body>
 </html>

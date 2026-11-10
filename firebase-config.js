@@ -23,4 +23,8 @@ if (!window.firebase) {
 } else {
     firebase.initializeApp(window.firebaseConfig);
     window.firebaseAuth = firebase.auth();
+    window.firebaseAuthPersistence = window.firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    window.firebaseAuthPersistence.catch(error => {
+        window.firebaseInitializationError = error;
+    });
 }
