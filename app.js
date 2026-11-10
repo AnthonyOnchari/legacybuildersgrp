@@ -1188,7 +1188,7 @@ async function loadDeveloperPortal() {
             await Promise.all([
                 loadSection(
                     'systemStats',
-                    callAPI('getDeveloperPortalData', { email: currentUserEmail }, 0, DEVELOPER_PORTAL_TIMEOUT_MS),
+                    callAPI('getSystemStats', { email: currentUserEmail }, 0, DEVELOPER_PORTAL_TIMEOUT_MS),
                     res => loadSystemStats({ success: true, stats: res.stats }),
                     loadDeveloperPortal
                 ),
