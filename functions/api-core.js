@@ -8,6 +8,8 @@ let firebaseAuth;
 const DEVELOPER_EMAILS = new Set(["info.onchari@gmail.com"]);
 const LOAN_INTEREST_RATE = 0.1;
 const TREASURER_DEFAULT = "Mrs. Kithinji";
+const POSITION_TITLES = new Set(["Chairman", "Vice-Chairman", "Treasurer", "Secretary", "Member"]);
+const PROFILE_SALUTATIONS = new Set(["Mr.", "Mrs."]);
 const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || "qopne8fk";
 const PUSH_API_URL = process.env.PUSH_API_URL || "https://legacybuildersgroup.vercel.app/api/send-push";
 
@@ -27,6 +29,8 @@ const publicUser = (user) => ({
     email: user.email || "",
     name: user.name || "",
     role: user.role || "member",
+    position: POSITION_TITLES.has(user.position) ? user.position : "Member",
+    salutation: PROFILE_SALUTATIONS.has(user.salutation) ? user.salutation : "",
     status: user.status || "pending",
     created_at: user.created_at || "",
     approved_by: user.approved_by || "",
@@ -92,16 +96,20 @@ async function profileFor(email) {
 
 const isDeveloper = (user) => user.profile.role === "developer";
 const isAdmin = (user) => ["admin", "developer"].includes(user.profile.role);
-const requireAdmin = (user) => {
-    if (!isAdmin(user)) throw new Error("Access denied. Treasurer or developer privileges required.");
-};
-const normalizedName = (value) => String(value || "").trim().toLocaleLowerCase();
-async function canApproveTransactions(user) {
+async function hasAdminAccess(user) {
     if (isAdmin(user)) return true;
+    if (user.profile.position === "Treasurer") return true;
     const userNames = [user.profile.name, user.profile.displayName, user.auth.name]
         .map(normalizedName)
         .filter(Boolean);
     return userNames.includes(normalizedName(await getTreasurerName()));
+}
+const requireAdmin = async (user) => {
+    if (!await hasAdminAccess(user)) throw new Error("Access denied. Administrator or treasurer privileges required.");
+};
+const normalizedName = (value) => String(value || "").trim().toLocaleLowerCase();
+async function canApproveTransactions(user) {
+    return hasAdminAccess(user);
 }
 async function requireTransactionApprover(user) {
     if (!await canApproveTransactions(user)) {
@@ -221,9 +229,12 @@ async function getDashboard(user, params) {
     const userNames = [user.profile.name, user.profile.displayName, user.auth.name]
         .map(normalizedName)
         .filter(Boolean);
-    const transactionApprover = isAdmin(user) || userNames.includes(normalizedName(treasurerName));
+    const adminAccess = isAdmin(user)
+        || user.profile.position === "Treasurer"
+        || userNames.includes(normalizedName(treasurerName));
+    const transactionApprover = adminAccess;
     if (transactionApprover) collections.push("pendingTransactions", "pendingEdits");
-    if (isAdmin(user)) collections.push("loansAwaitingDueDate");
+    if (adminAccess) collections.push("loansAwaitingDueDate");
     const values = await Promise.all(collections.map(rows));
     const data = Object.fromEntries(collections.map((name, index) => [name, values[index]]));
     const allTransactions = data.transactions || [];
@@ -303,7 +314,7 @@ async function getDashboard(user, params) {
         activeLoans: params.includeLoanTracking === "false" ? [] : activeLoans,
         treasurerName
     };
-    if (isAdmin(user) && params.includeLoanTracking !== "false") {
+    if (adminAccess && params.includeLoanTracking !== "false") {
         result.loansAwaitingDueDate = data.loansAwaitingDueDate || [];
     }
     return result;
@@ -320,6 +331,8 @@ async function handleAction(action, params, user) {
                 displayName: user.profile.displayName || name,
                 email: user.email,
                 role: user.profile.role || "member",
+                position: POSITION_TITLES.has(user.profile.position) ? user.profile.position : "Member",
+                salutation: PROFILE_SALUTATIONS.has(user.profile.salutation) ? user.profile.salutation : "",
                 status: user.profile.status,
                 phone: user.profile.phone || "",
                 phoneCountry: user.profile.phoneCountry || "",
@@ -337,7 +350,7 @@ async function handleAction(action, params, user) {
             return { success: true, displayName };
         }
         case "getAdminMemberProfiles": {
-            requireAdmin(user);
+            await requireAdmin(user);
             const profiles = (await rows("users"))
                 .filter((profile) => profile.status === "approved")
                 .map((profile) => ({
@@ -353,7 +366,7 @@ async function handleAction(action, params, user) {
             return { success: true, profiles };
         }
         case "setMemberPhone": {
-            requireAdmin(user);
+            await requireAdmin(user);
             const email = emailKey(params.email);
             const ref = db.collection("users").doc(safeDocId(email));
             const snapshot = await ref.get();
@@ -512,9 +525,10 @@ async function handleAction(action, params, user) {
             return { success: true, id };
         }
         case "getGroupMessages": {
+            const adminAccess = await hasAdminAccess(user);
             const [messageSnapshot, requestSnapshot] = await Promise.all([
                 db.collection("groupMessages").orderBy("created_at", "desc").limit(50).get(),
-                isAdmin(user)
+                adminAccess
                     ? db.collection("registrationRequests").where("status", "==", "pending").limit(50).get()
                     : Promise.resolve({ docs: [] })
             ]);
@@ -529,7 +543,7 @@ async function handleAction(action, params, user) {
             };
         }
         case "deleteGroupMessage": {
-            requireAdmin(user);
+            await requireAdmin(user);
             const id = String(params.id || "").trim();
             if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Choose a valid group message.");
             const ref = recordRef("groupMessages", id);
@@ -563,6 +577,7 @@ async function handleAction(action, params, user) {
                     name: item.name || "",
                     email: item.email || "",
                     role: item.role || "member",
+                    position: POSITION_TITLES.has(item.position) ? item.position : "Member",
                     image: byEmail.get(emailKey(item.email)) || null,
                     hasImage: Boolean(byEmail.get(emailKey(item.email)))
                 }))
@@ -893,6 +908,7 @@ async function handleAction(action, params, user) {
             return { success: true };
         }
         case "cancelLoan": {
+            const adminAccess = await hasAdminAccess(user);
             const id = String(params.loanId || "");
             const ref = recordRef("pendingLoans", id);
             const historyRef = recordRef("loanRequests", id);
@@ -904,7 +920,7 @@ async function handleAction(action, params, user) {
                 const requesterIsAnotherMember = loan.requesterEmail
                     ? emailKey(loan.requesterEmail) !== actorEmail
                     : loan.member !== name;
-                if (requesterIsAnotherMember && !isAdmin(user)) {
+                if (requesterIsAnotherMember && !adminAccess) {
                     throw new Error("You can only cancel your own loan request.");
                 }
                 amount = asNumber(loan.amount);
@@ -930,7 +946,7 @@ async function handleAction(action, params, user) {
             return { success: true };
         }
         case "setLoanDueDate": {
-            requireAdmin(user);
+            await requireAdmin(user);
             const loanId = String(params.loanId || "");
             const dueDate = String(params.dueDate || "");
             if (!isIsoDate(dueDate)) {
@@ -996,10 +1012,11 @@ async function handleAction(action, params, user) {
         case "getTreasurerInfo":
         case "getSubscriptions":
         case "exportAuditLog": {
-            if (["getPendingRegistrations", "getPendingTransactions", "getLoansAwaitingDueDate"].includes(action)) requireAdmin(user);
-            if (["getAllUsersFull", "exportAuditLog"].includes(action)) requireAdmin(user);
+            const adminAccess = await hasAdminAccess(user);
+            if (["getPendingRegistrations", "getPendingTransactions", "getLoansAwaitingDueDate"].includes(action)) await requireAdmin(user);
+            if (["getAllUsersFull", "exportAuditLog"].includes(action)) await requireAdmin(user);
             if (["getDeveloperAuditLog", "getDeveloperPortalData", "getSystemStats", "getSubscriptions"].includes(action)) requireDeveloper(user);
-            if (action === "getAuditLog") requireAdmin(user);
+            if (action === "getAuditLog") await requireAdmin(user);
             if (action === "getPendingRegistrations") {
                 const [usersSnapshot, joinRequestsSnapshot] = await Promise.all([
                     db.collection("users").where("status", "==", "pending").get(),
@@ -1148,7 +1165,7 @@ async function handleAction(action, params, user) {
                         };
                     }),
                     activeLoans,
-                    loansAwaitingDueDate: isAdmin(user) ? awaiting : [],
+                    loansAwaitingDueDate: adminAccess ? awaiting : [],
                     loanRequests: loanRequests.map((request) => {
                         const requesterProfile = approvedUsers.find((item) => String(item.name || "").trim().toLowerCase() === String(request.member || "").trim().toLowerCase());
                         const requesterEmail = emailKey(request.requesterEmail || (requesterProfile && requesterProfile.email));
@@ -1230,7 +1247,7 @@ async function handleAction(action, params, user) {
             return { success: true, subscriptions: await rows("subscriptions") };
         }
         case "approveRegistration": {
-            requireAdmin(user);
+            await requireAdmin(user);
             const email = emailKey(params.email);
             const ref = db.collection("users").doc(safeDocId(email));
             const requestRef = db.collection("registrationRequests").doc(safeDocId(email));
@@ -1262,7 +1279,7 @@ async function handleAction(action, params, user) {
             return { success: true };
         }
         case "rejectRegistration": {
-            requireAdmin(user);
+            await requireAdmin(user);
             const email = emailKey(params.email);
             const ref = db.collection("users").doc(safeDocId(email));
             const requestRef = db.collection("registrationRequests").doc(safeDocId(email));
@@ -1284,7 +1301,7 @@ async function handleAction(action, params, user) {
             return { success: true };
         }
         case "updateUserRole": {
-            requireAdmin(user);
+            await requireAdmin(user);
             const email = emailKey(params.email);
             const role = String(params.role || "").toLowerCase();
             if (!["member", "admin", "developer"].includes(role)) throw new Error("Invalid role.");
@@ -1302,8 +1319,34 @@ async function handleAction(action, params, user) {
             await audit(name, "Updated user role", `${email} → ${role}`);
             return { success: true, message: `User role updated to ${role}` };
         }
+        case "setUserPosition": {
+            requireDeveloper(user);
+            const email = emailKey(params.email);
+            const position = String(params.position || "");
+            if (!POSITION_TITLES.has(position)) throw new Error("Choose a valid member position.");
+            const ref = db.collection("users").doc(safeDocId(email));
+            const snapshot = await ref.get();
+            if (!snapshot.exists || snapshot.data().status !== "approved") throw new Error("Approved member not found.");
+            await ref.update({ position });
+            await audit(name, "Updated member position", `${email} → ${position}`);
+            return { success: true, email, position };
+        }
+        case "setUserSalutation": {
+            requireDeveloper(user);
+            const email = emailKey(params.email);
+            const salutation = String(params.salutation || "");
+            if (salutation && !PROFILE_SALUTATIONS.has(salutation)) {
+                throw new Error("Choose Mr., Mrs., or no salutation.");
+            }
+            const ref = db.collection("users").doc(safeDocId(email));
+            const snapshot = await ref.get();
+            if (!snapshot.exists || snapshot.data().status !== "approved") throw new Error("Approved member not found.");
+            await ref.update({ salutation, updated_at: nowIso() });
+            await audit(name, "Updated member greeting salutation", `${email} → ${salutation || "none"}`);
+            return { success: true, email, salutation };
+        }
         case "createUser": {
-            requireAdmin(user);
+            await requireAdmin(user);
             const email = emailKey(params.email);
             const newName = String(params.name || "").trim();
             if (newName.length < 2 || newName.length > 80) throw new Error("Enter a name between 2 and 80 characters.");
@@ -1343,7 +1386,7 @@ async function handleAction(action, params, user) {
             await audit(name, "Refreshed all system data", "Developer forced data refresh");
             return { success: true, message: "All data refreshed successfully." };
         case "saveMeetingMinutes": {
-            requireAdmin(user);
+            await requireAdmin(user);
             const id = crypto.randomUUID();
             await recordRef("meetingMinutes", id).create({
                 id, date: params.date || "", recordedBy: name, agenda: String(params.agenda || ""),
@@ -1354,14 +1397,14 @@ async function handleAction(action, params, user) {
             return { success: true, id };
         }
         case "deleteMeeting": {
-            requireAdmin(user);
+            await requireAdmin(user);
             const ref = recordRef("meetingMinutes", params.id);
             if (!(await ref.get()).exists) throw new Error("Meeting not found.");
             await ref.delete();
             return { success: true };
         }
         case "scheduleMeeting": {
-            requireAdmin(user);
+            await requireAdmin(user);
             await db.collection("scheduledMeeting").doc("current").set({
                 date: params.date || "", agenda: String(params.agenda || ""),
                 venue: String(params.venue || ""), scheduledBy: name
@@ -1370,7 +1413,7 @@ async function handleAction(action, params, user) {
             return { success: true };
         }
         case "cancelScheduledMeeting":
-            requireAdmin(user);
+            await requireAdmin(user);
             await db.collection("scheduledMeeting").doc("current").delete();
             await sendPush("Meeting Cancelled", "The scheduled meeting has been cancelled.", null, name, { type: "meeting_cancelled" });
             return { success: true };
@@ -1386,7 +1429,7 @@ async function handleAction(action, params, user) {
             return { success: true };
         }
         case "sendPushNotification": {
-            requireAdmin(user);
+            await requireAdmin(user);
             const count = await sendPush(
                 String(params.title || "NBFA GROUP"),
                 String(params.body || ""),

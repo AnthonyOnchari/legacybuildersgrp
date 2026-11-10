@@ -1,10 +1,12 @@
 // ============================================================
 // CONFIGURATION
 // ============================================================
-const TREASURER_NAME = "Mrs. Kithinji";
+let TREASURER_NAME = "Mrs. Kithinji";
 const BANK_INTEREST_EARNED = 252.90;
 const BANK_INTEREST_RATE_PERCENT = 4;
 const BANK_INTEREST_MINIMUM_BALANCE = 50000;
+const MEMBER_POSITION_TITLES = ['Chairman', 'Vice-Chairman', 'Treasurer', 'Secretary', 'Member'];
+const PROFILE_SALUTATIONS = ['Mr.', 'Mrs.'];
 const VAPID_PUBLIC_KEY = 'BB4N47xyKjLw-K29lXDolpcht45pVZcqV4m-Iw-8tJBk8g21yE66KVJmxbNOIDEIRBun-JDACI0lK4MRIvVwYH0';
 const DEVELOPMENT_PREVIEW_PROFILE_IMAGE = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80';
 const DEVELOPMENT_PREVIEW_ENABLED = ['localhost', '127.0.0.1'].includes(window.location.hostname)
@@ -13,11 +15,15 @@ const DEVELOPMENT_PREVIEW_ENABLED = ['localhost', '127.0.0.1'].includes(window.l
 let allRecords = [], allMembers = [], allMembersData = [], pendingLoans = [], completedLoans = [], loanRequests = [];
 let pendingTransactions = [], pendingEditsMap = {}, activeLoans = [], loansAwaitingDueDate = [];
 let currentUser = null, currentUserDisplayName = null, currentUserEmail = null, currentUserRole = null;
+let currentUserPosition = 'Member';
+let currentUserSalutation = '';
 let currentTab = localStorage.getItem('legacy_active_tab') || 'transactions';
 let countdownInterval = null, refreshInterval = null, themeTransitionTimeout = null;
 let userProfileImage = null;
 let currentUserPhone = '', currentUserPhoneCountry = '', currentUserPhoneDialCode = '';
 let currentUserPhoneVerifiedAt = '', currentUserPhoneVerifiedBy = '';
+const adminPhoneProfileDirectories = new Map();
+const ADMIN_PHONE_PROFILE_PAGE_SIZE = 20;
 let isLoading = false, chartInstance = null;
 let dashboardLoaded = false;
 let appBackNavigationInitialized = false;
@@ -38,6 +44,16 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function memberPositionBadge(position = 'Member') {
+    const title = MEMBER_POSITION_TITLES.includes(position) ? position : 'Member';
+    const modifier = title.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '');
+    return `<sup class="member-position-badge member-position-badge--${modifier}" title="${escapeHtml(title)}" aria-label="Position: ${escapeHtml(title)}">${escapeHtml(title)}</sup>`;
+}
+
+function validProfileSalutation(salutation) {
+    return PROFILE_SALUTATIONS.includes(salutation) ? salutation : '';
 }
 
 function renderBankInterestEarned() {
@@ -74,12 +90,13 @@ function updateLoanRequestedDueDateMinimum() {
 }
 
 function isTreasurer() {
-    return String(currentUser || '').trim().toLocaleLowerCase() === TREASURER_NAME.toLocaleLowerCase();
+    return currentUserPosition === 'Treasurer'
+        || String(currentUser || '').trim().toLocaleLowerCase() === TREASURER_NAME.toLocaleLowerCase();
 }
 
 function isDeveloper() { return currentUserRole === 'developer'; }
 
-function hasAdminPortalAccess() { return currentUserRole === 'admin' || isDeveloper(); }
+function hasAdminPortalAccess() { return currentUserRole === 'admin' || isDeveloper() || isTreasurer(); }
 
 function setDarkMode(enabled, persist = true) {
     const themeToggle = document.getElementById('themeToggle');
@@ -634,6 +651,8 @@ async function completeLogin(name, email, profile = {}) {
     currentUserDisplayName = profile.displayName || name;
     currentUserEmail = email;
     currentUserRole = profile.role || currentUserRole || 'member';
+    currentUserPosition = MEMBER_POSITION_TITLES.includes(profile.position) ? profile.position : 'Member';
+    currentUserSalutation = validProfileSalutation(profile.salutation);
     currentUserPhone = profile.phone || '';
     currentUserPhoneCountry = profile.phoneCountry || '';
     currentUserPhoneDialCode = profile.phoneDialCode || '';
@@ -773,25 +792,72 @@ function closeDeveloperPortalModal() {
     document.getElementById('developerTab')?.focus();
 }
 
+let developerContactsDialogOpener = null;
+
+function openDeveloperContactsDialog() {
+    if (!isDeveloper()) {
+        showToast('Developer portal access is restricted.', 'error');
+        return;
+    }
+    const dialog = document.getElementById('developerContactsDialog');
+    if (!dialog) return;
+    if (dialog.open) {
+        dialog.querySelector('.developer-contacts-close')?.focus();
+        return;
+    }
+
+    developerContactsDialogOpener = document.activeElement;
+    dialog.showModal();
+    requestAnimationFrame(() => dialog.querySelector('.developer-contacts-close')?.focus());
+}
+
+function closeDeveloperContactsDialog() {
+    const dialog = document.getElementById('developerContactsDialog');
+    if (dialog?.open) dialog.close();
+}
+
+document.getElementById('developerContactsDialog')?.addEventListener('close', () => {
+    if (developerContactsDialogOpener instanceof HTMLElement && developerContactsDialogOpener.isConnected) {
+        developerContactsDialogOpener.focus();
+    }
+    developerContactsDialogOpener = null;
+});
+
+document.getElementById('developerContactsDialog')?.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+        event.preventDefault();
+        closeDeveloperContactsDialog();
+    }
+});
+
+document.getElementById('developerContactsDialog')?.addEventListener('click', event => {
+    const dialog = event.currentTarget;
+    if (event.target !== dialog) return;
+    const bounds = dialog.getBoundingClientRect();
+    if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) {
+        dialog.close();
+    }
+});
+
 function showHidePendingTab() {
-    const admin = currentUserRole === 'admin';
-    const treasurerOnly = isTreasurer() && !hasAdminPortalAccess();
+    const treasurerOnly = isTreasurer() && currentUserRole !== 'admin' && !isDeveloper();
+    const admin = currentUserRole === 'admin' || treasurerOnly;
     const show = admin || treasurerOnly;
     const pendingTab = document.getElementById('pendingTab');
     pendingTab.style.display = show ? 'flex' : 'none';
-    pendingTab.setAttribute('aria-label', treasurerOnly ? 'Transaction approvals' : 'Admin portal');
+    pendingTab.setAttribute('aria-label', treasurerOnly ? 'Treasurer portal' : 'Admin portal');
     document.getElementById('pendingSidebarLink').style.display = show ? 'flex' : 'none';
     const updateLabel = (element, label) => {
         const labelContainer = element?.querySelector(':scope > span:nth-child(2)');
         const textNode = [...(labelContainer?.childNodes || [])].find(node => node.nodeType === Node.TEXT_NODE);
         if (textNode) textNode.textContent = label;
     };
-    updateLabel(pendingTab, treasurerOnly ? 'Approvals' : 'Admin Portal');
-    updateLabel(document.getElementById('pendingSidebarLink'), treasurerOnly ? 'Approvals' : 'Admin Portal');
+    updateLabel(pendingTab, treasurerOnly ? 'Treasurer Portal' : 'Admin Portal');
+    updateLabel(document.getElementById('pendingSidebarLink'), treasurerOnly ? 'Treasurer Portal' : 'Admin Portal');
     const portal = document.getElementById('pendingPanel');
-    portal?.querySelector('.admin-portal-hero h1')?.replaceChildren(document.createTextNode(treasurerOnly ? 'Transaction approvals' : 'Admin portal'));
+    portal?.querySelector('.admin-portal-hero h1')?.replaceChildren(document.createTextNode(treasurerOnly ? 'Treasurer portal' : 'Admin portal'));
     portal?.querySelector('.admin-portal-hero p')?.replaceChildren(document.createTextNode(
-        treasurerOnly ? 'Review and approve pending group transactions.' : 'Keep member access, approvals, and group records moving from one clear workspace.'
+        'Manage member access, approvals, contacts, meetings, and group records from one workspace.'
     ));
     const status = portal?.querySelector('.admin-portal-status');
     if (status) {
@@ -799,7 +865,7 @@ function showHidePendingTab() {
         if (statusText) statusText.textContent = treasurerOnly ? 'Treasurer workspace' : 'Admin workspace';
     }
     portal?.querySelectorAll('.admin-phone-directory-card, .admin-registrations-card, .admin-user-management-card, .admin-audit-download-card')
-        .forEach(section => { section.hidden = treasurerOnly; });
+        .forEach(section => { section.hidden = false; });
     if (admin) loadPendingRegistrations();
 }
 
@@ -980,7 +1046,10 @@ function updateDashboardGreeting() {
     if (!el || !currentUser) return;
     const hour = new Date().getHours();
     const timeGreeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-    el.textContent = `${timeGreeting}, ${(currentUserDisplayName || currentUser).trim()}`;
+    const title = currentUserPosition === 'Member'
+        ? 'Member'
+        : `${currentUserSalutation ? `${currentUserSalutation} ` : ''}${currentUserPosition}`;
+    el.textContent = `${timeGreeting}, ${title}`;
 }
 
 // ============================================================
@@ -1012,7 +1081,31 @@ async function loadDeveloperPortal() {
     if (developerPortalLoadPromise) return developerPortalLoadPromise;
     developerPortalLoadPromise = (async () => {
         try {
-            const res = await callAPI('getDeveloperPortalData', { email: currentUserEmail });
+            const res = DEVELOPMENT_PREVIEW_ENABLED
+                ? {
+                    success: true,
+                    users: allMembersData.map((member, index) => ({
+                        ...member,
+                        role: index === 0 ? 'developer' : index === 1 ? 'admin' : 'member',
+                        status: 'approved'
+                    })),
+                    profiles: allMembersData.map(member => ({ email: member.email, name: member.name, phone: '' })),
+                    registrations: [],
+                    joinRequests: [],
+                    entries: [],
+                    stats: {
+                        totalUsers: allMembersData.length,
+                        pendingRegistrations: 0,
+                        pendingTransactions: 0,
+                        pendingLoans: 1,
+                        activeLoans: 1,
+                        pushSubscriptions: 0,
+                        totalSavings: 45500,
+                        outstandingLoans: 42000,
+                        interestEarned: 5600
+                    }
+                }
+                : await callAPI('getDeveloperPortalData', { email: currentUserEmail });
             if (!res.success) throw new Error(res.error || 'Could not load developer portal data.');
             await Promise.all([
                 loadSystemStats({ success: true, stats: res.stats }),
@@ -1088,35 +1181,136 @@ async function loadAllUsersFull(containerId = 'allUsersList', data = null) {
             container.setAttribute('aria-busy', 'false');
             container.innerHTML = `
                 <div class="developer-user-directory">
-                    <table class="history-table developer-user-table">
-                        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
-                        <tbody>
-                            ${res.users.map(user => `
-                                <tr>
-                                    <td data-label="Name"><strong>${escapeHtml(user.name)}</strong></td>
-                                    <td data-label="Email" class="developer-user-email">${escapeHtml(user.email)}</td>
-                                    <td data-label="Role"><span class="badge ${user.role === 'developer' ? 'badge-savings' : user.role === 'admin' ? 'badge-loan' : 'badge-repayment'}">${user.role || 'member'}</span></td>
-                                    <td data-label="Status"><span class="badge ${user.status === 'approved' ? 'badge-savings' : user.status === 'pending' ? 'badge-repayment' : 'badge-loan'}">${user.status || 'pending'}</span></td>
-                                    <td data-label="Actions" class="developer-user-actions">${user.email !== currentUserEmail ? `<div class="developer-user-action-list">
-                                        <select onchange="updateUserRole('${user.email}', this.value)" aria-label="Role for ${escapeHtml(user.name)}">
+                    <div class="developer-user-grid">
+                        ${res.users.map(user => `
+                            <article class="developer-user-card">
+                                <header class="developer-user-card-header">
+                                    <div class="developer-user-identity">
+                                        <h3>${escapeHtml(user.name)} ${memberPositionBadge(user.position)}</h3>
+                                        <p class="developer-user-email">${escapeHtml(user.email)}</p>
+                                    </div>
+                                    <span class="developer-user-status developer-user-status--${user.status === 'approved' ? 'approved' : user.status === 'pending' ? 'pending' : 'inactive'}">${escapeHtml(user.status || 'pending')}</span>
+                                </header>
+                                <div class="developer-user-controls">
+                                    <label class="developer-user-control">
+                                        <span>Account access</span>
+                                        ${user.email !== currentUserEmail ? `<select onchange="updateUserRole('${user.email}', this.value)" aria-label="Access role for ${escapeHtml(user.name)}">
                                             <option value="member" ${user.role === 'member' ? 'selected' : ''}>Member</option>
-                                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Treasurer</option>
+                                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
                                             ${isDeveloper() ? `<option value="developer" ${user.role === 'developer' ? 'selected' : ''}>Developer</option>` : ''}
-                                        </select>
-                                        ${isDeveloper() ? `<button class="user-photo-edit-button" type="button" onclick="editUserProfilePhoto('${user.email}')">Edit photo</button>` : ''}
-                                        ${user.role === 'developer' ? '<span class="protected-user-label">Protected developer</span>' : isDeveloper() ? `<button class="user-delete-button" aria-label="Deactivate user" onclick="deleteUser('${user.email}')">Deactivate</button>` : ''}
-                                    </div>` : '<em class="developer-user-self">You</em>'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                                        </select>` : '<span class="developer-user-self">Your account</span>'}
+                                    </label>
+                                    ${isDeveloper() && user.status === 'approved' ? `
+                                        <label class="developer-user-control">
+                                            <span>Group position</span>
+                                            <select class="member-position-select" data-position-email="${escapeHtml(user.email)}" data-original-position="${escapeHtml(user.position || 'Member')}" aria-label="Group position for ${escapeHtml(user.name)}">${MEMBER_POSITION_TITLES.map(position => `<option value="${position}" ${user.position === position || (!user.position && position === 'Member') ? 'selected' : ''}>${position}</option>`).join('')}</select>
+                                        </label>
+                                        <label class="developer-user-control">
+                                            <span>Greeting salutation</span>
+                                            <select class="member-salutation-select" data-salutation-email="${escapeHtml(user.email)}" data-original-salutation="${escapeHtml(validProfileSalutation(user.salutation))}" aria-label="Greeting salutation for ${escapeHtml(user.name)}"><option value="" ${!validProfileSalutation(user.salutation) ? 'selected' : ''}>No salutation</option>${PROFILE_SALUTATIONS.map(salutation => `<option value="${salutation}" ${user.salutation === salutation ? 'selected' : ''}>${salutation}</option>`).join('')}</select>
+                                        </label>` : ''}
+                                </div>
+                                ${isDeveloper() && user.email !== currentUserEmail ? `
+                                    <footer class="developer-user-card-actions">
+                                        ${user.role === 'developer' ? '<span class="protected-user-label">Protected developer</span>' : `<button class="user-delete-button" aria-label="Deactivate user" onclick="deleteUser('${user.email}')">Deactivate</button>`}
+                                        <button class="user-photo-edit-button" type="button" onclick="editUserProfilePhoto('${user.email}')">Edit photo</button>
+                                    </footer>` : ''}
+                            </article>
+                        `).join('')}
+                    </div>
                 </div>
             `;
+            container.querySelectorAll('.member-position-select').forEach(select => {
+                select.addEventListener('change', () => setUserPosition(select.dataset.positionEmail, select));
+            });
+            container.querySelectorAll('.member-salutation-select').forEach(select => {
+                select.addEventListener('change', () => setUserSalutation(select.dataset.salutationEmail, select));
+            });
         } else {
             throw new Error(res.error || 'Could not load users.');
         }
     } catch (e) {
         showDeveloperLoadError(container, e, () => loadAllUsersFull(containerId));
+    }
+}
+
+async function setUserPosition(email, select) {
+    if (!isDeveloper()) {
+        showToast('Only the developer can change member positions.', 'error');
+        return;
+    }
+    const previousPosition = select.dataset.originalPosition || 'Member';
+    const position = select.value;
+    select.disabled = true;
+    try {
+        let result;
+        if (DEVELOPMENT_PREVIEW_ENABLED) {
+            const member = allMembersData.find(item => item.email.toLowerCase() === email.toLowerCase());
+            if (!member) throw new Error('Sample member not found.');
+            member.position = position;
+            result = { success: true };
+        } else {
+            result = await callAPI('setUserPosition', { email, position });
+        }
+        if (!result.success) throw new Error(result.error || 'Could not update this member position.');
+        select.dataset.originalPosition = position;
+        if (email.toLowerCase() === (currentUserEmail || '').toLowerCase()) {
+            currentUserPosition = position;
+            updateDashboardGreeting();
+            showHidePendingTab();
+        }
+        const row = select.closest('tr');
+        const name = row?.querySelector('td[data-label="Name"]');
+        if (name) {
+            const badge = name.querySelector('.member-position-badge');
+            if (badge) badge.outerHTML = memberPositionBadge(position);
+        }
+        document.querySelectorAll('#membersList .member-card').forEach(card => {
+            if (card.dataset.memberEmail?.toLowerCase() !== email.toLowerCase()) return;
+            const member = allMembersData.find(item => item.email.toLowerCase() === email.toLowerCase());
+            const badge = card.querySelector('.member-position-badge');
+            if (badge) badge.outerHTML = memberPositionBadge(position);
+            if (member) member.position = position;
+        });
+        showToast(`Position updated to ${position}.`, 'success');
+    } catch (error) {
+        select.value = previousPosition;
+        showToast(error.message || 'Could not update this member position.', 'error');
+    } finally {
+        select.disabled = false;
+    }
+}
+
+async function setUserSalutation(email, select) {
+    if (!isDeveloper()) {
+        showToast('Only the developer can change member salutations.', 'error');
+        return;
+    }
+    const previousSalutation = select.dataset.originalSalutation || '';
+    const salutation = validProfileSalutation(select.value);
+    select.disabled = true;
+    try {
+        let result;
+        if (DEVELOPMENT_PREVIEW_ENABLED) {
+            const member = allMembersData.find(item => item.email.toLowerCase() === email.toLowerCase());
+            if (!member) throw new Error('Sample member not found.');
+            member.salutation = salutation;
+            result = { success: true };
+        } else {
+            result = await callAPI('setUserSalutation', { email, salutation });
+        }
+        if (!result.success) throw new Error(result.error || 'Could not update this member salutation.');
+        select.dataset.originalSalutation = salutation;
+        if (email.toLowerCase() === (currentUserEmail || '').toLowerCase()) {
+            currentUserSalutation = salutation;
+            updateDashboardGreeting();
+        }
+        showToast(salutation ? `Greeting salutation updated (${salutation}).` : 'Greeting salutation removed.', 'success');
+    } catch (error) {
+        select.value = previousSalutation;
+        showToast(error.message || 'Could not update this member salutation.', 'error');
+    } finally {
+        select.disabled = false;
     }
 }
 
@@ -1164,19 +1358,26 @@ async function loadDevPendingRegistrations(data = null) {
                 !res.registrations.some(registration => registration.email.toLowerCase() === request.email.toLowerCase())
             )];
             if (registrations.length === 0) {
-                container.innerHTML = '<div class="empty-state">No pending registrations</div>';
+                container.innerHTML = `
+                    <div class="developer-empty-state">
+                        <span class="developer-empty-icon" aria-hidden="true">✓</span>
+                        <div><strong>All caught up</strong><p>No pending registrations right now.</p></div>
+                    </div>
+                `;
                 return;
             }
             container.innerHTML = registrations.map(reg => `
-                <div class="pending-item" style="background: #FFF8E1; border-left: 4px solid #FF9800;">
-                    <div><strong> ${escapeHtml(reg.name)}</strong></div>
-                    <div> ${escapeHtml(reg.email)}</div>
-                    <div> ${reg.created_at ? new Date(reg.created_at).toLocaleDateString() : ''}</div>
-                    <div style="margin-top: 10px; display: flex; gap: 8px;">
-                        <button class="approve-btn" onclick="approveRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')"> Approve</button>
-                        <button class="reject-btn" onclick="rejectRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')"> Reject</button>
+                <article class="developer-registration-card">
+                    <div class="developer-registration-info">
+                        <strong>${escapeHtml(reg.name || 'New member')}</strong>
+                        <span>${escapeHtml(reg.email)}</span>
+                        ${reg.created_at ? `<time datetime="${escapeHtml(reg.created_at)}">Requested ${new Date(reg.created_at).toLocaleDateString()}</time>` : ''}
                     </div>
-                </div>
+                    <div class="developer-registration-actions">
+                        <button class="approve-btn" onclick="approveRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')">Approve</button>
+                        <button class="reject-btn" onclick="rejectRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')">Reject</button>
+                    </div>
+                </article>
             `).join('');
         } else {
             throw new Error(res.error || 'Could not load pending registrations.');
@@ -1195,16 +1396,25 @@ async function loadDevAuditLog(data = null) {
             container.removeAttribute('role');
             container.removeAttribute('aria-label');
             container.setAttribute('aria-busy', 'false');
-            container.innerHTML = res.entries.map(entry => `
-                <div class="audit-log-row">
-                    <div class="audit-log-icon">${auditIconFor(entry.action)}</div>
-                    <div class="audit-log-info">
-                        <div class="audit-log-line"><strong>${escapeHtml(entry.actor)}</strong> ${escapeHtml(entry.action)}</div>
-                        ${entry.details ? `<div class="audit-log-details">${escapeHtml(entry.details)}</div>` : ''}
-                        <div class="audit-log-time">${new Date(entry.timestamp).toLocaleString()}</div>
-                    </div>
+            container.innerHTML = res.entries.length ? `
+                <div class="developer-audit-list">
+                    ${res.entries.map(entry => `
+                        <article class="developer-audit-entry">
+                            <div class="audit-log-icon">${auditIconFor(entry.action)}</div>
+                            <div class="audit-log-info">
+                                <div class="audit-log-line"><strong>${escapeHtml(entry.actor)}</strong> ${escapeHtml(entry.action)}</div>
+                                ${entry.details ? `<div class="audit-log-details">${escapeHtml(entry.details)}</div>` : ''}
+                                <time class="audit-log-time" datetime="${escapeHtml(entry.timestamp)}">${new Date(entry.timestamp).toLocaleString()}</time>
+                            </div>
+                        </article>
+                    `).join('')}
                 </div>
-            `).join('');
+            ` : `
+                <div class="developer-empty-state developer-empty-state--quiet">
+                    <span class="developer-empty-icon" aria-hidden="true">i</span>
+                    <div><strong>No recent activity</strong><p>Developer actions will appear here when recorded.</p></div>
+                </div>
+            `;
         } else {
             throw new Error(res.error || 'Could not load audit log.');
         }
@@ -1943,6 +2153,8 @@ function renderLoansAwaitingDueDate() {
 function renderPendingApprovals(containerId = 'pendingApprovalsList') {
     const container = document.getElementById(containerId);
     if (!container) return;
+    container.classList.remove('loading-container', 'developer-approval-loading');
+    container.removeAttribute('aria-busy');
     if (!pendingTransactions.length) { container.innerHTML = '<div class="empty-state">No pending approvals</div>'; return; }
     container.innerHTML = pendingTransactions.map(t => {
         const editKey = `${t.member}|${t.type}|${t.amount}`;
@@ -2584,16 +2796,15 @@ function renderMembersList(members) {
     const sortedMembers = [...members].sort((a, b) => a.name.localeCompare(b.name));
     const memberCards = sortedMembers.map(member => {
         const initial = getInitials(member.name);
-        const isTreas = member.name === TREASURER_NAME;
         const memberStats = getUserStats(member.name);
         if (member.image && member.email) memberPhotoCache[member.email.toLowerCase()] = member.image;
         const cachedPhoto = memberPhotoCache[member.email?.toLowerCase()];
         const avatarContent = cachedPhoto ? `<img src="${cachedPhoto}" alt="${escapeHtml(member.name)}">` : initial;
-        return `<div class="member-card" onclick="viewMemberProfile('${escapeHtml(member.name)}', '${escapeHtml(member.email || '')}')">
+        return `<div class="member-card" data-member-email="${escapeHtml(member.email || '')}" onclick="viewMemberProfile('${escapeHtml(member.name)}', '${escapeHtml(member.email || '')}')">
             <div class="member-avatar" id="memberAvatar-${escapeHtml(member.email || '')}" data-member-email="${escapeHtml(member.email || '')}">${avatarContent}</div>
             <div class="member-card-info">
-                <div class="member-name">${escapeHtml(member.name)}</div>
-                <div class="member-role ${isTreas ? 'treasurer' : ''}">${isTreas ? 'Treasurer' : 'Member'}</div>
+                <div class="member-name">${escapeHtml(member.name)} ${memberPositionBadge(member.position)}</div>
+                <div class="member-role">Group member</div>
             </div>
             <div class="member-stats">
                 <span class="member-stat"><span class="member-stat-label">Saved</span><strong>KES ${(memberStats.savings || 0).toLocaleString()}</strong></span>
@@ -2719,7 +2930,7 @@ function viewMemberProfile(name, email) {
     const member = allMembersData.find(m => m.name === name);
     if (!member) { showToast('Member not found', 'error'); return; }
     const stats = getUserStats(name);
-    const isTreas = name === TREASURER_NAME;
+    const position = MEMBER_POSITION_TITLES.includes(member.position) ? member.position : 'Member';
     const initial = getInitials(name);
     const cachedPhoto = email ? memberPhotoCache[email.toLowerCase()] : null;
     const avatarId = `profileViewAvatar-${email || name}`;
@@ -2736,9 +2947,9 @@ function viewMemberProfile(name, email) {
                 </div>
             </div>
             <div class="profile-body">
-                <div class="profile-name">${escapeHtml(name)}</div>
+                <div class="profile-name">${escapeHtml(name)} ${memberPositionBadge(position)}</div>
                 <div class="profile-email">${escapeHtml(email || 'No email')}</div>
-                <span class="profile-role ${isTreas ? 'treasurer' : ''}">${isTreas ? 'Treasurer' : 'Member'}</span>
+                <span class="profile-role">Group member</span>
                 <div class="profile-divider"></div>
                 <div class="profile-stats-grid">
                     <div class="profile-stat-card savings"><div class="stat-number">KES ${(stats.savings || 0).toLocaleString()}</div><div class="stat-label">Total Savings</div></div>
@@ -3029,7 +3240,9 @@ async function saveOwnProfile() {
     }
     if (button) button.disabled = true;
     try {
-        const result = await callAPI('updateOwnProfile', { displayName: name });
+        const result = DEVELOPMENT_PREVIEW_ENABLED
+            ? { success: true, displayName: name }
+            : await callAPI('updateOwnProfile', { displayName: name });
         if (!result.success) throw new Error(result.error || 'Could not update your profile.');
         currentUserDisplayName = result.displayName;
         const userLabel = document.getElementById('loggedInUser');
@@ -3057,44 +3270,116 @@ async function loadAdminMemberProfiles(containerId, data = null) {
             container.innerHTML = '<div class="empty-state">No approved members found.</div>';
             return;
         }
-        container.className = 'admin-phone-profiles';
-        container.innerHTML = result.profiles.map(profile => {
-            const selectedCountry = PHONE_COUNTRIES.find(country => country.code === profile.phoneCountry) || PHONE_COUNTRIES[0];
-            const nationalNumber = profile.phone && profile.phoneDialCode && profile.phone.startsWith(profile.phoneDialCode)
-                ? profile.phone.slice(profile.phoneDialCode.length)
-                : profile.phone.replace(/^\+/, '');
-            const countryOptions = PHONE_COUNTRIES.map(country =>
-                `<option value="${country.code}" data-dial-code="${country.dialCode}" ${selectedCountry.code === country.code ? 'selected' : ''}>${countryFlag(country.code)} ${country.name} (${country.dialCode})</option>`
-            ).join('');
-            return `<article class="admin-phone-row" data-email="${escapeHtml(profile.email)}" data-has-phone="${Boolean(profile.phone)}">
-                <div class="admin-phone-member">
-                    <strong>${escapeHtml(profile.name || 'Member')}</strong>
-                    <span>${escapeHtml(profile.email)}</span>
-                    ${profile.phone
-                        ? `<span class="admin-verified-pill">${countryFlag(profile.phoneCountry)} ${escapeHtml(profile.phone)} · Verified by admin</span>`
-                        : '<span class="profile-phone-pending">No phone number on file</span>'}
-                </div>
-                <details class="admin-phone-editor">
-                    <summary>${profile.phone ? 'Edit verified number' : 'Add phone number'}</summary>
-                    <div class="admin-phone-editor-fields">
-                    <label>
-                        <span>Country / calling code</span>
-                        <select class="admin-phone-country">${countryOptions}</select>
-                    </label>
-                    <label>
-                        <span>Phone number</span>
-                        <input class="admin-phone-input" type="tel" inputmode="tel" autocomplete="tel-national" value="${escapeHtml(nationalNumber)}" placeholder="712 345 678">
-                    </label>
-                    <button type="button" class="admin-phone-save" onclick="saveMemberPhone(this)">Save &amp; verify</button>
-                    <span class="admin-phone-status" role="status"></span>
-                    </div>
-                </details>
-            </article>`;
-        }).join('');
+        const directory = adminPhoneProfileDirectories.get(containerId) || { query: '', page: 0 };
+        directory.profiles = result.profiles;
+        directory.page = Math.min(directory.page, Math.max(0, Math.ceil(result.profiles.length / ADMIN_PHONE_PROFILE_PAGE_SIZE) - 1));
+        adminPhoneProfileDirectories.set(containerId, directory);
+        renderAdminMemberProfiles(containerId);
     } catch (error) {
         container.className = 'admin-phone-profiles';
         container.innerHTML = `<div class="empty-state">${escapeHtml(error.message || 'Could not load member contacts.')}</div>`;
     }
+}
+
+function renderAdminMemberProfiles(containerId) {
+    const container = document.getElementById(containerId);
+    const directory = adminPhoneProfileDirectories.get(containerId);
+    if (!container || !directory) return;
+    const developerDirectory = containerId === 'developerPhoneProfiles';
+    const profiles = directory.profiles.filter(profile => {
+        const query = directory.query.trim().toLocaleLowerCase();
+        return !query
+            || String(profile.name || '').toLocaleLowerCase().includes(query)
+            || String(profile.email || '').toLocaleLowerCase().includes(query);
+    });
+    const pageCount = Math.ceil(profiles.length / ADMIN_PHONE_PROFILE_PAGE_SIZE);
+    directory.page = Math.min(directory.page, Math.max(0, pageCount - 1));
+    const start = directory.page * ADMIN_PHONE_PROFILE_PAGE_SIZE;
+    const visibleProfiles = profiles.slice(start, start + ADMIN_PHONE_PROFILE_PAGE_SIZE);
+    container.className = `admin-phone-profiles${developerDirectory ? ' developer-phone-grid' : ''}`;
+    if (!profiles.length) {
+        container.innerHTML = `
+            <label class="phone-directory-search">
+                <span>Find a member</span>
+                <input type="search" class="phone-directory-search-input" value="${escapeHtml(directory.query)}" placeholder="Search name or email" aria-label="Search member contacts">
+            </label>
+            <div class="empty-state">${directory.query ? 'No matching members found.' : 'No approved members found.'}</div>
+        `;
+    } else {
+        container.innerHTML = `
+            <div class="phone-directory-toolbar">
+                <label class="phone-directory-search">
+                    <span>Find a member</span>
+                    <input type="search" class="phone-directory-search-input" value="${escapeHtml(directory.query)}" placeholder="Search name or email" aria-label="Search member contacts">
+                </label>
+                <span class="phone-directory-count" aria-live="polite">${profiles.length.toLocaleString()} ${profiles.length === 1 ? 'member' : 'members'}</span>
+            </div>
+            <div class="phone-directory-results">
+                ${visibleProfiles.map(profile => {
+                    const selectedCountry = PHONE_COUNTRIES.find(country => country.code === profile.phoneCountry) || PHONE_COUNTRIES[0];
+                    const nationalNumber = profile.phone && profile.phoneDialCode && profile.phone.startsWith(profile.phoneDialCode)
+                        ? profile.phone.slice(profile.phoneDialCode.length)
+                        : profile.phone.replace(/^\+/, '');
+                    const countryOptions = PHONE_COUNTRIES.map(country =>
+                        `<option value="${country.code}" data-dial-code="${country.dialCode}" ${selectedCountry.code === country.code ? 'selected' : ''}>${countryFlag(country.code)} ${country.name} (${country.dialCode})</option>`
+                    ).join('');
+                    return `<article class="admin-phone-row${developerDirectory ? ' developer-phone-card' : ''}" data-email="${escapeHtml(profile.email)}" data-has-phone="${Boolean(profile.phone)}">
+                        <div class="admin-phone-member">
+                            <div class="admin-phone-member-heading"><strong>${escapeHtml(profile.name || 'Member')}</strong>${profile.phone ? '<span class="developer-phone-status">Verified</span>' : '<span class="developer-phone-status developer-phone-status--missing">Missing</span>'}</div>
+                            <span>${escapeHtml(profile.email)}</span>
+                            ${profile.phone
+                                ? `<span class="admin-verified-pill">${countryFlag(profile.phoneCountry)} ${escapeHtml(profile.phone)} · Verified by admin</span>`
+                                : ''}
+                        </div>
+                        <details class="admin-phone-editor">
+                            <summary>${profile.phone ? 'Edit verified number' : 'Add phone number'}<span class="admin-phone-editor-chevron" aria-hidden="true"></span></summary>
+                            <div class="admin-phone-editor-fields">
+                                <label>
+                                    <span>Country / calling code</span>
+                                    <select class="admin-phone-country">${countryOptions}</select>
+                                </label>
+                                <label>
+                                    <span>Phone number</span>
+                                    <input class="admin-phone-input" type="tel" inputmode="tel" autocomplete="tel-national" value="${escapeHtml(nationalNumber)}" placeholder="712 345 678">
+                                </label>
+                                <button type="button" class="admin-phone-save" onclick="saveMemberPhone(this)">Save &amp; verify</button>
+                                <span class="admin-phone-status" role="status"></span>
+                            </div>
+                        </details>
+                    </article>`;
+                }).join('')}
+            </div>
+            ${pageCount > 1 ? `
+                <nav class="phone-directory-pagination" aria-label="Member contact pages">
+                    <button type="button" data-page="${directory.page - 1}" ${directory.page === 0 ? 'disabled' : ''}>Previous</button>
+                    <span>Page ${directory.page + 1} of ${pageCount}</span>
+                    <button type="button" data-page="${directory.page + 1}" ${directory.page >= pageCount - 1 ? 'disabled' : ''}>Next</button>
+                </nav>
+            ` : ''}
+        `;
+    }
+    container.querySelector('.phone-directory-search-input')?.addEventListener('input', event => {
+        directory.query = event.currentTarget.value;
+        directory.page = 0;
+        renderAdminMemberProfiles(containerId);
+        const search = container.querySelector('.phone-directory-search-input');
+        search?.focus();
+        search?.setSelectionRange(directory.query.length, directory.query.length);
+    });
+    container.querySelectorAll('.phone-directory-pagination button').forEach(button => {
+        button.addEventListener('click', () => {
+            directory.page = Number(button.dataset.page);
+            renderAdminMemberProfiles(containerId);
+        });
+    });
+    container.querySelectorAll('.admin-phone-editor').forEach(editor => {
+        editor.addEventListener('toggle', () => {
+            if (!editor.open) return;
+            container.querySelectorAll('.admin-phone-editor[open]').forEach(otherEditor => {
+                if (otherEditor !== editor) otherEditor.open = false;
+            });
+        });
+    });
 }
 
 async function saveMemberPhone(button) {
@@ -4694,6 +4979,8 @@ async function logout(event) {
     localStorage.removeItem('legacy_active_tab');
     if (refreshInterval) clearInterval(refreshInterval);
     currentUser = null; currentUserDisplayName = null; currentUserEmail = null; currentUserRole = null;
+    currentUserPosition = 'Member';
+    currentUserSalutation = '';
     currentUserPhone = ''; currentUserPhoneCountry = ''; currentUserPhoneDialCode = '';
     currentUserPhoneVerifiedAt = ''; currentUserPhoneVerifiedBy = '';
     allRecords = []; allMembers = []; pendingLoans = []; completedLoans = []; pendingTransactions = []; isLoading = false; dashboardLoaded = false;
@@ -4778,6 +5065,8 @@ const initializeApp = async () => {
         currentUserDisplayName = account.displayName || currentUser;
         currentUserEmail = account.email || currentUserEmail;
         currentUserRole = account.role || 'member';
+        currentUserPosition = MEMBER_POSITION_TITLES.includes(account.position) ? account.position : 'Member';
+        currentUserSalutation = validProfileSalutation(account.salutation);
         currentUserPhone = account.phone || '';
         currentUserPhoneCountry = account.phoneCountry || '';
         currentUserPhoneDialCode = account.phoneDialCode || '';
@@ -4829,7 +5118,8 @@ function initializeDevelopmentPreview() {
         { name: 'Alex Morgan', email: 'alex.morgan@example.test' },
         { name: 'Taylor Quinn', email: 'taylor.quinn@example.test' },
         { name: 'Jordan Lee', email: 'jordan.lee@example.test' },
-        { name: 'Casey Rivers', email: 'casey.rivers@example.test' }
+        { name: 'Casey Rivers', email: 'casey.rivers@example.test' },
+        { name: 'Sam Kiplagat', email: 'sam.kiplagat@example.test' }
     ];
     const daysAgo = days => {
         const date = new Date();
@@ -4840,10 +5130,17 @@ function initializeDevelopmentPreview() {
     currentUser = 'Alex Morgan';
     currentUserDisplayName = currentUser;
     currentUserEmail = 'alex.morgan@example.test';
-    currentUserRole = 'member';
+    const previewRole = new URLSearchParams(window.location.search).get('previewRole');
+    currentUserRole = previewRole === 'developer' ? 'developer' : 'member';
+    currentUserPosition = 'Chairman';
+    currentUserSalutation = 'Mr.';
     currentTab = 'transactions';
     allMembers = sampleMembers.map(member => member.name);
-    allMembersData = sampleMembers;
+    allMembersData = sampleMembers.map((member, index) => ({
+        ...member,
+        position: ['Chairman', 'Vice-Chairman', 'Treasurer', 'Secretary'][index] || 'Member',
+        salutation: index === 0 ? 'Mr.' : ''
+    }));
     allRecords = [
         { date: daysAgo(1), member: 'Alex Morgan', type: 'Savings', amount: 12000 },
         { date: daysAgo(2), member: 'Taylor Quinn', type: 'Loan Repayment', amount: 8500 },

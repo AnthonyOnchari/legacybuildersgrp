@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=169">
+    <link rel="stylesheet" href="style.css?v=171">
 </head>
 <body class="finance-ui app-loading">
 
@@ -553,9 +553,11 @@
             <div class="card developer-section developer-contacts-card">
                 <div class="portal-section-heading">
                     <div><span class="dashboard-eyebrow">MEMBER CONTACTS</span><h2>Verified phone numbers</h2><p>Add or update a member's phone. Numbers entered here are marked as verified by an administrator.</p></div>
-                    <span class="admin-verified-pill">Admin managed</span>
+                    <div class="developer-contacts-actions">
+                        <span class="admin-verified-pill">Admin managed</span>
+                        <button type="button" class="developer-contacts-open" aria-haspopup="dialog" aria-controls="developerContactsDialog" onclick="openDeveloperContactsDialog()">Manage contacts</button>
+                    </div>
                 </div>
-                <div id="developerPhoneProfiles" class="admin-phone-profiles loading-container"><div class="loading-spinner"></div><div>Loading member contacts...</div></div>
             </div>
             <div class="card developer-section developer-stats-card">
                 <div class="developer-section-heading"><div><span class="developer-portal-kicker">AT A GLANCE</span><h2>System statistics</h2></div></div>
@@ -563,7 +565,10 @@
             </div>
             <div class="card developer-section developer-approvals-card">
                 <div class="developer-section-heading"><div><span class="developer-portal-kicker">ACTION QUEUE</span><h2>Pending approvals</h2></div></div>
-                <div id="developerPendingApprovalsList" class="loading-container"><div class="loading-spinner"></div><div>Loading pending approvals...</div></div>
+                <div id="developerPendingApprovalsList" class="loading-container developer-approval-loading" role="status" aria-busy="true">
+                    <div class="loading-spinner" aria-hidden="true"></div>
+                    <div class="developer-approval-loading-copy"><strong>Loading pending approvals...</strong><span>Checking for items that need your attention</span></div>
+                </div>
             </div>
             <div class="card developer-section developer-users-card">
                 <div class="developer-section-heading"><div><span class="developer-portal-kicker">ACCESS CONTROL</span><h2>User management</h2></div></div>
@@ -594,15 +599,23 @@
             <div class="card developer-section developer-actions-card">
                 <div class="developer-section-heading"><div><span class="developer-portal-kicker">TOOLS</span><h2>Developer actions</h2></div></div>
                 <div class="developer-actions">
-                    <button class="dev-refresh-btn" onclick="refreshAllData()">Refresh data</button>
-                    <button class="dev-export-btn" onclick="exportSystemData()">Export data</button>
-                    <button class="dev-reload-btn" onclick="clearSystemCache()">Reload app</button>
+                    <button class="dev-refresh-btn" onclick="refreshAllData()"><span class="developer-tool-icon" aria-hidden="true">↻</span><span class="developer-tool-copy"><strong>Refresh data</strong><small>Update the portal information</small></span><span class="developer-tool-arrow" aria-hidden="true">›</span></button>
+                    <button class="dev-export-btn" onclick="exportSystemData()"><span class="developer-tool-icon" aria-hidden="true">↓</span><span class="developer-tool-copy"><strong>Export data</strong><small>Download a system data backup</small></span><span class="developer-tool-arrow" aria-hidden="true">›</span></button>
+                    <button class="dev-reload-btn" onclick="clearSystemCache()"><span class="developer-tool-icon" aria-hidden="true">⟳</span><span class="developer-tool-copy"><strong>Reload app</strong><small>Clear cached app files</small></span><span class="developer-tool-arrow" aria-hidden="true">›</span></button>
                 </div>
             </div>
         </div>
         </div>
     </div>
     </div>
+
+    <dialog id="developerContactsDialog" class="developer-contacts-dialog" aria-labelledby="developerContactsTitle">
+        <div class="developer-contacts-dialog-header">
+            <div><span class="dashboard-eyebrow">MEMBER CONTACTS</span><h2 id="developerContactsTitle">Verified phone numbers</h2><p>Search members and securely manage their verified phone numbers.</p></div>
+            <button type="button" class="developer-contacts-close" aria-label="Close member contacts" onclick="closeDeveloperContactsDialog()">Close</button>
+        </div>
+        <div id="developerPhoneProfiles" class="admin-phone-profiles loading-container"><div class="loading-spinner"></div><div>Loading member contacts...</div></div>
+    </dialog>
 
     <!-- TAB BAR -->
     <div class="tab-bar" id="tabBar" style="display: none;" aria-label="App navigation">
@@ -628,6 +641,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://accounts.google.com/gsi/client" defer></script>
     <script src="firebase-config.js?v=36"></script>
-    <script src="app.js?v=107"></script>
+    <script src="app.js?v=108"></script>
 </body>
 </html>
