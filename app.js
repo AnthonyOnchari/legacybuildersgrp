@@ -808,6 +808,15 @@ function openDeveloperContactsDialog() {
 
     developerContactsDialogOpener = document.activeElement;
     dialog.showModal();
+    if (!adminPhoneProfileDirectories.has('developerPhoneProfiles')) {
+        const previewProfiles = DEVELOPMENT_PREVIEW_ENABLED
+            ? {
+                success: true,
+                profiles: allMembersData.map(member => ({ email: member.email, name: member.name, phone: '' }))
+            }
+            : null;
+        loadAdminMemberProfiles('developerPhoneProfiles', previewProfiles);
+    }
     requestAnimationFrame(() => dialog.querySelector('.developer-contacts-close')?.focus());
 }
 
@@ -1111,16 +1120,14 @@ async function loadDeveloperPortal() {
                 loadSystemStats({ success: true, stats: res.stats }),
                 loadAllUsersFull('allUsersList', { success: true, users: res.users }),
                 loadDevPendingRegistrations({ success: true, registrations: res.registrations, joinRequests: res.joinRequests }),
-                loadDevAuditLog({ success: true, entries: res.entries }),
-                loadAdminMemberProfiles('developerPhoneProfiles', { success: true, profiles: res.profiles })
+                loadDevAuditLog({ success: true, entries: res.entries })
             ]);
         } catch (error) {
             [
                 'systemStats',
                 'allUsersList',
                 'devPendingRegistrations',
-                'devAuditLog',
-                'developerPhoneProfiles'
+                'devAuditLog'
             ].forEach(id => {
                 const container = document.getElementById(id);
                 if (container) showDeveloperLoadError(container, error, loadDeveloperPortal);
@@ -3276,8 +3283,15 @@ async function loadAdminMemberProfiles(containerId, data = null) {
         adminPhoneProfileDirectories.set(containerId, directory);
         renderAdminMemberProfiles(containerId);
     } catch (error) {
+        console.error('Could not load member contacts:', error);
         container.className = 'admin-phone-profiles';
-        container.innerHTML = `<div class="empty-state">${escapeHtml(error.message || 'Could not load member contacts.')}</div>`;
+        container.innerHTML = `
+            <div class="empty-state">Member contacts are temporarily unavailable. Please try again.</div>
+            <button type="button" class="developer-load-retry">Try again</button>
+        `;
+        container.querySelector('.developer-load-retry')?.addEventListener('click', () => {
+            loadAdminMemberProfiles(containerId);
+        });
     }
 }
 
