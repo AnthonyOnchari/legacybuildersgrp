@@ -17,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=184">
+    <link rel="stylesheet" href="style.css?v=190">
 </head>
 <body class="finance-ui app-loading">
 
@@ -331,7 +331,7 @@
                         <input type="date" id="loanRequestedDueDate">
                     </div>
                 </div>
-                <div id="approvalNotice" style="background:#E8EEFF; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">All other approved members must approve the request. 10% interest will be added; the treasurer confirms the activation date.</div>
+                <div id="approvalNotice" style="background:#E8EEFF; padding:10px; border-radius:14px; margin-bottom:14px; font-size:11px; display:none;">The 50% lending pool is shared by all borrowers. Every Board member except the borrower must approve. The Treasurer sets the final due date, unless the Treasurer borrowed, in which case the Chairman sets it. 10% interest applies.</div>
                 <div class="modal-buttons">
                     <button id="addBtn">Submit Transaction</button>
                     <button class="close-modal" onclick="closeAddTransactionModal()">Cancel</button>
@@ -404,17 +404,21 @@
             </header>
             <section class="loan-planning-grid" aria-label="Loan cost estimate">
                 <div class="loan-estimator-card">
-                    <div class="loan-planning-heading"><span class="loan-planning-icon" aria-hidden="true">KES</span><div><span class="section-kicker">COST ESTIMATOR</span><h2>Know the total first</h2></div></div>
-                    <p>Enter an example amount to see the current 10% interest estimate. Final terms are confirmed during group approval.</p>
-                    <label for="loanEstimatePrincipal">Example principal (KES)</label>
+                    <div class="loan-planning-heading"><span class="loan-planning-icon" aria-hidden="true">KES</span><div><h2>Cost estimator</h2></div></div>
+                    <p>Estimate the total at 10% interest.</p>
+                    <label for="loanEstimatePrincipal">Amount (KES)</label>
                     <input type="number" id="loanEstimatePrincipal" min="1" step="100" value="10000" inputmode="numeric" oninput="updateLoanEstimate()">
+                    <p id="loanEstimateLimit" class="loan-estimate-limit" aria-live="polite">Checking your loan limit…</p>
                     <div class="loan-estimate-breakdown">
                         <div><span>Principal</span><strong id="loanEstimatePrincipalDisplay">KES 10,000</strong></div>
                         <div><span>Estimated interest (10%)</span><strong id="loanEstimateInterest">KES 1,000</strong></div>
                         <div class="loan-estimate-total"><span>Estimated total due</span><strong id="loanEstimateTotal">KES 11,000</strong></div>
                     </div>
-                    <p class="loan-estimate-note">This is an estimate, not an approval or a recommendation to borrow.</p>
+                    <p class="loan-estimate-note">Estimate only. Final terms need group approval.</p>
                     <button type="button" class="loan-estimate-request" onclick="requestEstimatedLoan()">Request this amount</button>
+                    <div class="loans-history-launch">
+                        <button type="button" class="loans-history-open" onclick="openLoanRequestHistoryModal()" aria-haspopup="dialog">View loan history</button>
+                    </div>
                 </div>
             </section>
             <div class="loans-sections-grid">
@@ -435,10 +439,6 @@
                     <div id="completedLoans" class="loading-container"><div class="loading-spinner"></div><div>Loading…</div></div>
                 </section>
             </div>
-            <section class="card loans-section loans-request-history">
-                <div class="loans-section-heading"><div><span class="section-kicker">A SHARED RECORD</span><h2>Loan request history</h2><p>Follow every request, approval and decision reason.</p></div></div>
-                <div id="loanRequestHistory" class="loan-history-list"><div class="loading-container"><div class="loading-spinner"></div><div>Loading request history…</div></div></div>
-            </section>
         </div>
 
         <!-- Meetings Panel -->
@@ -692,6 +692,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://accounts.google.com/gsi/client" defer></script>
     <script src="firebase-config.js?v=37"></script>
-    <script src="app.js?v=124"></script>
+    <script src="app.js?v=127"></script>
 </body>
 </html>

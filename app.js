@@ -1980,7 +1980,7 @@ async function loadAllData(silent = false, skipBalanceUI = false) {
                 activeLoans = dash.activeLoans || [];
                 if (!skipBalanceUI) renderActiveLoans();
             }
-            if ((isTreasurer() || hasAdminPortalAccess()) && dash.loansAwaitingDueDate !== undefined) {
+            if (dash.loansAwaitingDueDate !== undefined) {
                 loansAwaitingDueDate = dash.loansAwaitingDueDate || [];
                 if (!skipBalanceUI) renderLoansAwaitingDueDate();
             }
@@ -2003,6 +2003,7 @@ async function loadAllData(silent = false, skipBalanceUI = false) {
 }
 
 let isLoansLoading = false;
+let loanCapacity = null;
 function updateLoanEstimate() {
     const input = document.getElementById('loanEstimatePrincipal');
     const principal = Math.max(0, Math.round(Number(input?.value) || 0));
@@ -2014,11 +2015,23 @@ function updateLoanEstimate() {
     if (principalEl) principalEl.textContent = formatKes(principal);
     if (interestEl) interestEl.textContent = formatKes(interest);
     if (totalEl) totalEl.textContent = formatKes(principal + interest);
+    const limitNote = document.getElementById('loanEstimateLimit');
+    if (input && loanCapacity) {
+        input.max = String(Math.floor(loanCapacity.requestLimit || 0));
+        if (limitNote) {
+            const limit = Math.floor(loanCapacity.requestLimit || 0);
+            limitNote.textContent = limit > 0
+                ? `Available in shared 50% pool: ${formatKes(limit)}.`
+                : 'No borrowing capacity is currently available.';
+        }
+    }
 }
 
 async function loadLoansDashboard() {
     if (isLoansLoading || !currentUser) return;
     if (DEVELOPMENT_PREVIEW_ENABLED) {
+        loanCapacity = null;
+        updateLoanEstimate();
         pendingLoans = [];
         completedLoans = [];
         activeLoans = [];
@@ -2035,6 +2048,8 @@ async function loadLoansDashboard() {
     try {
         const result = await callAPI('getLoansDashboard');
         if (!result.success) throw new Error(result.error || 'Could not load loan information.');
+        loanCapacity = result.loanCapacity || null;
+        updateLoanEstimate();
         allMembers = result.members || [];
         const total = allMembers.length || 1;
         const loans = result.loans || [];
@@ -2117,6 +2132,36 @@ function renderLoanRequestHistory() {
             ${request.status === 'cancelled' ? '<p class="loan-history-votes">This request was cancelled.</p>' : ''}
         </article>`;
     }).join('');
+}
+
+function openLoanRequestHistoryModal() {
+    document.querySelector('.loan-request-history-modal')?.remove();
+    const modal = document.createElement('div');
+    modal.className = 'history-modal loan-request-history-modal';
+    modal.setAttribute('role', 'presentation');
+    modal.innerHTML = `
+        <section class="history-modal-content loan-request-history-content" role="dialog" aria-modal="true" aria-labelledby="loanRequestHistoryTitle" tabindex="-1">
+            <div class="history-modal-header">
+                <div>
+                    <span class="history-modal-kicker">GROUP LOANS</span>
+                    <h3 id="loanRequestHistoryTitle">Loan request history</h3>
+                    <p>Requests, approvals and decision reasons.</p>
+                </div>
+                <button type="button" class="close-history-btn" aria-label="Close loan request history" onclick="this.closest('.loan-request-history-modal').remove()">×</button>
+            </div>
+            <div class="history-modal-body loan-request-history-body">
+                <div id="loanRequestHistory" class="loan-history-list"><div class="loading-container"><div class="loading-spinner"></div><div>Loading request history…</div></div></div>
+            </div>
+        </section>`;
+    modal.addEventListener('click', event => {
+        if (event.target === modal) modal.remove();
+    });
+    modal.addEventListener('keydown', event => {
+        if (event.key === 'Escape') modal.remove();
+    });
+    document.body.appendChild(modal);
+    renderLoanRequestHistory();
+    modal.querySelector('.loan-request-history-content')?.focus({ preventScroll: true });
 }
 
 // ============================================================
@@ -2344,14 +2389,17 @@ function renderPendingLoans() {
         const alreadyApproved = loan.viewerHasApproved !== undefined
             ? Boolean(loan.viewerHasApproved)
             : approvals.includes(currentUser);
-        const showButtons = !isRequester && !alreadyApproved;
+        const eligibleApprover = loan.viewerCanApprove !== undefined
+            ? Boolean(loan.viewerCanApprove)
+            : !isRequester && !alreadyApproved;
+        const showButtons = !isRequester && !alreadyApproved && eligibleApprover;
         const totalNeeded = Math.max(Number(loan.approvalsRequired) || (allMembers.length - 1), 1);
         const percent = totalNeeded > 0 ? (approvals.length / totalNeeded) * 100 : 100;
         return `<div class="loan-item ${isRequester ? 'own-loan' : ''}">
             <div><strong>${escapeHtml(loan.member)}</strong> requested <strong>KES ${(loan.principal || 0).toLocaleString('en-KE')}</strong> + 10% = <strong>KES ${(loan.totalDue || 0).toLocaleString('en-KE')}</strong>${isRequester ? ' (Your request)' : (alreadyApproved ? ' (You approved)' : '')}</div>
             <div style="font-size:12px;">${escapeHtml(loan.message || '')}</div>
             ${loan.requestedDueDate ? `<div style="font-size:11px; margin-top:5px;">Requested repayment date: ${escapeHtml(loan.requestedDueDate)}</div>` : ''}
-            <div style="font-size:11px; margin-top:5px;">Approvals: ${approvals.length}/${totalNeeded}${isRequester ? ' (you cannot approve your own request)' : ''}</div>
+            <div style="font-size:11px; margin-top:5px;">Board approvals: ${approvals.length}/${totalNeeded}${isRequester ? ' (you cannot approve your own request)' : ''}</div>
             <div class="progress-bar"><div class="progress-fill" style="width: ${Math.min(percent, 100)}%;"></div></div>
             ${showButtons ? `<div style="margin-top:8px; display:flex; gap:8px;"><button class="approve-btn" onclick="approveLoan('${loan.id}')">Approve request</button><button class="reject-btn" onclick="rejectLoan('${loan.id}')">Decline with reason</button></div>` : ''}
             ${isRequester && loan.status === 'pending' ? `<div style="margin-top:8px;"><button class="cancel-btn" onclick="cancelLoanRequest('${loan.id}')"> Cancel Request</button></div>` : ''}
@@ -2399,10 +2447,6 @@ function renderLoansAwaitingDueDate() {
     const container = document.getElementById('awaitingDueDateList');
     const card = document.getElementById('awaitingDueDateCard');
     if (!container) return;
-    if (!isTreasurer() && !hasAdminPortalAccess()) {
-        if (card) card.hidden = true;
-        return;
-    }
     if (card) {
         card.hidden = loansAwaitingDueDate.length === 0;
         card.style.display = loansAwaitingDueDate.length ? 'block' : 'none';
@@ -2532,6 +2576,14 @@ function openAddTransactionModal(type) {
     document.getElementById('addTransactionTitle').textContent = 
         type === 'Savings' ? 'New Deposit' : type === 'Loan Taken' ? 'Request a Loan' : 'Repay a Loan';
     toggleApprovalNotice();
+    const amountInput = document.getElementById('amount');
+    const amountHint = document.getElementById('amountHint');
+    if (type === 'Loan Taken' && loanCapacity) {
+        amountInput.max = String(Math.floor(loanCapacity.requestLimit || 0));
+        if (amountHint) amountHint.textContent = `Maximum available now: KES ${Math.floor(loanCapacity.requestLimit || 0).toLocaleString('en-KE')}. 10% interest is added.`;
+    } else if (amountInput) {
+        amountInput.removeAttribute('max');
+    }
     if (!document.getElementById('date').value) {
         document.getElementById('date').value = getLocalDateInputValue();
     }
@@ -2639,13 +2691,6 @@ async function addRecord() {
     const orig = btn.innerHTML;
     showButtonLoading(btn, 'Processing...');
     if (type === 'Loan Taken') {
-        const savingsRes = await callAPI('getSummary');
-        const currentSavings = savingsRes.success ? (savingsRes.savings || 0) : 0;
-        if (amount > currentSavings) {
-            showToast(`Cannot borrow KES ${amount.toLocaleString()}. Available: KES ${currentSavings.toLocaleString()}`, 'error');
-            hideButtonLoading(btn, orig);
-            return;
-        }
         const res = await callAPI('submitLoan', { date, member, amount, message: message.trim(), requestedDueDate, notes: '', requestedBy: currentUser });
         if (res.success) {
             const approvalsRequired = Number.isFinite(Number(res.approvalsRequired))
