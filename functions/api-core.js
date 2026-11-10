@@ -1001,14 +1001,14 @@ async function handleAction(action, params, user) {
             if (["getDeveloperAuditLog", "getDeveloperPortalData", "getSystemStats", "getSubscriptions"].includes(action)) requireDeveloper(user);
             if (action === "getAuditLog") requireAdmin(user);
             if (action === "getPendingRegistrations") {
-                const [users, joinRequests] = await Promise.all([
-                    rows("users"),
-                    rows("registrationRequests")
+                const [usersSnapshot, joinRequestsSnapshot] = await Promise.all([
+                    db.collection("users").where("status", "==", "pending").get(),
+                    db.collection("registrationRequests").where("status", "==", "pending").get()
                 ]);
                 return {
                     success: true,
-                    registrations: users.filter((item) => item.status === "pending").map(publicUser),
-                    joinRequests: joinRequests.filter((item) => item.status === "pending")
+                    registrations: usersSnapshot.docs.map((doc) => publicUser(doc.data())),
+                    joinRequests: joinRequestsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
                 };
             }
             if (action === "getDeveloperPortalData") {
@@ -1560,15 +1560,16 @@ async function handleApiRequest(req, res) {
         const rawMessage = error && error.message ? error.message : "Unexpected Firebase API error";
         const quotaExceeded = error && (error.code === 8 || error.code === "8" || error.code === "RESOURCE_EXHAUSTED")
             || /RESOURCE_EXHAUSTED|quota exceeded/i.test(rawMessage);
-        const message = quotaExceeded
-            ? "The database read quota is exhausted. Please try again after it resets, or ask the site administrator to check Firebase/Google Cloud billing and quota."
+        const backendFailure = quotaExceeded
+            || rawMessage.startsWith("Firebase Admin")
+            || (error && (typeof error.code === "number"
+                || /^(firestore\/|grpc\/|UNAVAILABLE$|DEADLINE_EXCEEDED$|INTERNAL$)/i.test(String(error.code))));
+        const message = backendFailure
+            ? "This information is temporarily unavailable. Please try again later."
             : rawMessage;
-        if (message.startsWith("Firebase Admin")) {
-            return sendJson(res, 500, { success: false, error: message });
-        }
         const unauthenticated = message.includes("Authentication") || message.includes("verified Google");
         if (!unauthenticated) console.error("Firebase API request failed:", error);
-        return sendJson(res, quotaExceeded ? 503 : unauthenticated ? 401 : 200, { success: false, error: message });
+        return sendJson(res, backendFailure ? 503 : unauthenticated ? 401 : 200, { success: false, error: message });
     }
 }
 

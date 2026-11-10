@@ -688,7 +688,7 @@ function startBackgroundRefresh() {
     refreshInterval = setInterval(() => {
         if (!currentUser || document.hidden || Date.now() < nextGroupMessageRetryAt) return;
         const chatOpen = document.getElementById('groupChatModal')?.style.display !== 'none';
-        if (currentTab === 'meetings' || chatOpen) loadGroupMessages();
+        if (chatOpen) loadGroupMessages();
     }, 60000);
 }
 
@@ -1506,7 +1506,7 @@ async function loadAllData(silent = false, skipBalanceUI = false) {
             updatePendingCount();
         }
     } catch (e) {
-        if (!silent) showToast('Error loading data', 'error');
+        if (!silent) showToast('Could not load data right now. Please try again later.', 'error');
         console.error(e);
     } finally {
         isLoading = false;
