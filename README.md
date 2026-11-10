@@ -17,6 +17,10 @@ The web app config is in `firebase-config.js`. Its API key identifies the public
 
 The Vercel API allows `https://legacybuildersgroup.vercel.app` and localhost on port 3000 by default. Set the non-secret `ALLOWED_ORIGINS` environment variable in Vercel if the site uses another origin.
 
+## Company files
+
+Administrators and the treasurer can upload PDF, Office, text, CSV, JPEG, and PNG files up to 20 MB from Connect â†’ Company files. Files stay private in Firebase Storage. Approved members request a six-digit access code at their registered email; each code expires after 10 minutes, and the download links expire after five minutes. Configure `RESEND_API_KEY` and `RESEND_FROM_EMAIL` in Vercel, using a sender address verified with Resend, before enabling email codes. Never put the Resend API key in frontend configuration or commit it to the repository. Upload authorization is role-checked by the API; storage rules continue to deny direct browser access.
+
 ## Local dashboard preview
 
 Open `http://localhost:3000/?preview=1` on a local static server to view the dashboard without signing in. This preview is enabled only on `localhost` or `127.0.0.1`, uses fictional sample data, and disables API calls; it does not read or modify Firebase data.

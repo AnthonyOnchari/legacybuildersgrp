@@ -10,6 +10,16 @@ let storageBucket;
 let pushSubscriptionsCache = null;
 let pushSubscriptionsCacheExpiresAt = 0;
 const DEVELOPER_EMAILS = new Set(["info.onchari@gmail.com"]);
+const BANK_INTEREST_EARNED_DEFAULT = 252.90;
+const COMPANY_FILE_MAX_BYTES = 20 * 1024 * 1024;
+const COMPANY_FILE_MIME_TYPES = new Set([
+    "application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "text/plain", "text/csv", "image/jpeg", "image/png"
+]);
+const COMPANY_FILE_OTP_COOLDOWN_MS = 60 * 1000;
+const COMPANY_FILE_OTP_LIFETIME_MS = 10 * 60 * 1000;
 const LOAN_INTEREST_RATE = 0.1;
 const TREASURER_DEFAULT = "Mrs. Kithinji";
 const POSITION_TITLES = new Set(["Chairman", "Vice-Chairman", "Treasurer", "Secretary", "Member"]);
@@ -32,6 +42,34 @@ const rows = async (collection) => {
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 };
 const recordRef = (collection, id) => db.collection(collection).doc(safeDocId(id));
+const cleanCompanyFileName = (value) => String(value || "").replace(/[\\/\r\n\"]+/g, "_").trim().slice(0, 120);
+const companyFileOtpHash = (challengeId, code) => crypto
+    .createHmac("sha256", process.env.RESEND_API_KEY || "")
+    .update(`${challengeId}:${code}`)
+    .digest("hex");
+async function sendCompanyFileOtp(email, code) {
+    const apiKey = process.env.RESEND_API_KEY;
+    const from = process.env.RESEND_FROM_EMAIL;
+    if (!apiKey || !from) {
+        console.error("Company file email delivery is not configured.");
+        throw new Error("Email access codes are not available yet. Contact the administrator.");
+    }
+    const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+            from,
+            to: [email],
+            subject: "Your NBFA Group company files access code",
+            html: `<div style="font-family:Arial,sans-serif;color:#18392f"><h2>Company files access</h2><p>Your one-time code is:</p><p style="font-size:28px;font-weight:700;letter-spacing:8px">${code}</p><p>This code expires in 10 minutes. If you did not request it, ignore this email.</p></div>`
+        })
+    });
+    if (!response.ok) {
+        const details = await response.text();
+        console.error("Resend company-file OTP delivery failed:", response.status, details.slice(0, 500));
+        throw new Error("The access code email could not be sent. Try again later or contact the administrator.");
+    }
+}
 const publicUser = (user) => ({
     email: user.email || "",
     name: user.name || "",
@@ -316,7 +354,16 @@ async function getDashboard(user, params) {
     const transactionApprover = adminAccess;
     if (transactionApprover) collections.push("pendingTransactions", "pendingEdits");
     if (adminAccess) collections.push("loansAwaitingDueDate");
-    const values = await Promise.all(collections.map(rows));
+    const [values, bankInterestSnapshot] = await Promise.all([
+        Promise.all(collections.map(rows)),
+        recordRef("settings", "bankInterest").get()
+    ]);
+    const configuredBankInterest = bankInterestSnapshot.exists
+        ? Number(bankInterestSnapshot.data().amount)
+        : BANK_INTEREST_EARNED_DEFAULT;
+    const bankInterestEarned = Number.isFinite(configuredBankInterest) && configuredBankInterest >= 0
+        ? configuredBankInterest
+        : BANK_INTEREST_EARNED_DEFAULT;
     const data = Object.fromEntries(collections.map((name, index) => [name, values[index]]));
     const allTransactions = data.transactions || [];
     const summary = summarizeData(allTransactions, data.activeLoans || []);
@@ -400,6 +447,7 @@ async function getDashboard(user, params) {
         pendingTransactions: transactionApprover ? (data.pendingTransactions || []) : [],
         pendingEditsMap: transactionApprover ? pendingEditsMap : {},
         activeLoans: params.includeLoanTracking === "false" ? [] : activeLoans,
+        bankInterestEarned,
         treasurerName
     };
     if (adminAccess && params.includeLoanTracking !== "false") {
@@ -703,6 +751,173 @@ async function handleAction(action, params, user) {
         }
         case "getDashboardData":
             return getDashboard(user, params);
+        case "setBankInterestEarned": {
+            await requireAdmin(user);
+            const amount = Number(params.amount);
+            if (params.amount === undefined || params.amount === null || String(params.amount).trim() === ""
+                || !Number.isFinite(amount) || amount < 0 || amount > 100000000) {
+                throw new Error("Enter a valid bank interest amount.");
+            }
+            const roundedAmount = Math.round(amount * 100) / 100;
+            await recordRef("settings", "bankInterest").set({
+                amount: roundedAmount,
+                updatedAt: nowIso(),
+                updatedBy: user.email
+            }, { merge: true });
+            await audit(name, "Updated actual bank interest credited", `KES ${roundedAmount.toFixed(2)}`);
+            return { success: true, amount: roundedAmount };
+        }
+        case "createCompanyFileUpload": {
+            await requireAdmin(user);
+            const fileName = cleanCompanyFileName(params.fileName);
+            const contentType = String(params.contentType || "").toLowerCase();
+            const size = Number(params.size);
+            if (!fileName || !COMPANY_FILE_MIME_TYPES.has(contentType)) {
+                throw new Error("Choose a supported company file (PDF, Office document, text, CSV, JPEG, or PNG).");
+            }
+            if (!Number.isInteger(size) || size < 1 || size > COMPANY_FILE_MAX_BYTES) {
+                throw new Error("Company files must be 20 MB or smaller.");
+            }
+            const id = crypto.randomUUID();
+            const storagePath = `company-files/${id}`;
+            const expiresAt = Date.now() + 10 * 60 * 1000;
+            const [uploadUrl] = await storageBucket.file(storagePath).getSignedUrl({
+                version: "v4", action: "write", expires: expiresAt, contentType
+            });
+            await recordRef("companyFileUploads", id).create({
+                id, email: user.email, fileName, contentType, size, storagePath,
+                createdAt: nowIso(), expiresAt, status: "uploading"
+            });
+            return { success: true, fileId: id, uploadUrl, contentType };
+        }
+        case "completeCompanyFileUpload": {
+            await requireAdmin(user);
+            const id = String(params.fileId || "");
+            if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Choose a valid company file upload.");
+            const intentRef = recordRef("companyFileUploads", id);
+            const intentSnapshot = await intentRef.get();
+            if (!intentSnapshot.exists) throw new Error("Company file upload has expired. Start again.");
+            const intent = intentSnapshot.data();
+            if (emailKey(intent.email) !== user.email || Date.now() > Number(intent.expiresAt)) {
+                throw new Error("Company file upload has expired. Start again.");
+            }
+            const object = storageBucket.file(intent.storagePath);
+            const [metadata] = await object.getMetadata();
+            if (Number(metadata.size) !== Number(intent.size) || String(metadata.contentType || "").toLowerCase() !== intent.contentType) {
+                await object.delete({ ignoreNotFound: true });
+                await intentRef.delete();
+                throw new Error("Uploaded file details did not match. Please upload the file again.");
+            }
+            const file = {
+                id,
+                fileName: intent.fileName,
+                contentType: intent.contentType,
+                size: Number(intent.size),
+                storagePath: intent.storagePath,
+                createdAt: nowIso(),
+                uploadedBy: user.email
+            };
+            await recordRef("companyFiles", id).create(file);
+            await intentRef.delete();
+            await audit(name, "Uploaded a company file", intent.fileName);
+            return { success: true, file: { id, fileName: file.fileName, size: file.size, createdAt: file.createdAt } };
+        }
+        case "deleteCompanyFile": {
+            await requireAdmin(user);
+            const id = String(params.fileId || "");
+            if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Choose a valid company file.");
+            const ref = recordRef("companyFiles", id);
+            const snapshot = await ref.get();
+            if (!snapshot.exists) throw new Error("Company file not found.");
+            const file = snapshot.data();
+            await storageBucket.file(file.storagePath).delete({ ignoreNotFound: true });
+            await ref.delete();
+            await audit(name, "Deleted a company file", file.fileName || id);
+            return { success: true, fileId: id };
+        }
+        case "requestCompanyFilesOtp": {
+            const email = emailKey(user.email);
+            const now = Date.now();
+            const today = new Date(now).toISOString().slice(0, 10);
+            const rateRef = recordRef("companyFileOtpRateLimits", email);
+            await db.runTransaction(async (transaction) => {
+                const snapshot = await transaction.get(rateRef);
+                const rate = snapshot.exists ? snapshot.data() : {};
+                const lastSentAt = Number(rate.lastSentAt || 0);
+                if (now - lastSentAt < COMPANY_FILE_OTP_COOLDOWN_MS) {
+                    throw new Error("Wait one minute before requesting another company files code.");
+                }
+                const requestsToday = rate.day === today ? Number(rate.requestsToday) || 0 : 0;
+                if (requestsToday >= 10) throw new Error("You have reached today's company files code limit. Try again tomorrow.");
+                transaction.set(rateRef, { email, lastSentAt: now, day: today, requestsToday: requestsToday + 1 }, { merge: true });
+            });
+            const code = String(crypto.randomInt(100000, 1000000));
+            const challengeId = crypto.randomUUID();
+            const previousChallenges = await db.collection("companyFileOtpChallenges").where("email", "==", email).get();
+            if (!previousChallenges.empty) {
+                const batch = db.batch();
+                previousChallenges.docs.forEach((doc) => batch.delete(doc.ref));
+                await batch.commit();
+            }
+            const challengeRef = recordRef("companyFileOtpChallenges", challengeId);
+            await challengeRef.create({
+                email,
+                codeHash: companyFileOtpHash(challengeId, code),
+                attempts: 0,
+                createdAt: now,
+                expiresAt: now + COMPANY_FILE_OTP_LIFETIME_MS
+            });
+            try {
+                await sendCompanyFileOtp(email, code);
+            } catch (error) {
+                await challengeRef.delete();
+                throw error;
+            }
+            return { success: true, challengeId, emailHint: `${email.slice(0, 2)}•••${email.includes("@") ? email.slice(email.indexOf("@")) : ""}` };
+        }
+        case "verifyCompanyFilesOtp": {
+            const challengeId = String(params.challengeId || "");
+            const code = String(params.code || "").trim();
+            if (!/^[0-9a-f-]{36}$/i.test(challengeId) || !/^\d{6}$/.test(code)) {
+                throw new Error("Enter the six-digit code from your email.");
+            }
+            const challengeRef = recordRef("companyFileOtpChallenges", challengeId);
+            const result = await db.runTransaction(async (transaction) => {
+                const snapshot = await transaction.get(challengeRef);
+                if (!snapshot.exists) return { error: "This code is invalid or has expired. Request a new code." };
+                const challenge = snapshot.data();
+                if (emailKey(challenge.email) !== user.email || challenge.usedAt || Date.now() > Number(challenge.expiresAt)) {
+                    return { error: "This code is invalid or has expired. Request a new code." };
+                }
+                if (Number(challenge.attempts) >= 5) return { error: "Too many attempts. Request a new code." };
+                const expected = Buffer.from(String(challenge.codeHash || ""), "hex");
+                const actual = Buffer.from(companyFileOtpHash(challengeId, code), "hex");
+                const matches = expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+                if (!matches) {
+                    transaction.update(challengeRef, { attempts: Number(challenge.attempts || 0) + 1 });
+                    return { error: "That code is incorrect. Try again." };
+                }
+                transaction.delete(challengeRef);
+                return { success: true };
+            });
+            if (result.error) throw new Error(result.error);
+            const snapshot = await db.collection("companyFiles").orderBy("createdAt", "desc").limit(100).get();
+            const files = await Promise.all(snapshot.docs.map(async (doc) => {
+                const file = doc.data();
+                const [url] = await storageBucket.file(file.storagePath).getSignedUrl({
+                    version: "v4", action: "read", expires: Date.now() + 5 * 60 * 1000
+                });
+                return {
+                    id: doc.id,
+                    fileName: file.fileName || "Company file",
+                    contentType: file.contentType || "application/octet-stream",
+                    size: Number(file.size) || 0,
+                    createdAt: file.createdAt || "",
+                    url
+                };
+            }));
+            return { success: true, files, expiresInSeconds: 300 };
+        }
         case "get":
             return { success: true, records: (await rows("transactions")) };
         case "getSummary":

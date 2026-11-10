@@ -3,7 +3,7 @@
 // ============================================================
 let TREASURER_NAME = "Mrs. Kithinji";
 const DEVELOPER_EMAIL = 'info.onchari@gmail.com';
-const BANK_INTEREST_EARNED = 252.90;
+let BANK_INTEREST_EARNED = 252.90;
 const BANK_INTEREST_RATE_PERCENT = 4;
 const BANK_INTEREST_MINIMUM_BALANCE = 50000;
 const MEMBER_POSITION_TITLES = ['Chairman', 'Vice-Chairman', 'Treasurer', 'Secretary', 'Member'];
@@ -88,6 +88,38 @@ function renderBankInterestEarned() {
     const terms = document.getElementById('bankInterestTerms');
     if (terms) {
         terms.textContent = `Actual credit · daily cleared balances from KES ${BANK_INTEREST_MINIMUM_BALANCE.toLocaleString('en-KE')}, compounded monthly.`;
+    }
+    const editor = document.getElementById('bankInterestEditor');
+    const input = document.getElementById('bankInterestInput');
+    if (editor) editor.hidden = DEVELOPMENT_PREVIEW_ENABLED || !hasAdminPortalAccess();
+    if (input && document.activeElement !== input) input.value = BANK_INTEREST_EARNED.toFixed(2);
+}
+
+async function saveBankInterestEarned(event) {
+    event?.preventDefault();
+    if (!hasAdminPortalAccess() || DEVELOPMENT_PREVIEW_ENABLED) {
+        showToast('Only an administrator or treasurer can update bank interest.', 'error');
+        return;
+    }
+    const input = document.getElementById('bankInterestInput');
+    const button = document.getElementById('bankInterestSaveButton');
+    const amount = Number(input?.value);
+    if (!Number.isFinite(amount) || amount < 0 || amount > 100000000) {
+        showToast('Enter a valid bank interest amount.', 'error');
+        input?.focus();
+        return;
+    }
+    if (button) showButtonLoading(button, 'Saving...');
+    try {
+        const res = await callAPI('setBankInterestEarned', { amount: Math.round(amount * 100) / 100 });
+        if (!res.success) throw new Error(res.error || 'Could not save bank interest.');
+        BANK_INTEREST_EARNED = Number(res.amount);
+        renderBankInterestEarned();
+        showToast('Bank interest amount updated.', 'success');
+    } catch (error) {
+        showToast(error.message || 'Could not save bank interest.', 'error');
+    } finally {
+        if (button) hideButtonLoading(button, 'Save amount');
     }
 }
 
@@ -1906,6 +1938,10 @@ async function loadAllData(silent = false, skipBalanceUI = false) {
             includeLoanTracking: silent ? 'false' : 'true'
         });
         if (!dash.success) throw new Error(dash.error || 'Failed to load dashboard data');
+        if (Number.isFinite(Number(dash.bankInterestEarned)) && Number(dash.bankInterestEarned) >= 0) {
+            BANK_INTEREST_EARNED = Number(dash.bankInterestEarned);
+            renderBankInterestEarned();
+        }
 
         dashboardLoaded = true;
         allRecords = dash.records || [];
@@ -2824,6 +2860,147 @@ async function submitLoanDueDate(loanId) {
 // ============================================================
 // MEETING FUNCTIONS
 // ============================================================
+let companyFilesChallengeId = '';
+let companyFilesAccessList = [];
+
+function openCompanyFilesModal() {
+    const modal = document.getElementById('companyFilesModal');
+    if (!modal) return;
+    modal.style.display = 'grid';
+    modal.setAttribute('aria-hidden', 'false');
+    document.getElementById('companyFileUploadForm').hidden = !hasAdminPortalAccess();
+    document.getElementById('companyFilesOtpForm').hidden = true;
+    document.getElementById('companyFilesStatus').textContent = '';
+    document.getElementById('companyFilesList').innerHTML = '<div class="empty-state">Files are protected. Request an email code to view them.</div>';
+    companyFilesChallengeId = '';
+    companyFilesAccessList = [];
+    requestAnimationFrame(() => modal.querySelector('.company-files-close')?.focus());
+}
+
+function closeCompanyFilesModal() {
+    const modal = document.getElementById('companyFilesModal');
+    if (!modal) return;
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    companyFilesChallengeId = '';
+    companyFilesAccessList = [];
+    document.getElementById('companyFilesOtpInput').value = '';
+    document.getElementById('companyFilesList').innerHTML = '<div class="empty-state">Files are protected. Request an email code to view them.</div>';
+}
+
+async function requestCompanyFilesCode() {
+    const button = document.getElementById('companyFilesRequestCode');
+    const status = document.getElementById('companyFilesStatus');
+    showButtonLoading(button, 'Sending code...');
+    try {
+        const res = await callAPI('requestCompanyFilesOtp');
+        if (!res.success) throw new Error(res.error || 'Could not send an access code.');
+        companyFilesChallengeId = res.challengeId;
+        document.getElementById('companyFilesEmailHint').textContent = res.emailHint ? `· ${res.emailHint}` : '';
+        document.getElementById('companyFilesOtpForm').hidden = false;
+        status.textContent = 'A six-digit code was sent to your registered email. It expires in 10 minutes.';
+        document.getElementById('companyFilesOtpInput').focus();
+    } catch (error) {
+        status.textContent = error.message || 'Could not send an access code.';
+    } finally {
+        hideButtonLoading(button, 'Email me an access code');
+    }
+}
+
+async function verifyCompanyFilesCode(event) {
+    event.preventDefault();
+    const button = document.getElementById('companyFilesVerifyCode');
+    const status = document.getElementById('companyFilesStatus');
+    const code = document.getElementById('companyFilesOtpInput').value.trim();
+    showButtonLoading(button, 'Checking...');
+    try {
+        const res = await callAPI('verifyCompanyFilesOtp', { challengeId: companyFilesChallengeId, code });
+        if (!res.success) throw new Error(res.error || 'Could not verify the access code.');
+        companyFilesAccessList = Array.isArray(res.files) ? res.files : [];
+        status.textContent = 'Code verified. Secure file links expire in five minutes.';
+        renderCompanyFilesList();
+    } catch (error) {
+        status.textContent = error.message || 'Could not verify the access code.';
+    } finally {
+        hideButtonLoading(button, 'View files');
+    }
+}
+
+function renderCompanyFilesList() {
+    const container = document.getElementById('companyFilesList');
+    if (!container) return;
+    if (!companyFilesAccessList.length) {
+        container.innerHTML = '<div class="empty-state">No company files have been uploaded yet.</div>';
+        return;
+    }
+    container.innerHTML = companyFilesAccessList.map(file => {
+        const size = Number(file.size) < 1024 * 1024
+            ? `${Math.max(1, Math.round(Number(file.size) / 1024))} KB`
+            : `${(Number(file.size) / (1024 * 1024)).toFixed(1)} MB`;
+        const date = file.createdAt ? new Date(file.createdAt).toLocaleDateString() : '';
+        return `<article class="company-file-row">
+            <span class="company-file-icon" aria-hidden="true">FILE</span>
+            <div class="company-file-info"><strong>${escapeHtml(file.fileName)}</strong><span>${escapeHtml(size)}${date ? ` · ${escapeHtml(date)}` : ''}</span></div>
+            <a class="company-file-open" href="${escapeHtml(file.url)}" target="_blank" rel="noopener">Open</a>
+            ${hasAdminPortalAccess() ? `<button type="button" class="company-file-delete" onclick="deleteCompanyFile('${escapeHtml(file.id)}')" aria-label="Delete ${escapeHtml(file.fileName)}">Delete</button>` : ''}
+        </article>`;
+    }).join('');
+}
+
+async function uploadCompanyFile(event) {
+    event.preventDefault();
+    if (!hasAdminPortalAccess()) {
+        showToast('Only an administrator or treasurer can upload company files.', 'error');
+        return;
+    }
+    const input = document.getElementById('companyFileInput');
+    const file = input.files?.[0];
+    const button = document.getElementById('companyFileUploadButton');
+    const status = document.getElementById('companyFilesStatus');
+    if (!file) return;
+    if (file.size > 20 * 1024 * 1024) {
+        status.textContent = 'Company files must be 20 MB or smaller.';
+        return;
+    }
+    showButtonLoading(button, 'Uploading...');
+    try {
+        const upload = await callAPI('createCompanyFileUpload', {
+            fileName: file.name,
+            contentType: file.type,
+            size: file.size
+        });
+        if (!upload.success) throw new Error(upload.error || 'Could not prepare the file upload.');
+        const response = await fetch(upload.uploadUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': upload.contentType },
+            body: file
+        });
+        if (!response.ok) throw new Error('The file upload failed. Try again.');
+        const saved = await callAPI('completeCompanyFileUpload', { fileId: upload.fileId });
+        if (!saved.success) throw new Error(saved.error || 'The file could not be saved.');
+        input.value = '';
+        status.textContent = 'File uploaded. Request an email code to open the latest file list.';
+        showToast('Company file uploaded.', 'success');
+    } catch (error) {
+        status.textContent = error.message || 'Could not upload this company file.';
+    } finally {
+        hideButtonLoading(button, 'Upload file');
+    }
+}
+
+async function deleteCompanyFile(fileId) {
+    if (!hasAdminPortalAccess() || !confirm('Delete this company file?')) return;
+    try {
+        const res = await callAPI('deleteCompanyFile', { fileId });
+        if (!res.success) throw new Error(res.error || 'Could not delete the file.');
+        companyFilesAccessList = companyFilesAccessList.filter(file => file.id !== fileId);
+        renderCompanyFilesList();
+        showToast('Company file deleted.', 'success');
+    } catch (error) {
+        showToast(error.message || 'Could not delete the file.', 'error');
+    }
+}
+
 async function loadMeetingMinutes() {
     const container = document.getElementById('meetingMinutesList');
     if (!container) return;
@@ -5472,6 +5649,7 @@ async function logout(event) {
         destructive: true
     });
     if (!confirmed) return;
+    closeCompanyFilesModal();
     if (window.firebaseAuth) await window.firebaseAuth.signOut();
     if (countdownInterval) clearInterval(countdownInterval);
     localStorage.removeItem('legacy_current_user');
@@ -5789,9 +5967,16 @@ window.rejectLoan = rejectLoan;
 window.submitLoanDueDate = submitLoanDueDate;
 window.addRecord = addRecord;
 window.openAddTransactionModal = openAddTransactionModal;
+window.saveBankInterestEarned = saveBankInterestEarned;
 window.closeAddTransactionModal = closeAddTransactionModal;
 window.openHistoryModal = openHistoryModal;
 window.openViewMinutesModal = openViewMinutesModal;
+window.openCompanyFilesModal = openCompanyFilesModal;
+window.closeCompanyFilesModal = closeCompanyFilesModal;
+window.requestCompanyFilesCode = requestCompanyFilesCode;
+window.verifyCompanyFilesCode = verifyCompanyFilesCode;
+window.uploadCompanyFile = uploadCompanyFile;
+window.deleteCompanyFile = deleteCompanyFile;
 window.openScheduleMeetingModal = openScheduleMeetingModal;
 window.openSendAnnouncementModal = openSendAnnouncementModal;
 window.openAuditLogModal = openAuditLogModal;
