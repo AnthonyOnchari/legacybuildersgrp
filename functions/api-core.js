@@ -1492,18 +1492,63 @@ async function handleAction(action, params, user) {
         }
         case "scheduleMeeting": {
             await requireAdmin(user);
-            await db.collection("scheduledMeeting").doc("current").set({
-                date: params.date || "", agenda: String(params.agenda || ""),
-                venue: String(params.venue || ""), scheduledBy: name
+            const meeting = {
+                date: params.date || "",
+                agenda: String(params.agenda || ""),
+                venue: String(params.venue || ""),
+                scheduledBy: name
+            };
+            const createdAt = nowIso();
+            const inboxMessageRef = db.collection("groupMessages").doc();
+            const batch = db.batch();
+            batch.set(db.collection("scheduledMeeting").doc("current"), meeting);
+            batch.create(inboxMessageRef, {
+                id: inboxMessageRef.id,
+                message: `${name} scheduled a group meeting for ${meeting.date}.${meeting.agenda ? ` Agenda: ${meeting.agenda}.` : ""}${meeting.venue ? ` Venue: ${meeting.venue}.` : ""}`,
+                member: name,
+                email: user.email,
+                type: "meeting_scheduled",
+                created_at: createdAt
             });
-            await sendPush("New Meeting Scheduled", `A meeting has been scheduled for ${params.date || ""}.`, null, name, { type: "meeting_scheduled", date: params.date || "", agenda: params.agenda || "", venue: params.venue || "" });
+            await batch.commit();
+            await sendPush(
+                "New Meeting Scheduled",
+                `A group meeting has been scheduled for ${meeting.date}.${meeting.agenda ? ` Agenda: ${meeting.agenda}.` : ""}${meeting.venue ? ` Venue: ${meeting.venue}.` : ""}`,
+                null,
+                name,
+                { type: "meeting_scheduled", ...meeting }
+            );
             return { success: true };
         }
-        case "cancelScheduledMeeting":
+        case "cancelScheduledMeeting": {
             await requireAdmin(user);
-            await db.collection("scheduledMeeting").doc("current").delete();
-            await sendPush("Meeting Cancelled", "The scheduled meeting has been cancelled.", null, name, { type: "meeting_cancelled" });
+            const scheduledMeetingRef = db.collection("scheduledMeeting").doc("current");
+            const inboxMessageRef = db.collection("groupMessages").doc();
+            const cancelledAt = nowIso();
+            let meeting = null;
+            await db.runTransaction(async (tx) => {
+                const snapshot = await tx.get(scheduledMeetingRef);
+                if (!snapshot.exists) throw new Error("There is no scheduled meeting to cancel.");
+                meeting = snapshot.data();
+                tx.delete(scheduledMeetingRef);
+                tx.create(inboxMessageRef, {
+                    id: inboxMessageRef.id,
+                    message: `${name} cancelled the group meeting scheduled for ${meeting.date || "an upcoming date"}.`,
+                    member: name,
+                    email: user.email,
+                    type: "meeting_cancelled",
+                    created_at: cancelledAt
+                });
+            });
+            await sendPush(
+                "Meeting Cancelled",
+                `The group meeting scheduled for ${meeting.date || "an upcoming date"} has been cancelled.`,
+                null,
+                name,
+                { type: "meeting_cancelled", date: meeting.date || "" }
+            );
             return { success: true };
+        }
         case "savePushSubscription": {
             const subscription = params.subscription;
             if (!subscription || !subscription.endpoint || !subscription.keys) throw new Error("Valid push subscription is required.");

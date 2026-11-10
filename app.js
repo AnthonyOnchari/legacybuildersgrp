@@ -2846,6 +2846,7 @@ async function scheduleNextMeeting() {
         document.getElementById('nextMeetingAgenda').value = '';
         document.getElementById('nextMeetingVenue').value = '';
         await loadScheduledMeeting();
+        await refreshGroupInboxIfOpen();
     } else {
         showToast(res.error || 'Error scheduling meeting', 'error');
     }
@@ -2855,7 +2856,11 @@ async function scheduleNextMeeting() {
 async function cancelScheduledMeeting() {
     if (!confirm('Cancel the scheduled meeting?')) return;
     const res = await callAPI('cancelScheduledMeeting');
-    if (res.success) { showToast('Scheduled meeting cancelled', 'success'); await loadScheduledMeeting(); }
+    if (res.success) {
+        showToast('Scheduled meeting cancelled and shared with the group.', 'success');
+        await loadScheduledMeeting();
+        await refreshGroupInboxIfOpen();
+    }
     else showToast('Error cancelling meeting', 'error');
 }
 
