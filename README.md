@@ -46,3 +46,7 @@ For `--commit`, authenticate the local Firebase Admin SDK with Google Applicatio
 Legacy `Users` rows are matched by Gmail address. Password columns are deliberately excluded; users sign in with Google using the same email. Existing users without a status are imported as approved, and the configured developer email retains developer role. A new account not included in the import becomes a pending registration at first Google sign-in.
 
 The Vercel API derives identity and roles from verified Firebase ID tokens and Firestore profiles. Browser clients are denied direct Firestore reads and writes by `firestore.rules`.
+
+## Firestore read usage
+
+Summary-only requests use Firestore aggregate queries instead of downloading every transaction to calculate totals. The main dashboard still loads transaction records because its history and member-stat views use them. The app uses one-time API reads rather than Firestore snapshot listeners. If Firestore reports that the read quota is exhausted, wait for the quota reset and check the Firebase/Google Cloud billing plan and Firestore usage metrics; code changes cannot restore an exhausted project quota immediately.

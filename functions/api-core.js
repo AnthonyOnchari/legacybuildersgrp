@@ -170,15 +170,17 @@ async function notifyDevelopersOfProtectedAccountAttempt(actor, targetEmail, act
 }
 
 function summarizeData(transactions, activeLoans) {
-    let savingsIn = 0;
-    let loansTaken = 0;
-    let repaid = 0;
+    const totals = { savingsIn: 0, loansTaken: 0, repaid: 0 };
     for (const row of transactions) {
         const amount = asNumber(row.amount);
-        if (row.type === "Savings") savingsIn += amount;
-        else if (row.type === "Loan Taken") loansTaken += amount;
-        else if (row.type === "Loan Repayment") repaid += amount;
+        if (row.type === "Savings") totals.savingsIn += amount;
+        else if (row.type === "Loan Taken") totals.loansTaken += amount;
+        else if (row.type === "Loan Repayment") totals.repaid += amount;
     }
+    return summarizeTotals(totals, activeLoans);
+}
+
+function summarizeTotals(totals, activeLoans) {
     const outstanding = activeLoans.reduce((total, loan) => {
         if (loan.status === "paid_off") return total;
         return total + Math.max(0, asNumber(loan.principal) - asNumber(loan.amountRepaid));
@@ -186,20 +188,31 @@ function summarizeData(transactions, activeLoans) {
     const interestEarned = activeLoans.reduce((total, loan) => total + asNumber(loan.interest), 0);
     return {
         success: true,
-        savings: Math.max(0, savingsIn - outstanding),
-        loansTaken,
-        repaid,
+        savings: Math.max(0, totals.savingsIn - outstanding),
+        loansTaken: totals.loansTaken,
+        repaid: totals.repaid,
         outstanding,
         interestEarned
     };
 }
 
 async function getSummaryData() {
-    const [transactions, activeLoans] = await Promise.all([
-        rows("transactions"),
+    const transactionTypes = [
+        ["Savings", "savingsIn"],
+        ["Loan Taken", "loansTaken"],
+        ["Loan Repayment", "repaid"]
+    ];
+    const [transactionTotals, activeLoans] = await Promise.all([
+        Promise.all(transactionTypes.map(async ([type, key]) => {
+            const snapshot = await db.collection("transactions")
+                .where("type", "==", type)
+                .aggregate({ total: AggregateField.sum("amount") })
+                .get();
+            return [key, asNumber(snapshot.data().total)];
+        })),
         rows("activeLoans")
     ]);
-    return summarizeData(transactions, activeLoans);
+    return summarizeTotals(Object.fromEntries(transactionTotals), activeLoans);
 }
 
 async function getDashboard(user, params) {
