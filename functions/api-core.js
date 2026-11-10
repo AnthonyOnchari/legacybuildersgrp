@@ -1,6 +1,6 @@
 const { cert, getApps, initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
-const { AggregateField, getFirestore } = require("firebase-admin/firestore");
+const { AggregateField, FieldPath, getFirestore } = require("firebase-admin/firestore");
 const crypto = require("node:crypto");
 
 let db;
@@ -1006,6 +1006,7 @@ async function handleAction(action, params, user) {
         case "getAuditLog":
         case "getDeveloperAuditLog":
         case "getDeveloperPortalData":
+        case "getDeveloperUsers":
         case "getAllUsersFull":
         case "getSystemStats":
         case "getScheduledMeeting":
@@ -1015,7 +1016,7 @@ async function handleAction(action, params, user) {
             const adminAccess = await hasAdminAccess(user);
             if (["getPendingRegistrations", "getPendingTransactions", "getLoansAwaitingDueDate"].includes(action)) await requireAdmin(user);
             if (["getAllUsersFull", "exportAuditLog"].includes(action)) await requireAdmin(user);
-            if (["getDeveloperAuditLog", "getDeveloperPortalData", "getSystemStats", "getSubscriptions"].includes(action)) requireDeveloper(user);
+            if (["getDeveloperAuditLog", "getDeveloperPortalData", "getDeveloperUsers", "getSystemStats", "getSubscriptions"].includes(action)) requireDeveloper(user);
             if (action === "getAuditLog") await requireAdmin(user);
             if (action === "getPendingRegistrations") {
                 const [usersSnapshot, joinRequestsSnapshot] = await Promise.all([
@@ -1028,10 +1029,26 @@ async function handleAction(action, params, user) {
                     joinRequests: joinRequestsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
                 };
             }
+            if (action === "getDeveloperUsers") {
+                const requestedLimit = Number(params.limit);
+                const limit = Number.isInteger(requestedLimit) ? Math.min(50, Math.max(1, requestedLimit)) : 25;
+                let query = db.collection("users").orderBy(FieldPath.documentId()).limit(limit + 1);
+                const cursor = String(params.cursor || "");
+                if (cursor) query = query.startAfter(cursor);
+                const snapshot = await query.get();
+                const docs = snapshot.docs.slice(0, limit);
+                return {
+                    success: true,
+                    users: docs.map((doc) => publicUser({ ...doc.data(), email: doc.data().email || doc.id })),
+                    nextCursor: docs.length ? docs[docs.length - 1].id : null,
+                    hasMore: snapshot.docs.length > limit
+                };
+            }
             if (action === "getDeveloperPortalData") {
                 const activeLoansCollection = db.collection("activeLoans");
-                const [users, joinRequestsSnapshot, pendingTransactionsSnapshot, pendingLoansSnapshot, activeLoansSnapshot, interestSnapshot, subscriptionsSnapshot, savingsSnapshot, auditSnapshot] = await Promise.all([
-                    rows("users"),
+                const [usersCountSnapshot, pendingUsersSnapshot, joinRequestsSnapshot, pendingTransactionsSnapshot, pendingLoansSnapshot, activeLoansSnapshot, interestSnapshot, subscriptionsSnapshot, savingsSnapshot, auditSnapshot] = await Promise.all([
+                    db.collection("users").count().get(),
+                    db.collection("users").where("status", "==", "pending").get(),
                     db.collection("registrationRequests").where("status", "==", "pending").get(),
                     db.collection("pendingTransactions").count().get(),
                     db.collection("pendingLoans").count().get(),
@@ -1044,9 +1061,8 @@ async function handleAction(action, params, user) {
                 ]);
                 const activeLoans = activeLoansSnapshot.docs.map((doc) => doc.data());
                 const joinRequests = joinRequestsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-                const pendingUserEmails = new Set(users
-                    .filter((item) => item.status === "pending")
-                    .map((item) => emailKey(item.email)));
+                const pendingUsers = pendingUsersSnapshot.docs.map((doc) => ({ ...doc.data(), email: doc.data().email || doc.id }));
+                const pendingUserEmails = new Set(pendingUsers.map((item) => emailKey(item.email)));
                 const summary = summarizeData([{
                     type: "Savings",
                     amount: savingsSnapshot.data().total || 0
@@ -1054,12 +1070,11 @@ async function handleAction(action, params, user) {
                 summary.interestEarned = interestSnapshot.data().total || 0;
                 return {
                     success: true,
-                    users: users.map(publicUser),
-                    registrations: users.filter((item) => item.status === "pending").map(publicUser),
+                    registrations: pendingUsers.map(publicUser),
                     joinRequests: joinRequests.filter((item) => item.status === "pending"),
                     entries: auditSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
                     stats: {
-                        totalUsers: users.length,
+                        totalUsers: usersCountSnapshot.data().count,
                         pendingRegistrations: pendingUserEmails.size + joinRequests.filter((item) =>
                             item.status === "pending" && !pendingUserEmails.has(emailKey(item.email))
                         ).length,

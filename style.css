@@ -12875,8 +12875,7 @@ body.finance-ui #pendingPanel.active-panel > * {
     box-sizing: border-box;
     grid-column: auto !important;
 }
-body.finance-ui #pendingPanel.active-panel > .admin-approvals-card,
-body.finance-ui #pendingPanel.active-panel > .admin-registrations-card {
+body.finance-ui #pendingPanel.active-panel > .admin-approvals-card {
     min-height: 170px;
 }
 body.finance-ui #pendingPanel.active-panel > .admin-user-management-card,
@@ -13166,8 +13165,7 @@ body.finance-ui .theme-toggle-icon--sun { display: none; }
     body.finance-ui #pendingPanel .admin-queue-card h2 { margin-bottom: 5px; font-size: 17px; }
     body.finance-ui #pendingPanel .portal-section-heading p { max-width: none; font-size: 10px; line-height: 1.5; }
     body.finance-ui #pendingPanel .admin-verified-pill { align-self: flex-start; }
-    body.finance-ui #pendingPanel.active-panel > .admin-approvals-card,
-    body.finance-ui #pendingPanel.active-panel > .admin-registrations-card { min-height: 0; }
+    body.finance-ui #pendingPanel.active-panel > .admin-approvals-card { min-height: 0; }
     body.finance-ui #pendingPanel .admin-phone-row {
         display: grid;
         grid-template-columns: minmax(0, 1fr);

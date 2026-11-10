@@ -216,6 +216,7 @@ async function callAPI(action, data = {}, _retryCount = 0, timeoutMs = API_REQUE
     if (DEVELOPMENT_PREVIEW_ENABLED) {
         return { success: false, error: 'API actions are disabled in the local sample-data preview.' };
     }
+    const requestStartedAt = Date.now();
     const controller = new AbortController();
     let requestTimeout;
     let timedOut = false;
@@ -255,8 +256,12 @@ async function callAPI(action, data = {}, _retryCount = 0, timeoutMs = API_REQUE
         return await Promise.race([request, timeout]);
     } catch (e) {
         if (!timedOut && e instanceof TypeError && _retryCount < 2) {
-            await delay(500 * (2 ** _retryCount));
-            return callAPI(action, data, _retryCount + 1, timeoutMs);
+            const retryDelay = 500 * (2 ** _retryCount);
+            const remainingTimeout = timeoutMs - (Date.now() - requestStartedAt);
+            if (remainingTimeout > retryDelay) {
+                await delay(retryDelay);
+                return callAPI(action, data, _retryCount + 1, remainingTimeout - retryDelay);
+            }
         }
         console.error('API Error:', e);
         return { success: false, error: e.message };
@@ -870,9 +875,8 @@ function showHidePendingTab() {
         const statusText = [...status.childNodes].find(node => node.nodeType === Node.TEXT_NODE);
         if (statusText) statusText.textContent = treasurerOnly ? 'Treasurer workspace' : 'Admin workspace';
     }
-    portal?.querySelectorAll('.admin-phone-directory-card, .admin-registrations-card, .admin-user-management-card, .admin-audit-download-card')
+    portal?.querySelectorAll('.admin-phone-directory-card, .admin-user-management-card, .admin-audit-download-card')
         .forEach(section => { section.hidden = false; });
-    if (admin) loadPendingRegistrations();
 }
 
 function openAdminPortal() {
@@ -1062,6 +1066,8 @@ function updateDashboardGreeting() {
 // DEVELOPER PORTAL FUNCTIONS
 // ============================================================
 let developerPortalLoadPromise = null;
+let developerUsersCursor = null;
+let developerUsersLoading = false;
 
 function showDeveloperLoadError(container, error, retry) {
     container.removeAttribute('aria-label');
@@ -1086,6 +1092,7 @@ async function loadDeveloperPortal() {
     if (!isDeveloper()) return;
     if (developerPortalLoadPromise) return developerPortalLoadPromise;
     developerPortalLoadPromise = (async () => {
+        const usersLoadPromise = DEVELOPMENT_PREVIEW_ENABLED ? null : loadAllUsersFull();
         try {
             const res = DEVELOPMENT_PREVIEW_ENABLED
                 ? {
@@ -1113,16 +1120,16 @@ async function loadDeveloperPortal() {
                 }
                 : await callAPI('getDeveloperPortalData', { email: currentUserEmail }, 0, DEVELOPER_PORTAL_TIMEOUT_MS);
             if (!res.success) throw new Error(res.error || 'Could not load developer portal data.');
+            const usersPromise = usersLoadPromise || loadAllUsersFull('allUsersList', { success: true, users: res.users });
             await Promise.all([
                 loadSystemStats({ success: true, stats: res.stats }),
-                loadAllUsersFull('allUsersList', { success: true, users: res.users }),
                 loadDevPendingRegistrations({ success: true, registrations: res.registrations, joinRequests: res.joinRequests }),
-                loadDevAuditLog({ success: true, entries: res.entries })
+                loadDevAuditLog({ success: true, entries: res.entries }),
+                usersPromise
             ]);
         } catch (error) {
             [
                 'systemStats',
-                'allUsersList',
                 'devPendingRegistrations',
                 'devAuditLog'
             ].forEach(id => {
@@ -1184,11 +1191,20 @@ async function loadAllUsersFull(containerId = 'allUsersList', data = null) {
     const container = document.getElementById(containerId);
     if (!container) return;
     try {
-        const res = data || await callAPI('getAllUsersFull', { email: currentUserEmail });
+        const isDeveloperDirectory = containerId === 'allUsersList' && isDeveloper() && !data;
+        const res = data || await callAPI(
+            isDeveloperDirectory ? 'getDeveloperUsers' : 'getAllUsersFull',
+            isDeveloperDirectory
+                ? { email: currentUserEmail, limit: 25 }
+                : { email: currentUserEmail },
+            0,
+            isDeveloperDirectory ? DEVELOPER_PORTAL_TIMEOUT_MS : API_REQUEST_TIMEOUT_MS
+        );
         if (res.success && res.users) {
             container.removeAttribute('role');
             container.removeAttribute('aria-label');
             container.setAttribute('aria-busy', 'false');
+            developerUsersCursor = isDeveloperDirectory ? res.nextCursor || null : null;
             container.innerHTML = `
                 <div class="developer-user-directory">
                     <div class="developer-user-grid">
@@ -1228,19 +1244,103 @@ async function loadAllUsersFull(containerId = 'allUsersList', data = null) {
                             </article>
                         `).join('')}
                     </div>
+                    ${isDeveloperDirectory && res.hasMore ? '<button type="button" class="developer-load-retry developer-users-load-more">Load more users</button>' : ''}
                 </div>
             `;
             container.querySelectorAll('.member-position-select').forEach(select => {
+                select.dataset.bound = 'true';
                 select.addEventListener('change', () => setUserPosition(select.dataset.positionEmail, select));
             });
             container.querySelectorAll('.member-salutation-select').forEach(select => {
+                select.dataset.bound = 'true';
                 select.addEventListener('change', () => setUserSalutation(select.dataset.salutationEmail, select));
+            });
+            container.querySelector('.developer-users-load-more')?.addEventListener('click', event => {
+                loadMoreDeveloperUsers(event.currentTarget);
             });
         } else {
             throw new Error(res.error || 'Could not load users.');
         }
     } catch (e) {
         showDeveloperLoadError(container, e, () => loadAllUsersFull(containerId));
+    }
+}
+
+async function loadMoreDeveloperUsers(button) {
+    if (developerUsersLoading || !developerUsersCursor) return;
+    const container = document.getElementById('allUsersList');
+    const grid = container?.querySelector('.developer-user-grid');
+    if (!container || !grid) return;
+    developerUsersLoading = true;
+    button.disabled = true;
+    button.textContent = 'Loading users...';
+    try {
+        const res = await callAPI('getDeveloperUsers', {
+            email: currentUserEmail,
+            limit: 25,
+            cursor: developerUsersCursor
+        }, 0, DEVELOPER_PORTAL_TIMEOUT_MS);
+        if (!res.success || !res.users) throw new Error(res.error || 'Could not load more users.');
+        const cards = res.users.map(user => `
+            <article class="developer-user-card">
+                <header class="developer-user-card-header">
+                    <div class="developer-user-identity">
+                        <h3>${escapeHtml(user.name)} ${memberPositionBadge(user.position)}</h3>
+                        <p class="developer-user-email">${escapeHtml(user.email)}</p>
+                    </div>
+                    <span class="developer-user-status developer-user-status--${user.status === 'approved' ? 'approved' : user.status === 'pending' ? 'pending' : 'inactive'}">${escapeHtml(user.status || 'pending')}</span>
+                </header>
+                <div class="developer-user-controls">
+                    <label class="developer-user-control">
+                        <span>Account access</span>
+                        ${user.email !== currentUserEmail ? `<select onchange="updateUserRole('${user.email}', this.value)" aria-label="Access role for ${escapeHtml(user.name)}">
+                            <option value="member" ${user.role === 'member' ? 'selected' : ''}>Member</option>
+                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                            ${isDeveloper() ? `<option value="developer" ${user.role === 'developer' ? 'selected' : ''}>Developer</option>` : ''}
+                        </select>` : '<span class="developer-user-self">Your account</span>'}
+                    </label>
+                    ${isDeveloper() && user.status === 'approved' ? `
+                        <label class="developer-user-control">
+                            <span>Group position</span>
+                            <select class="member-position-select" data-position-email="${escapeHtml(user.email)}" data-original-position="${escapeHtml(user.position || 'Member')}" aria-label="Group position for ${escapeHtml(user.name)}">${MEMBER_POSITION_TITLES.map(position => `<option value="${position}" ${user.position === position || (!user.position && position === 'Member') ? 'selected' : ''}>${position}</option>`).join('')}</select>
+                        </label>
+                        <label class="developer-user-control">
+                            <span>Greeting salutation</span>
+                            <select class="member-salutation-select" data-salutation-email="${escapeHtml(user.email)}" data-original-salutation="${escapeHtml(validProfileSalutation(user.salutation))}" aria-label="Greeting salutation for ${escapeHtml(user.name)}"><option value="" ${!validProfileSalutation(user.salutation) ? 'selected' : ''}>No salutation</option>${PROFILE_SALUTATIONS.map(salutation => `<option value="${salutation}" ${user.salutation === salutation ? 'selected' : ''}>${salutation}</option>`).join('')}</select>
+                        </label>` : ''}
+                </div>
+                ${isDeveloper() && user.email !== currentUserEmail ? `
+                    <footer class="developer-user-card-actions">
+                        ${user.role === 'developer' ? '<span class="protected-user-label">Protected developer</span>' : `<button class="user-delete-button" aria-label="Deactivate user" onclick="deleteUser('${user.email}')">Deactivate</button>`}
+                        <button class="user-photo-edit-button" type="button" onclick="editUserProfilePhoto('${user.email}')">Edit photo</button>
+                    </footer>` : ''}
+            </article>
+        `).join('');
+        grid.insertAdjacentHTML('beforeend', cards);
+        developerUsersCursor = res.nextCursor || null;
+        const nextButton = button.cloneNode(true);
+        nextButton.disabled = false;
+        nextButton.textContent = 'Load more users';
+        nextButton.addEventListener('click', event => loadMoreDeveloperUsers(event.currentTarget));
+        button.replaceWith(nextButton);
+        if (!res.hasMore) nextButton.remove();
+        container.querySelectorAll('.member-position-select, .member-salutation-select').forEach(select => {
+            if (select.dataset.bound === 'true') return;
+            select.dataset.bound = 'true';
+            select.addEventListener('change', () => {
+                if (select.classList.contains('member-position-select')) {
+                    setUserPosition(select.dataset.positionEmail, select);
+                } else {
+                    setUserSalutation(select.dataset.salutationEmail, select);
+                }
+            });
+        });
+    } catch (error) {
+        button.disabled = false;
+        button.textContent = 'Could not load. Try again';
+        showToast(error.message || 'Could not load more users.', 'error');
+    } finally {
+        developerUsersLoading = false;
     }
 }
 
@@ -1535,7 +1635,6 @@ async function approveRegistration(email) {
         if (res.success) {
             showToast(` ${email} approved!`, 'success');
             await loadDevPendingRegistrations();
-            await loadPendingRegistrations();
             await loadAllUsersFull();
             await loadGroupMessages();
             if (isDeveloper()) await loadSystemStats();
@@ -1555,7 +1654,6 @@ async function rejectRegistration(email) {
         if (res.success) {
             showToast(` ${email} rejected`, 'success');
             await loadDevPendingRegistrations();
-            await loadPendingRegistrations();
             await loadAllUsersFull();
             await loadGroupMessages();
             if (isDeveloper()) await loadSystemStats();
@@ -1604,39 +1702,6 @@ function auditIconFor(action) {
     if (a.includes('requested') || a.includes('submitted')) return 'RQ';
     if (a.includes('due date')) return 'DT';
     return 'LG';
-}
-
-// ============================================================
-// LOAD PENDING REGISTRATIONS (for Treasurer/Developer)
-// ============================================================
-async function loadPendingRegistrations() {
-    const container = document.getElementById('pendingRegistrationsList');
-    if (!container) return;
-    try {
-        const res = await callAPI('getPendingRegistrations', { email: currentUserEmail });
-        if (res.success && res.registrations) {
-            const registrations = [...res.registrations, ...(res.joinRequests || []).filter(request =>
-                !res.registrations.some(registration => registration.email.toLowerCase() === request.email.toLowerCase())
-            )];
-            if (registrations.length === 0) {
-                container.innerHTML = '<div class="empty-state">No pending registrations</div>';
-                return;
-            }
-            container.innerHTML = registrations.map(reg => `
-                <div class="pending-item" style="background: #FFF8E1; border-left: 4px solid #FF9800;">
-                    <div><strong> ${escapeHtml(reg.name)}</strong></div>
-                    <div> ${escapeHtml(reg.email)}</div>
-                    <div> ${reg.created_at ? new Date(reg.created_at).toLocaleDateString() : ''}</div>
-                    <div style="margin-top: 10px; display: flex; gap: 8px;">
-                        <button class="approve-btn" onclick="approveRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')"> Approve</button>
-                        <button class="reject-btn" onclick="rejectRegistration('${encodeURIComponent(reg.email).replace(/'/g, '%27')}')"> Reject</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-    } catch (e) {
-        container.innerHTML = '<div class="empty-state">Error loading registrations</div>';
-    }
 }
 
 // ============================================================
