@@ -1690,7 +1690,9 @@ async function handleAction(action, params, user) {
             return { success: true, pushDelivery };
         }
         case "updateUserRole": {
-            await requireAdmin(user);
+            // Roles are controlled by the developer so an administrator cannot
+            // silently change another administrator's access after assignment.
+            requireDeveloper(user);
             const email = emailKey(params.email);
             const role = String(params.role || "").toLowerCase();
             if (!["member", "admin", "developer"].includes(role)) throw new Error("Invalid role.");
@@ -1698,7 +1700,7 @@ async function handleAction(action, params, user) {
             const ref = db.collection("users").doc(safeDocId(email));
             const snapshot = await ref.get();
             if (!snapshot.exists) throw new Error("User not found.");
-            if (snapshot.data().role === "developer") {
+            if (DEVELOPER_EMAILS.has(email)) {
                 await audit(name, "CLASSIFIED: blocked protected developer role change", `${email} — requested role ${role}`);
                 await notifyDevelopersOfProtectedAccountAttempt(name, email, "role change");
                 throw new Error("Developer accounts are protected and cannot be changed.");
@@ -1760,7 +1762,7 @@ async function handleAction(action, params, user) {
             const ref = db.collection("users").doc(safeDocId(email));
             const snapshot = await ref.get();
             if (!snapshot.exists) throw new Error("User not found.");
-            if (snapshot.data().role === "developer") {
+            if (DEVELOPER_EMAILS.has(email)) {
                 await audit(name, "CLASSIFIED: blocked protected developer deletion attempt", email);
                 await notifyDevelopersOfProtectedAccountAttempt(name, email, "account deletion");
                 throw new Error("Developer accounts are protected and cannot be deleted.");

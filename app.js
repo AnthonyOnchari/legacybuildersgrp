@@ -2,6 +2,7 @@
 // CONFIGURATION
 // ============================================================
 let TREASURER_NAME = "Mrs. Kithinji";
+const DEVELOPER_EMAIL = 'info.onchari@gmail.com';
 const BANK_INTEREST_EARNED = 252.90;
 const BANK_INTEREST_RATE_PERCENT = 4;
 const BANK_INTEREST_MINIMUM_BALANCE = 50000;
@@ -111,6 +112,7 @@ function isTreasurer() {
 }
 
 function isDeveloper() { return currentUserRole === 'developer'; }
+function isProtectedDeveloperAccount(email) { return String(email || '').trim().toLowerCase() === DEVELOPER_EMAIL; }
 
 function hasAdminPortalAccess() { return currentUserRole === 'admin' || isDeveloper() || isTreasurer(); }
 
@@ -1325,7 +1327,7 @@ async function loadAllUsersFull(containerId = 'allUsersList', data = null) {
                                 <div class="developer-user-controls">
                                     <label class="developer-user-control">
                                         <span>Account access</span>
-                                        ${user.email !== currentUserEmail ? `<select onchange="updateUserRole('${user.email}', this.value)" aria-label="Access role for ${escapeHtml(user.name)}">
+                                        ${isDeveloper() && user.email !== currentUserEmail ? `<select data-original-role="${escapeHtml(user.role || 'member')}" onchange="updateUserRole('${user.email}', this.value, this)" aria-label="Access role for ${escapeHtml(user.name)}">
                                             <option value="member" ${user.role === 'member' ? 'selected' : ''}>Member</option>
                                             <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
                                             ${isDeveloper() ? `<option value="developer" ${user.role === 'developer' ? 'selected' : ''}>Developer</option>` : ''}
@@ -1343,7 +1345,7 @@ async function loadAllUsersFull(containerId = 'allUsersList', data = null) {
                                 </div>
                                 ${isDeveloper() && user.email !== currentUserEmail ? `
                                     <footer class="developer-user-card-actions">
-                                        ${user.role === 'developer' ? '<span class="protected-user-label">Protected developer</span>' : `<button class="user-delete-button" aria-label="Deactivate user" onclick="deleteUser('${user.email}')">Deactivate</button>`}
+                                        ${isProtectedDeveloperAccount(user.email) ? '<span class="protected-user-label">Protected developer</span>' : `<button class="user-delete-button" aria-label="Deactivate user" onclick="deleteUser('${user.email}')">Deactivate</button>`}
                                         <button class="user-photo-edit-button" type="button" onclick="editUserProfilePhoto('${user.email}')">Edit photo</button>
                                     </footer>` : ''}
                             </article>
@@ -1399,7 +1401,7 @@ async function loadMoreDeveloperUsers(button) {
                 <div class="developer-user-controls">
                     <label class="developer-user-control">
                         <span>Account access</span>
-                        ${user.email !== currentUserEmail ? `<select onchange="updateUserRole('${user.email}', this.value)" aria-label="Access role for ${escapeHtml(user.name)}">
+                        ${isDeveloper() && user.email !== currentUserEmail ? `<select data-original-role="${escapeHtml(user.role || 'member')}" onchange="updateUserRole('${user.email}', this.value, this)" aria-label="Access role for ${escapeHtml(user.name)}">
                             <option value="member" ${user.role === 'member' ? 'selected' : ''}>Member</option>
                             <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
                             ${isDeveloper() ? `<option value="developer" ${user.role === 'developer' ? 'selected' : ''}>Developer</option>` : ''}
@@ -1417,7 +1419,7 @@ async function loadMoreDeveloperUsers(button) {
                 </div>
                 ${isDeveloper() && user.email !== currentUserEmail ? `
                     <footer class="developer-user-card-actions">
-                        ${user.role === 'developer' ? '<span class="protected-user-label">Protected developer</span>' : `<button class="user-delete-button" aria-label="Deactivate user" onclick="deleteUser('${user.email}')">Deactivate</button>`}
+                        ${isProtectedDeveloperAccount(user.email) ? '<span class="protected-user-label">Protected developer</span>' : `<button class="user-delete-button" aria-label="Deactivate user" onclick="deleteUser('${user.email}')">Deactivate</button>`}
                         <button class="user-photo-edit-button" type="button" onclick="editUserProfilePhoto('${user.email}')">Edit photo</button>
                     </footer>` : ''}
             </article>
@@ -1644,18 +1646,29 @@ async function loadDevAuditLog(data = null) {
     }
 }
 
-async function updateUserRole(email, role) {
-    if (!confirm(`Change role for ${email} to ${role}?`)) return;
+async function updateUserRole(email, role, control) {
+    if (!isDeveloper()) {
+        if (control) control.value = control.dataset.originalRole || 'member';
+        showToast('Only the developer can change member roles.', 'error');
+        return;
+    }
+    if (!confirm(`Change role for ${email} to ${role}?`)) {
+        if (control) control.value = control.dataset.originalRole || 'member';
+        return;
+    }
     try {
         const res = await callAPI('updateUserRole', { email, role, requesterEmail: currentUserEmail });
         if (res.success) {
+            if (control) control.dataset.originalRole = role;
             showToast(`Role updated for ${email}`, 'success');
             await loadAllUsersFull();
             await loadSystemStats();
         } else {
+            if (control) control.value = control.dataset.originalRole || 'member';
             showToast(res.error || 'Error updating role', 'error');
         }
     } catch (e) {
+        if (control) control.value = control.dataset.originalRole || 'member';
         showToast('Error updating role', 'error');
     }
 }
