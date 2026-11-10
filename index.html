@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=171">
+    <link rel="stylesheet" href="style.css?v=175">
 </head>
 <body class="finance-ui app-loading">
 
@@ -566,8 +566,12 @@
             <div class="card developer-section developer-approvals-card">
                 <div class="developer-section-heading"><div><span class="developer-portal-kicker">ACTION QUEUE</span><h2>Pending approvals</h2></div></div>
                 <div id="developerPendingApprovalsList" class="loading-container developer-approval-loading" role="status" aria-busy="true">
-                    <div class="loading-spinner" aria-hidden="true"></div>
-                    <div class="developer-approval-loading-copy"><strong>Loading pending approvals...</strong><span>Checking for items that need your attention</span></div>
+                    <span class="developer-approval-loader-icon" aria-hidden="true"><span class="loading-spinner"></span></span>
+                    <div class="developer-approval-loading-copy">
+                        <strong>Loading pending approvals...</strong>
+                        <span>Checking for items that need your attention</span>
+                        <span class="developer-approval-progress" aria-hidden="true"><i></i></span>
+                    </div>
                 </div>
             </div>
             <div class="card developer-section developer-users-card">
@@ -641,6 +645,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://accounts.google.com/gsi/client" defer></script>
     <script src="firebase-config.js?v=36"></script>
-    <script src="app.js?v=109"></script>
+    <script src="app.js?v=110"></script>
 </body>
 </html>

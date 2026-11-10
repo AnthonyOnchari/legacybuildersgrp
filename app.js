@@ -2166,21 +2166,58 @@ function renderPendingApprovals(containerId = 'pendingApprovalsList') {
     container.innerHTML = pendingTransactions.map(t => {
         const editKey = `${t.member}|${t.type}|${t.amount}`;
         const editInfo = pendingEditsMap[editKey];
-        const editBadge = editInfo ? `<div style="background:var(--blue-soft);color:var(--blue);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;margin-bottom:8px;display:inline-block;"> EDIT REQUEST — was KES ${editInfo.originalAmount.toLocaleString('en-KE')}</div><br>` : '';
-        const rejectFn = editInfo ? `rejectTransactionEdit('${editInfo.editId}', '${currentUser}')` : `rejectTransaction('${t.id}')`;
-        return `<div class="pending-item">
-            ${editBadge}
-            <div><strong> ${t.date}</strong></div>
-            <div> <strong>Submitted by:</strong> ${escapeHtml(t.submittedBy || t.member)}</div>
-            <div> <strong>Type:</strong> ${t.type}</div>
-            <div> <strong>Amount:</strong> KES ${(t.amount || 0).toLocaleString('en-KE')}</div>
-            <div> <strong>Message:</strong> ${escapeHtml(t.message || '-')}</div>
-            <div style="margin-top: 10px; display: flex; gap: 8px;">
-                <button class="approve-btn" onclick="approveTransaction('${t.id}')"> Approve</button>
-                <button class="reject-btn" onclick="${rejectFn}"> Reject</button>
+        const message = String(t.message || '-');
+        const hasLongMessage = message.length > 120;
+        const messagePreview = hasLongMessage ? `${message.slice(0, 120).trimEnd()}…` : message;
+        return `<article class="pending-item transaction-approval-card">
+            <header class="transaction-approval-header">
+                <div>
+                    <span class="transaction-approval-kicker">${escapeHtml(t.type || 'Transaction')} ${editInfo ? '· Edit request' : ''}</span>
+                    <strong>${escapeHtml(t.date || '')}</strong>
+                </div>
+                <span class="transaction-approval-status">Needs review</span>
+            </header>
+            <div class="transaction-approval-facts">
+                <div><span>Submitted by</span><strong>${escapeHtml(t.submittedBy || t.member || 'Member')}</strong></div>
+                <div><span>Type</span><strong>${escapeHtml(t.type || '—')}</strong></div>
+                <div><span>Amount</span><strong>KES ${(Number(t.amount) || 0).toLocaleString('en-KE')}</strong></div>
             </div>
-        </div>`;
+            ${editInfo ? `<div class="transaction-approval-edit-badge">Edit request · previously KES ${(Number(editInfo.originalAmount) || 0).toLocaleString('en-KE')}</div>` : ''}
+            <div class="transaction-approval-message">
+                <span class="transaction-approval-message-label">Message</span>
+                <p class="transaction-approval-message-preview">${escapeHtml(messagePreview)}</p>
+                ${hasLongMessage ? `<p class="transaction-approval-message-full" hidden>${escapeHtml(message)}</p><button type="button" class="transaction-approval-message-toggle" aria-expanded="false">View details</button>` : ''}
+            </div>
+            <div class="transaction-approval-actions">
+                <button type="button" class="approve-btn" data-approval-action="approve" data-approval-id="${escapeHtml(t.id)}">Approve</button>
+                <button type="button" class="reject-btn" data-approval-action="reject" data-approval-id="${escapeHtml(t.id)}" ${editInfo ? `data-edit-id="${escapeHtml(editInfo.editId)}" data-actor="${escapeHtml(currentUser)}"` : ''}>Reject</button>
+            </div>
+        </article>`;
     }).join('');
+    container.querySelectorAll('.transaction-approval-message-toggle').forEach(button => {
+        button.addEventListener('click', () => {
+            const card = button.closest('.transaction-approval-card');
+            const expanded = button.getAttribute('aria-expanded') === 'true';
+            const preview = card?.querySelector('.transaction-approval-message-preview');
+            const full = card?.querySelector('.transaction-approval-message-full');
+            if (!preview || !full) return;
+            button.setAttribute('aria-expanded', String(!expanded));
+            button.textContent = expanded ? 'View details' : 'Show less';
+            preview.hidden = !expanded;
+            full.hidden = expanded;
+        });
+    });
+    container.querySelectorAll('.transaction-approval-actions button').forEach(button => {
+        button.addEventListener('click', () => {
+            if (button.dataset.approvalAction === 'approve') {
+                approveTransaction(button.dataset.approvalId);
+            } else if (button.dataset.editId) {
+                rejectTransactionEdit(button.dataset.editId, button.dataset.actor);
+            } else {
+                rejectTransaction(button.dataset.approvalId);
+            }
+        });
+    });
 }
 
 function updatePendingCount() {

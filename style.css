@@ -15368,40 +15368,289 @@ body.finance-ui .developer-contacts-dialog .loading-container {
     text-align: center;
 }
 body.finance-ui .developer-portal #developerPendingApprovalsList.developer-approval-loading {
-    min-height: 176px;
+    position: relative;
+    min-height: 132px;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 16px;
     box-sizing: border-box;
     padding: 24px;
-    border: 1px dashed #d7e5d9;
-    border-radius: 16px;
-    background: linear-gradient(145deg, #f8fbf8, #f2f7f2);
+    overflow: hidden;
+    border: 1px solid #e0ebe1;
+    border-radius: 18px;
+    background:
+        radial-gradient(ellipse at 12% 50%, rgba(111, 166, 119, .11), transparent 34%),
+        linear-gradient(135deg, #fbfdfb, #f2f7f2);
     color: #607466;
     text-align: center;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 8px 20px rgba(37, 63, 45, .035);
+}
+body.finance-ui .developer-approval-loader-icon {
+    display: grid;
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+    place-items: center;
+    border: 1px solid #dce9dd;
+    border-radius: 17px;
+    background: linear-gradient(145deg, #fff, #edf5ee);
+    box-shadow: 0 5px 14px rgba(52, 104, 62, .09);
 }
 body.finance-ui .developer-portal #developerPendingApprovalsList.developer-approval-loading .loading-spinner {
-    width: 36px;
-    height: 36px;
+    width: 27px;
+    height: 27px;
     flex: 0 0 auto;
     margin: 0;
     border: 3px solid #dce9de;
     border-top-color: #4a8b58;
     border-right-color: #78aa7f;
-    box-shadow: 0 3px 12px rgba(65, 123, 75, .12);
 }
 body.finance-ui .developer-approval-loading-copy {
     display: grid;
-    gap: 4px;
+    width: min(100%, 300px);
+    gap: 6px;
+    text-align: left;
 }
 body.finance-ui .developer-approval-loading-copy strong {
     color: #315640;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 750;
+    letter-spacing: -.015em;
 }
 body.finance-ui .developer-approval-loading-copy span {
     color: #7a897e;
+    font-size: 12px;
+    line-height: 1.45;
+}
+body.finance-ui .developer-approval-progress {
+    display: block;
+    width: 100%;
+    height: 4px;
+    margin-top: 5px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: #e3ece4;
+}
+body.finance-ui .developer-approval-progress i {
+    display: block;
+    width: 38%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #75a97b, #3f8050);
+    animation: developer-approval-progress 1.8s ease-in-out infinite;
+}
+@keyframes developer-approval-progress {
+    0% { transform: translateX(-110%); }
+    100% { transform: translateX(280%); }
+}
+body.finance-ui .transaction-approval-card {
+    display: grid;
+    gap: 14px;
+    margin: 0 0 12px;
+    padding: 17px;
+    border: 1px solid #e5ebe8;
+    border-left: 4px solid #5478e8;
+    border-top-color: #e5ebe8 !important;
+    border-right-color: #e5ebe8 !important;
+    border-bottom-color: #e5ebe8 !important;
+    border-radius: 17px;
+    background: linear-gradient(145deg, #fff, #f8fafc);
+    color: #31443a;
+    box-shadow: 0 7px 20px rgba(37, 55, 45, .055);
+    transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+body.finance-ui .transaction-approval-card:hover {
+    border-color: #d3ddf2;
+    border-left-color: #456be0;
+    box-shadow: 0 10px 24px rgba(37, 55, 45, .09);
+    transform: translateY(-1px);
+}
+body.finance-ui .transaction-approval-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+body.finance-ui .transaction-approval-header > div {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+body.finance-ui .transaction-approval-kicker {
+    color: #657889;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+body.finance-ui .transaction-approval-header > div > strong {
+    color: #233a30;
+    font-size: 15px;
+    letter-spacing: -.025em;
+}
+body.finance-ui .transaction-approval-status {
+    flex: 0 0 auto;
+    padding: 5px 9px;
+    border: 1px solid #f0dfb8;
+    border-radius: 999px;
+    background: #fff8e9;
+    color: #8a672a;
+    font-size: 9px;
+    font-weight: 750;
+}
+body.finance-ui .transaction-approval-facts {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(90px, .7fr) minmax(120px, .8fr);
+    gap: 10px;
+}
+body.finance-ui .transaction-approval-facts > div {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+}
+body.finance-ui .transaction-approval-facts span,
+body.finance-ui .transaction-approval-message-label {
+    color: #829087;
+    font-size: 9px;
+    font-weight: 750;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+body.finance-ui .transaction-approval-facts strong {
+    overflow: hidden;
+    color: #354b3d;
     font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+body.finance-ui .transaction-approval-message {
+    display: grid;
+    gap: 6px;
+    padding: 11px 12px;
+    border: 1px solid #edf0ef;
+    border-radius: 12px;
+    background: rgba(245, 248, 247, .8);
+}
+body.finance-ui .transaction-approval-message p {
+    margin: 0;
+    color: #5e6f65;
+    font-size: 11px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+body.finance-ui .transaction-approval-message-full { white-space: pre-wrap; }
+body.finance-ui .transaction-approval-message-toggle {
+    justify-self: start;
+    min-height: 28px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #4167d6;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 750;
+    cursor: pointer;
+}
+body.finance-ui .transaction-approval-message-toggle:hover { color: #294db7; text-decoration: underline; }
+body.finance-ui .transaction-approval-edit-badge {
+    justify-self: start;
+    padding: 5px 9px;
+    border: 1px solid #dfe6fb;
+    border-radius: 8px;
+    background: #f0f3ff;
+    color: #4963b2;
+    font-size: 10px;
+    font-weight: 750;
+}
+body.finance-ui .transaction-approval-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+body.finance-ui .transaction-approval-actions button {
+    min-width: 84px;
+    min-height: 34px;
+    margin: 0;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 750;
+}
+body.finance-ui .transaction-approval-actions .approve-btn {
+    background: linear-gradient(135deg, #5276ed, #365ed5);
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(62, 99, 215, .18);
+}
+body.finance-ui .transaction-approval-actions .approve-btn:hover {
+    background: linear-gradient(135deg, #4469e2, #2d53c6);
+}
+body.finance-ui .transaction-approval-actions .reject-btn {
+    border: 1px solid #f0d8d5;
+    background: #fff7f6;
+    color: #a94840;
+}
+body.finance-ui .transaction-approval-actions .reject-btn:hover {
+    border-color: #e8bbb5;
+    background: #fff0ee;
+}
+body.finance-ui .transaction-approval-card :is(.transaction-approval-message-toggle, .approve-btn, .reject-btn):focus-visible {
+    outline: 3px solid rgba(75, 110, 224, .3);
+    outline-offset: 2px;
+}
+body.finance-ui .transaction-approval-message [hidden] { display: none !important; }
+body.finance-ui.dark-mode .transaction-approval-card,
+body.finance-ui.dark-mode .app-container .transaction-approval-card,
+body.finance-ui.dark-mode #pendingPanel .transaction-approval-card {
+    border-color: #35443a !important;
+    border-left-color: #8299f1 !important;
+    background: linear-gradient(145deg, #1d2721, #17201a) !important;
+    color: #e2ebe4;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .2);
+}
+body.finance-ui.dark-mode .transaction-approval-card:hover,
+body.finance-ui.dark-mode #pendingPanel .transaction-approval-card:hover {
+    border-color: #465a4a !important;
+    border-left-color: #a4b4ff !important;
+}
+body.finance-ui.dark-mode .transaction-approval-kicker,
+body.finance-ui.dark-mode .transaction-approval-facts span,
+body.finance-ui.dark-mode .transaction-approval-message-label {
+    color: #9baa9e;
+}
+body.finance-ui.dark-mode .transaction-approval-header > div > strong,
+body.finance-ui.dark-mode .transaction-approval-facts strong {
+    color: #e2ebe4;
+}
+body.finance-ui.dark-mode .transaction-approval-status {
+    border-color: #5a4a2d;
+    background: #342c1d;
+    color: #e0c58b;
+}
+body.finance-ui.dark-mode .transaction-approval-message {
+    border-color: #354239;
+    background: #18211b;
+}
+body.finance-ui.dark-mode .transaction-approval-message p { color: #bdc9bf; }
+body.finance-ui.dark-mode .transaction-approval-message-toggle { color: #a6b5ff; }
+body.finance-ui.dark-mode .transaction-approval-message-toggle:hover { color: #c1caff; }
+body.finance-ui.dark-mode .transaction-approval-edit-badge {
+    border-color: #3a456a;
+    background: #242d49;
+    color: #c1caff;
+}
+body.finance-ui.dark-mode .transaction-approval-actions .approve-btn {
+    background: #536fe0;
+    color: #fff;
+}
+body.finance-ui.dark-mode .transaction-approval-actions .reject-btn {
+    background: #8f493e;
+    color: #fff;
+}
+@media (max-width: 680px) {
+    body.finance-ui .transaction-approval-card { gap: 12px; padding: 14px; }
+    body.finance-ui .transaction-approval-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    body.finance-ui .transaction-approval-facts > div:first-child { grid-column: 1 / -1; }
+    body.finance-ui .transaction-approval-actions button { flex: 1 1 100px; }
 }
 body.finance-ui.dark-mode .developer-contacts-dialog {
     border-color: #38453b;
@@ -15435,14 +15684,26 @@ body.finance-ui.dark-mode .developer-contacts-close:hover {
     background: #2d4032;
 }
 body.finance-ui.dark-mode .developer-portal #developerPendingApprovalsList.developer-approval-loading {
-    border-color: #3c4b40;
-    background: linear-gradient(145deg, #1a221c, #202a22);
+    border-color: #34443a;
+    background:
+        radial-gradient(ellipse at 12% 50%, rgba(112, 166, 119, .12), transparent 34%),
+        linear-gradient(135deg, #171e19, #1d2720);
     color: #a8b7ab;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .025), 0 8px 22px rgba(0, 0, 0, .13);
+}
+body.finance-ui.dark-mode .developer-approval-loader-icon {
+    border-color: #3a4b3e;
+    background: linear-gradient(145deg, #29372d, #202c23);
+    box-shadow: 0 5px 14px rgba(0, 0, 0, .18);
 }
 body.finance-ui.dark-mode .developer-portal #developerPendingApprovalsList.developer-approval-loading .loading-spinner {
-    border-color: #334438;
-    border-top-color: #8ebd94;
-    border-right-color: #6ea778;
+    border-color: #334438 !important;
+    border-top-color: #8ebd94 !important;
+    border-right-color: #6ea778 !important;
+}
+body.finance-ui.dark-mode .developer-approval-progress { background: #334238; }
+body.finance-ui.dark-mode .developer-approval-progress i {
+    background: linear-gradient(90deg, #8ebd94, #6ea778);
 }
 body.finance-ui.dark-mode .developer-contacts-dialog .developer-phone-card .admin-phone-editor,
 body.finance-ui.dark-mode .developer-contacts-dialog .developer-phone-card .admin-phone-editor-fields {
@@ -15472,6 +15733,19 @@ body.finance-ui.dark-mode .developer-contacts-dialog .developer-phone-card .admi
     body.finance-ui .developer-contacts-dialog-header { gap: 10px; }
     body.finance-ui .developer-contacts-close { padding: 0 10px; }
     body.finance-ui .developer-contacts-dialog .developer-phone-grid { grid-template-columns: minmax(0, 1fr); }
+    body.finance-ui .developer-portal #developerPendingApprovalsList.developer-approval-loading {
+        min-height: 118px;
+        gap: 12px;
+        padding: 18px 14px;
+    }
+    body.finance-ui .developer-approval-loader-icon {
+        width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+        border-radius: 14px;
+    }
+    body.finance-ui .developer-approval-loading-copy strong { font-size: 12px; }
+    body.finance-ui .developer-approval-loading-copy span { font-size: 10px; }
 }
 @media (prefers-reduced-motion: reduce) {
     body.finance-ui .developer-contacts-open,
@@ -15479,4 +15753,5 @@ body.finance-ui.dark-mode .developer-contacts-dialog .developer-phone-card .admi
     body.finance-ui .developer-portal #developerPendingApprovalsList.developer-approval-loading .loading-spinner {
         animation: none;
     }
+    body.finance-ui .developer-approval-progress i { animation: none; }
 }
