@@ -210,8 +210,9 @@ function markMeetingUpdatesRead() {
 // API CALL
 // ============================================================
 const API_REQUEST_TIMEOUT_MS = 30000;
+const DEVELOPER_PORTAL_TIMEOUT_MS = 5000;
 
-async function callAPI(action, data = {}, _retryCount = 0) {
+async function callAPI(action, data = {}, _retryCount = 0, timeoutMs = API_REQUEST_TIMEOUT_MS) {
     if (DEVELOPMENT_PREVIEW_ENABLED) {
         return { success: false, error: 'API actions are disabled in the local sample-data preview.' };
     }
@@ -249,13 +250,13 @@ async function callAPI(action, data = {}, _retryCount = 0) {
                 timedOut = true;
                 controller.abort();
                 reject(new Error('The request timed out. Check your connection and try again.'));
-            }, API_REQUEST_TIMEOUT_MS);
+            }, timeoutMs);
         });
         return await Promise.race([request, timeout]);
     } catch (e) {
         if (!timedOut && e instanceof TypeError && _retryCount < 2) {
             await delay(500 * (2 ** _retryCount));
-            return callAPI(action, data, _retryCount + 1);
+            return callAPI(action, data, _retryCount + 1, timeoutMs);
         }
         console.error('API Error:', e);
         return { success: false, error: e.message };
@@ -634,10 +635,6 @@ function activateCurrentTab() {
     const appContainerEl = document.getElementById('appContainer');
     if (appContainerEl) appContainerEl.classList.toggle('dashboard-active', currentTab === 'transactions');
     localStorage.setItem('legacy_active_tab', currentTab);
-    if (currentTab === 'pending' && hasAdminPortalAccess()) {
-        loadAdminMemberProfiles('adminPhoneProfiles');
-        loadAllUsersFull('adminAllUsersList');
-    }
     if (currentTab === 'loans') loadLoansDashboard();
     if (currentTab === 'meetings') loadGroupMessages();
 }
@@ -1114,7 +1111,7 @@ async function loadDeveloperPortal() {
                         interestEarned: 5600
                     }
                 }
-                : await callAPI('getDeveloperPortalData', { email: currentUserEmail });
+                : await callAPI('getDeveloperPortalData', { email: currentUserEmail }, 0, DEVELOPER_PORTAL_TIMEOUT_MS);
             if (!res.success) throw new Error(res.error || 'Could not load developer portal data.');
             await Promise.all([
                 loadSystemStats({ success: true, stats: res.stats }),
@@ -1130,7 +1127,10 @@ async function loadDeveloperPortal() {
                 'devAuditLog'
             ].forEach(id => {
                 const container = document.getElementById(id);
-                if (container) showDeveloperLoadError(container, error, loadDeveloperPortal);
+                if (container) {
+                    container.classList.remove('loading-container');
+                    showDeveloperLoadError(container, error, loadDeveloperPortal);
+                }
             });
         }
     })();
@@ -1148,6 +1148,9 @@ async function loadSystemStats(data = null) {
         if (res.success && res.stats) {
             const s = res.stats;
             container.classList.remove('loading-container');
+            container.setAttribute('aria-busy', 'false');
+            container.removeAttribute('role');
+            container.removeAttribute('aria-label');
             container.innerHTML = `
                 <div class="developer-stats-grid">
                     <div class="developer-stat-tile"><div class="summary-stat-value" id="devStatUsers" data-target="0">0</div><div class="summary-stat-label">Total users</div></div>
@@ -1341,7 +1344,6 @@ async function editUserProfilePhoto(email) {
             await saveProfileImageToServer(cropped, targetEmail);
             showToast(`Profile photo updated for ${targetEmail}.`, 'success');
             await loadAllUsersFull();
-            await loadAllUsersFull('adminAllUsersList');
         } catch (error) {
             if (error.name !== 'AbortError') showToast(error.message || 'Could not update this profile photo.', 'error');
         } finally {
@@ -1437,7 +1439,6 @@ async function updateUserRole(email, role) {
         if (res.success) {
             showToast(`Role updated for ${email}`, 'success');
             await loadAllUsersFull();
-            await loadAllUsersFull('adminAllUsersList');
             await loadSystemStats();
         } else {
             showToast(res.error || 'Error updating role', 'error');
@@ -1473,7 +1474,6 @@ async function createGroupUser(button) {
         if (!result.success) throw new Error(result.error || 'Could not add this user.');
         modal.remove();
         showToast('User added successfully.', 'success');
-        await loadAllUsersFull('adminAllUsersList');
         await loadAllUsersFull();
     } catch (error) {
         showToast(error.message || 'Could not add this user.', 'error');
@@ -1518,7 +1518,6 @@ async function deleteUser(email) {
         if (res.success) {
             showToast(`${email} deactivated successfully.`, 'success');
             await loadAllUsersFull();
-            await loadAllUsersFull('adminAllUsersList');
             await loadSystemStats();
         } else {
             showToast(res.error || 'Error deactivating user', 'error');
@@ -2186,7 +2185,7 @@ function renderPendingApprovals(containerId = 'pendingApprovalsList') {
             <div class="transaction-approval-message">
                 <span class="transaction-approval-message-label">Message</span>
                 <p class="transaction-approval-message-preview">${escapeHtml(messagePreview)}</p>
-                ${hasLongMessage ? `<p class="transaction-approval-message-full" hidden>${escapeHtml(message)}</p><button type="button" class="transaction-approval-message-toggle" aria-expanded="false">View details</button>` : ''}
+                ${hasLongMessage ? `<p class="transaction-approval-message-full" hidden>${escapeHtml(message)}</p><button type="button" class="transaction-approval-message-toggle" aria-expanded="false">View full message</button>` : ''}
             </div>
             <div class="transaction-approval-actions">
                 <button type="button" class="approve-btn" data-approval-action="approve" data-approval-id="${escapeHtml(t.id)}">Approve</button>
@@ -2202,7 +2201,7 @@ function renderPendingApprovals(containerId = 'pendingApprovalsList') {
             const full = card?.querySelector('.transaction-approval-message-full');
             if (!preview || !full) return;
             button.setAttribute('aria-expanded', String(!expanded));
-            button.textContent = expanded ? 'View details' : 'Show less';
+            button.textContent = expanded ? 'View full message' : 'Show less';
             preview.hidden = !expanded;
             full.hidden = expanded;
         });
@@ -3494,7 +3493,7 @@ async function saveMemberPhone(button) {
         }
         status.textContent = 'Saved';
         showToast(phone ? 'Phone saved and marked verified by admin.' : 'Phone number removed.', 'success');
-        await loadAdminMemberProfiles(row.closest('#developerPhoneProfiles') ? 'developerPhoneProfiles' : 'adminPhoneProfiles');
+        await loadAdminMemberProfiles('developerPhoneProfiles');
     } catch (error) {
         status.textContent = error.message || 'Could not save this phone number.';
         showToast(status.textContent, 'error');
@@ -4250,10 +4249,6 @@ function activateTab(tabId) {
         loadGroupMessages();
         loadMeetingMinutes();
         markMeetingUpdatesRead();
-    }
-    if (tabId === 'pending' && hasAdminPortalAccess()) {
-        loadAdminMemberProfiles('adminPhoneProfiles');
-        loadAllUsersFull('adminAllUsersList');
     }
     if (tabId === 'developer') {
         if (typeof loadDeveloperPortal === 'function') loadDeveloperPortal();

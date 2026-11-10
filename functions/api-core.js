@@ -1029,17 +1029,20 @@ async function handleAction(action, params, user) {
                 };
             }
             if (action === "getDeveloperPortalData") {
-                const [users, joinRequestsSnapshot, pendingTransactionsSnapshot, pendingLoansSnapshot, activeLoans, subscriptionsSnapshot, savingsSnapshot, auditSnapshot] = await Promise.all([
+                const activeLoansCollection = db.collection("activeLoans");
+                const [users, joinRequestsSnapshot, pendingTransactionsSnapshot, pendingLoansSnapshot, activeLoansSnapshot, interestSnapshot, subscriptionsSnapshot, savingsSnapshot, auditSnapshot] = await Promise.all([
                     rows("users"),
                     db.collection("registrationRequests").where("status", "==", "pending").get(),
                     db.collection("pendingTransactions").count().get(),
                     db.collection("pendingLoans").count().get(),
-                    rows("activeLoans"),
+                    activeLoansCollection.where("status", "!=", "paid_off").get(),
+                    activeLoansCollection.aggregate({ total: AggregateField.sum("interest") }).get(),
                     db.collection("subscriptions").count().get(),
                     db.collection("transactions").where("type", "==", "Savings")
                         .aggregate({ total: AggregateField.sum("amount") }).get(),
-                    db.collection("auditLog").orderBy("timestamp", "desc").limit(50).get()
+                    db.collection("auditLog").orderBy("timestamp", "desc").limit(15).get()
                 ]);
+                const activeLoans = activeLoansSnapshot.docs.map((doc) => doc.data());
                 const joinRequests = joinRequestsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
                 const pendingUserEmails = new Set(users
                     .filter((item) => item.status === "pending")
@@ -1048,21 +1051,10 @@ async function handleAction(action, params, user) {
                     type: "Savings",
                     amount: savingsSnapshot.data().total || 0
                 }], activeLoans);
+                summary.interestEarned = interestSnapshot.data().total || 0;
                 return {
                     success: true,
                     users: users.map(publicUser),
-                    profiles: users
-                        .filter((profile) => profile.status === "approved")
-                        .map((profile) => ({
-                            email: emailKey(profile.email || profile.id),
-                            name: String(profile.displayName || profile.name || ""),
-                            phone: String(profile.phone || ""),
-                            phoneCountry: String(profile.phoneCountry || ""),
-                            phoneDialCode: String(profile.phoneDialCode || ""),
-                            phoneVerifiedAt: String(profile.phoneVerifiedAt || ""),
-                            phoneVerifiedBy: String(profile.phoneVerifiedBy || "")
-                        }))
-                        .filter((profile) => profile.email),
                     registrations: users.filter((item) => item.status === "pending").map(publicUser),
                     joinRequests: joinRequests.filter((item) => item.status === "pending"),
                     entries: auditSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
@@ -1073,7 +1065,7 @@ async function handleAction(action, params, user) {
                         ).length,
                         pendingTransactions: pendingTransactionsSnapshot.data().count,
                         pendingLoans: pendingLoansSnapshot.data().count,
-                        activeLoans: activeLoans.filter((item) => item.status !== "paid_off").length,
+                        activeLoans: activeLoansSnapshot.size,
                         pushSubscriptions: subscriptionsSnapshot.data().count,
                         totalSavings: summary.savings,
                         outstandingLoans: summary.outstanding,

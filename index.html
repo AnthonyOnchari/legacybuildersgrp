@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=175">
+    <link rel="stylesheet" href="style.css?v=177">
 </head>
 <body class="finance-ui app-loading">
 
@@ -489,25 +489,11 @@
         <!-- Pending Panel -->
         <div id="pendingPanel" class="panel fullscreen-panel">
             <div class="admin-portal-hero">
-                <div><span class="admin-portal-kicker">GROUP OPERATIONS</span><h1>Admin portal</h1><p>Keep member access, approvals, and group records moving from one clear workspace.</p></div>
+                <div><span class="admin-portal-kicker">GROUP OPERATIONS</span><h1>Admin portal</h1><p>Review member requests and keep group transactions moving from one clear workspace.</p></div>
                 <div class="admin-portal-status"><span></span>Admin workspace</div>
-            </div>
-            <div class="card admin-phone-directory-card">
-                <div class="portal-section-heading">
-                    <div><span class="dashboard-eyebrow">MEMBER CONTACTS</span><h2>Verified phone numbers</h2><p>Add or update a member's phone. Numbers entered here are marked as verified by an administrator.</p></div>
-                    <span class="admin-verified-pill">Admin managed</span>
-                </div>
-                <div id="adminPhoneProfiles" class="admin-phone-profiles loading-container"><div class="loading-spinner"></div><div>Loading member contacts...</div></div>
             </div>
             <div class="card admin-queue-card admin-approvals-card"><h2>Pending approvals</h2><div id="pendingApprovalsList" class="loading-container"><div class="loading-spinner"></div><div>Loading pending approvals...</div></div></div>
             <div class="card admin-queue-card admin-registrations-card"><h2>Pending registrations</h2><div id="pendingRegistrationsList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div></div>
-            <div class="card admin-user-management-card">
-                <div class="portal-section-heading"><div><span class="dashboard-eyebrow">MEMBER ACCESS</span><h2>User management</h2><p>Add members, manage roles, and remove accounts. Developer accounts are protected.</p></div><button type="button" class="admin-add-user-button" onclick="openAddUserModal()">+ Add user</button></div>
-                <div id="adminAllUsersList" class="loading-container"><div class="loading-spinner"></div><div>Loading users...</div></div>
-            </div>
-            <div class="card admin-audit-download-card">
-                <div class="portal-section-heading"><div><span class="dashboard-eyebrow">PRIVATE RECORD</span><h2>Group activity export</h2><p>Download the complete audit history for the group.</p></div><button type="button" class="admin-download-log-button" onclick="exportAuditLog()">Download full log</button></div>
-            </div>
         </div>
 
         <!-- About Panel -->
@@ -561,7 +547,18 @@
             </div>
             <div class="card developer-section developer-stats-card">
                 <div class="developer-section-heading"><div><span class="developer-portal-kicker">AT A GLANCE</span><h2>System statistics</h2></div></div>
-                <div id="systemStats" class="loading-container"><div class="loading-spinner"></div><div>Loading stats...</div></div>
+                <div id="systemStats" class="developer-loading-state developer-stats-loading" role="status" aria-label="Loading system statistics" aria-busy="true">
+                    <div class="developer-stats-grid" aria-hidden="true">
+                        <div class="developer-stat-tile"><i></i><i></i></div>
+                        <div class="developer-stat-tile"><i></i><i></i></div>
+                        <div class="developer-stat-tile"><i></i><i></i></div>
+                        <div class="developer-stat-tile"><i></i><i></i></div>
+                        <div class="developer-stat-tile"><i></i><i></i></div>
+                        <div class="developer-stat-tile"><i></i><i></i></div>
+                        <div class="developer-stat-tile"><i></i><i></i></div>
+                        <div class="developer-stat-tile"><i></i><i></i></div>
+                    </div>
+                </div>
             </div>
             <div class="card developer-section developer-approvals-card">
                 <div class="developer-section-heading"><div><span class="developer-portal-kicker">ACTION QUEUE</span><h2>Pending approvals</h2></div></div>
@@ -645,6 +642,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://accounts.google.com/gsi/client" defer></script>
     <script src="firebase-config.js?v=36"></script>
-    <script src="app.js?v=110"></script>
+    <script src="app.js?v=111"></script>
 </body>
 </html>
