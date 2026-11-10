@@ -684,10 +684,23 @@ async function handleAction(action, params, user) {
         case "rejectTransaction": {
             await requireTransactionApprover(user);
             const ref = recordRef("pendingTransactions", params.id);
-            const snapshot = await ref.get();
-            if (!snapshot.exists) throw new Error("Pending transaction not found.");
-            const transaction = snapshot.data();
-            await ref.delete();
+            let transaction;
+            const inboxMessageRef = db.collection("groupMessages").doc();
+            const declinedAt = nowIso();
+            await db.runTransaction(async (tx) => {
+                const snapshot = await tx.get(ref);
+                if (!snapshot.exists) throw new Error("Pending transaction not found.");
+                transaction = snapshot.data();
+                tx.delete(ref);
+                tx.create(inboxMessageRef, {
+                    id: inboxMessageRef.id,
+                    message: `${name} declined ${transaction.member}'s ${transaction.type} of KES ${asNumber(transaction.amount).toLocaleString()}.`,
+                    member: name,
+                    email: user.email,
+                    type: "transaction_rejected",
+                    created_at: declinedAt
+                });
+            });
             await audit(name, `Rejected ${transaction.type}`, `${transaction.member}'s KES ${asNumber(transaction.amount).toLocaleString()}`);
             await sendPush("Transaction Rejected", `Your ${transaction.type} transaction was rejected.`, transaction.member, name, { type: "transaction_rejected" });
             return { success: true };
@@ -1259,29 +1272,45 @@ async function handleAction(action, params, user) {
             const ref = db.collection("users").doc(safeDocId(email));
             const requestRef = db.collection("registrationRequests").doc(safeDocId(email));
             const [snapshot, requestSnapshot] = await Promise.all([ref.get(), requestRef.get()]);
+            const hasPendingRequest = requestSnapshot.exists && requestSnapshot.data().status === "pending";
+            if (snapshot.exists && snapshot.data().status !== "pending" && !hasPendingRequest) {
+                throw new Error("Registration request is no longer pending.");
+            }
+            const targetName = snapshot.exists
+                ? (snapshot.data().displayName || snapshot.data().name || email)
+                : (requestSnapshot.exists ? requestSnapshot.data().name || email : email);
+            const approvedAt = nowIso();
+            const inboxMessageRef = db.collection("groupMessages").doc();
+            const batch = db.batch();
             if (snapshot.exists) {
-                const updates = { status: "approved", approved_by: name, approved_at: nowIso() };
-                await Promise.all([
-                    ref.update(updates),
-                    ...(requestSnapshot.exists && requestSnapshot.data().status === "pending"
-                        ? [requestRef.update(updates)]
-                        : [])
-                ]);
+                const updates = { status: "approved", approved_by: name, approved_at: approvedAt };
+                batch.update(ref, updates);
+                if (requestSnapshot.exists && requestSnapshot.data().status === "pending") {
+                    batch.update(requestRef, updates);
+                }
             } else if (requestSnapshot.exists && requestSnapshot.data().status === "pending") {
-                const request = requestSnapshot.data();
-                await ref.create({
+                batch.create(ref, {
                     email,
-                    name: request.name,
+                    name: requestSnapshot.data().name,
                     role: "member",
                     status: "approved",
-                    created_at: request.created_at || nowIso(),
+                    created_at: requestSnapshot.data().created_at || approvedAt,
                     approved_by: name,
-                    approved_at: nowIso()
+                    approved_at: approvedAt
                 });
-                await requestRef.update({ status: "approved", approved_by: name, approved_at: nowIso() });
+                batch.update(requestRef, { status: "approved", approved_by: name, approved_at: approvedAt });
             } else {
                 throw new Error("Registration request not found.");
             }
+            batch.create(inboxMessageRef, {
+                id: inboxMessageRef.id,
+                message: `${name} approved ${targetName}'s registration request.`,
+                member: name,
+                email: user.email,
+                type: "registration_approved",
+                created_at: approvedAt
+            });
+            await batch.commit();
             await audit(name, "Approved registration", email);
             return { success: true };
         }
@@ -1291,19 +1320,36 @@ async function handleAction(action, params, user) {
             const ref = db.collection("users").doc(safeDocId(email));
             const requestRef = db.collection("registrationRequests").doc(safeDocId(email));
             const [snapshot, requestSnapshot] = await Promise.all([ref.get(), requestRef.get()]);
+            const hasPendingRequest = requestSnapshot.exists && requestSnapshot.data().status === "pending";
+            if (snapshot.exists && snapshot.data().status !== "pending" && !hasPendingRequest) {
+                throw new Error("Registration request is no longer pending.");
+            }
+            const targetName = snapshot.exists
+                ? (snapshot.data().displayName || snapshot.data().name || email)
+                : (requestSnapshot.exists ? requestSnapshot.data().name || email : email);
+            const rejectedAt = nowIso();
+            const inboxMessageRef = db.collection("groupMessages").doc();
+            const batch = db.batch();
             if (snapshot.exists) {
-                const updates = { status: "rejected", rejected_by: name, rejected_at: nowIso() };
-                await Promise.all([
-                    ref.update(updates),
-                    ...(requestSnapshot.exists && requestSnapshot.data().status === "pending"
-                        ? [requestRef.update(updates)]
-                        : [])
-                ]);
+                const updates = { status: "rejected", rejected_by: name, rejected_at: rejectedAt };
+                batch.update(ref, updates);
+                if (requestSnapshot.exists && requestSnapshot.data().status === "pending") {
+                    batch.update(requestRef, updates);
+                }
             } else if (requestSnapshot.exists && requestSnapshot.data().status === "pending") {
-                await requestRef.update({ status: "rejected", rejected_by: name, rejected_at: nowIso() });
+                batch.update(requestRef, { status: "rejected", rejected_by: name, rejected_at: rejectedAt });
             } else {
                 throw new Error("Registration request not found.");
             }
+            batch.create(inboxMessageRef, {
+                id: inboxMessageRef.id,
+                message: `${name} declined ${targetName}'s registration request.`,
+                member: name,
+                email: user.email,
+                type: "registration_rejected",
+                created_at: rejectedAt
+            });
+            await batch.commit();
             await audit(name, "Rejected registration", email);
             return { success: true };
         }
@@ -1478,6 +1524,17 @@ async function handleAction(action, params, user) {
             const batch = db.batch();
             batch.delete(ref);
             batch.delete(recordRef("pendingTransactions", params.editId));
+            const edit = snapshot.data();
+            const inboxMessageRef = db.collection("groupMessages").doc();
+            const declinedAt = nowIso();
+            batch.create(inboxMessageRef, {
+                id: inboxMessageRef.id,
+                message: `${name} declined ${edit.member}'s requested update to their ${edit.type} transaction.`,
+                member: name,
+                email: user.email,
+                type: "transaction_edit_rejected",
+                created_at: declinedAt
+            });
             await batch.commit();
             await audit(name, "Rejected transaction edit", String(params.editId));
             return { success: true };

@@ -1636,7 +1636,7 @@ async function approveRegistration(email) {
             showToast(` ${email} approved!`, 'success');
             await loadDevPendingRegistrations();
             await loadAllUsersFull();
-            await loadGroupMessages();
+            await refreshGroupInboxIfOpen();
             if (isDeveloper()) await loadSystemStats();
         } else {
             showToast(res.error || 'Error approving', 'error');
@@ -1655,7 +1655,7 @@ async function rejectRegistration(email) {
             showToast(` ${email} rejected`, 'success');
             await loadDevPendingRegistrations();
             await loadAllUsersFull();
-            await loadGroupMessages();
+            await refreshGroupInboxIfOpen();
             if (isDeveloper()) await loadSystemStats();
         } else {
             showToast(res.error || 'Error rejecting', 'error');
@@ -2444,7 +2444,7 @@ async function approveTransaction(id) {
     if (res.success) {
         showToast('Transaction approved!', 'success');
         await loadAllData();
-        await loadGroupMessages();
+        await refreshGroupInboxIfOpen();
     }
     else { showToast(res.error || 'Error', 'error'); }
     hideButtonLoading(btn, orig);
@@ -2455,7 +2455,11 @@ async function rejectTransaction(id) {
     const orig = btn.innerHTML;
     showButtonLoading(btn, 'Rejecting...');
     const res = await callAPI('rejectTransaction', { id });
-    if (res.success) { showToast('Transaction rejected', 'success'); await loadAllData(); }
+    if (res.success) {
+        showToast('Transaction rejected and shared with the group.', 'success');
+        await loadAllData();
+        await refreshGroupInboxIfOpen();
+    }
     else { showToast(res.error || 'Error', 'error'); }
     hideButtonLoading(btn, orig);
 }
@@ -2466,8 +2470,9 @@ async function rejectTransactionEdit(editId, rejectedBy) {
     if (btn) showButtonLoading(btn, 'Rejecting...');
     const res = await callAPI('rejectTransactionEdit', { editId, rejectedBy: currentUser });
     if (res.success) {
-        showToast('Edit request rejected — original restored', 'success');
+        showToast('Edit request declined and shared with the group; original transaction unchanged.', 'success');
         await loadAllData();
+        await refreshGroupInboxIfOpen();
     } else {
         showToast(res.error || 'Error rejecting edit', 'error');
     }
@@ -2487,6 +2492,7 @@ async function approveLoan(loanId) {
         showToast(remaining > 0 ? `Approved! Need ${remaining} more` : `Loan fully approved!`, 'success');
         await loadAllData();
         await loadLoansDashboard();
+        await refreshGroupInboxIfOpen();
     } else { showToast('Error: ' + res.error, 'error'); }
     hideButtonLoading(btn, orig);
 }
@@ -2544,6 +2550,7 @@ async function rejectLoan(loanId) {
         showToast('Decision recorded and shared with the group.', 'success');
         await loadAllData();
         await loadLoansDashboard();
+        await refreshGroupInboxIfOpen();
     } else showToast('Error: ' + res.error, 'error');
 }
 
@@ -2570,6 +2577,7 @@ async function submitLoanDueDate(loanId) {
         showToast('Loan activated with due date set!', 'success');
         await loadAllData();
         await loadLoansDashboard();
+        await refreshGroupInboxIfOpen();
     } else {
         showToast(res.error || 'Error setting due date', 'error');
     }
@@ -4851,6 +4859,12 @@ function updateMemoriesPosition(instant = false) {
         dot.classList.toggle('active', active);
         dot.setAttribute('aria-current', active ? 'true' : 'false');
     });
+}
+
+async function refreshGroupInboxIfOpen() {
+    if (document.getElementById('groupChatModal')?.style.display !== 'none') {
+        await loadGroupMessages(true);
+    }
 }
 
 async function loadGroupMessages(force = false) {
