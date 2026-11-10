@@ -31,7 +31,7 @@ let unreadGroupMessages = 0;
 let groupMessagesLoading = false, groupMessageRetryDelay = 60000, nextGroupMessageRetryAt = 0;
 let unreadMeetingUpdates = false;
 const memberPhotoCache = {};
-let serviceWorkerRegistered = false, pushSubscription = null;
+let serviceWorkerRegistered = false, pushSubscription = null, pushSetupPromise = null;
 const countUpFrames = new WeakMap();
 let memberRollContainer = null, memberRollObserver = null, memberRollAnimationFrame = 0;
 const memberRollReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -4281,6 +4281,7 @@ async function checkAndShowNotificationPrompt() {
     enableButton.hidden = false;
     const permission = getNotificationPermission();
     if (permission === 'default') {
+        enableButton.textContent = 'Enable Notifications';
         message.textContent = 'Get real-time alerts';
         prompt.classList.add('active');
         registerServiceWorker().catch(error => {
@@ -4292,11 +4293,16 @@ async function checkAndShowNotificationPrompt() {
         enableButton.hidden = true;
         prompt.classList.add('active');
     } else if (permission === 'granted') {
-        prompt.classList.remove('active');
+        enableButton.hidden = false;
+        enableButton.textContent = 'Retry setup';
+        message.textContent = 'Setting up your notifications...';
+        prompt.classList.add('active');
         try {
-            const registration = await registerServiceWorker();
-            await subscribeToPush(registration);
+            await setupPushNotifications();
+            prompt.classList.remove('active');
         } catch (error) {
+            message.textContent = 'Notifications are allowed, but setup did not finish. Tap to retry.';
+            enableButton.textContent = 'Retry setup';
             console.error('Push notification setup failed:', error);
             showToast(error.message || 'Could not set up push notifications.', 'error');
         }
@@ -4309,11 +4315,12 @@ async function requestNotificationPermission() {
     const supportMessage = getNotificationSupportMessage();
     if (supportMessage) { showToast(supportMessage, 'error'); return; }
     try {
-        const permission = await Notification.requestPermission();
+        const permission = Notification.permission === 'granted'
+            ? 'granted'
+            : await Notification.requestPermission();
         if (permission === 'granted') {
-            document.getElementById('notificationPrompt').classList.remove('active');
-            const registration = await registerServiceWorker();
-            await subscribeToPush(registration);
+            await setupPushNotifications();
+            document.getElementById('notificationPrompt')?.classList.remove('active');
         } else {
             await checkAndShowNotificationPrompt();
             if (permission === 'denied') showToast('Allow notifications in your browser or phone settings.', 'error');
@@ -4329,6 +4336,16 @@ async function registerServiceWorker() {
     const registration = await navigator.serviceWorker.register('/service-worker.js');
     serviceWorkerRegistered = true;
     return registration;
+}
+
+function setupPushNotifications() {
+    if (pushSubscription) return Promise.resolve(pushSubscription);
+    if (!pushSetupPromise) {
+        pushSetupPromise = registerServiceWorker()
+            .then(registration => subscribeToPush(registration))
+            .finally(() => { pushSetupPromise = null; });
+    }
+    return pushSetupPromise;
 }
 
 function urlBase64ToUint8Array(base64String) {
@@ -5453,6 +5470,9 @@ document.addEventListener('DOMContentLoaded', () => {
             syncChatViewport();
             scrollGroupMessagesToBottom('smooth');
         }, 250);
+    });
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && currentUser) checkAndShowNotificationPrompt();
     });
     initializeAuthVideoLoop();
     initializeGoogleSignIn();
