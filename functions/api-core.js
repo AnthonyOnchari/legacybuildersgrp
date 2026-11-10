@@ -1479,14 +1479,34 @@ async function handleAction(action, params, user) {
         }
         case "sendPushNotification": {
             await requireAdmin(user);
-            const count = await sendPush(
-                String(params.title || "NBFA GROUP"),
-                String(params.body || ""),
-                params.recipient || null,
-                params.sender || name,
-                params.data || {}
-            );
-            return { success: true, sent: count };
+            const title = String(params.title || "NBFA GROUP").trim();
+            const body = String(params.body || "").trim();
+            if (!body) throw new Error("Write an announcement before sending it.");
+            const inboxMessageRef = db.collection("groupMessages").doc();
+            const createdAt = nowIso();
+            await inboxMessageRef.create({
+                id: inboxMessageRef.id,
+                message: `${title}\n${body}`,
+                member: name,
+                email: user.email,
+                type: "announcement",
+                created_at: createdAt
+            });
+            let sent = 0;
+            let pushError = "";
+            try {
+                sent = await sendPush(
+                    title,
+                    body,
+                    params.recipient || null,
+                    params.sender || name,
+                    params.data || {}
+                );
+            } catch (error) {
+                console.error("Announcement was posted to the group inbox, but push delivery failed", error);
+                pushError = error.message || "Push delivery failed.";
+            }
+            return { success: true, sent, pushError };
         }
         case "requestTransactionEdit": {
             const rowKey = String(params.rowKey || "");

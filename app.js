@@ -2911,12 +2911,19 @@ async function sendAnnouncement() {
     const btn = document.getElementById('sendAnnouncementBtn');
     const originalText = btn.innerHTML;
     showButtonLoading(btn, 'Sending...');
-    const title = titleInput ? ` ${titleInput}` : `Announcement from ${currentUser}`;
+    const title = titleInput || `Announcement from ${currentUser}`;
     const body = `${bodyInput} — sent by ${currentUser}`;
     const res = await callAPI('sendPushNotification', { title, body, sender: currentUser });
     if (res.success) {
         const sent = res.sent || 0;
-        showToast(sent > 0 ? `Announcement sent to ${sent} member${sent > 1 ? 's' : ''}!` : 'No other members are subscribed yet', 'success');
+        await refreshGroupInboxIfOpen();
+        if (res.pushError) {
+            showToast(`Announcement posted to the group inbox, but push delivery failed: ${res.pushError}`, 'error');
+        } else {
+            showToast(sent > 0
+                ? `Announcement posted to the group inbox and sent to ${sent} member${sent > 1 ? 's' : ''}!`
+                : 'Announcement posted to the group inbox; no other members are subscribed to push notifications.', 'success');
+        }
         document.getElementById('announcementTitle').value = '';
         document.getElementById('announcementBody').value = '';
     } else {
