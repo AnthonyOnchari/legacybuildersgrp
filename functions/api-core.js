@@ -1059,7 +1059,7 @@ async function handleAction(action, params, user) {
             }
             if (action === "getDeveloperPortalData") {
                 const activeLoansCollection = db.collection("activeLoans");
-                const [usersCountSnapshot, pendingUsersSnapshot, joinRequestsSnapshot, pendingTransactionsSnapshot, pendingLoansSnapshot, activeLoansSnapshot, interestSnapshot, subscriptionsSnapshot, savingsSnapshot, auditSnapshot] = await Promise.all([
+                const [usersCountSnapshot, pendingUsersSnapshot, joinRequestsSnapshot, pendingTransactionsSnapshot, pendingLoansSnapshot, activeLoansSnapshot, interestSnapshot, subscriptionsSnapshot, savingsSnapshot] = await Promise.all([
                     db.collection("users").count().get(),
                     db.collection("users").where("status", "==", "pending").get(),
                     db.collection("registrationRequests").where("status", "==", "pending").get(),
@@ -1069,8 +1069,7 @@ async function handleAction(action, params, user) {
                     activeLoansCollection.aggregate({ total: AggregateField.sum("interest") }).get(),
                     db.collection("subscriptions").count().get(),
                     db.collection("transactions").where("type", "==", "Savings")
-                        .aggregate({ total: AggregateField.sum("amount") }).get(),
-                    db.collection("auditLog").orderBy("timestamp", "desc").limit(15).get()
+                        .aggregate({ total: AggregateField.sum("amount") }).get()
                 ]);
                 const activeLoans = activeLoansSnapshot.docs.map((doc) => doc.data());
                 const joinRequests = joinRequestsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -1083,9 +1082,6 @@ async function handleAction(action, params, user) {
                 summary.interestEarned = interestSnapshot.data().total || 0;
                 return {
                     success: true,
-                    registrations: pendingUsers.map(publicUser),
-                    joinRequests: joinRequests.filter((item) => item.status === "pending"),
-                    entries: auditSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
                     stats: {
                         totalUsers: usersCountSnapshot.data().count,
                         pendingRegistrations: pendingUserEmails.size + joinRequests.filter((item) =>

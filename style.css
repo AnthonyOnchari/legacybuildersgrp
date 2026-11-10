@@ -15367,6 +15367,22 @@ body.finance-ui .developer-contacts-dialog .admin-phone-profiles {
     overflow: auto;
     padding-top: 18px;
 }
+body.finance-ui .developer-users-dialog #allUsersList {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: auto;
+    padding-top: 18px;
+}
+body.finance-ui .developer-users-dialog .developer-user-directory {
+    padding: 0 2px 6px;
+}
+body.finance-ui .developer-users-dialog .developer-user-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+    gap: 10px;
+}
+body.finance-ui .developer-users-dialog .developer-users-load-more {
+    margin-top: 14px;
+}
 body.finance-ui .developer-contacts-dialog .developer-phone-grid {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
     gap: 9px;
@@ -15714,6 +15730,10 @@ body.finance-ui.dark-mode .developer-contacts-dialog .developer-phone-card {
     border-color: #343f36;
     background: #171d19;
 }
+body.finance-ui.dark-mode .developer-users-dialog .developer-user-card {
+    border-color: #343f36;
+    background: #171d19;
+}
 body.finance-ui.dark-mode .developer-contacts-open,
 body.finance-ui.dark-mode .developer-contacts-close {
     border-color: #3c4b40;
@@ -15775,6 +15795,7 @@ body.finance-ui.dark-mode .developer-contacts-dialog .developer-phone-card .admi
     body.finance-ui .developer-contacts-dialog-header { gap: 10px; }
     body.finance-ui .developer-contacts-close { padding: 0 10px; }
     body.finance-ui .developer-contacts-dialog .developer-phone-grid { grid-template-columns: minmax(0, 1fr); }
+    body.finance-ui .developer-users-dialog .developer-user-grid { grid-template-columns: minmax(0, 1fr); }
     body.finance-ui .developer-portal #developerPendingApprovalsList.developer-approval-loading {
         min-height: 118px;
         gap: 12px;

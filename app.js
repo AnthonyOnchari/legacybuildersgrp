@@ -1068,6 +1068,7 @@ function updateDashboardGreeting() {
 let developerPortalLoadPromise = null;
 let developerUsersCursor = null;
 let developerUsersLoading = false;
+let developerPreviewUsers = [];
 
 function showDeveloperLoadError(container, error, retry) {
     container.removeAttribute('aria-label');
@@ -1092,21 +1093,15 @@ async function loadDeveloperPortal() {
     if (!isDeveloper()) return;
     if (developerPortalLoadPromise) return developerPortalLoadPromise;
     developerPortalLoadPromise = (async () => {
-        const usersLoadPromise = DEVELOPMENT_PREVIEW_ENABLED ? null : loadAllUsersFull();
         try {
-            const res = DEVELOPMENT_PREVIEW_ENABLED
-                ? {
-                    success: true,
-                    users: allMembersData.map((member, index) => ({
-                        ...member,
-                        role: index === 0 ? 'developer' : index === 1 ? 'admin' : 'member',
-                        status: 'approved'
-                    })),
-                    profiles: allMembersData.map(member => ({ email: member.email, name: member.name, phone: '' })),
-                    registrations: [],
-                    joinRequests: [],
-                    entries: [],
-                    stats: {
+            if (DEVELOPMENT_PREVIEW_ENABLED) {
+                const users = allMembersData.map((member, index) => ({
+                    ...member,
+                    role: index === 0 ? 'developer' : index === 1 ? 'admin' : 'member',
+                    status: 'approved'
+                }));
+                await Promise.all([
+                    loadSystemStats({ success: true, stats: {
                         totalUsers: allMembersData.length,
                         pendingRegistrations: 0,
                         pendingTransactions: 0,
@@ -1116,16 +1111,44 @@ async function loadDeveloperPortal() {
                         totalSavings: 45500,
                         outstandingLoans: 42000,
                         interestEarned: 5600
-                    }
+                    } }),
+                    loadDevPendingRegistrations({ success: true, registrations: [], joinRequests: [] }),
+                    loadDevAuditLog({ success: true, entries: [] })
+                ]);
+                developerPreviewUsers = users;
+                return;
+            }
+
+            const loadSection = async (containerId, request, render, retry) => {
+                const container = document.getElementById(containerId);
+                try {
+                    const res = await request;
+                    if (!res.success) throw new Error(res.error || 'Could not load this section.');
+                    await render(res);
+                } catch (error) {
+                    if (container) showDeveloperLoadError(container, error, retry);
                 }
-                : await callAPI('getDeveloperPortalData', { email: currentUserEmail }, 0, DEVELOPER_PORTAL_TIMEOUT_MS);
-            if (!res.success) throw new Error(res.error || 'Could not load developer portal data.');
-            const usersPromise = usersLoadPromise || loadAllUsersFull('allUsersList', { success: true, users: res.users });
+            };
+
             await Promise.all([
-                loadSystemStats({ success: true, stats: res.stats }),
-                loadDevPendingRegistrations({ success: true, registrations: res.registrations, joinRequests: res.joinRequests }),
-                loadDevAuditLog({ success: true, entries: res.entries }),
-                usersPromise
+                loadSection(
+                    'systemStats',
+                    callAPI('getDeveloperPortalData', { email: currentUserEmail }, 0, DEVELOPER_PORTAL_TIMEOUT_MS),
+                    res => loadSystemStats({ success: true, stats: res.stats }),
+                    loadDeveloperPortal
+                ),
+                loadSection(
+                    'devPendingRegistrations',
+                    callAPI('getPendingRegistrations', { email: currentUserEmail }, 0, DEVELOPER_PORTAL_TIMEOUT_MS),
+                    loadDevPendingRegistrations,
+                    loadDevPendingRegistrations
+                ),
+                loadSection(
+                    'devAuditLog',
+                    callAPI('getDeveloperAuditLog', { email: currentUserEmail, limit: 15 }, 0, DEVELOPER_PORTAL_TIMEOUT_MS),
+                    loadDevAuditLog,
+                    loadDevAuditLog
+                )
             ]);
         } catch (error) {
             [
@@ -1147,6 +1170,66 @@ async function loadDeveloperPortal() {
         developerPortalLoadPromise = null;
     }
 }
+
+let developerUsersDialogOpener = null;
+
+function openDeveloperUsersDialog() {
+    if (!isDeveloper()) {
+        showToast('Developer portal access is restricted.', 'error');
+        return;
+    }
+    const dialog = document.getElementById('developerUsersDialog');
+    const container = document.getElementById('allUsersList');
+    if (!dialog || !container) return;
+    if (dialog.open) {
+        dialog.querySelector('.developer-contacts-close')?.focus();
+        return;
+    }
+
+    developerUsersDialogOpener = document.activeElement;
+    dialog.showModal();
+    if (container.dataset.loaded !== 'true') {
+        if (DEVELOPMENT_PREVIEW_ENABLED) {
+            const users = developerPreviewUsers.length ? developerPreviewUsers : allMembersData.map((member, index) => ({
+                ...member,
+                role: index === 0 ? 'developer' : index === 1 ? 'admin' : 'member',
+                status: 'approved'
+            }));
+            loadAllUsersFull('allUsersList', { success: true, users });
+        } else {
+            loadAllUsersFull();
+        }
+    }
+    requestAnimationFrame(() => dialog.querySelector('.developer-contacts-close')?.focus());
+}
+
+function closeDeveloperUsersDialog() {
+    const dialog = document.getElementById('developerUsersDialog');
+    if (dialog?.open) dialog.close();
+}
+
+document.getElementById('developerUsersDialog')?.addEventListener('close', () => {
+    if (developerUsersDialogOpener instanceof HTMLElement && developerUsersDialogOpener.isConnected) {
+        developerUsersDialogOpener.focus();
+    }
+    developerUsersDialogOpener = null;
+});
+
+document.getElementById('developerUsersDialog')?.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+        event.preventDefault();
+        closeDeveloperUsersDialog();
+    }
+});
+
+document.getElementById('developerUsersDialog')?.addEventListener('click', event => {
+    const dialog = event.currentTarget;
+    if (event.target !== dialog) return;
+    const bounds = dialog.getBoundingClientRect();
+    if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) {
+        dialog.close();
+    }
+});
 
 async function loadSystemStats(data = null) {
     const container = document.getElementById('systemStats');
@@ -1204,6 +1287,7 @@ async function loadAllUsersFull(containerId = 'allUsersList', data = null) {
             container.removeAttribute('role');
             container.removeAttribute('aria-label');
             container.setAttribute('aria-busy', 'false');
+            container.dataset.loaded = 'true';
             developerUsersCursor = isDeveloperDirectory ? res.nextCursor || null : null;
             container.innerHTML = `
                 <div class="developer-user-directory">
@@ -1262,6 +1346,7 @@ async function loadAllUsersFull(containerId = 'allUsersList', data = null) {
             throw new Error(res.error || 'Could not load users.');
         }
     } catch (e) {
+        container.dataset.loaded = 'false';
         showDeveloperLoadError(container, e, () => loadAllUsersFull(containerId));
     }
 }
@@ -1500,7 +1585,7 @@ async function loadDevAuditLog(data = null) {
     const container = document.getElementById('devAuditLog');
     if (!container) return;
     try {
-        const res = data || await callAPI('getDeveloperAuditLog', { email: currentUserEmail, limit: 50 });
+        const res = data || await callAPI('getDeveloperAuditLog', { email: currentUserEmail, limit: 15 }, 0, DEVELOPER_PORTAL_TIMEOUT_MS);
         if (res.success && res.entries) {
             container.removeAttribute('role');
             container.removeAttribute('aria-label');

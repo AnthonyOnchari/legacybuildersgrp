@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=178">
+    <link rel="stylesheet" href="style.css?v=179">
 </head>
 <body class="finance-ui app-loading">
 
@@ -571,13 +571,10 @@
                 </div>
             </div>
             <div class="card developer-section developer-users-card">
-                <div class="developer-section-heading"><div><span class="developer-portal-kicker">ACCESS CONTROL</span><h2>User management</h2></div></div>
-                <div id="allUsersList" class="developer-loading-state developer-users-loading" role="status" aria-label="Loading users" aria-busy="true">
-                    <div class="developer-skeleton-table" aria-hidden="true">
-                        <div class="developer-skeleton-table-head"><i></i><i></i><i></i></div>
-                        <div class="developer-skeleton-user-row"><i></i><i></i><i></i></div>
-                        <div class="developer-skeleton-user-row"><i></i><i></i><i></i></div>
-                        <div class="developer-skeleton-user-row"><i></i><i></i><i></i></div>
+                <div class="developer-section-heading">
+                    <div><span class="developer-portal-kicker">ACCESS CONTROL</span><h2>User management</h2><p>Review member access, group positions, and account settings.</p></div>
+                    <div class="developer-contacts-actions">
+                        <button type="button" class="developer-contacts-open" aria-haspopup="dialog" aria-controls="developerUsersDialog" onclick="openDeveloperUsersDialog()">Manage users</button>
                     </div>
                 </div>
             </div>
@@ -617,6 +614,21 @@
         <div id="developerPhoneProfiles" class="admin-phone-profiles loading-container"><div class="loading-spinner"></div><div>Loading member contacts...</div></div>
     </dialog>
 
+    <dialog id="developerUsersDialog" class="developer-contacts-dialog developer-users-dialog" aria-labelledby="developerUsersTitle">
+        <div class="developer-contacts-dialog-header">
+            <div><span class="developer-portal-kicker">ACCESS CONTROL</span><h2 id="developerUsersTitle">User management</h2><p>Manage account access, group positions, and profile settings.</p></div>
+            <button type="button" class="developer-contacts-close" aria-label="Close user management" onclick="closeDeveloperUsersDialog()">Close</button>
+        </div>
+        <div id="allUsersList" class="developer-loading-state developer-users-loading" role="status" aria-label="Loading users" aria-busy="true">
+            <div class="developer-skeleton-table" aria-hidden="true">
+                <div class="developer-skeleton-table-head"><i></i><i></i><i></i></div>
+                <div class="developer-skeleton-user-row"><i></i><i></i><i></i></div>
+                <div class="developer-skeleton-user-row"><i></i><i></i><i></i></div>
+                <div class="developer-skeleton-user-row"><i></i><i></i><i></i></div>
+            </div>
+        </div>
+    </dialog>
+
     <!-- TAB BAR -->
     <div class="tab-bar" id="tabBar" style="display: none;" aria-label="App navigation">
         <button class="tab" data-panel="transactions"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3.5 10 8.5-7 8.5 7M5.5 9v11h13V9M9 20v-6h6v6"/></svg></span><span>Home</span></button>
@@ -641,6 +653,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://accounts.google.com/gsi/client" defer></script>
     <script src="firebase-config.js?v=36"></script>
-    <script src="app.js?v=112"></script>
+    <script src="app.js?v=114"></script>
 </body>
 </html>
