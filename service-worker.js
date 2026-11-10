@@ -11,16 +11,13 @@ self.addEventListener('activate', function(event) {
     event.waitUntil(self.clients.claim());
 });
 
-// Handle push notifications
 self.addEventListener('push', function(event) {
-    console.log('Push notification received:', event);
-    
     let data = {
         title: 'NBFA GROUP',
         body: 'You have a new notification',
         data: {}
     };
-    
+
     try {
         if (event.data) {
             const parsed = event.data.json();
@@ -34,58 +31,37 @@ self.addEventListener('push', function(event) {
     } catch (e) {
         console.error('Error parsing push data:', e);
     }
-    
+
+    const parsedTimestamp = Date.parse(data.timestamp);
     const options = {
         body: data.body,
-        vibrate: [200, 100, 200],
+        icon: '/Assets/notification-icon.png',
+        badge: '/Assets/notification-icon.png',
+        timestamp: Number.isNaN(parsedTimestamp) ? Date.now() : parsedTimestamp,
+        dir: 'auto',
+        lang: 'en',
         data: data.data || {},
-        requireInteraction: true,
-        actions: [
-            {
-                action: 'open',
-                title: 'Open App'
-            },
-            {
-                action: 'close',
-                title: 'Dismiss'
-            }
-        ]
+        requireInteraction: false
     };
-    
+
     event.waitUntil(
         self.registration.showNotification(data.title, options)
     );
 });
 
-// Handle notification clicks
 self.addEventListener('notificationclick', function(event) {
-    console.log('Notification clicked:', event);
     event.notification.close();
-    
-    if (event.action === 'close') {
-        return;
-    }
-    
-    if (event.action === 'open') {
-        event.waitUntil(
-            clients.openWindow('/')
-        );
-        return;
-    }
-    
-    // Default: open the app
+
     event.waitUntil(
         clients.matchAll({ 
             type: 'window', 
             includeUncontrolled: true 
         })
         .then(function(clientList) {
-            for (let i = 0; i < clientList.length; i++) {
-                const client = clientList[i];
-                if (client.url.includes('/') && 'focus' in client) {
-                    return client.focus();
-                }
-            }
+            const appClient = clientList.find(function(client) {
+                return new URL(client.url).origin === self.location.origin;
+            });
+            if (appClient && 'focus' in appClient) return appClient.focus();
             return clients.openWindow('/');
         })
     );
