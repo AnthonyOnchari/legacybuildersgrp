@@ -6,7 +6,7 @@
   },
   "scripts": {
     "serve": "firebase emulators:start --only functions,firestore",
-    "deploy": "firebase deploy --only functions,firestore:rules",
+    "deploy": "firebase deploy --only functions,firestore:rules,storage",
     "import": "node scripts/import-legacy.js"
   },
   "dependencies": {

@@ -14952,6 +14952,19 @@ body.finance-ui.dark-mode .member-position-badge--member {
         font: inherit;
         cursor: pointer;
     }
+    .group-inbox-load-older {
+        align-self: center;
+        margin: 8px auto;
+        padding: 7px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface);
+        color: var(--ink-soft);
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    .group-inbox-load-older:hover { color: var(--ink); }
     body.finance-ui.dark-mode .group-message-load-error {
         border-color: #754848;
         background: #2a1717;

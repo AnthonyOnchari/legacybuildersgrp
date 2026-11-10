@@ -1,16 +1,23 @@
 const { cert, getApps, initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 const { AggregateField, FieldPath, getFirestore } = require("firebase-admin/firestore");
+const { getStorage } = require("firebase-admin/storage");
 const crypto = require("node:crypto");
 
 let db;
 let firebaseAuth;
+let storageBucket;
+let pushSubscriptionsCache = null;
+let pushSubscriptionsCacheExpiresAt = 0;
 const DEVELOPER_EMAILS = new Set(["info.onchari@gmail.com"]);
 const LOAN_INTEREST_RATE = 0.1;
 const TREASURER_DEFAULT = "Mrs. Kithinji";
 const POSITION_TITLES = new Set(["Chairman", "Vice-Chairman", "Treasurer", "Secretary", "Member"]);
 const PROFILE_SALUTATIONS = new Set(["Mr.", "Mrs."]);
 const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || "qopne8fk";
+const PAYMENT_EVIDENCE_BUCKET = process.env.FIREBASE_STORAGE_BUCKET || "legacy-builders-group.firebasestorage.app";
+const PAYMENT_EVIDENCE_MAX_BYTES = 5 * 1024 * 1024;
+const PAYMENT_EVIDENCE_TYPES = new Set(["application/pdf", "image/jpeg", "image/png"]);
 const PUSH_API_URL = process.env.PUSH_API_URL || "https://legacybuildersgroup.vercel.app/api/send-push";
 
 const emailKey = (email) => String(email || "").trim().toLowerCase();
@@ -72,6 +79,7 @@ function initializeFirebaseAdmin() {
         );
         db = getFirestore(app);
         firebaseAuth = getAuth(app);
+        storageBucket = getStorage(app).bucket(PAYMENT_EVIDENCE_BUCKET);
     } catch (error) {
         console.error("Firebase Admin initialization failed:", error);
         throw new Error("Firebase Admin could not initialize. Verify the service-account key and Firestore permissions.");
@@ -136,30 +144,82 @@ async function emailForName(nameOrEmail) {
 }
 
 async function sendPush(title, body, recipient = null, sender = null, data = {}) {
-    const subscriptions = await rows("subscriptions");
-    const targetEmail = recipient ? await emailForName(recipient) : null;
-    const senderEmail = sender ? await emailForName(sender) : null;
-    const selected = recipient
-        ? (targetEmail ? subscriptions.filter((item) => emailKey(item.email) === targetEmail) : [])
-        : subscriptions.filter((item) => !senderEmail || emailKey(item.email) !== senderEmail);
-    const results = await Promise.allSettled(selected.map(async (item) => {
-        const subscription = item.subscription || {
-            endpoint: item.endpoint,
-            keys: { auth: item.auth, p256dh: item.p256dh }
-        };
-        const response = await fetch(PUSH_API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ subscription, title, body, data })
-        });
-        if (!response.ok && response.status !== 410) {
-            throw new Error(`Push API returned HTTP ${response.status}`);
+    try {
+        if (!pushSubscriptionsCache || Date.now() >= pushSubscriptionsCacheExpiresAt) {
+            pushSubscriptionsCache = await rows("subscriptions");
+            pushSubscriptionsCacheExpiresAt = Date.now() + 30_000;
         }
-        if (response.status === 410) await recordRef("subscriptions", item.id).delete();
-    }));
-    const failures = results.filter((result) => result.status === "rejected");
-    if (failures.length) console.error("Some push notifications could not be delivered", failures);
-    return selected.length - failures.length;
+        const subscriptions = pushSubscriptionsCache;
+        const targetEmail = recipient ? await emailForName(recipient) : null;
+        const senderEmail = sender ? await emailForName(sender) : null;
+        const selected = recipient
+            ? (targetEmail ? subscriptions.filter((item) => emailKey(item.email) === targetEmail) : [])
+            : subscriptions.filter((item) => !senderEmail || emailKey(item.email) !== senderEmail);
+        const type = String(data.type || "");
+        const genericCopy = {
+            announcement: ["New group announcement", "A new announcement is available. Open NBFA Group to read it."],
+            transaction_submission: ["Group transaction submitted", "A transaction was submitted for review. Open NBFA Group for details."],
+            transaction_approved: ["Group transaction approved", "A transaction was approved. Open NBFA Group for details."],
+            transaction_rejected: ["Group transaction declined", "A transaction was declined. Open NBFA Group for details."],
+            transaction_edit_request: ["Transaction update requested", "A transaction update was submitted for review. Open NBFA Group for details."],
+            transaction_edit_rejected: ["Transaction update declined", "A transaction update was declined. Open NBFA Group for details."],
+            loan_request: ["Loan request submitted", "A loan request needs review. Open NBFA Group for details."],
+            loan_approved: ["Loan request approved", "A loan request was approved. Open NBFA Group for details."],
+            loan_rejected: ["Loan request declined", "A loan request was declined. Open NBFA Group for details."],
+            loan_cancelled: ["Loan request cancelled", "A loan request was cancelled. Open NBFA Group for details."],
+            loan_due_date_set: ["Loan activated", "A loan was activated. Open NBFA Group for details."],
+            loan_fully_approved: ["Loan request approved", "A loan request was approved. Open NBFA Group for details."],
+            loan_needs_due_date: ["Loan activation needed", "An approved loan needs its repayment schedule. Open NBFA Group for details."],
+            loan_approval_update: ["Loan request update", "A loan request received an approval. Open NBFA Group for details."],
+            registration_approved: ["Registration approved", "A membership registration was approved."],
+            registration_rejected: ["Registration declined", "A membership registration was declined."],
+            registration_request: ["New membership request", "A membership request needs review. Open NBFA Group to review it."],
+            meeting_scheduled: ["New meeting scheduled", "A group meeting was scheduled. Open NBFA Group for details."],
+            meeting_cancelled: ["Meeting cancelled", "A group meeting was cancelled."],
+            meeting_minutes_saved: ["Meeting minutes available", "New meeting minutes are available in NBFA Group."],
+            classified_developer_security_alert: [title, body]
+        };
+        const copy = genericCopy[type] || [title, body];
+        const safeData = type ? { type } : {};
+        const results = await Promise.allSettled(selected.map(async (item) => {
+            const subscription = item.subscription || {
+                endpoint: item.endpoint,
+                keys: { auth: item.auth, p256dh: item.p256dh }
+            };
+            const response = await fetch(PUSH_API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ subscription, title: copy[0], body: copy[1], data: safeData })
+            });
+            if (response.status === 410) {
+                await recordRef("subscriptions", item.id).delete();
+                if (Array.isArray(pushSubscriptionsCache)) {
+                    pushSubscriptionsCache = pushSubscriptionsCache.filter((subscriptionItem) => subscriptionItem.id !== item.id);
+                }
+                return "expired";
+            }
+            if (!response.ok) throw new Error(`Push API returned HTTP ${response.status}`);
+            return "sent";
+        }));
+        const sent = results.filter((result) => result.status === "fulfilled" && result.value === "sent").length;
+        const expired = results.filter((result) => result.status === "fulfilled" && result.value === "expired").length;
+        const failed = results.filter((result) => result.status === "rejected").length;
+        if (failed) console.error("Some push notifications could not be delivered", results.filter((result) => result.status === "rejected"));
+        return { attempted: selected.length, sent, failed, expired };
+    } catch (error) {
+        console.error("Push delivery could not be completed", error);
+        return { attempted: 0, sent: 0, failed: 1, expired: 0, error: error.message || "Push delivery could not be completed." };
+    }
+}
+
+function combinePushDeliveries(deliveries) {
+    return deliveries.reduce((total, delivery) => ({
+        attempted: total.attempted + (delivery?.attempted || 0),
+        sent: total.sent + (delivery?.sent || 0),
+        failed: total.failed + (delivery?.failed || 0),
+        expired: total.expired + (delivery?.expired || 0),
+        ...(delivery?.error ? { error: delivery.error } : {})
+    }), { attempted: 0, sent: 0, failed: 0, expired: 0 });
 }
 
 async function notifyDevelopersOfProtectedAccountAttempt(actor, targetEmail, action) {
@@ -174,6 +234,27 @@ async function notifyDevelopersOfProtectedAccountAttempt(actor, targetEmail, act
         recipient,
         null,
         { type: "classified_developer_security_alert", action }
+    )));
+}
+
+async function notifyAdministratorsOfRegistration(name, email) {
+    const treasurerName = await getTreasurerName();
+    const [admins, treasurers, configuredTreasurer] = await Promise.all([
+        db.collection("users").where("role", "in", ["admin", "developer"]).get(),
+        db.collection("users").where("position", "==", "Treasurer").get(),
+        db.collection("users").where("name", "==", treasurerName).get()
+    ]);
+    const recipients = new Set([
+        ...[...admins.docs, ...treasurers.docs, ...configuredTreasurer.docs]
+            .filter((doc) => doc.data().status === "approved")
+            .map((doc) => emailKey(doc.data().email || doc.id))
+    ].filter((recipient) => recipient && recipient !== emailKey(email)));
+    return Promise.all([...recipients].map((recipient) => sendPush(
+        "New membership request",
+        `${name} requested to join the group.`,
+        recipient,
+        null,
+        { type: "registration_request" }
     )));
 }
 
@@ -299,13 +380,20 @@ async function getDashboard(user, params) {
     }
     const result = {
         success: true,
-        records: allTransactions.map((item) => ({
-            ...item,
-            date: item.date || "",
-            member: item.member || "",
-            type: item.type || "",
-            amount: asNumber(item.amount)
-        })),
+        records: allTransactions.map((item) => {
+            const { evidenceId, submittedByEmail, ...record } = item;
+            const canViewEvidence = transactionApprover
+                || emailKey(submittedByEmail) === actorEmail;
+            return {
+                ...record,
+                date: item.date || "",
+                member: item.member || "",
+                type: item.type || "",
+                amount: asNumber(item.amount),
+                ...(transactionApprover && submittedByEmail ? { submittedByEmail } : {}),
+                ...(canViewEvidence && evidenceId ? { evidenceId } : {})
+            };
+        }),
         summary,
         members,
         loans,
@@ -526,21 +614,51 @@ async function handleAction(action, params, user) {
         }
         case "getGroupMessages": {
             const adminAccess = await hasAdminAccess(user);
-            const [messageSnapshot, requestSnapshot] = await Promise.all([
-                db.collection("groupMessages").orderBy("created_at", "desc").limit(50).get(),
+            const requestedLimit = Number(params.limit);
+            const limit = Number.isInteger(requestedLimit) ? Math.min(50, Math.max(1, requestedLimit)) : 50;
+            const cursor = params.cursor && typeof params.cursor === "object" ? params.cursor : null;
+            let query = db.collection("groupMessages")
+                .orderBy("created_at", "desc")
+                .orderBy(FieldPath.documentId(), "desc")
+                .limit(limit + 1);
+            if (cursor) {
+                if (typeof cursor.createdAt !== "string" || !cursor.createdAt || typeof cursor.id !== "string" || !cursor.id) {
+                    throw new Error("The group inbox page cursor is invalid.");
+                }
+                query = query.startAfter(cursor.createdAt, cursor.id);
+            }
+            const [messageSnapshot, requestSnapshot, readSnapshot] = await Promise.all([
+                query.get(),
                 adminAccess
                     ? db.collection("registrationRequests").where("status", "==", "pending").limit(50).get()
-                    : Promise.resolve({ docs: [] })
+                    : Promise.resolve({ docs: [] }),
+                recordRef("groupInboxReads", user.email).get()
             ]);
-            const messages = messageSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            const docs = messageSnapshot.docs.slice(0, limit);
+            const messages = docs.map((doc) => ({ id: doc.id, ...doc.data() }));
             const joinRequests = requestSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
             messages.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
             joinRequests.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
             return {
                 success: true,
                 messages,
-                joinRequests
+                joinRequests,
+                readAt: readSnapshot.exists ? String(readSnapshot.data().readAt || "") : "",
+                hasMore: messageSnapshot.docs.length > limit,
+                nextCursor: docs.length
+                    ? { createdAt: String(docs[docs.length - 1].data().created_at || ""), id: docs[docs.length - 1].id }
+                    : null
             };
+        }
+        case "markGroupMessagesRead": {
+            const requestedReadAt = String(params.readAt || "");
+            const requestedTimestamp = requestedReadAt ? Date.parse(requestedReadAt) : NaN;
+            if (requestedReadAt && (!Number.isFinite(requestedTimestamp) || requestedTimestamp > Date.now() + 1000)) {
+                throw new Error("The group inbox read timestamp is invalid.");
+            }
+            const readAt = requestedReadAt || nowIso();
+            await recordRef("groupInboxReads", user.email).set({ email: user.email, readAt });
+            return { success: true, readAt };
         }
         case "deleteGroupMessage": {
             await requireAdmin(user);
@@ -589,6 +707,71 @@ async function handleAction(action, params, user) {
             return { success: true, records: (await rows("transactions")) };
         case "getSummary":
             return getSummaryData();
+        case "createPaymentEvidenceUpload": {
+            const contentType = String(params.contentType || "").toLowerCase();
+            const fileName = String(params.fileName || "").replace(/[\\/]/g, "_").slice(0, 120);
+            if (!PAYMENT_EVIDENCE_TYPES.has(contentType)) {
+                throw new Error("Upload a PDF, JPEG, or PNG payment receipt.");
+            }
+            if (!fileName) throw new Error("Choose a payment receipt file.");
+            const id = crypto.randomUUID();
+            const stagingPath = `payment-evidence-staging/${id}`;
+            const expiresAt = Date.now() + 10 * 60 * 1000;
+            const [uploadUrl] = await storageBucket.file(stagingPath).getSignedUrl({
+                version: "v4",
+                action: "write",
+                expires: expiresAt,
+                contentType
+            });
+            await recordRef("paymentEvidence", id).create({
+                id,
+                email: user.email,
+                fileName,
+                contentType,
+                stagingPath,
+                status: "uploading",
+                created_at: nowIso()
+            });
+            return { success: true, evidenceId: id, uploadUrl, expiresAt };
+        }
+        case "getMyPaymentEvidence": {
+            const snapshot = await db.collection("paymentEvidence")
+                .where("email", "==", user.email)
+                .limit(50)
+                .get();
+            const receipts = snapshot.docs.map((doc) => {
+                const evidence = doc.data();
+                return {
+                    id: doc.id,
+                    fileName: evidence.fileName || "payment-receipt",
+                    status: evidence.status || "uploading",
+                    created_at: evidence.created_at || "",
+                    reviewedAt: evidence.reviewedAt || "",
+                    available: Boolean(evidence.storagePath)
+                };
+            }).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+            return { success: true, receipts };
+        }
+        case "getPaymentEvidence": {
+            const evidenceId = String(params.evidenceId || "");
+            if (!/^[0-9a-f-]{36}$/i.test(evidenceId)) throw new Error("Choose a valid payment receipt.");
+            const ref = recordRef("paymentEvidence", evidenceId);
+            const snapshot = await ref.get();
+            if (!snapshot.exists) throw new Error("Payment receipt not found.");
+            const evidence = snapshot.data();
+            if (emailKey(evidence.email) !== user.email && !await canApproveTransactions(user)) {
+                throw new Error("Access denied. This payment receipt is private.");
+            }
+            if (!["pending", "approved", "rejected"].includes(evidence.status) || !evidence.storagePath) {
+                throw new Error("This payment receipt is not available yet.");
+            }
+            const [url] = await storageBucket.file(evidence.storagePath).getSignedUrl({
+                version: "v4",
+                action: "read",
+                expires: Date.now() + 5 * 60 * 1000
+            });
+            return { success: true, url, fileName: evidence.fileName || "payment-receipt" };
+        }
         case "submitTransaction": {
             const type = String(params.type || "");
             const amount = Number(params.amount);
@@ -596,33 +779,114 @@ async function handleAction(action, params, user) {
                 throw new Error("Choose a valid transaction type and positive amount.");
             }
             if (type === "Loan Repayment" && !params.loanId) throw new Error("Choose the loan being repaid.");
+            const evidenceId = String(params.evidenceId || "");
+            let evidence = null;
+            let finalEvidencePath = "";
+            let stagedEvidencePath = "";
+            if (evidenceId) {
+                if (!/^[0-9a-f-]{36}$/i.test(evidenceId)) throw new Error("Choose a valid payment receipt.");
+                const evidenceRef = recordRef("paymentEvidence", evidenceId);
+                const evidenceSnapshot = await evidenceRef.get();
+                if (!evidenceSnapshot.exists || emailKey(evidenceSnapshot.data().email) !== user.email
+                    || evidenceSnapshot.data().status !== "uploading") {
+                    throw new Error("The payment receipt could not be verified. Please upload it again.");
+                }
+                evidence = evidenceSnapshot.data();
+                const stagedFile = storageBucket.file(evidence.stagingPath);
+                let metadata;
+                try {
+                    [metadata] = await stagedFile.getMetadata();
+                } catch (error) {
+                    console.error("Could not verify uploaded payment evidence", error);
+                    throw new Error("The payment receipt upload is missing or could not be verified.");
+                }
+                const fileSize = Number(metadata.size);
+                const contentType = String(metadata.contentType || "").toLowerCase();
+                if (!Number.isFinite(fileSize) || fileSize <= 0 || fileSize > PAYMENT_EVIDENCE_MAX_BYTES
+                    || contentType !== evidence.contentType || !PAYMENT_EVIDENCE_TYPES.has(contentType)) {
+                    try {
+                        await stagedFile.delete({ ignoreNotFound: true });
+                    } catch (cleanupError) {
+                        console.error("Could not remove invalid payment evidence", cleanupError);
+                    }
+                    await evidenceRef.update({ status: "invalid", rejectedAt: nowIso() });
+                    throw new Error("Payment receipts must be a PDF, JPEG, or PNG no larger than 5 MB.");
+                }
+                const [fileHeader] = await stagedFile.download({ start: 0, end: 7 });
+                const isPdf = contentType === "application/pdf" && fileHeader.subarray(0, 5).toString() === "%PDF-";
+                const isPng = contentType === "image/png" && fileHeader.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+                const isJpeg = contentType === "image/jpeg" && fileHeader.subarray(0, 3).equals(Buffer.from([255, 216, 255]));
+                if (!isPdf && !isPng && !isJpeg) {
+                    try {
+                        await stagedFile.delete({ ignoreNotFound: true });
+                    } catch (cleanupError) {
+                        console.error("Could not remove payment evidence with an invalid file signature", cleanupError);
+                    }
+                    await evidenceRef.update({ status: "invalid", rejectedAt: nowIso() });
+                    throw new Error("The uploaded file does not match its declared receipt format.");
+                }
+                stagedEvidencePath = evidence.stagingPath;
+                finalEvidencePath = `payment-evidence/${evidenceId}`;
+                await stagedFile.copy(finalEvidencePath);
+            }
             const id = crypto.randomUUID();
             const submittedAt = nowIso();
             const inboxMessageRef = db.collection("groupMessages").doc();
-            await db.runTransaction(async (tx) => {
-                tx.create(recordRef("pendingTransactions", id), {
-                    id, date: params.date || "", member: name, type, amount,
-                    message: String(params.message || ""), submittedBy: name,
-                    submittedAt, loanId: params.loanId || ""
+            try {
+                await db.runTransaction(async (tx) => {
+                    if (evidenceId) {
+                        const evidenceRef = recordRef("paymentEvidence", evidenceId);
+                        const evidenceSnapshot = await tx.get(evidenceRef);
+                        if (!evidenceSnapshot.exists || emailKey(evidenceSnapshot.data().email) !== user.email
+                            || evidenceSnapshot.data().status !== "uploading") {
+                            throw new Error("The payment receipt has already been used or is no longer available.");
+                        }
+                        tx.update(evidenceRef, {
+                            status: "pending",
+                            storagePath: finalEvidencePath,
+                            transactionId: id
+                        });
+                    }
+                    tx.create(recordRef("pendingTransactions", id), {
+                        id, date: params.date || "", member: name, type, amount,
+                        message: String(params.message || ""), submittedBy: name,
+                        submittedByEmail: user.email, submittedAt, loanId: params.loanId || "", evidenceId
+                    });
+                    tx.create(inboxMessageRef, {
+                        id: inboxMessageRef.id,
+                        message: `${name} submitted a ${type} of KES ${amount.toLocaleString()} for group approval.`,
+                        member: name,
+                        email: user.email,
+                        type: "transaction_submission",
+                        created_at: submittedAt
+                    });
                 });
-                tx.create(inboxMessageRef, {
-                    id: inboxMessageRef.id,
-                    message: `${name} submitted a ${type} of KES ${amount.toLocaleString()} for group approval.`,
-                    member: name,
-                    email: user.email,
-                    type: "transaction_submission",
-                    created_at: submittedAt
-                });
-            });
+            } catch (error) {
+                if (finalEvidencePath) {
+                    try {
+                        await storageBucket.file(finalEvidencePath).delete({ ignoreNotFound: true });
+                    } catch (cleanupError) {
+                        console.error("Could not clean up an unlinked payment receipt", cleanupError);
+                    }
+                }
+                throw error;
+            }
+            if (stagedEvidencePath) {
+                try {
+                    await storageBucket.file(stagedEvidencePath).delete({ ignoreNotFound: true });
+                } catch (error) {
+                    console.error("Could not remove the temporary payment receipt upload", error);
+                }
+            }
             await audit(name, `Submitted ${type}`, `KES ${amount.toLocaleString()} — awaiting approval`);
-            await sendPush(
-                `${type} submitted by ${name}`,
-                `${name} submitted KES ${amount.toLocaleString()} as ${type}. It is awaiting group approval.`,
+            const pushDelivery = await sendPush(
+                "Group transaction submitted",
+                "A transaction was submitted for review.",
                 null,
                 name,
-                { type: "transaction_submission", amount, member: name, transactionType: type, transactionId: id }
+                { type: "transaction_submission" }
             );
-            return { success: true, id };
+            return { success: true, id, pushDelivery };
         }
         case "approveTransaction": {
             await requireTransactionApprover(user);
@@ -635,6 +899,8 @@ async function handleAction(action, params, user) {
                 const snapshot = await tx.get(ref);
                 if (!snapshot.exists) throw new Error("Pending transaction not found.");
                 transaction = snapshot.data();
+                const evidenceRef = transaction.evidenceId ? recordRef("paymentEvidence", transaction.evidenceId) : null;
+                const evidenceSnapshot = evidenceRef ? await tx.get(evidenceRef) : null;
                 let loanRef;
                 let loanSnapshot;
                 if (!transaction.editId && transaction.type === "Loan Repayment" && transaction.loanId) {
@@ -668,10 +934,14 @@ async function handleAction(action, params, user) {
                         approvedBy: name,
                         approvalDate: approvedAt,
                         balanceAfter: 0,
-                        loanId: transaction.loanId || ""
+                        loanId: transaction.loanId || "",
+                        submittedByEmail: transaction.submittedByEmail || "",
+                        evidenceId: transaction.evidenceId || ""
                     });
                 }
                 tx.delete(ref);
+                if (evidenceRef && !evidenceSnapshot?.exists) throw new Error("The payment receipt record could not be found.");
+                if (evidenceRef) tx.update(evidenceRef, { status: "approved", reviewedAt: approvedAt, reviewedBy: user.email });
                 if (loanSnapshot?.exists) {
                     const loan = loanSnapshot.data();
                     const repaid = asNumber(loan.amountRepaid) + asNumber(transaction.amount);
@@ -690,14 +960,14 @@ async function handleAction(action, params, user) {
                 });
             });
             await audit(name, transaction.editId ? "Approved transaction edit" : `Approved ${transaction.type}`, `${transaction.member}'s KES ${asNumber(transaction.amount).toLocaleString()}`);
-            await sendPush(
+            const pushDelivery = await sendPush(
                 "Transaction Approved",
-                `${name} approved ${transaction.member}'s ${transaction.type} of KES ${asNumber(transaction.amount).toLocaleString()}.`,
+                "A group transaction was approved.",
                 null,
                 name,
-                { type: "transaction_approved", member: transaction.member, amount: asNumber(transaction.amount) }
+                { type: "transaction_approved" }
             );
-            return { success: true };
+            return { success: true, pushDelivery };
         }
         case "rejectTransaction": {
             await requireTransactionApprover(user);
@@ -709,7 +979,11 @@ async function handleAction(action, params, user) {
                 const snapshot = await tx.get(ref);
                 if (!snapshot.exists) throw new Error("Pending transaction not found.");
                 transaction = snapshot.data();
+                const evidenceRef = transaction.evidenceId ? recordRef("paymentEvidence", transaction.evidenceId) : null;
+                const evidenceSnapshot = evidenceRef ? await tx.get(evidenceRef) : null;
                 tx.delete(ref);
+                if (evidenceRef && !evidenceSnapshot?.exists) throw new Error("The payment receipt record could not be found.");
+                if (evidenceRef) tx.update(evidenceRef, { status: "rejected", reviewedAt: declinedAt, reviewedBy: user.email });
                 tx.create(inboxMessageRef, {
                     id: inboxMessageRef.id,
                     message: `${name} declined ${transaction.member}'s ${transaction.type} of KES ${asNumber(transaction.amount).toLocaleString()}.`,
@@ -720,14 +994,14 @@ async function handleAction(action, params, user) {
                 });
             });
             await audit(name, `Rejected ${transaction.type}`, `${transaction.member}'s KES ${asNumber(transaction.amount).toLocaleString()}`);
-            await sendPush(
+            const pushDelivery = await sendPush(
                 "Transaction Declined",
-                `${name} declined ${transaction.member}'s ${transaction.type} of KES ${asNumber(transaction.amount).toLocaleString()}.`,
+                "A group transaction was declined.",
                 null,
                 name,
-                { type: "transaction_rejected", member: transaction.member, amount: asNumber(transaction.amount) }
+                { type: "transaction_rejected" }
             );
-            return { success: true };
+            return { success: true, pushDelivery };
         }
         case "submitLoan": {
             const amount = Number(params.amount);
@@ -785,14 +1059,14 @@ async function handleAction(action, params, user) {
                 tx.create(recordRef("groupMessages", inboxMessage.id), inboxMessage);
             });
             await audit(name, "Requested a loan", `KES ${amount.toLocaleString()} — needs member approval`);
-            await sendPush(
-                `New Loan Request from ${name}`,
-                `${name} requested KES ${amount.toLocaleString()} for ${message}. Estimated total: KES ${loan.totalDue.toLocaleString()}. Requested repayment: ${requestedDueDate}. All ${approvalsRequired} other approved member(s) must approve.`,
+            const pushDelivery = await sendPush(
+                "New Loan Request",
+                "A loan request was submitted for review.",
                 null,
                 requesterEmail,
-                { type: "loan_request", amount, member: name, loanId: id, requestedDueDate }
+                { type: "loan_request" }
             );
-            return { success: true, id, approvalsRequired };
+            return { success: true, id, approvalsRequired, pushDelivery };
         }
         case "approveLoan": {
             const id = String(params.loanId || "");
@@ -872,31 +1146,34 @@ async function handleAction(action, params, user) {
                 tx.create(recordRef("groupMessages", inboxMessage.id), inboxMessage);
             });
             await audit(name, "Approved a loan vote", `${approvalCount} approval(s)`);
+            let pushDeliveries;
             if (completedLoan) {
-                await sendPush(
+                pushDeliveries = await Promise.all([
+                sendPush(
                     "Loan Fully Approved!",
-                    `${completedLoan.member}'s request for KES ${asNumber(completedLoan.amount).toLocaleString()} has all ${approvalsRequired} required member approvals. The treasurer will confirm the activation due date.`,
+                    "A loan request received all required approvals.",
                     null,
                     approverEmail,
-                    { type: "loan_fully_approved", loanId: id, amount: asNumber(completedLoan.amount) }
-                );
-                await sendPush(
+                    { type: "loan_fully_approved" }
+                ),
+                sendPush(
                     "Set Loan Due Date",
-                    `${completedLoan.member}'s loan has been fully approved and needs a due date.`,
+                    "An approved loan needs its repayment schedule.",
                     await getTreasurerName(),
                     approverEmail,
-                    { type: "loan_needs_due_date", loanId: id, member: completedLoan.member }
-                );
+                    { type: "loan_needs_due_date" }
+                )
+                ]);
             } else {
-                await sendPush(
+                pushDeliveries = [await sendPush(
                     "Loan Approval Update",
-                    `${name} approved ${member}'s request. ${Math.max(0, approvalsRequired - approvalCount)} more approval(s) are needed.`,
+                    "A loan request received an approval.",
                     null,
                     approverEmail,
-                    { type: "loan_approval_update", loanId: id, approvals: approvalCount }
-                );
+                    { type: "loan_approval_update" }
+                )];
             }
-            return { success: true, approvals: approvalCount, approvalsRequired };
+            return { success: true, approvals: approvalCount, approvalsRequired, pushDelivery: combinePushDeliveries(pushDeliveries) };
         }
         case "rejectLoan": {
             const id = String(params.loanId || "");
@@ -941,8 +1218,8 @@ async function handleAction(action, params, user) {
                 tx.create(recordRef("groupMessages", inboxMessage.id), inboxMessage);
             });
             await audit(name, "Rejected a loan request", `${loanMember}'s request — ${reason}`);
-            await sendPush("Loan Request Declined", `${name} declined ${loanMember}'s loan request. Reason: ${reason}`, null, actorEmail, { type: "loan_rejected", loanId: id, reason });
-            return { success: true };
+            const pushDelivery = await sendPush("Loan Request Declined", "A loan request was declined.", null, actorEmail, { type: "loan_rejected" });
+            return { success: true, pushDelivery };
         }
         case "cancelLoan": {
             const adminAccess = await hasAdminAccess(user);
@@ -979,8 +1256,8 @@ async function handleAction(action, params, user) {
                 };
                 tx.create(recordRef("groupMessages", inboxMessage.id), inboxMessage);
             });
-            await sendPush("Loan Request Cancelled", `${name} cancelled a loan request of KES ${amount.toLocaleString()}.`, null, actorEmail, { type: "loan_cancelled", loanId: id });
-            return { success: true };
+            const pushDelivery = await sendPush("Loan Request Cancelled", "A loan request was cancelled.", null, actorEmail, { type: "loan_cancelled" });
+            return { success: true, pushDelivery };
         }
         case "setLoanDueDate": {
             await requireAdmin(user);
@@ -1030,8 +1307,8 @@ async function handleAction(action, params, user) {
                 tx.create(recordRef("groupMessages", inboxMessage.id), inboxMessage);
             });
             await audit(name, "Activated loan with due date", `${loanId} — due ${dueDate}`);
-            await sendPush("Loan Activated", `${loanMember}'s loan is active. Repayment due: ${dueDate}.`, null, actorEmail, { type: "loan_due_date_set", loanId, dueDate });
-            return { success: true };
+            const pushDelivery = await sendPush("Loan Activated", "A loan was activated.", null, actorEmail, { type: "loan_due_date_set" });
+            return { success: true, pushDelivery };
         }
         case "getPendingRegistrations":
         case "getPendingTransactions":
@@ -1049,11 +1326,12 @@ async function handleAction(action, params, user) {
         case "getScheduledMeeting":
         case "getTreasurerInfo":
         case "getSubscriptions":
+        case "exportSystemData":
         case "exportAuditLog": {
             const adminAccess = await hasAdminAccess(user);
             if (["getPendingRegistrations", "getPendingTransactions", "getLoansAwaitingDueDate"].includes(action)) await requireAdmin(user);
             if (["getAllUsersFull", "exportAuditLog"].includes(action)) await requireAdmin(user);
-            if (["getDeveloperAuditLog", "getDeveloperPortalData", "getDeveloperUsers", "getSystemStats", "getSubscriptions"].includes(action)) requireDeveloper(user);
+            if (["getDeveloperAuditLog", "getDeveloperPortalData", "getDeveloperUsers", "getSystemStats", "getSubscriptions", "exportSystemData"].includes(action)) requireDeveloper(user);
             if (action === "getAuditLog") await requireAdmin(user);
             if (action === "getPendingRegistrations") {
                 const [usersSnapshot, joinRequestsSnapshot] = await Promise.all([
@@ -1077,6 +1355,30 @@ async function handleAction(action, params, user) {
                 return {
                     success: true,
                     users: docs.map((doc) => publicUser({ ...doc.data(), email: doc.data().email || doc.id })),
+                    nextCursor: docs.length ? docs[docs.length - 1].id : null,
+                    hasMore: snapshot.docs.length > limit
+                };
+            }
+            if (action === "exportSystemData") {
+                const allowedCollections = new Set([
+                    "activeLoans", "auditLog", "groupMemories", "groupMessages", "loanRequests",
+                    "loansAwaitingDueDate", "meetingMinutes", "pendingEdits", "pendingLoans",
+                    "pendingTransactions", "registrationRequests", "scheduledMeeting", "settings",
+                    "subscriptions", "transactions", "users"
+                ]);
+                const collection = String(params.collection || "");
+                if (!allowedCollections.has(collection)) throw new Error("Choose a supported backup data collection.");
+                const requestedLimit = Number(params.limit);
+                const limit = Number.isInteger(requestedLimit) ? Math.min(100, Math.max(1, requestedLimit)) : 100;
+                let query = db.collection(collection).orderBy(FieldPath.documentId()).limit(limit + 1);
+                const cursor = String(params.cursor || "");
+                if (cursor) query = query.startAfter(cursor);
+                const snapshot = await query.get();
+                const docs = snapshot.docs.slice(0, limit);
+                return {
+                    success: true,
+                    collection,
+                    records: docs.map((doc) => ({ id: doc.id, ...doc.data() })),
                     nextCursor: docs.length ? docs[docs.length - 1].id : null,
                     hasMore: snapshot.docs.length > limit
                 };
@@ -1332,14 +1634,14 @@ async function handleAction(action, params, user) {
             });
             await batch.commit();
             await audit(name, "Approved registration", email);
-            await sendPush(
+            const pushDelivery = await sendPush(
                 "Registration Approved",
-                `${name} approved ${targetName}'s registration request.`,
+                "A membership registration was approved.",
                 null,
                 emailKey(user.email),
-                { type: "registration_approved", member: targetName }
+                { type: "registration_approved" }
             );
-            return { success: true };
+            return { success: true, pushDelivery };
         }
         case "rejectRegistration": {
             await requireAdmin(user);
@@ -1378,14 +1680,14 @@ async function handleAction(action, params, user) {
             });
             await batch.commit();
             await audit(name, "Rejected registration", email);
-            await sendPush(
+            const pushDelivery = await sendPush(
                 "Registration Declined",
-                `${name} declined ${targetName}'s registration request.`,
+                "A membership registration was declined.",
                 null,
                 emailKey(user.email),
-                { type: "registration_rejected", member: targetName }
+                { type: "registration_rejected" }
             );
-            return { success: true };
+            return { success: true, pushDelivery };
         }
         case "updateUserRole": {
             await requireAdmin(user);
@@ -1475,13 +1777,34 @@ async function handleAction(action, params, user) {
         case "saveMeetingMinutes": {
             await requireAdmin(user);
             const id = crypto.randomUUID();
-            await recordRef("meetingMinutes", id).create({
+            const date = String(params.date || "");
+            const minutes = {
                 id, date: params.date || "", recordedBy: name, agenda: String(params.agenda || ""),
                 notes: String(params.notes || ""), decisions: String(params.decisions || ""),
                 nextMeeting: params.nextMeeting || ""
+            };
+            const createdAt = nowIso();
+            const inboxMessageRef = db.collection("groupMessages").doc();
+            const batch = db.batch();
+            batch.create(recordRef("meetingMinutes", id), minutes);
+            batch.create(inboxMessageRef, {
+                id: inboxMessageRef.id,
+                message: `${name} saved meeting minutes${date ? ` for ${date}` : ""}. Open the meeting minutes section to read them.`,
+                member: name,
+                email: user.email,
+                type: "meeting_minutes_saved",
+                created_at: createdAt
             });
-            await audit(name, "Saved meeting minutes", params.date || "");
-            return { success: true, id };
+            await batch.commit();
+            await audit(name, "Saved meeting minutes", date);
+            const pushDelivery = await sendPush(
+                "Meeting minutes available",
+                "New meeting minutes are available in NBFA Group.",
+                null,
+                name,
+                { type: "meeting_minutes_saved" }
+            );
+            return { success: true, id, pushDelivery };
         }
         case "deleteMeeting": {
             await requireAdmin(user);
@@ -1511,14 +1834,14 @@ async function handleAction(action, params, user) {
                 created_at: createdAt
             });
             await batch.commit();
-            await sendPush(
+            const pushDelivery = await sendPush(
                 "New Meeting Scheduled",
-                `A group meeting has been scheduled for ${meeting.date}.${meeting.agenda ? ` Agenda: ${meeting.agenda}.` : ""}${meeting.venue ? ` Venue: ${meeting.venue}.` : ""}`,
+                "A group meeting was scheduled.",
                 null,
                 name,
-                { type: "meeting_scheduled", ...meeting }
+                { type: "meeting_scheduled" }
             );
-            return { success: true };
+            return { success: true, pushDelivery };
         }
         case "cancelScheduledMeeting": {
             await requireAdmin(user);
@@ -1540,14 +1863,14 @@ async function handleAction(action, params, user) {
                     created_at: cancelledAt
                 });
             });
-            await sendPush(
+            const pushDelivery = await sendPush(
                 "Meeting Cancelled",
-                `The group meeting scheduled for ${meeting.date || "an upcoming date"} has been cancelled.`,
+                "A group meeting was cancelled.",
                 null,
                 name,
-                { type: "meeting_cancelled", date: meeting.date || "" }
+                { type: "meeting_cancelled" }
             );
-            return { success: true };
+            return { success: true, pushDelivery };
         }
         case "savePushSubscription": {
             const subscription = params.subscription;
@@ -1558,6 +1881,7 @@ async function handleAction(action, params, user) {
                 auth: subscription.keys.auth || "", p256dh: subscription.keys.p256dh || "",
                 subscription, timestamp: nowIso()
             }, { merge: true });
+            pushSubscriptionsCache = null;
             return { success: true };
         }
         case "sendPushNotification": {
@@ -1575,21 +1899,14 @@ async function handleAction(action, params, user) {
                 type: "announcement",
                 created_at: createdAt
             });
-            let sent = 0;
-            let pushError = "";
-            try {
-                sent = await sendPush(
-                    title,
-                    body,
-                    params.recipient || null,
-                    params.sender || name,
-                    params.data || {}
-                );
-            } catch (error) {
-                console.error("Announcement was posted to the group inbox, but push delivery failed", error);
-                pushError = error.message || "Push delivery failed.";
-            }
-            return { success: true, sent, pushError };
+            const pushDelivery = await sendPush(
+                title,
+                body,
+                params.recipient || null,
+                params.sender || name,
+                { type: "announcement" }
+            );
+            return { success: true, pushDelivery };
         }
         case "requestTransactionEdit": {
             const rowKey = String(params.rowKey || "");
@@ -1623,14 +1940,14 @@ async function handleAction(action, params, user) {
                 created_at: requestedAt
             });
             await batch.commit();
-            await sendPush(
+            const pushDelivery = await sendPush(
                 `Transaction Update Requested by ${name}`,
                 `${name} requested an update to a ${type} transaction from KES ${Number(amountValue).toLocaleString()} to KES ${newAmount.toLocaleString()}.`,
                 null,
                 actorEmail,
-                { type: "transaction_edit_request", member: name, transactionType: type, transactionId: matches[0].id }
+                { type: "transaction_edit_request" }
             );
-            return { success: true, id };
+            return { success: true, id, pushDelivery };
         }
         case "rejectTransactionEdit": {
             await requireTransactionApprover(user);
@@ -1653,14 +1970,14 @@ async function handleAction(action, params, user) {
             });
             await batch.commit();
             await audit(name, "Rejected transaction edit", String(params.editId));
-            await sendPush(
+            const pushDelivery = await sendPush(
                 "Transaction Update Declined",
                 `${name} declined ${edit.member}'s requested update to their ${edit.type} transaction.`,
                 null,
                 actorEmail,
-                { type: "transaction_edit_rejected", member: edit.member, transactionType: edit.type }
+                { type: "transaction_edit_rejected" }
             );
-            return { success: true };
+            return { success: true, pushDelivery };
         }
         default:
             throw new Error(`Unknown Firebase action: ${String(action || "")}`);
@@ -1720,10 +2037,14 @@ async function submitJoinRequest(params) {
             created_at: nowIso()
         });
     });
+    const pushDelivery = alreadySubmitted
+        ? { attempted: 0, sent: 0, failed: 0, expired: 0 }
+        : combinePushDeliveries(await notifyAdministratorsOfRegistration(name, email));
     return {
         success: true,
         status: "pending",
         alreadySubmitted,
+        pushDelivery,
         message: "Your request has been sent to the group for review."
     };
 }

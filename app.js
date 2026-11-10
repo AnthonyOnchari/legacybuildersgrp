@@ -29,6 +29,7 @@ let dashboardLoaded = false;
 let appBackNavigationInitialized = false;
 let unreadGroupMessages = 0;
 let groupMessagesLoading = false, groupMessageRetryDelay = 60000, nextGroupMessageRetryAt = 0;
+let groupMessages = [], groupMessagesCursor = null, groupMessagesHasMore = false;
 let unreadMeetingUpdates = false;
 const memberPhotoCache = {};
 let serviceWorkerRegistered = false, pushSubscription = null, pushSetupPromise = null;
@@ -44,6 +45,21 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function showPushDeliveryFeedback(delivery, actionLabel = 'Update') {
+    if (!delivery) return;
+    if (delivery.error) {
+        showToast(`${actionLabel} saved, but push delivery could not be completed. The group inbox has the full update.`, 'error');
+        return;
+    }
+    if (delivery.failed > 0) {
+        showToast(`${actionLabel} saved, but push delivery failed for ${delivery.failed} device${delivery.failed === 1 ? '' : 's'}. The group inbox has the full update.`, 'error');
+    } else if (delivery.attempted === 0) {
+        showToast(`${actionLabel} saved in the group inbox; no other members currently have push notifications subscribed.`, 'info');
+    } else if (delivery.sent === 0 && delivery.expired > 0) {
+        showToast(`${actionLabel} saved in the group inbox; expired push subscriptions were removed.`, 'info');
+    }
 }
 
 function memberPositionBadge(position = 'Member') {
@@ -194,8 +210,16 @@ function syncChatViewport() {
     if (document.getElementById('groupChatModal')?.style.display !== 'none') scrollGroupMessagesToBottom();
 }
 
-function markGroupMessagesRead() {
-    localStorage.setItem(unreadStorageKey('group_messages'), new Date().toISOString());
+async function markGroupMessagesRead() {
+    if (DEVELOPMENT_PREVIEW_ENABLED) return;
+    const readAt = groupMessages.reduce((latest, message) =>
+        String(message.created_at || '') > latest ? String(message.created_at || '') : latest, '');
+    const result = await callAPI('markGroupMessagesRead', { readAt });
+    if (!result.success) {
+        showToast(result.error || 'Could not update group inbox read status.', 'error');
+        return;
+    }
+    localStorage.setItem(unreadStorageKey('group_messages'), result.readAt);
     unreadGroupMessages = 0;
     updateUnreadIndicators();
 }
@@ -1722,6 +1746,7 @@ async function approveRegistration(email) {
         const res = await callAPI('approveRegistration', { email, approvedBy: currentUser });
         if (res.success) {
             showToast(` ${email} approved!`, 'success');
+            showPushDeliveryFeedback(res.pushDelivery, 'Registration decision');
             await loadDevPendingRegistrations();
             await loadAllUsersFull();
             await refreshGroupInboxIfOpen();
@@ -1741,6 +1766,7 @@ async function rejectRegistration(email) {
         const res = await callAPI('rejectRegistration', { email, rejectedBy: currentUser });
         if (res.success) {
             showToast(` ${email} rejected`, 'success');
+            showPushDeliveryFeedback(res.pushDelivery, 'Registration decision');
             await loadDevPendingRegistrations();
             await loadAllUsersFull();
             await refreshGroupInboxIfOpen();
@@ -1770,8 +1796,52 @@ async function refreshAllData() {
     }
 }
 
-function exportSystemData() {
-    showToast('Export feature coming soon', 'info');
+async function exportSystemData() {
+    if (currentUserRole !== 'developer') {
+        showToast('Only developers can export a system backup.', 'error');
+        return;
+    }
+    const button = document.querySelector('.dev-export-btn');
+    const originalText = button?.innerHTML || '';
+    if (button) showButtonLoading(button, 'Preparing backup...');
+    const collections = [
+        'activeLoans', 'auditLog', 'groupMemories', 'groupMessages', 'loanRequests',
+        'loansAwaitingDueDate', 'meetingMinutes', 'pendingEdits', 'pendingLoans',
+        'pendingTransactions', 'registrationRequests', 'scheduledMeeting', 'settings',
+        'transactions', 'users'
+    ];
+    try {
+        const backup = {
+            exportedAt: new Date().toISOString(),
+            formatVersion: 1,
+            collections: {}
+        };
+        for (const collection of collections) {
+            const records = [];
+            let cursor = '';
+            let hasMore = true;
+            while (hasMore) {
+                const page = await callAPI('exportSystemData', { collection, limit: 100, cursor });
+                if (!page.success) throw new Error(page.error || `Could not export ${collection}.`);
+                records.push(...(Array.isArray(page.records) ? page.records : []));
+                cursor = page.nextCursor || '';
+                hasMore = Boolean(page.hasMore && cursor);
+            }
+            backup.collections[collection] = records;
+        }
+        const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `nbfa-system-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+        showToast('System backup downloaded.', 'success');
+    } catch (error) {
+        showToast(error.message || 'System backup could not be completed.', 'error');
+    } finally {
+        if (button) hideButtonLoading(button, originalText);
+    }
 }
 
 function clearSystemCache() {
@@ -2341,6 +2411,7 @@ function renderPendingApprovals(containerId = 'pendingApprovalsList') {
                 ${hasLongMessage ? `<p class="transaction-approval-message-full" hidden>${escapeHtml(message)}</p><button type="button" class="transaction-approval-message-toggle" aria-expanded="false">View full message</button>` : ''}
             </div>
             <div class="transaction-approval-actions">
+                ${t.evidenceId ? `<button type="button" class="secondary-btn" onclick="openPaymentEvidence('${escapeHtml(t.evidenceId)}')">View private receipt</button>` : ''}
                 <button type="button" class="approve-btn" data-approval-action="approve" data-approval-id="${escapeHtml(t.id)}">Approve</button>
                 <button type="button" class="reject-btn" data-approval-action="reject" data-approval-id="${escapeHtml(t.id)}" ${editInfo ? `data-edit-id="${escapeHtml(editInfo.editId)}" data-actor="${escapeHtml(currentUser)}"` : ''}>Reject</button>
             </div>
@@ -2359,7 +2430,7 @@ function renderPendingApprovals(containerId = 'pendingApprovalsList') {
             full.hidden = expanded;
         });
     });
-    container.querySelectorAll('.transaction-approval-actions button').forEach(button => {
+    container.querySelectorAll('.transaction-approval-actions button[data-approval-action]').forEach(button => {
         button.addEventListener('click', () => {
             if (button.dataset.approvalAction === 'approve') {
                 approveTransaction(button.dataset.approvalId);
@@ -2370,6 +2441,22 @@ function renderPendingApprovals(containerId = 'pendingApprovalsList') {
             }
         });
     });
+}
+
+async function openPaymentEvidence(evidenceId) {
+    const popup = window.open('about:blank', '_blank');
+    if (!popup) {
+        showToast('Allow pop-ups to view the private payment receipt.', 'error');
+        return;
+    }
+    popup.opener = null;
+    const result = await callAPI('getPaymentEvidence', { evidenceId });
+    if (!result.success) {
+        popup.close();
+        showToast(result.error || 'Could not open the private payment receipt.', 'error');
+        return;
+    }
+    popup.location.href = result.url;
 }
 
 function updatePendingCount() {
@@ -2420,6 +2507,10 @@ function toggleApprovalNotice() {
     const type = document.getElementById('type').value;
     const isLoanRequest = type === 'Loan Taken';
     document.getElementById('approvalNotice').style.display = isLoanRequest ? 'block' : 'none';
+    const evidenceWrapper = document.getElementById('paymentEvidenceWrapper');
+    const evidenceInput = document.getElementById('paymentEvidenceInput');
+    if (evidenceWrapper) evidenceWrapper.style.display = isLoanRequest ? 'none' : 'block';
+    if (isLoanRequest && evidenceInput) evidenceInput.value = '';
     const dueDateWrapper = document.getElementById('loanRequestedDueDateWrapper');
     const dueDateInput = document.getElementById('loanRequestedDueDate');
     const messageInput = document.getElementById('message');
@@ -2446,6 +2537,24 @@ function toggleApprovalNotice() {
             amountHint.textContent = 'For loans: Enter PRINCIPAL amount (10% interest added)';
         }
     }
+}
+
+async function uploadPrivatePaymentEvidence(file) {
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) throw new Error('Choose a PDF, JPG, or PNG payment receipt.');
+    if (!file.size || file.size > 5 * 1024 * 1024) throw new Error('Payment receipts must be no larger than 5 MB.');
+    const upload = await callAPI('createPaymentEvidenceUpload', {
+        fileName: file.name,
+        contentType: file.type
+    });
+    if (!upload.success) throw new Error(upload.error || 'Could not prepare the private receipt upload.');
+    const response = await fetch(upload.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file
+    });
+    if (!response.ok) throw new Error(`Receipt upload failed (HTTP ${response.status}). Please try again.`);
+    return upload.evidenceId;
 }
 
 function populateRepayLoanPicker() {
@@ -2494,6 +2603,7 @@ async function addRecord() {
                 ? Number(res.approvalsRequired)
                 : Math.max(allMembers.length - 1, 1);
             showToast(`Loan request submitted! Needs ${approvalsRequired} other approval${approvalsRequired === 1 ? '' : 's'}.`, 'success');
+            showPushDeliveryFeedback(res.pushDelivery, 'Loan request');
             document.getElementById('amount').value = '';
             document.getElementById('message').value = '';
             document.getElementById('loanRequestedDueDate').value = '';
@@ -2513,11 +2623,24 @@ async function addRecord() {
                 return;
             }
         }
-        const res = await callAPI('submitTransaction', { date, member, type, amount, message, submittedBy: currentUser, loanId });
+        const evidenceFile = document.getElementById('paymentEvidenceInput')?.files?.[0];
+        let evidenceId = '';
+        if (evidenceFile) {
+            try {
+                evidenceId = await uploadPrivatePaymentEvidence(evidenceFile);
+            } catch (error) {
+                showToast(error.message || 'Could not upload the payment receipt.', 'error');
+                hideButtonLoading(btn, orig);
+                return;
+            }
+        }
+        const res = await callAPI('submitTransaction', { date, member, type, amount, message, submittedBy: currentUser, loanId, evidenceId });
         if (res.success) {
             showToast('Transaction submitted! It has been shared with the group and is awaiting approval.', 'success');
+            showPushDeliveryFeedback(res.pushDelivery, 'Transaction');
             document.getElementById('amount').value = '';
             document.getElementById('message').value = '';
+            document.getElementById('paymentEvidenceInput').value = '';
             closeAddTransactionModal();
             await loadAllData();
             await refreshGroupInboxIfOpen();
@@ -2533,6 +2656,7 @@ async function approveTransaction(id) {
     const res = await callAPI('approveTransaction', { id, approvedBy: currentUser });
     if (res.success) {
         showToast('Transaction approved!', 'success');
+        showPushDeliveryFeedback(res.pushDelivery, 'Transaction decision');
         await loadAllData();
         await refreshGroupInboxIfOpen();
     }
@@ -2547,6 +2671,7 @@ async function rejectTransaction(id) {
     const res = await callAPI('rejectTransaction', { id });
     if (res.success) {
         showToast('Transaction rejected and shared with the group.', 'success');
+        showPushDeliveryFeedback(res.pushDelivery, 'Transaction decision');
         await loadAllData();
         await refreshGroupInboxIfOpen();
     }
@@ -2561,6 +2686,7 @@ async function rejectTransactionEdit(editId, rejectedBy) {
     const res = await callAPI('rejectTransactionEdit', { editId, rejectedBy: currentUser });
     if (res.success) {
         showToast('Edit request declined and shared with the group; original transaction unchanged.', 'success');
+        showPushDeliveryFeedback(res.pushDelivery, 'Transaction decision');
         await loadAllData();
         await refreshGroupInboxIfOpen();
     } else {
@@ -2580,6 +2706,7 @@ async function approveLoan(loanId) {
     if (res.success) {
         const remaining = Math.max((res.approvalsRequired ?? allMembers.length - 1) - (res.approvals || 0), 0);
         showToast(remaining > 0 ? `Approved! Need ${remaining} more` : `Loan fully approved!`, 'success');
+        showPushDeliveryFeedback(res.pushDelivery, 'Loan decision');
         await loadAllData();
         await loadLoansDashboard();
         await refreshGroupInboxIfOpen();
@@ -2638,6 +2765,7 @@ async function rejectLoan(loanId) {
     const res = await callAPI('rejectLoan', { loanId, reason });
     if (res.success) {
         showToast('Decision recorded and shared with the group.', 'success');
+        showPushDeliveryFeedback(res.pushDelivery, 'Loan decision');
         await loadAllData();
         await loadLoansDashboard();
         await refreshGroupInboxIfOpen();
@@ -2652,6 +2780,7 @@ async function cancelLoanRequest(loanId) {
     const res = await callAPI('cancelLoan', { loanId });
     if (res.success) {
         showToast('Loan cancellation shared with the group.', 'success');
+        showPushDeliveryFeedback(res.pushDelivery, 'Loan cancellation');
         await loadAllData();
         await loadLoansDashboard();
         await refreshGroupInboxIfOpen();
@@ -2670,6 +2799,7 @@ async function submitLoanDueDate(loanId) {
     const res = await callAPI('setLoanDueDate', { loanId, dueDate, setBy: currentUser });
     if (res.success) {
         showToast('Loan activated with due date set!', 'success');
+        showPushDeliveryFeedback(res.pushDelivery, 'Loan activation');
         await loadAllData();
         await loadLoansDashboard();
         await refreshGroupInboxIfOpen();
@@ -2760,8 +2890,10 @@ async function saveMeetingMinutes() {
     });
     if (res.success) {
         showToast('Meeting saved!', 'success');
+        showPushDeliveryFeedback(res.pushDelivery, 'Meeting minutes');
         document.getElementById('meetingDate')?.closest('.modal')?.remove();
         await loadMeetingMinutes();
+        await refreshGroupInboxIfOpen();
     } else showToast('Error: ' + res.error, 'error');
 }
 
@@ -2842,6 +2974,7 @@ async function scheduleNextMeeting() {
     const res = await callAPI('scheduleMeeting', { date, agenda, venue, scheduledBy: currentUser });
     if (res.success) {
         showToast('Next meeting scheduled!', 'success');
+        showPushDeliveryFeedback(res.pushDelivery, 'Meeting schedule');
         document.getElementById('nextMeetingDate').value = '';
         document.getElementById('nextMeetingAgenda').value = '';
         document.getElementById('nextMeetingVenue').value = '';
@@ -2858,6 +2991,7 @@ async function cancelScheduledMeeting() {
     const res = await callAPI('cancelScheduledMeeting');
     if (res.success) {
         showToast('Scheduled meeting cancelled and shared with the group.', 'success');
+        showPushDeliveryFeedback(res.pushDelivery, 'Meeting cancellation');
         await loadScheduledMeeting();
         await refreshGroupInboxIfOpen();
     }
@@ -2927,14 +3061,17 @@ async function sendAnnouncement() {
     const body = `${bodyInput} — sent by ${currentUser}`;
     const res = await callAPI('sendPushNotification', { title, body, sender: currentUser });
     if (res.success) {
-        const sent = res.sent || 0;
+        const delivery = res.pushDelivery || {};
+        const sent = delivery.sent || 0;
         await refreshGroupInboxIfOpen();
-        if (res.pushError) {
-            showToast(`Announcement posted to the group inbox, but push delivery failed: ${res.pushError}`, 'error');
+        if (delivery.failed > 0) {
+            showToast(`Announcement posted to the group inbox, but push delivery failed for ${delivery.failed} device${delivery.failed === 1 ? '' : 's'}.`, 'error');
+        } else if (sent > 0) {
+            showToast(`Announcement posted to the group inbox and sent to ${sent} member${sent > 1 ? 's' : ''}!`, 'success');
+        } else if (delivery.expired > 0) {
+            showToast('Announcement posted to the group inbox; expired push subscriptions were removed.', 'info');
         } else {
-            showToast(sent > 0
-                ? `Announcement posted to the group inbox and sent to ${sent} member${sent > 1 ? 's' : ''}!`
-                : 'Announcement posted to the group inbox; no other members are subscribed to push notifications.', 'success');
+            showToast('Announcement posted to the group inbox; no other members are subscribed to push notifications.', 'success');
         }
         document.getElementById('announcementTitle').value = '';
         document.getElementById('announcementBody').value = '';
@@ -3242,6 +3379,10 @@ function openHistoryModal() {
                         <tbody id="historyBody"></tbody>
                     </table>
                 </div>
+                <section class="private-receipts-section" aria-labelledby="privateReceiptsTitle">
+                    <h4 id="privateReceiptsTitle">My private payment receipts</h4>
+                    <div id="myPaymentEvidenceList" aria-live="polite">Loading receipts...</div>
+                </section>
             </div>
         </section>
     `;
@@ -3256,10 +3397,42 @@ function openHistoryModal() {
     currentHistoryRecords = [...allRecords];
     currentHistorySort = { column: 'date', direction: 'desc' };
     renderHistoryTable();
+    loadMyPaymentEvidence();
     document.getElementById('historySearch')?.addEventListener('input', filterHistory);
     document.getElementById('historyFilterMember')?.addEventListener('change', filterHistory);
     document.getElementById('historyFilterType')?.addEventListener('change', filterHistory);
     modal.querySelector('.history-modal-content')?.focus({ preventScroll: true });
+}
+
+async function loadMyPaymentEvidence() {
+    const container = document.getElementById('myPaymentEvidenceList');
+    if (!container) return;
+    const result = await callAPI('getMyPaymentEvidence');
+    if (!result.success) {
+        container.textContent = result.error || 'Could not load your private payment receipts.';
+        return;
+    }
+    const receipts = Array.isArray(result.receipts) ? result.receipts : [];
+    if (!receipts.length) {
+        container.textContent = 'No payment receipts submitted yet.';
+        return;
+    }
+    container.innerHTML = receipts.map(receipt => {
+        const status = receipt.status === 'pending'
+            ? 'Awaiting approval'
+            : receipt.status === 'approved'
+                ? 'Approved'
+                : receipt.status === 'rejected'
+                    ? 'Declined'
+                    : 'Upload incomplete';
+        const viewButton = receipt.available
+            ? `<button type="button" onclick="openPaymentEvidence('${escapeHtml(receipt.id)}')">View receipt</button>`
+            : '';
+        return `<article class="private-receipt-row">
+            <div><strong>${escapeHtml(receipt.fileName)}</strong><span>${escapeHtml(status)}${receipt.created_at ? ` · ${new Date(receipt.created_at).toLocaleDateString()}` : ''}</span></div>
+            ${viewButton}
+        </article>`;
+    }).join('');
 }
 
 function filterHistory() {
@@ -3320,13 +3493,16 @@ function renderHistoryTable(filtered = null) {
         const rowKey = `${r.date}|${r.member}|${r.type}|${r.amount}`;
         const isOwn = r.member === currentUser;
         const editBtn = isOwn ? `<button class="edit-txn-btn" onclick="openEditTransactionModal(${JSON.stringify(rowKey)}, ${JSON.stringify(r.type)}, ${r.amount}, ${JSON.stringify(r.message || '')})"> Edit</button>` : '';
+        const evidenceBtn = r.evidenceId
+            ? `<button type="button" class="edit-txn-btn" onclick="openPaymentEvidence('${escapeHtml(r.evidenceId)}')">Receipt</button>`
+            : '';
         return `<tr>
             <td data-label="Date">${new Date(r.date).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
             <td data-label="Member"><strong>${escapeHtml(r.member)}</strong></td>
             <td data-label="Type"><span class="badge ${cls}">${escapeHtml(r.type)}</span></td>
             <td data-label="Amount" class="history-amount ${sign === '-' ? 'negative' : 'positive'}">${sign} KES ${(r.amount || 0).toLocaleString('en-KE')}</td>
             <td data-label="Note" class="message-cell">${escapeHtml(msg)}</td>
-            <td data-label="Actions" class="history-actions">${editBtn}</td>
+            <td data-label="Actions" class="history-actions">${editBtn}${evidenceBtn}</td>
         </tr>`;
     }).join('');
 }
@@ -3357,6 +3533,7 @@ async function submitTransactionEdit(rowKey) {
     const res = await callAPI('requestTransactionEdit', { rowKey, member: currentUser, requestedBy: currentUser, newAmount: Number(newAmount), newMessage });
     if (res.success) {
         showToast('Edit request submitted! Awaiting approval.', 'success');
+        showPushDeliveryFeedback(res.pushDelivery, 'Transaction edit');
         document.querySelector('.modal .close-modal')?.closest('.modal')?.remove();
         document.querySelector('.history-modal')?.remove();
         await loadAllData(false, true);
@@ -5033,20 +5210,27 @@ async function refreshGroupInboxIfOpen() {
     }
 }
 
-async function loadGroupMessages(force = false) {
+async function loadGroupMessages(force = false, loadOlder = false) {
     const container = document.getElementById('groupMessages');
     if (!container || groupMessagesLoading || (!force && Date.now() < nextGroupMessageRetryAt)) return;
+    if (loadOlder && (!groupMessagesHasMore || !groupMessagesCursor)) return;
     groupMessagesLoading = true;
     try {
         if (DEVELOPMENT_PREVIEW_ENABLED) {
             const requestContainer = document.getElementById('groupInboxRequests');
             if (requestContainer) requestContainer.innerHTML = '';
             container.innerHTML = '<div class="empty-state">No group messages yet.</div>';
+            groupMessages = [];
+            groupMessagesCursor = null;
+            groupMessagesHasMore = false;
             unreadGroupMessages = 0;
             updateUnreadIndicators();
             return;
         }
-        const res = await callAPI('getGroupMessages');
+        const res = await callAPI('getGroupMessages', {
+            limit: 50,
+            ...(loadOlder ? { cursor: groupMessagesCursor } : {})
+        });
         if (!res.success) {
             nextGroupMessageRetryAt = Date.now() + groupMessageRetryDelay;
             groupMessageRetryDelay = Math.min(groupMessageRetryDelay * 2, 15 * 60 * 1000);
@@ -5072,7 +5256,7 @@ async function loadGroupMessages(force = false) {
 
         const requests = Array.isArray(res.joinRequests) ? res.joinRequests : [];
         const requestContainer = document.getElementById('groupInboxRequests');
-        requestContainer.innerHTML = requests.length ? `
+        if (requestContainer) requestContainer.innerHTML = requests.length ? `
         <section class="group-request-feed">
             <h3>Requests to join</h3>
             ${requests.map(request => `
@@ -5086,23 +5270,32 @@ async function loadGroupMessages(force = false) {
     ` : '';
 
         const messages = Array.isArray(res.messages) ? res.messages : [];
-        let messagesSeenAt = localStorage.getItem(unreadStorageKey('group_messages')) || '';
-        const latestMessageAt = messages.reduce((latest, message) => String(message.created_at || '') > latest ? String(message.created_at || '') : latest, '');
-        if (!messagesSeenAt && latestMessageAt) {
-            messagesSeenAt = latestMessageAt;
-            localStorage.setItem(unreadStorageKey('group_messages'), messagesSeenAt);
-        }
-        unreadGroupMessages = messages.filter(message =>
-            message.email !== currentUserEmail && message.created_at && String(message.created_at) > messagesSeenAt
-        ).length;
+    if (loadOlder) {
+        const existingIds = new Set(groupMessages.map(message => message.id));
+        groupMessages = [...groupMessages, ...messages.filter(message => !existingIds.has(message.id))];
+    } else {
+        const incomingIds = new Set(messages.map(message => message.id));
+        groupMessages = [...messages, ...groupMessages.filter(message => !incomingIds.has(message.id))];
+    }
+    groupMessagesCursor = res.nextCursor || null;
+    groupMessagesHasMore = Boolean(res.hasMore);
+    const latestMessageAt = groupMessages.reduce((latest, message) =>
+        String(message.created_at || '') > latest ? String(message.created_at || '') : latest, '');
+    const messagesSeenAt = res.readAt
+        || localStorage.getItem(unreadStorageKey('group_messages'))
+        || latestMessageAt;
+    unreadGroupMessages = groupMessages.filter(message =>
+        String(message.email || '').toLowerCase() !== String(currentUserEmail || '').toLowerCase()
+        && message.created_at && String(message.created_at) > messagesSeenAt
+    ).length;
+    updateUnreadIndicators();
+    if (!groupMessages.length) {
+        unreadGroupMessages = 0;
         updateUnreadIndicators();
-        if (!messages.length) {
-            unreadGroupMessages = 0;
-            updateUnreadIndicators();
-            container.innerHTML = '<div class="empty-state">No messages yet. Start the group conversation.</div>';
-            return;
-        }
-        const chronologicalMessages = messages
+        container.innerHTML = '<div class="empty-state">No messages yet. Start the group conversation.</div>';
+        return;
+    }
+    const chronologicalMessages = groupMessages
             .map((message, index) => ({ message, index, timestamp: Date.parse(message.created_at || '') }))
             .sort((a, b) => {
                 const aTimestamp = Number.isNaN(a.timestamp) ? Number.NEGATIVE_INFINITY : a.timestamp;
@@ -5111,7 +5304,9 @@ async function loadGroupMessages(force = false) {
             })
             .map(({ message }) => message);
         const canDeleteMessages = hasAdminPortalAccess();
-        container.innerHTML = chronologicalMessages.map(message => `
+        const previousScrollHeight = container.scrollHeight;
+        const previousScrollTop = container.scrollTop;
+        container.innerHTML = `${groupMessagesHasMore ? '<button type="button" class="group-inbox-load-older">Load older messages</button>' : ''}${chronologicalMessages.map(message => `
         <article class="group-message${message.email === currentUserEmail ? ' own-message' : ''}">
             <div class="group-message-meta">
                 <strong>${escapeHtml(message.member || 'Group member')}</strong>
@@ -5120,11 +5315,13 @@ async function loadGroupMessages(force = false) {
             </div>
             <p>${escapeHtml(message.message)}</p>
         </article>
-    `).join('');
+    `).join('')}`;
+        if (loadOlder) container.scrollTop = previousScrollTop + container.scrollHeight - previousScrollHeight;
+        container.querySelector('.group-inbox-load-older')?.addEventListener('click', () => loadGroupMessages(false, true));
         container.querySelectorAll('.group-message-delete').forEach(button => {
             button.addEventListener('click', () => deleteGroupMessage(button));
         });
-        scrollGroupMessagesToBottom();
+        if (!loadOlder) scrollGroupMessagesToBottom();
         if (document.getElementById('groupChatModal')?.style.display !== 'none') markGroupMessagesRead();
     } finally {
         groupMessagesLoading = false;
@@ -5153,6 +5350,7 @@ async function deleteGroupMessage(button) {
     try {
         const res = await callAPI('deleteGroupMessage', { id });
         if (!res.success) throw new Error(res.error || 'Could not delete the group message.');
+        groupMessages = groupMessages.filter(message => message.id !== id);
         await loadGroupMessages();
         showToast('Group message deleted.', 'success');
     } catch (error) {
@@ -5205,7 +5403,6 @@ function toggleGroupChat(open, opener = null) {
         document.addEventListener('keydown', handleGroupChatKeydown);
         modal.querySelector('.group-chat-modal-dialog')?.focus({ preventScroll: true });
         document.getElementById('groupMessageInput')?.focus({ preventScroll: true });
-        markGroupMessagesRead();
         loadGroupMessages();
         setTimeout(() => {
             syncChatViewport();
@@ -5424,6 +5621,9 @@ function initializeDevelopmentPreview() {
     currentUserEmail = 'alex.morgan@example.test';
     const previewRole = new URLSearchParams(window.location.search).get('previewRole');
     currentUserRole = previewRole === 'developer' ? 'developer' : 'member';
+    dashboardLoaded = true;
+    pendingTransactions = [];
+    pendingEditsMap = {};
     currentUserPosition = 'Chairman';
     currentUserSalutation = 'Mr.';
     currentTab = 'transactions';
@@ -5462,6 +5662,7 @@ function initializeDevelopmentPreview() {
     showHidePendingTab();
     updateMemberDropdowns();
     renderRecentActivity();
+    renderPendingApprovals();
     updateAboutStats();
     renderMembersList(allMembersData);
     const memberCountBadge = document.getElementById('memberCountBadge');

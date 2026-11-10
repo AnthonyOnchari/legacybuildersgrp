@@ -302,7 +302,7 @@
                     </div>
                     <button type="button" onclick="openHistoryModal()">View full history</button>
                 </div>
-                <p class="recent-activity-hint">Showing the latest two</p>
+                <p class="recent-activity-hint">Showing up to the latest five</p>
                 <div id="recentActivityList" class="loading-container"><div class="loading-spinner"></div><div>Loading...</div></div>
             </div>
         </div>
@@ -321,6 +321,11 @@
                     </div>
                     <div><label>Amount (KES)</label><input type="number" id="amount" placeholder="0"><small id="amountHint" style="font-size:10px; color:#7C8AA5; display:block; margin-top:4px;">For loans: Enter PRINCIPAL amount (10% interest added)</small></div>
                     <div><label id="transactionMessageLabel">Transaction Message</label><input type="text" id="message" maxlength="500" placeholder="e.g., Bank/Mpesa Message"></div>
+                    <div id="paymentEvidenceWrapper" style="grid-column: span 2;">
+                        <label for="paymentEvidenceInput">Payment receipt (optional)</label>
+                        <input type="file" id="paymentEvidenceInput" accept="application/pdf,image/jpeg,image/png">
+                        <small style="font-size:10px; color:#7C8AA5; display:block; margin-top:4px;">PDF, JPG, or PNG up to 5 MB. Visible only to you and authorized approvers.</small>
+                    </div>
                     <div id="loanRequestedDueDateWrapper" style="display:none;">
                         <label for="loanRequestedDueDate">Requested repayment date *</label>
                         <input type="date" id="loanRequestedDueDate">
