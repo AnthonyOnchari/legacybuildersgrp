@@ -16311,9 +16311,15 @@ body.finance-ui .company-files-security-note > span {
 }
 body.finance-ui .company-files-security-note p { margin: 0; color: #718078; font-size: 10px; line-height: 1.55; }
 body.finance-ui .company-files-security-note strong { color: #365b42; }
-body.finance-ui .company-file-upload-form { margin: 0; padding: 13px; border: 1px solid #e1e9df; border-radius: 13px; background: #f7faf5; }
+body.finance-ui .company-file-upload-form { display: grid; gap: 12px; margin: 0; padding: 15px; border: 1px solid #dfe9dc; border-radius: 14px; background: linear-gradient(135deg, #f8fbf6, #f1f7ef); }
 body.finance-ui .company-file-upload-form[hidden] { display: none !important; }
+body.finance-ui .company-file-upload-copy { display: grid; gap: 4px; }
+body.finance-ui .company-file-upload-copy strong { color: #315b40; font-size: 11px; }
+body.finance-ui .company-file-upload-copy span { color: #78877c; font-size: 10px; line-height: 1.45; }
+body.finance-ui .company-file-upload-controls { display: flex; align-items: center; gap: 10px; }
 body.finance-ui .company-file-upload-form input { min-width: 0; flex: 1; color: #526456; font-size: 10px; }
+body.finance-ui .company-file-upload-form button { flex: 0 0 auto; padding: 0 15px; }
+body.finance-ui #companyFilesListHeading:focus { outline: none; }
 body.finance-ui .company-files-list-section { display: grid; gap: 10px; }
 body.finance-ui .company-files-list-heading h3 { margin: 0; color: #274c35; font-size: 13px; font-weight: 800; }
 body.finance-ui .company-files-list-heading p { margin: 4px 0 0; color: #829087; font-size: 10px; }
@@ -16354,6 +16360,8 @@ body.finance-ui.dark-mode .company-files-otp-form label,
 body.finance-ui.dark-mode .company-file-upload-form > label { color: #c4d1c1; }
 body.finance-ui.dark-mode .company-files-access,
 body.finance-ui.dark-mode .company-file-upload-form { border-color: #343a34; background: #1b201b; }
+body.finance-ui.dark-mode .company-file-upload-copy strong { color: #d7e4d4; }
+body.finance-ui.dark-mode .company-file-upload-copy span { color: #a3afa3; }
 body.finance-ui.dark-mode .company-files-access-copy strong { color: #e0eadf; }
 body.finance-ui.dark-mode .company-files-access-copy span,
 body.finance-ui.dark-mode .company-files-security-note p,
@@ -16388,4 +16396,5 @@ body.finance-ui.dark-mode .company-file-row { border-color: #343a34; background:
     body.finance-ui .company-files-access { padding: 13px; }
     body.finance-ui .company-files-otp-form input { height: 58px; font-size: 25px; }
     body.finance-ui .company-files-list { max-height: 38vh; }
+    body.finance-ui .company-file-upload-controls { align-items: stretch; flex-direction: column; }
 }

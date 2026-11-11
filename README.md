@@ -19,7 +19,9 @@ The Vercel API allows `https://legacybuildersgroup.vercel.app` and localhost on 
 
 ## Company files
 
-Administrators and the treasurer can upload PDF, Office, text, CSV, JPEG, and PNG files up to 20 MB from Connect â†’ Company files. Files stay private in Firebase Storage. Approved members request a six-digit access code at their registered email; each code expires after 10 minutes, and the download links expire after five minutes. Configure `RESEND_API_KEY` and `RESEND_FROM_EMAIL` in Vercel, using a sender address verified with Resend, before enabling email codes. Never put the Resend API key in frontend configuration or commit it to the repository. Upload authorization is role-checked by the API; storage rules continue to deny direct browser access.
+Only the developer can upload or delete PDF, Office, text, CSV, JPEG, and PNG company files up to 20 MB from Connect → Company files. The upload controls appear in the shared-documents view after email verification. Files stay private in Firebase Storage. Approved members request a six-digit access code at their registered email; each code expires after 10 minutes, and the download links expire after five minutes. Configure `RESEND_API_KEY` and `RESEND_FROM_EMAIL` in Vercel, using a sender address verified with Resend, before enabling email codes. Never put the Resend API key in frontend configuration or commit it to the repository. Upload and delete authorization is enforced by the API; storage rules continue to deny direct browser access.
+
+If a company file upload reports that it cannot reach Firebase Storage, confirm that the bucket's CORS policy is applied and includes the website's exact origin. Apply the repository policy with `gcloud storage buckets update gs://legacy-builders-group.firebasestorage.app --cors-file=storage-cors.json` (replace the bucket name if `FIREBASE_STORAGE_BUCKET` is configured differently), then retry the upload.
 
 ## Local dashboard preview
 

@@ -2988,10 +2988,14 @@ async function verifyCompanyFilesCode(event) {
         document.getElementById('companyFilesAccess').hidden = true;
         document.getElementById('companyFilesSecurityNote').hidden = true;
         document.getElementById('companyFilesListSection').hidden = false;
-        document.getElementById('companyFileUploadForm').hidden = !hasAdminPortalAccess();
-        status.hidden = false;
-        status.textContent = 'Access verified. Secure file links expire in five minutes.';
+        document.getElementById('companyFileUploadForm').hidden = !isDeveloper();
+        status.hidden = true;
+        status.textContent = '';
         renderCompanyFilesList();
+        requestAnimationFrame(() => {
+            document.getElementById('companyFilesListHeading')?.focus({ preventScroll: true });
+            document.getElementById('companyFilesListSection')?.scrollIntoView({ block: 'nearest' });
+        });
     } catch (error) {
         status.hidden = false;
         status.textContent = error.message || 'Could not verify the access code.';
@@ -3016,15 +3020,15 @@ function renderCompanyFilesList() {
             <span class="company-file-icon" aria-hidden="true">FILE</span>
             <div class="company-file-info"><strong>${escapeHtml(file.fileName)}</strong><span>${escapeHtml(size)}${date ? ` · ${escapeHtml(date)}` : ''}</span></div>
             <a class="company-file-open" href="${escapeHtml(file.url)}" target="_blank" rel="noopener">Open</a>
-            ${hasAdminPortalAccess() ? `<button type="button" class="company-file-delete" onclick="deleteCompanyFile('${escapeHtml(file.id)}')" aria-label="Delete ${escapeHtml(file.fileName)}">Delete</button>` : ''}
+            ${isDeveloper() ? `<button type="button" class="company-file-delete" onclick="deleteCompanyFile('${escapeHtml(file.id)}')" aria-label="Delete ${escapeHtml(file.fileName)}">Delete</button>` : ''}
         </article>`;
     }).join('');
 }
 
 async function uploadCompanyFile(event) {
     event.preventDefault();
-    if (!hasAdminPortalAccess()) {
-        showToast('Only an administrator or treasurer can upload company files.', 'error');
+    if (!isDeveloper()) {
+        showToast('Only the developer can upload company files.', 'error');
         return;
     }
     const input = document.getElementById('companyFileInput');
@@ -3033,6 +3037,7 @@ async function uploadCompanyFile(event) {
     const status = document.getElementById('companyFilesStatus');
     if (!file) return;
     if (file.size > 20 * 1024 * 1024) {
+        status.hidden = false;
         status.textContent = 'Company files must be 20 MB or smaller.';
         return;
     }
@@ -3044,18 +3049,26 @@ async function uploadCompanyFile(event) {
             size: file.size
         });
         if (!upload.success) throw new Error(upload.error || 'Could not prepare the file upload.');
-        const response = await fetch(upload.uploadUrl, {
-            method: 'PUT',
-            headers: { 'Content-Type': upload.contentType },
-            body: file
-        });
-        if (!response.ok) throw new Error('The file upload failed. Try again.');
+        let response;
+        try {
+            response = await fetch(upload.uploadUrl, {
+                method: 'PUT',
+                headers: { 'Content-Type': upload.contentType },
+                body: file
+            });
+        } catch (error) {
+            console.error('Company file upload could not reach Firebase Storage:', error);
+            throw new Error('Could not reach Firebase Storage. This is usually a bucket CORS issue. Apply storage-cors.json with `gcloud storage buckets update gs://legacy-builders-group.firebasestorage.app --cors-file=storage-cors.json`, then try again.');
+        }
+        if (!response.ok) throw new Error(`Firebase Storage rejected the upload (HTTP ${response.status}). Check the bucket CORS policy and Storage permissions.`);
         const saved = await callAPI('completeCompanyFileUpload', { fileId: upload.fileId });
         if (!saved.success) throw new Error(saved.error || 'The file could not be saved.');
         input.value = '';
+        status.hidden = false;
         status.textContent = 'File uploaded. Request an email code to open the latest file list.';
         showToast('Company file uploaded.', 'success');
     } catch (error) {
+        status.hidden = false;
         status.textContent = error.message || 'Could not upload this company file.';
     } finally {
         hideButtonLoading(button, 'Upload file');
@@ -3063,7 +3076,11 @@ async function uploadCompanyFile(event) {
 }
 
 async function deleteCompanyFile(fileId) {
-    if (!hasAdminPortalAccess() || !confirm('Delete this company file?')) return;
+    if (!isDeveloper()) {
+        showToast('Only the developer can delete company files.', 'error');
+        return;
+    }
+    if (!confirm('Delete this company file?')) return;
     try {
         const res = await callAPI('deleteCompanyFile', { fileId });
         if (!res.success) throw new Error(res.error || 'Could not delete the file.');

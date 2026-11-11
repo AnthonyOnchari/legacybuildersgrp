@@ -510,12 +510,12 @@
                     </div>
                     <p class="company-files-status" id="companyFilesStatus" role="status" hidden></p>
                     <div class="company-files-security-note" id="companyFilesSecurityNote" hidden><span aria-hidden="true">✓</span><p><strong>Secure access.</strong> Your code expires in 10 minutes. Never share it with anyone.</p></div>
-                    <form id="companyFileUploadForm" class="company-file-upload-form" hidden onsubmit="uploadCompanyFile(event)">
-                        <label for="companyFileInput">Upload a company file <span>PDF, Office files, text, CSV, JPEG or PNG · up to 20 MB</span></label>
-                        <div><input id="companyFileInput" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png" required><button type="submit" id="companyFileUploadButton">Upload file</button></div>
-                    </form>
                     <section class="company-files-list-section" id="companyFilesListSection" aria-label="Shared documents" hidden>
-                        <div class="company-files-list-heading"><div><h3>Shared documents</h3><p>Files made available to your group</p></div></div>
+                        <div class="company-files-list-heading"><div><h3 id="companyFilesListHeading" tabindex="-1">Shared documents</h3><p>Files made available to your group</p></div></div>
+                        <form id="companyFileUploadForm" class="company-file-upload-form" hidden onsubmit="uploadCompanyFile(event)">
+                            <div class="company-file-upload-copy"><strong>Developer file management</strong><span>Share a PDF, Office file, text, CSV, JPEG, or PNG up to 20 MB.</span></div>
+                            <div class="company-file-upload-controls"><input id="companyFileInput" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png" required><button type="submit" id="companyFileUploadButton">Upload file</button></div>
+                        </form>
                         <div class="company-files-list" id="companyFilesList" aria-live="polite"><div class="company-files-empty"><span class="company-files-empty-icon" aria-hidden="true">▤</span><strong>Your documents will appear here</strong><span>Request an access code to securely view group files.</span></div></div>
                     </section>
                 </section>

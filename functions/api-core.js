@@ -893,7 +893,7 @@ async function handleAction(action, params, user) {
             return { success: true, amount: roundedAmount };
         }
         case "createCompanyFileUpload": {
-            await requireAdmin(user);
+            requireDeveloper(user);
             const fileName = cleanCompanyFileName(params.fileName);
             const contentType = String(params.contentType || "").toLowerCase();
             const size = Number(params.size);
@@ -916,7 +916,7 @@ async function handleAction(action, params, user) {
             return { success: true, fileId: id, uploadUrl, contentType };
         }
         case "completeCompanyFileUpload": {
-            await requireAdmin(user);
+            requireDeveloper(user);
             const id = String(params.fileId || "");
             if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Choose a valid company file upload.");
             const intentRef = recordRef("companyFileUploads", id);
@@ -948,7 +948,7 @@ async function handleAction(action, params, user) {
             return { success: true, file: { id, fileName: file.fileName, size: file.size, createdAt: file.createdAt } };
         }
         case "deleteCompanyFile": {
-            await requireAdmin(user);
+            requireDeveloper(user);
             const id = String(params.fileId || "");
             if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Choose a valid company file.");
             const ref = recordRef("companyFiles", id);
