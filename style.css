@@ -10515,7 +10515,7 @@ body.finance-ui .recent-activity-card .activity-card-heading > button {
     padding: 0 11px;
 }
 body.finance-ui .communications-page .communications-hero {
-    min-height: 150px;
+    min-height: 170px;
     margin-bottom: 13px;
     padding: 24px clamp(20px, 3vw, 32px);
     border-radius: 19px;
