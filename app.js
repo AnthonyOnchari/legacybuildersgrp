@@ -2913,6 +2913,7 @@ function openCompanyFilesModal() {
     if (!modal) return;
     modal.style.display = 'grid';
     modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('company-files-modal-open');
     document.getElementById('companyFileUploadForm').hidden = true;
     document.getElementById('companyFilesRequestStep').hidden = false;
     document.getElementById('companyFilesRequestCode').hidden = false;
@@ -2937,6 +2938,7 @@ function closeCompanyFilesModal() {
     if (!modal) return;
     modal.style.display = 'none';
     modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('company-files-modal-open');
     companyFilesChallengeId = '';
     companyFilesAccessList = [];
     document.getElementById('companyFilesOtpInput').value = '';

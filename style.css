@@ -16141,6 +16141,11 @@ body.finance-ui .company-files-modal {
     backdrop-filter: blur(7px);
     -webkit-backdrop-filter: blur(7px);
 }
+body.finance-ui.company-files-modal-open .header-row-1,
+body.finance-ui.company-files-modal-open #tabBar {
+    filter: blur(5px);
+    pointer-events: none;
+}
 body.finance-ui .company-files-dialog {
     display: flex;
     flex-direction: column;
@@ -16364,8 +16369,21 @@ body.finance-ui.dark-mode .company-files-empty > span:last-child { color: #a3afa
 body.finance-ui.dark-mode .company-file-row { border-color: #343a34; background: #191c19; }
 @media (max-width: 560px) {
     body.finance-ui .communications-page .communications-hero-action-container > button { min-height: 36px; padding: 0 9px; border-radius: 6px; font-size: 10px; }
-    body.finance-ui .company-files-modal { align-items: end; padding: 0 0 calc(64px + env(safe-area-inset-bottom)); }
-    body.finance-ui .company-files-dialog { gap: 13px; width: 100%; max-height: 92vh; padding: 19px 16px max(18px, env(safe-area-inset-bottom)); border-radius: 20px 20px 0 0; }
+    body.finance-ui .company-files-modal {
+        align-items: center;
+        justify-items: center;
+        padding: 16px;
+        background: rgba(13, 24, 18, .52);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+    body.finance-ui .company-files-dialog {
+        gap: 13px;
+        width: min(560px, 100%);
+        max-height: min(760px, 92vh, calc(100dvh - 32px));
+        padding: 19px 16px;
+        border-radius: 20px;
+    }
     body.finance-ui .company-files-heading h2 { font-size: 21px; }
     body.finance-ui .company-files-access { padding: 13px; }
     body.finance-ui .company-files-otp-form input { height: 58px; font-size: 25px; }
