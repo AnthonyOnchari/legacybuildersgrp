@@ -15988,6 +15988,94 @@ body.finance-ui.dark-mode .bank-interest-editor-row input {
     background: #101210;
     color: #f2f2f2;
 }
+body.finance-ui #bankInterestEditor {
+    display: grid;
+    gap: 12px;
+    margin: 0 0 22px;
+    padding: 16px;
+    border-color: #d7e5d6;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #f8fbf6, #eef5eb);
+    box-shadow: 0 8px 22px rgba(31, 74, 47, .07);
+}
+body.finance-ui #bankInterestEditor[hidden] { display: none !important; }
+body.finance-ui #bankInterestEditor > label {
+    margin: 0;
+    color: #294d36;
+    font-size: 12px;
+    font-weight: 750;
+    letter-spacing: -.01em;
+}
+body.finance-ui #bankInterestEditor .bank-interest-editor-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+body.finance-ui #bankInterestEditor .bank-interest-editor-row > span {
+    color: #647668;
+    font-size: 12px;
+    font-weight: 750;
+}
+body.finance-ui #bankInterestEditor .bank-interest-editor-row input {
+    width: 100% !important;
+    min-width: 0;
+    height: 44px;
+    padding: 0 13px;
+    border-color: #d3e0d1;
+    border-radius: 11px;
+    font-size: 15px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    box-shadow: inset 0 1px 2px rgba(25, 55, 33, .04);
+}
+body.finance-ui #bankInterestEditor .bank-interest-editor-row input:focus {
+    border-color: #4c805d;
+    outline: 3px solid rgba(76, 128, 93, .15);
+}
+body.finance-ui #bankInterestEditor .bank-interest-editor-row button {
+    width: auto !important;
+    min-width: 112px;
+    min-height: 44px;
+    padding: 0 17px;
+    border-radius: 11px;
+    background: #285b40;
+    font-size: 12px;
+    font-weight: 750;
+    box-shadow: 0 4px 10px rgba(31, 74, 47, .14);
+}
+body.finance-ui #bankInterestEditor .bank-interest-editor-row button:hover:not(:disabled) {
+    background: #1d4932;
+}
+body.finance-ui #bankInterestEditor .bank-interest-preview-note {
+    color: #738174;
+    font-size: 11px;
+    line-height: 1.45;
+}
+body.finance-ui.dark-mode #bankInterestEditor {
+    border-color: #354638;
+    background: linear-gradient(135deg, #171d18, #111512);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .22);
+}
+body.finance-ui.dark-mode #bankInterestEditor > label { color: #e0eadf; }
+body.finance-ui.dark-mode #bankInterestEditor .bank-interest-editor-row > span,
+body.finance-ui.dark-mode #bankInterestEditor .bank-interest-preview-note { color: #abb9ab; }
+body.finance-ui.dark-mode #bankInterestEditor .bank-interest-editor-row input {
+    border-color: #3a493d;
+    background: #0c100d;
+    color: #f2f5f1;
+}
+@media (max-width: 420px) {
+    body.finance-ui #bankInterestEditor { padding: 13px; }
+    body.finance-ui #bankInterestEditor .bank-interest-editor-row {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+    body.finance-ui #bankInterestEditor .bank-interest-editor-row button {
+        grid-column: 1 / -1;
+        width: 100% !important;
+    }
+}
 
 body.finance-ui .communications-page .communications-hero-actions {
     gap: 5px;

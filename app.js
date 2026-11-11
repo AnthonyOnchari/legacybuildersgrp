@@ -91,7 +91,7 @@ function renderBankInterestEarned() {
     }
     const editor = document.getElementById('bankInterestEditor');
     const input = document.getElementById('bankInterestInput');
-    if (editor) editor.hidden = DEVELOPMENT_PREVIEW_ENABLED || !hasAdminPortalAccess();
+    if (editor) editor.hidden = !hasAdminPortalAccess();
     if (input && document.activeElement !== input) input.value = BANK_INTEREST_EARNED.toFixed(2);
 }
 
