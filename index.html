@@ -17,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=194">
+    <link rel="stylesheet" href="style.css?v=195">
 </head>
 <body class="finance-ui app-loading">
 
@@ -484,22 +484,33 @@
             <div class="company-files-modal" id="companyFilesModal" aria-hidden="true" style="display:none" onclick="if(event.target===this)closeCompanyFilesModal()">
                 <section class="company-files-dialog" role="dialog" aria-modal="true" aria-labelledby="companyFilesTitle" tabindex="-1">
                     <header class="company-files-heading">
-                        <div><span class="section-kicker">PRIVATE DOCUMENTS</span><h2 id="companyFilesTitle">Company files</h2><p>Request a one-time code at your registered email to view shared files.</p></div>
+                        <div class="company-files-heading-copy">
+                            <div class="company-files-brand">
+                                <img class="company-files-logo" src="Assets/notification-icon.png" alt="">
+                                <div><span class="section-kicker">SECURE GROUP DOCUMENTS</span><h2 id="companyFilesTitle">Company files</h2></div>
+                            </div>
+                            <p>Important files shared with NBFA Group members, all in one place.</p>
+                        </div>
                         <button type="button" class="company-files-close" onclick="closeCompanyFilesModal()" aria-label="Close company files">&times;</button>
                     </header>
                     <div class="company-files-access">
-                        <button type="button" class="meeting-primary-action" id="companyFilesRequestCode" onclick="requestCompanyFilesCode()">Email me an access code</button>
+                        <div class="company-files-access-copy"><strong>Access your shared files</strong><span>We'll email a one-time code to your registered address.</span></div>
+                        <button type="button" class="meeting-primary-action" id="companyFilesRequestCode" onclick="requestCompanyFilesCode()">Email me a secure code</button>
                         <form id="companyFilesOtpForm" class="company-files-otp-form" hidden onsubmit="verifyCompanyFilesCode(event)">
                             <label for="companyFilesOtpInput">Six-digit code <span id="companyFilesEmailHint"></span></label>
                             <div><input id="companyFilesOtpInput" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required><button type="submit" id="companyFilesVerifyCode">View files</button></div>
                         </form>
                     </div>
                     <p class="company-files-status" id="companyFilesStatus" role="status"></p>
+                    <div class="company-files-security-note"><span aria-hidden="true">✓</span><p><strong>Private by design</strong> Your code is personal and expires after 10 minutes. Never share it with anyone.</p></div>
                     <form id="companyFileUploadForm" class="company-file-upload-form" hidden onsubmit="uploadCompanyFile(event)">
                         <label for="companyFileInput">Upload a company file <span>PDF, Office files, text, CSV, JPEG or PNG · up to 20 MB</span></label>
                         <div><input id="companyFileInput" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png" required><button type="submit" id="companyFileUploadButton">Upload file</button></div>
                     </form>
-                    <div class="company-files-list" id="companyFilesList"><div class="empty-state">Files are protected. Request an email code to view them.</div></div>
+                    <section class="company-files-list-section" aria-label="Shared documents">
+                        <div class="company-files-list-heading"><div><h3>Shared documents</h3><p>Files made available to your group</p></div></div>
+                        <div class="company-files-list" id="companyFilesList" aria-live="polite"><div class="company-files-empty"><span class="company-files-empty-icon" aria-hidden="true">▤</span><strong>Your documents will appear here</strong><span>Request an access code to securely view group files.</span></div></div>
+                    </section>
                 </section>
             </div>
             <div class="group-chat-modal" id="groupChatModal" aria-hidden="true" style="display: none;" onclick="if(event.target===this)toggleGroupChat(false)">
@@ -692,6 +703,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://accounts.google.com/gsi/client" defer></script>
     <script src="firebase-config.js?v=37"></script>
-    <script src="app.js?v=129"></script>
+    <script src="app.js?v=130"></script>
 </body>
 </html>

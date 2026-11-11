@@ -2916,7 +2916,7 @@ function openCompanyFilesModal() {
     document.getElementById('companyFileUploadForm').hidden = !hasAdminPortalAccess();
     document.getElementById('companyFilesOtpForm').hidden = true;
     document.getElementById('companyFilesStatus').textContent = '';
-    document.getElementById('companyFilesList').innerHTML = '<div class="empty-state">Files are protected. Request an email code to view them.</div>';
+    document.getElementById('companyFilesList').innerHTML = '<div class="company-files-empty"><span class="company-files-empty-icon" aria-hidden="true">▤</span><strong>Your documents will appear here</strong><span>Request an access code to securely view group files.</span></div>';
     companyFilesChallengeId = '';
     companyFilesAccessList = [];
     requestAnimationFrame(() => modal.querySelector('.company-files-close')?.focus());
@@ -2930,7 +2930,7 @@ function closeCompanyFilesModal() {
     companyFilesChallengeId = '';
     companyFilesAccessList = [];
     document.getElementById('companyFilesOtpInput').value = '';
-    document.getElementById('companyFilesList').innerHTML = '<div class="empty-state">Files are protected. Request an email code to view them.</div>';
+    document.getElementById('companyFilesList').innerHTML = '<div class="company-files-empty"><span class="company-files-empty-icon" aria-hidden="true">▤</span><strong>Your documents will appear here</strong><span>Request an access code to securely view group files.</span></div>';
 }
 
 async function requestCompanyFilesCode() {
@@ -2975,7 +2975,7 @@ function renderCompanyFilesList() {
     const container = document.getElementById('companyFilesList');
     if (!container) return;
     if (!companyFilesAccessList.length) {
-        container.innerHTML = '<div class="empty-state">No company files have been uploaded yet.</div>';
+        container.innerHTML = '<div class="company-files-empty"><span class="company-files-empty-icon" aria-hidden="true">▤</span><strong>No documents available yet</strong><span>Check back later for files shared with your group.</span></div>';
         return;
     }
     container.innerHTML = companyFilesAccessList.map(file => {

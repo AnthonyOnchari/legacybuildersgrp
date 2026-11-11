@@ -16144,25 +16144,40 @@ body.finance-ui .company-files-modal {
 body.finance-ui .company-files-dialog {
     display: flex;
     flex-direction: column;
-    width: min(660px, 100%);
-    max-height: min(780px, 90vh);
-    padding: 22px;
-    overflow: hidden;
+    gap: 16px;
+    width: min(560px, 100%);
+    max-height: min(760px, 90vh);
+    padding: 26px;
+    overflow: auto;
     border: 1px solid #e1e9df;
-    border-radius: 20px;
-    background: #fff;
-    box-shadow: 0 24px 70px rgba(10, 30, 18, .24);
+    border-radius: 22px;
+    background: linear-gradient(180deg, #fff 0%, #fbfdfb 100%);
+    box-shadow: 0 28px 80px rgba(10, 30, 18, .28);
     color: #244b34;
 }
 body.finance-ui .company-files-heading {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 14px;
+    padding-bottom: 17px;
+    border-bottom: 1px solid #e8eee6;
 }
-body.finance-ui .company-files-heading .section-kicker { color: #739079; font-size: 9px; font-weight: 800; letter-spacing: .12em; }
-body.finance-ui .company-files-heading h2 { margin: 5px 0; font-size: 22px; }
-body.finance-ui .company-files-heading p { margin: 0; color: #718078; font-size: 11px; line-height: 1.5; }
+body.finance-ui .company-files-brand { display: flex; align-items: center; gap: 12px; }
+body.finance-ui .company-files-logo {
+    display: block;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    padding: 4px;
+    border: 1px solid #e5ece3;
+    border-radius: 14px;
+    background: #f5f8f3;
+    object-fit: contain;
+}
+body.finance-ui .company-files-heading .section-kicker { color: #68806d; font-size: 9px; font-weight: 800; letter-spacing: .13em; }
+body.finance-ui .company-files-heading h2 { margin: 4px 0 0; color: #18392f; font-size: 23px; letter-spacing: -.035em; }
+body.finance-ui .company-files-heading-copy > p { margin: 12px 0 0; color: #718078; font-size: 12px; line-height: 1.5; }
 body.finance-ui .company-files-close {
     width: 34px;
     height: 34px;
@@ -16174,8 +16189,29 @@ body.finance-ui .company-files-close {
     font-size: 22px;
     cursor: pointer;
 }
-body.finance-ui .company-files-access { margin-top: 16px; }
-body.finance-ui .company-files-access > button { min-height: 38px; padding: 0 14px; border-radius: 10px; font-size: 10px; }
+body.finance-ui .company-files-access {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid #e4ece1;
+    border-radius: 15px;
+    background: #f7faf6;
+}
+body.finance-ui .company-files-access-copy { display: grid; gap: 4px; }
+body.finance-ui .company-files-access-copy strong { color: #244b34; font-size: 13px; }
+body.finance-ui .company-files-access-copy span { color: #718078; font-size: 11px; line-height: 1.5; }
+body.finance-ui .company-files-access > button {
+    width: 100%;
+    min-height: 43px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 10px;
+    background: #285b40;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 750;
+    box-shadow: 0 5px 12px rgba(40, 91, 64, .16);
+}
 body.finance-ui .company-files-otp-form label,
 body.finance-ui .company-file-upload-form > label { display: grid; gap: 4px; margin-bottom: 7px; color: #42624b; font-size: 10px; font-weight: 750; }
 body.finance-ui .company-files-otp-form label span,
@@ -16183,35 +16219,79 @@ body.finance-ui .company-file-upload-form > label span { color: #78877c; font-si
 body.finance-ui .company-files-otp-form > div,
 body.finance-ui .company-file-upload-form > div { display: flex; align-items: center; gap: 8px; }
 body.finance-ui .company-files-otp-form input {
+    min-width: 0;
     width: 140px;
-    height: 38px;
+    height: 42px;
     padding: 0 12px;
     border: 1px solid #d7e2d5;
-    border-radius: 9px;
+    border-radius: 10px;
+    background: #fff;
     color: #244b34;
     font-size: 16px;
     font-weight: 750;
-    letter-spacing: .18em;
+    letter-spacing: .22em;
 }
 body.finance-ui .company-files-otp-form button,
 body.finance-ui .company-file-upload-form button {
-    min-height: 38px;
+    min-height: 42px;
     padding: 0 13px;
     border: 0;
-    border-radius: 9px;
+    border-radius: 10px;
     background: #285b40;
     color: #fff;
     font-size: 10px;
     font-weight: 750;
     cursor: pointer;
 }
-body.finance-ui .company-files-status { min-height: 16px; margin: 9px 0; color: #647668; font-size: 10px; }
-body.finance-ui .company-file-upload-form { margin: 2px 0 12px; padding: 11px; border: 1px solid #e1e9df; border-radius: 11px; background: #f7faf5; }
+body.finance-ui .company-files-status { min-height: 0; margin: -8px 0 0; color: #647668; font-size: 11px; line-height: 1.5; }
+body.finance-ui .company-files-status:empty { display: none; }
+body.finance-ui .company-files-security-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid #e3ebe0;
+    border-radius: 13px;
+    background: #fff;
+}
+body.finance-ui .company-files-security-note > span {
+    display: grid;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    place-items: center;
+    border-radius: 50%;
+    background: #e9f2e7;
+    color: #356b4a;
+    font-size: 11px;
+    font-weight: 800;
+}
+body.finance-ui .company-files-security-note p { margin: 0; color: #718078; font-size: 10px; line-height: 1.55; }
+body.finance-ui .company-files-security-note strong { color: #365b42; }
+body.finance-ui .company-file-upload-form { margin: 0; padding: 13px; border: 1px solid #e1e9df; border-radius: 13px; background: #f7faf5; }
 body.finance-ui .company-file-upload-form[hidden],
 body.finance-ui .company-files-otp-form[hidden] { display: none; }
 body.finance-ui .company-file-upload-form input { min-width: 0; flex: 1; color: #526456; font-size: 10px; }
-body.finance-ui .company-files-list { display: grid; gap: 7px; min-height: 76px; max-height: 42vh; overflow-y: auto; }
-body.finance-ui .company-file-row { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 10px; border: 1px solid #e7ede5; border-radius: 11px; background: #fcfdfb; }
+body.finance-ui .company-files-list-section { display: grid; gap: 10px; }
+body.finance-ui .company-files-list-heading h3 { margin: 0; color: #274c35; font-size: 13px; font-weight: 800; }
+body.finance-ui .company-files-list-heading p { margin: 4px 0 0; color: #829087; font-size: 10px; }
+body.finance-ui .company-files-list { display: grid; gap: 8px; min-height: 100px; max-height: 34vh; overflow-y: auto; }
+body.finance-ui .company-files-empty {
+    display: grid;
+    min-height: 100px;
+    align-content: center;
+    justify-items: center;
+    gap: 6px;
+    padding: 16px;
+    border: 1px dashed #d9e4d7;
+    border-radius: 13px;
+    background: #fbfdfb;
+    text-align: center;
+}
+body.finance-ui .company-files-empty-icon { color: #78927d; font-size: 19px; line-height: 1; }
+body.finance-ui .company-files-empty strong { color: #45634b; font-size: 11px; }
+body.finance-ui .company-files-empty > span:last-child { color: #829087; font-size: 10px; line-height: 1.45; }
+body.finance-ui .company-file-row { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 11px; border: 1px solid #e4ece1; border-radius: 12px; background: #fff; }
 body.finance-ui .company-file-icon { display: grid; width: 35px; height: 35px; flex: 0 0 35px; place-items: center; border-radius: 9px; background: #eaf2e8; color: #356b4a; font-size: 8px; font-weight: 800; }
 body.finance-ui .company-file-info { display: grid; min-width: 0; flex: 1; gap: 4px; }
 body.finance-ui .company-file-info strong { overflow: hidden; color: #244b34; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
@@ -16219,18 +16299,36 @@ body.finance-ui .company-file-info span { color: #829087; font-size: 9px; }
 body.finance-ui .company-file-open,
 body.finance-ui .company-file-delete { padding: 7px 9px; border: 1px solid #dfe8dc; border-radius: 8px; background: #fff; color: #356b4a; font-size: 9px; font-weight: 750; text-decoration: none; cursor: pointer; }
 body.finance-ui .company-file-delete { border-color: #f0d8d4; color: #a34235; }
-body.finance-ui.dark-mode .company-files-dialog { border-color: #333; background: #121412; color: #f2f2f2; }
-body.finance-ui.dark-mode .company-files-heading :is(h2, p),
+body.finance-ui.dark-mode .company-files-dialog { border-color: #343a34; background: linear-gradient(180deg, #171a17 0%, #121412 100%); color: #f2f2f2; }
+body.finance-ui.dark-mode .company-files-heading { border-color: #303630; }
+body.finance-ui.dark-mode .company-files-logo { border-color: #343a34; background: #202620; }
+body.finance-ui.dark-mode .company-files-heading h2,
+body.finance-ui.dark-mode .company-files-list-heading h3,
 body.finance-ui.dark-mode .company-file-info strong { color: #f2f2f2; }
+body.finance-ui.dark-mode .company-files-heading-copy > p,
+body.finance-ui.dark-mode .company-files-list-heading p { color: #a3afa3; }
 body.finance-ui.dark-mode .company-files-heading .section-kicker,
 body.finance-ui.dark-mode .company-files-otp-form label,
 body.finance-ui.dark-mode .company-file-upload-form > label { color: #c4d1c1; }
-body.finance-ui.dark-mode .company-file-upload-form,
-body.finance-ui.dark-mode .company-file-row { border-color: #343a34; background: #191c19; }
+body.finance-ui.dark-mode .company-files-access,
+body.finance-ui.dark-mode .company-file-upload-form { border-color: #343a34; background: #1b201b; }
+body.finance-ui.dark-mode .company-files-access-copy strong { color: #e0eadf; }
+body.finance-ui.dark-mode .company-files-access-copy span,
+body.finance-ui.dark-mode .company-files-security-note p { color: #a3afa3; }
+body.finance-ui.dark-mode .company-files-security-note { border-color: #343a34; background: #191c19; }
+body.finance-ui.dark-mode .company-files-security-note strong { color: #d7e4d4; }
 body.finance-ui.dark-mode .company-files-otp-form input { border-color: #343a34; background: #101210; color: #f2f2f2; }
+body.finance-ui.dark-mode .company-files-empty { border-color: #3a443a; background: #171b17; }
+body.finance-ui.dark-mode .company-files-empty strong { color: #d7e4d4; }
+body.finance-ui.dark-mode .company-files-empty > span:last-child { color: #a3afa3; }
+body.finance-ui.dark-mode .company-file-row { border-color: #343a34; background: #191c19; }
 @media (max-width: 560px) {
     body.finance-ui .communications-page .communications-hero-action-container > button { min-height: 36px; padding: 0 9px; border-radius: 6px; font-size: 10px; }
     body.finance-ui .company-files-modal { align-items: end; padding: 0; }
-    body.finance-ui .company-files-dialog { width: 100%; max-height: 92vh; padding: 18px 15px max(18px, env(safe-area-inset-bottom)); border-radius: 20px 20px 0 0; }
+    body.finance-ui .company-files-dialog { gap: 13px; width: 100%; max-height: 92vh; padding: 19px 16px max(18px, env(safe-area-inset-bottom)); border-radius: 20px 20px 0 0; }
+    body.finance-ui .company-files-heading h2 { font-size: 21px; }
+    body.finance-ui .company-files-access { padding: 13px; }
+    body.finance-ui .company-files-otp-form > div { align-items: stretch; }
+    body.finance-ui .company-files-otp-form input { flex: 1; width: auto; }
     body.finance-ui .company-files-list { max-height: 38vh; }
 }
