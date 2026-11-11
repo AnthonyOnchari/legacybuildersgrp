@@ -48,13 +48,26 @@ const companyFileOtpHash = (challengeId, code) => crypto
     .createHmac("sha256", process.env.RESEND_API_KEY || "")
     .update(`${challengeId}:${code}`)
     .digest("hex");
-async function sendCompanyFileOtp(email, code) {
+async function sendCompanyFileOtp(email, code, memberName) {
     const apiKey = process.env.RESEND_API_KEY;
     const from = process.env.RESEND_FROM_EMAIL;
     if (!apiKey || !from) {
         console.error("Company file email delivery is not configured.");
         throw new Error("Email access codes are not available yet. Contact the administrator.");
     }
+    const safeName = String(memberName || "NBFA Group member").replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+    })[character]);
+    const text = `Hello ${memberName || "NBFA Group member"},\n\nYour NBFA Group company files access code is ${code}.\n\nEnter this six-digit code in Company Files to view shared documents. It expires in 10 minutes. Keep it private; if you did not request it, you can ignore this email.\n\nNBFA Group`;
+    const html = `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">Your NBFA Group access code expires in 10 minutes.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f7fa;font-family:Arial,Helvetica,sans-serif;color:#243447"><tr><td align="center" style="padding:32px 16px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;background:#ffffff;border:1px solid #e3e8ef;border-radius:14px">
+<tr><td align="center" style="padding:26px 28px 20px"><img src="https://legacybuildersgroup.vercel.app/Assets/notification-icon.png" alt="NBFA Group logo" width="88" height="88" style="display:block;width:88px;height:88px;margin:0 auto 10px"><div style="font-size:13px;font-weight:700;letter-spacing:2px;color:#225b9b">NBFA GROUP</div><div style="margin-top:5px;font-size:11px;color:#697586">WHERE FAMILIES BUILD WEALTH TOGETHER</div></td></tr>
+<tr><td style="padding:0 32px"><div style="height:1px;background:#e9edf2;font-size:1px;line-height:1px">&nbsp;</div></td></tr>
+<tr><td style="padding:24px 32px 8px"><h1 style="margin:0;font-size:21px;line-height:1.35;color:#243447">Your secure access code</h1><p style="margin:14px 0 0;font-size:15px;line-height:1.6;color:#4b5565">Hello ${safeName}, use this one-time code to open the shared company files in your NBFA Group account.</p></td></tr>
+<tr><td align="center" style="padding:22px 32px"><div style="padding:18px 12px;border:1px solid #dce5ef;border-radius:10px;background:#f7f9fc;font-size:32px;line-height:1.2;font-weight:700;letter-spacing:9px;color:#183f68">${code}</div><p style="margin:12px 0 0;font-size:13px;color:#606d7c">This code expires in <strong style="color:#344256">10 minutes</strong>.</p></td></tr>
+<tr><td style="padding:0 32px 24px"><div style="padding:14px 16px;border-radius:9px;background:#f5f7fa;font-size:13px;line-height:1.6;color:#4b5565"><strong style="color:#243447">Keep your code private.</strong> NBFA Group will never ask you to share it. If you did not request this code, you can ignore this email.</div></td></tr>
+<tr><td align="center" style="padding:16px 24px;border-top:1px solid #e9edf2;font-size:12px;line-height:1.5;color:#778294">This is an automated security email from NBFA Group. Please do not reply.</td></tr></table></td></tr></table>`;
     const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -62,7 +75,8 @@ async function sendCompanyFileOtp(email, code) {
             from,
             to: [email],
             subject: "Your NBFA Group company files access code",
-            html: `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">Your NBFA Group company files access code expires in 10 minutes.</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f6f2;font-family:Arial,Helvetica,sans-serif;color:#18392f"><tr><td align="center" style="padding:32px 16px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;background:#fff;border:1px solid #e1e9df;border-radius:16px"><tr><td align="center" style="padding:30px 28px 22px"><img src="https://legacybuildersgroup.vercel.app/Assets/notification-icon.png" alt="NBFA Group logo" width="72" height="72" style="display:block;width:72px;height:72px;margin:0 auto 12px"><div style="font-size:13px;font-weight:700;letter-spacing:2px;color:#225b9b">NBFA GROUP</div><div style="margin-top:5px;font-size:12px;color:#718078">WHERE FAMILIES BUILD WEALTH TOGETHER</div></td></tr><tr><td style="padding:0 32px"><div style="height:1px;background:#e8eee6;font-size:1px;line-height:1px">&nbsp;</div></td></tr><tr><td align="center" style="padding:26px 32px 8px"><h1 style="margin:0;font-size:22px;line-height:1.35;color:#18392f">Your company files access code</h1><p style="margin:12px 0 0;font-size:15px;line-height:1.6;color:#526456">Use the secure code below to view shared NBFA Group documents. Enter it in the Company Files section of the app.</p></td></tr><tr><td align="center" style="padding:22px 32px"><div style="padding:16px 12px;border:1px solid #e1e9df;border-radius:12px;background:#f6f9f5;font-size:32px;line-height:1.2;font-weight:700;letter-spacing:9px;color:#18392f">${code}</div><p style="margin:12px 0 0;font-size:13px;color:#718078">This code expires in <strong style="color:#526456">10 minutes</strong>.</p></td></tr><tr><td style="padding:0 32px 26px"><div style="padding:14px 16px;border-radius:10px;background:#f3f6f2;font-size:13px;line-height:1.6;color:#526456"><strong style="color:#18392f">Keep this code private.</strong> NBFA Group will never ask you to share it. If you didn’t request this code, you can safely ignore this email.</div></td></tr><tr><td align="center" style="padding:18px 24px;border-top:1px solid #e8eee6;font-size:12px;line-height:1.5;color:#829087">This is an automated security email from NBFA Group.<br>Please do not reply to this message.</td></tr></table></td></tr></table>`
+            text,
+            html,
         })
     });
     if (!response.ok) {
@@ -979,7 +993,7 @@ async function handleAction(action, params, user) {
                 expiresAt: now + COMPANY_FILE_OTP_LIFETIME_MS
             });
             try {
-                await sendCompanyFileOtp(email, code);
+                await sendCompanyFileOtp(email, code, user.profile.name || user.auth.name);
             } catch (error) {
                 await challengeRef.delete();
                 throw error;

@@ -2913,10 +2913,20 @@ function openCompanyFilesModal() {
     if (!modal) return;
     modal.style.display = 'grid';
     modal.setAttribute('aria-hidden', 'false');
-    document.getElementById('companyFileUploadForm').hidden = !hasAdminPortalAccess();
+    document.getElementById('companyFileUploadForm').hidden = true;
+    document.getElementById('companyFilesRequestStep').hidden = false;
+    document.getElementById('companyFilesRequestCode').hidden = false;
     document.getElementById('companyFilesOtpForm').hidden = true;
+    document.getElementById('companyFilesResendCode').hidden = true;
+    document.getElementById('companyFilesSecurityNote').hidden = true;
+    document.getElementById('companyFilesListSection').hidden = true;
+    document.getElementById('companyFilesAccess').hidden = false;
+    document.getElementById('companyFilesStatus').hidden = true;
     document.getElementById('companyFilesStatus').textContent = '';
-    document.getElementById('companyFilesList').innerHTML = '<div class="company-files-empty"><span class="company-files-empty-icon" aria-hidden="true">▤</span><strong>Your documents will appear here</strong><span>Request an access code to securely view group files.</span></div>';
+    document.getElementById('companyFilesOtpInput').value = '';
+    document.getElementById('companyFilesEmailHint').textContent = '';
+    document.getElementById('companyFilesRequestCode').textContent = 'Send me a code';
+    document.getElementById('companyFilesList').innerHTML = '';
     companyFilesChallengeId = '';
     companyFilesAccessList = [];
     requestAnimationFrame(() => modal.querySelector('.company-files-close')?.focus());
@@ -2930,25 +2940,36 @@ function closeCompanyFilesModal() {
     companyFilesChallengeId = '';
     companyFilesAccessList = [];
     document.getElementById('companyFilesOtpInput').value = '';
-    document.getElementById('companyFilesList').innerHTML = '<div class="company-files-empty"><span class="company-files-empty-icon" aria-hidden="true">▤</span><strong>Your documents will appear here</strong><span>Request an access code to securely view group files.</span></div>';
+    document.getElementById('companyFilesList').innerHTML = '';
 }
 
 async function requestCompanyFilesCode() {
-    const button = document.getElementById('companyFilesRequestCode');
+    const requestStep = document.getElementById('companyFilesRequestStep');
+    const button = requestStep.hidden
+        ? document.getElementById('companyFilesResendCode')
+        : document.getElementById('companyFilesRequestCode');
     const status = document.getElementById('companyFilesStatus');
+    const originalText = requestStep.hidden ? 'Send a new code' : 'Send me a code';
     showButtonLoading(button, 'Sending code...');
     try {
         const res = await callAPI('requestCompanyFilesOtp');
         if (!res.success) throw new Error(res.error || 'Could not send an access code.');
         companyFilesChallengeId = res.challengeId;
         document.getElementById('companyFilesEmailHint').textContent = res.emailHint ? `· ${res.emailHint}` : '';
+        requestStep.hidden = true;
+        document.getElementById('companyFilesRequestCode').hidden = true;
         document.getElementById('companyFilesOtpForm').hidden = false;
-        status.textContent = 'A six-digit code was sent to your registered email. It expires in 10 minutes.';
+        document.getElementById('companyFilesResendCode').hidden = false;
+        document.getElementById('companyFilesSecurityNote').hidden = false;
+        document.getElementById('companyFilesOtpInput').value = '';
+        status.hidden = false;
+        status.textContent = 'Code sent. It expires in 10 minutes.';
         document.getElementById('companyFilesOtpInput').focus();
     } catch (error) {
+        status.hidden = false;
         status.textContent = error.message || 'Could not send an access code.';
     } finally {
-        hideButtonLoading(button, 'Email me an access code');
+        hideButtonLoading(button, originalText);
     }
 }
 
@@ -2962,12 +2983,18 @@ async function verifyCompanyFilesCode(event) {
         const res = await callAPI('verifyCompanyFilesOtp', { challengeId: companyFilesChallengeId, code });
         if (!res.success) throw new Error(res.error || 'Could not verify the access code.');
         companyFilesAccessList = Array.isArray(res.files) ? res.files : [];
-        status.textContent = 'Code verified. Secure file links expire in five minutes.';
+        document.getElementById('companyFilesAccess').hidden = true;
+        document.getElementById('companyFilesSecurityNote').hidden = true;
+        document.getElementById('companyFilesListSection').hidden = false;
+        document.getElementById('companyFileUploadForm').hidden = !hasAdminPortalAccess();
+        status.hidden = false;
+        status.textContent = 'Access verified. Secure file links expire in five minutes.';
         renderCompanyFilesList();
     } catch (error) {
+        status.hidden = false;
         status.textContent = error.message || 'Could not verify the access code.';
     } finally {
-        hideButtonLoading(button, 'View files');
+        hideButtonLoading(button, 'Verify code and view files');
     }
 }
 
