@@ -8,10 +8,10 @@ The app uses Firebase Authentication (Google sign-in), Cloud Firestore, and a Ve
 2. Add the deployed website hostname under Authentication → Settings → Authorized domains.
 3. In Google Cloud Console, add the production HTTPS origin (currently `https://legacybuildersgroup.vercel.app`) to the Web OAuth client's **Authorized JavaScript origins**. Add `http://localhost:3000` for local testing. The in-page Google account chooser requires a secure origin and a browser with FedCM support.
 4. Create a Cloud Firestore database in Native mode.
-5. In Google Cloud IAM, create a service account for the app and grant it the **Cloud Datastore User** role for Firestore access and **Storage Object Admin** on the Firebase Storage bucket for private payment receipts. Create a JSON key and store it securely; never commit or share the key. Firebase Authentication ID tokens are verified against Google's signing certificates.
+5. In Google Cloud IAM, create a service account for the app and grant it the **Cloud Datastore User** role for Firestore access. Create a JSON key and store it securely; never commit or share the key. Firebase Authentication ID tokens are verified against Google's signing certificates.
 6. In Vercel Project Settings → Environment Variables, add `FIREBASE_SERVICE_ACCOUNT` with the full service-account JSON as its value for Production and Preview. Redeploy after adding it. The Vercel `/api` endpoint uses this credential to verify Firebase ID tokens and access Firestore.
-7. Deploy Firestore and Storage rules with `firebase deploy --only firestore:rules,storage --project legacy-builders-group`. Import and verify legacy data **before allowing members to sign in** so existing Gmail accounts receive migrated roles and approvals instead of starting as pending registrations.
-8. Configure the Storage bucket's browser CORS policy once with `gcloud storage buckets update gs://legacy-builders-group.firebasestorage.app --cors-file=storage-cors.json`. If the bucket name differs, set `FIREBASE_STORAGE_BUCKET` in Vercel and use that bucket name in this command.
+7. Deploy Firestore rules with `firebase deploy --only firestore:rules --project legacy-builders-group`. Import and verify legacy data **before allowing members to sign in** so existing Gmail accounts receive migrated roles and approvals instead of starting as pending registrations.
+8. In Cloudinary Settings → Upload Presets, configure the unsigned preset named in `firebase-config.js` to allow raw file uploads. Allow the company's supported PDF, Office, text, CSV, JPEG, and PNG formats and a maximum upload size of 20 MB. Payment receipts are limited in the app to 5 MB.
 
 The web app config is in `firebase-config.js`. Its API key identifies the public web app; restrict it to the website's authorized referrers in Google Cloud. Never put service-account credentials in frontend files or commit them to this repository.
 
@@ -19,9 +19,9 @@ The Vercel API allows `https://legacybuildersgroup.vercel.app` and localhost on 
 
 ## Company files
 
-Only the developer can upload or delete PDF, Office, text, CSV, JPEG, and PNG company files up to 20 MB from Connect → Company files. The upload controls appear in the shared-documents view after email verification. Files stay private in Firebase Storage. Approved members request a six-digit access code at their registered email; each code expires after 10 minutes, and the download links expire after five minutes. Configure `RESEND_API_KEY` and `RESEND_FROM_EMAIL` in Vercel, using a sender address verified with Resend, before enabling email codes. Never put the Resend API key in frontend configuration or commit it to the repository. Upload and delete authorization is enforced by the API; storage rules continue to deny direct browser access.
+Only the developer can add or remove PDF, Office, text, CSV, JPEG, and PNG company files up to 20 MB from Connect → Company files. The upload controls appear in the shared-documents view after email verification. Approved members request a six-digit access code at their registered email; each code expires after 10 minutes. Configure `RESEND_API_KEY` and `RESEND_FROM_EMAIL` in Vercel, using a sender address verified with Resend, before enabling email codes. Never put the Resend API key in frontend configuration or commit it to the repository. Cloudinary links are public and do not expire. Removing a file from the app does not delete the asset from Cloudinary; delete it separately from the Cloudinary Media Library.
 
-If a company file upload reports that it cannot reach Firebase Storage, confirm that the bucket's CORS policy is applied and includes the website's exact origin. Apply the repository policy with `gcloud storage buckets update gs://legacy-builders-group.firebasestorage.app --cors-file=storage-cors.json` (replace the bucket name if `FIREBASE_STORAGE_BUCKET` is configured differently), then retry the upload.
+Company files upload directly to Cloudinary as raw assets through the unsigned preset. Access-code checks control whether the app displays links, but anyone with a file URL can open it.
 
 ## Local dashboard preview
 
@@ -29,15 +29,14 @@ Open `http://localhost:3000/?preview=1` on a local static server to view the das
 
 ## Cloudinary photos and group inbox
 
-Profile photos and shared group memories use direct unsigned Cloudinary uploads. Configure an unsigned upload preset named `legacybuilders_unsigned` in the `qopne8fk` Cloudinary account. Allow JPG, PNG, and WebP uploads, set the preset's maximum file size to 5 MB, and verify it honors the upload `folder` parameter. The app expects uploads under `legacy-builders/profiles/` and `legacy-builders/memories/`; it also checks the image size in the browser. The cloud name and preset name are public frontend settings in `firebase-config.js`; do not add a Cloudinary API secret there. `CLOUDINARY_CLOUD_NAME` is an optional Vercel environment variable if the backend should validate a different cloud name.
+Profile photos, shared group memories, company files, and payment receipts use direct unsigned Cloudinary uploads. Configure the unsigned preset in the `qopne8fk` account to allow JPG, PNG, WebP, PDF, Office, text, and CSV uploads, up to 20 MB. The app expects image uploads under `legacy-builders/profiles/` and `legacy-builders/memories/`, and file uploads under `legacy-builders/company-files/` or `legacy-builders/payment-evidence/`. The cloud name and preset name are public frontend settings in `firebase-config.js`.
 
 Approved members can post memories and use the group inbox. Group messages are retained until an administrator, treasurer, or developer deletes them; older messages are loaded in bounded pages. Join requests contain only a name and email address and are visible to administrators and the treasurer, who can approve or reject them from the operations portal. Only developers can assign member positions (Chairman, Vice-Chairman, Treasurer, Secretary, or Member); Treasurer position holders receive the same operational permissions as administrators. Never request or send passwords in group messages.
 
-Payment receipts are optional PDF, JPEG, or PNG files up to 5 MB. They are uploaded to private Firebase Storage staging objects, verified by the API, and attached to the transaction only after verification. Only the submitting member and authorized approvers can request a five-minute download link; receipts are not included in the developer system backup. Storage rules deny direct client access.
+Payment receipts are optional PDF, JPEG, or PNG files up to 5 MB. They are attached to the transaction after upload. Only the submitting member and authorized approvers can request the link through the app, but the Cloudinary URL itself is public and does not expire. Receipts are not included in the developer system backup.
 
 The developer sets each approved member's optional Mr. or Mrs. greeting salutation in Developer → User management. The dashboard greeting uses that salutation and the member's assigned position (for example, “Good morning, Mrs. Secretary”); without a salutation, it shows the position alone.
 
-If a Cloudinary API secret was shared in a screenshot or message, rotate it in the Cloudinary dashboard. This integration does not need that secret.
 
 ## Non-destructive legacy data import
 

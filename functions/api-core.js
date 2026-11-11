@@ -1,12 +1,10 @@
 const { cert, getApps, initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 const { AggregateField, FieldPath, getFirestore } = require("firebase-admin/firestore");
-const { getStorage } = require("firebase-admin/storage");
 const crypto = require("node:crypto");
 
 let db;
 let firebaseAuth;
-let storageBucket;
 let pushSubscriptionsCache = null;
 let pushSubscriptionsCacheExpiresAt = 0;
 const DEVELOPER_EMAILS = new Set(["info.onchari@gmail.com"]);
@@ -26,7 +24,6 @@ const TREASURER_DEFAULT = "Mrs. Kithinji";
 const POSITION_TITLES = new Set(["Chairman", "Vice-Chairman", "Treasurer", "Secretary", "Member"]);
 const PROFILE_SALUTATIONS = new Set(["Mr.", "Mrs."]);
 const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || "qopne8fk";
-const PAYMENT_EVIDENCE_BUCKET = process.env.FIREBASE_STORAGE_BUCKET || "legacy-builders-group.firebasestorage.app";
 const PAYMENT_EVIDENCE_MAX_BYTES = 5 * 1024 * 1024;
 const PAYMENT_EVIDENCE_TYPES = new Set(["application/pdf", "image/jpeg", "image/png"]);
 const PUSH_API_URL = process.env.PUSH_API_URL || "https://legacybuildersgroup.vercel.app/api/send-push";
@@ -48,6 +45,34 @@ const companyFileOtpHash = (challengeId, code) => crypto
     .createHmac("sha256", process.env.RESEND_API_KEY || "")
     .update(`${challengeId}:${code}`)
     .digest("hex");
+function cloudinaryFileExtension(fileName, contentType) {
+    const extension = ({
+        "application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png",
+        "text/plain": "txt", "text/csv": "csv",
+        "application/msword": "doc",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+        "application/vnd.ms-excel": "xls",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+        "application/vnd.ms-powerpoint": "ppt",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx"
+    })[contentType];
+    if (extension) return extension;
+    const match = String(fileName || "").toLowerCase().match(/\.([a-z0-9]{1,8})$/);
+    return match ? match[1] : "bin";
+}
+function isExpectedCloudinaryRawUpload(urlValue, publicId, bytes, expectedBytes) {
+    try {
+        const url = new URL(String(urlValue || ""));
+        const expectedPath = `/${CLOUDINARY_CLOUD_NAME}/raw/upload/`;
+        return url.protocol === "https:"
+            && url.hostname === "res.cloudinary.com"
+            && url.pathname.startsWith(expectedPath)
+            && url.pathname.includes(`/${publicId}`)
+            && Number(bytes) === Number(expectedBytes);
+    } catch {
+        return false;
+    }
+}
 async function sendCompanyFileOtp(email, code, memberName) {
     const apiKey = process.env.RESEND_API_KEY;
     const from = process.env.RESEND_FROM_EMAIL;
@@ -132,7 +157,6 @@ function initializeFirebaseAdmin() {
         );
         db = getFirestore(app);
         firebaseAuth = getAuth(app);
-        storageBucket = getStorage(app).bucket(PAYMENT_EVIDENCE_BUCKET);
     } catch (error) {
         console.error("Firebase Admin initialization failed:", error);
         throw new Error("Firebase Admin could not initialize. Verify the service-account key and Firestore permissions.");
@@ -904,16 +928,14 @@ async function handleAction(action, params, user) {
                 throw new Error("Company files must be 20 MB or smaller.");
             }
             const id = crypto.randomUUID();
-            const storagePath = `company-files/${id}`;
+            const publicId = `legacy-builders/company-files/${id}.${cloudinaryFileExtension(fileName, contentType)}`;
             const expiresAt = Date.now() + 10 * 60 * 1000;
-            const [uploadUrl] = await storageBucket.file(storagePath).getSignedUrl({
-                version: "v4", action: "write", expires: expiresAt, contentType
-            });
+            const upload = { cloudName: CLOUDINARY_CLOUD_NAME, publicId };
             await recordRef("companyFileUploads", id).create({
-                id, email: user.email, fileName, contentType, size, storagePath,
+                id, email: user.email, fileName, contentType, size, publicId,
                 createdAt: nowIso(), expiresAt, status: "uploading"
             });
-            return { success: true, fileId: id, uploadUrl, contentType };
+            return { success: true, fileId: id, upload };
         }
         case "completeCompanyFileUpload": {
             requireDeveloper(user);
@@ -926,10 +948,8 @@ async function handleAction(action, params, user) {
             if (emailKey(intent.email) !== user.email || Date.now() > Number(intent.expiresAt)) {
                 throw new Error("Company file upload has expired. Start again.");
             }
-            const object = storageBucket.file(intent.storagePath);
-            const [metadata] = await object.getMetadata();
-            if (Number(metadata.size) !== Number(intent.size) || String(metadata.contentType || "").toLowerCase() !== intent.contentType) {
-                await object.delete({ ignoreNotFound: true });
+            const secureUrl = String(params.secureUrl || "");
+            if (params.publicId !== intent.publicId || !isExpectedCloudinaryRawUpload(secureUrl, intent.publicId, params.bytes, intent.size)) {
                 await intentRef.delete();
                 throw new Error("Uploaded file details did not match. Please upload the file again.");
             }
@@ -938,7 +958,8 @@ async function handleAction(action, params, user) {
                 fileName: intent.fileName,
                 contentType: intent.contentType,
                 size: Number(intent.size),
-                storagePath: intent.storagePath,
+                cloudinaryPublicId: intent.publicId,
+                cloudinaryUrl: secureUrl,
                 createdAt: nowIso(),
                 uploadedBy: user.email
             };
@@ -955,10 +976,9 @@ async function handleAction(action, params, user) {
             const snapshot = await ref.get();
             if (!snapshot.exists) throw new Error("Company file not found.");
             const file = snapshot.data();
-            await storageBucket.file(file.storagePath).delete({ ignoreNotFound: true });
             await ref.delete();
             await audit(name, "Deleted a company file", file.fileName || id);
-            return { success: true, fileId: id };
+            return { success: true, fileId: id, cloudinaryAssetRetained: true };
         }
         case "requestCompanyFilesOtp": {
             const email = emailKey(user.email);
@@ -1029,19 +1049,16 @@ async function handleAction(action, params, user) {
             const snapshot = await db.collection("companyFiles").orderBy("createdAt", "desc").limit(100).get();
             const files = await Promise.all(snapshot.docs.map(async (doc) => {
                 const file = doc.data();
-                const [url] = await storageBucket.file(file.storagePath).getSignedUrl({
-                    version: "v4", action: "read", expires: Date.now() + 5 * 60 * 1000
-                });
                 return {
                     id: doc.id,
                     fileName: file.fileName || "Company file",
                     contentType: file.contentType || "application/octet-stream",
                     size: Number(file.size) || 0,
                     createdAt: file.createdAt || "",
-                    url
+                    url: file.cloudinaryUrl
                 };
             }));
-            return { success: true, files, expiresInSeconds: 300 };
+            return { success: true, files };
         }
         case "get":
             return { success: true, records: (await rows("transactions")) };
@@ -1050,29 +1067,45 @@ async function handleAction(action, params, user) {
         case "createPaymentEvidenceUpload": {
             const contentType = String(params.contentType || "").toLowerCase();
             const fileName = String(params.fileName || "").replace(/[\\/]/g, "_").slice(0, 120);
+            const size = Number(params.size);
             if (!PAYMENT_EVIDENCE_TYPES.has(contentType)) {
                 throw new Error("Upload a PDF, JPEG, or PNG payment receipt.");
             }
             if (!fileName) throw new Error("Choose a payment receipt file.");
+            if (!Number.isInteger(size) || size < 1 || size > PAYMENT_EVIDENCE_MAX_BYTES) {
+                throw new Error("Payment receipts must be no larger than 5 MB.");
+            }
             const id = crypto.randomUUID();
-            const stagingPath = `payment-evidence-staging/${id}`;
+            const publicId = `legacy-builders/payment-evidence/${id}.${cloudinaryFileExtension(fileName, contentType)}`;
             const expiresAt = Date.now() + 10 * 60 * 1000;
-            const [uploadUrl] = await storageBucket.file(stagingPath).getSignedUrl({
-                version: "v4",
-                action: "write",
-                expires: expiresAt,
-                contentType
-            });
+            const upload = { cloudName: CLOUDINARY_CLOUD_NAME, publicId };
             await recordRef("paymentEvidence", id).create({
                 id,
                 email: user.email,
                 fileName,
                 contentType,
-                stagingPath,
+                size,
+                cloudinaryPublicId: publicId,
                 status: "uploading",
                 created_at: nowIso()
             });
-            return { success: true, evidenceId: id, uploadUrl, expiresAt };
+            return { success: true, evidenceId: id, upload, expiresAt };
+        }
+        case "completePaymentEvidenceUpload": {
+            const id = String(params.evidenceId || "");
+            if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Choose a valid payment receipt upload.");
+            const evidenceRef = recordRef("paymentEvidence", id);
+            const snapshot = await evidenceRef.get();
+            if (!snapshot.exists) throw new Error("The payment receipt upload has expired. Start again.");
+            const evidence = snapshot.data();
+            const secureUrl = String(params.secureUrl || "");
+            if (emailKey(evidence.email) !== user.email || evidence.status !== "uploading"
+                || params.publicId !== evidence.cloudinaryPublicId
+                || !isExpectedCloudinaryRawUpload(secureUrl, evidence.cloudinaryPublicId, params.bytes, evidence.size)) {
+                throw new Error("Uploaded receipt details did not match. Please upload the receipt again.");
+            }
+            await evidenceRef.update({ cloudinaryUrl: secureUrl, uploadedAt: nowIso() });
+            return { success: true, evidenceId: id };
         }
         case "getMyPaymentEvidence": {
             const snapshot = await db.collection("paymentEvidence")
@@ -1087,7 +1120,7 @@ async function handleAction(action, params, user) {
                     status: evidence.status || "uploading",
                     created_at: evidence.created_at || "",
                     reviewedAt: evidence.reviewedAt || "",
-                    available: Boolean(evidence.storagePath)
+                    available: Boolean(evidence.cloudinaryUrl)
                 };
             }).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
             return { success: true, receipts };
@@ -1100,17 +1133,16 @@ async function handleAction(action, params, user) {
             if (!snapshot.exists) throw new Error("Payment receipt not found.");
             const evidence = snapshot.data();
             if (emailKey(evidence.email) !== user.email && !await canApproveTransactions(user)) {
-                throw new Error("Access denied. This payment receipt is private.");
+                throw new Error("Access denied. You cannot open this payment receipt.");
             }
-            if (!["pending", "approved", "rejected"].includes(evidence.status) || !evidence.storagePath) {
+            if (!["pending", "approved", "rejected"].includes(evidence.status) || !evidence.cloudinaryUrl) {
                 throw new Error("This payment receipt is not available yet.");
             }
-            const [url] = await storageBucket.file(evidence.storagePath).getSignedUrl({
-                version: "v4",
-                action: "read",
-                expires: Date.now() + 5 * 60 * 1000
-            });
-            return { success: true, url, fileName: evidence.fileName || "payment-receipt" };
+            return {
+                success: true,
+                url: evidence.cloudinaryUrl,
+                fileName: evidence.fileName || "payment-receipt"
+            };
         }
         case "submitTransaction": {
             const type = String(params.type || "");
@@ -1121,8 +1153,6 @@ async function handleAction(action, params, user) {
             if (type === "Loan Repayment" && !params.loanId) throw new Error("Choose the loan being repaid.");
             const evidenceId = String(params.evidenceId || "");
             let evidence = null;
-            let finalEvidencePath = "";
-            let stagedEvidencePath = "";
             if (evidenceId) {
                 if (!/^[0-9a-f-]{36}$/i.test(evidenceId)) throw new Error("Choose a valid payment receipt.");
                 const evidenceRef = recordRef("paymentEvidence", evidenceId);
@@ -1132,42 +1162,12 @@ async function handleAction(action, params, user) {
                     throw new Error("The payment receipt could not be verified. Please upload it again.");
                 }
                 evidence = evidenceSnapshot.data();
-                const stagedFile = storageBucket.file(evidence.stagingPath);
-                let metadata;
-                try {
-                    [metadata] = await stagedFile.getMetadata();
-                } catch (error) {
-                    console.error("Could not verify uploaded payment evidence", error);
-                    throw new Error("The payment receipt upload is missing or could not be verified.");
-                }
-                const fileSize = Number(metadata.size);
-                const contentType = String(metadata.contentType || "").toLowerCase();
-                if (!Number.isFinite(fileSize) || fileSize <= 0 || fileSize > PAYMENT_EVIDENCE_MAX_BYTES
-                    || contentType !== evidence.contentType || !PAYMENT_EVIDENCE_TYPES.has(contentType)) {
-                    try {
-                        await stagedFile.delete({ ignoreNotFound: true });
-                    } catch (cleanupError) {
-                        console.error("Could not remove invalid payment evidence", cleanupError);
-                    }
+                const contentType = String(evidence.contentType || "").toLowerCase();
+                if (!Number.isInteger(Number(evidence.size)) || Number(evidence.size) <= 0 || Number(evidence.size) > PAYMENT_EVIDENCE_MAX_BYTES
+                    || !PAYMENT_EVIDENCE_TYPES.has(contentType) || !evidence.cloudinaryUrl) {
                     await evidenceRef.update({ status: "invalid", rejectedAt: nowIso() });
                     throw new Error("Payment receipts must be a PDF, JPEG, or PNG no larger than 5 MB.");
                 }
-                const [fileHeader] = await stagedFile.download({ start: 0, end: 7 });
-                const isPdf = contentType === "application/pdf" && fileHeader.subarray(0, 5).toString() === "%PDF-";
-                const isPng = contentType === "image/png" && fileHeader.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
-                const isJpeg = contentType === "image/jpeg" && fileHeader.subarray(0, 3).equals(Buffer.from([255, 216, 255]));
-                if (!isPdf && !isPng && !isJpeg) {
-                    try {
-                        await stagedFile.delete({ ignoreNotFound: true });
-                    } catch (cleanupError) {
-                        console.error("Could not remove payment evidence with an invalid file signature", cleanupError);
-                    }
-                    await evidenceRef.update({ status: "invalid", rejectedAt: nowIso() });
-                    throw new Error("The uploaded file does not match its declared receipt format.");
-                }
-                stagedEvidencePath = evidence.stagingPath;
-                finalEvidencePath = `payment-evidence/${evidenceId}`;
-                await stagedFile.copy(finalEvidencePath);
             }
             const id = crypto.randomUUID();
             const submittedAt = nowIso();
@@ -1183,7 +1183,6 @@ async function handleAction(action, params, user) {
                         }
                         tx.update(evidenceRef, {
                             status: "pending",
-                            storagePath: finalEvidencePath,
                             transactionId: id
                         });
                     }
@@ -1202,21 +1201,7 @@ async function handleAction(action, params, user) {
                     });
                 });
             } catch (error) {
-                if (finalEvidencePath) {
-                    try {
-                        await storageBucket.file(finalEvidencePath).delete({ ignoreNotFound: true });
-                    } catch (cleanupError) {
-                        console.error("Could not clean up an unlinked payment receipt", cleanupError);
-                    }
-                }
                 throw error;
-            }
-            if (stagedEvidencePath) {
-                try {
-                    await storageBucket.file(stagedEvidencePath).delete({ ignoreNotFound: true });
-                } catch (error) {
-                    console.error("Could not remove the temporary payment receipt upload", error);
-                }
             }
             await audit(name, `Submitted ${type}`, `KES ${amount.toLocaleString()} — awaiting approval`);
             const pushDelivery = await sendPush(

@@ -2504,7 +2504,7 @@ function renderPendingApprovals(containerId = 'pendingApprovalsList') {
                 ${hasLongMessage ? `<p class="transaction-approval-message-full" hidden>${escapeHtml(message)}</p><button type="button" class="transaction-approval-message-toggle" aria-expanded="false">View full message</button>` : ''}
             </div>
             <div class="transaction-approval-actions">
-                ${t.evidenceId ? `<button type="button" class="secondary-btn" onclick="openPaymentEvidence('${escapeHtml(t.evidenceId)}')">View private receipt</button>` : ''}
+                ${t.evidenceId ? `<button type="button" class="secondary-btn" onclick="openPaymentEvidence('${escapeHtml(t.evidenceId)}')">View receipt</button>` : ''}
                 <button type="button" class="approve-btn" data-approval-action="approve" data-approval-id="${escapeHtml(t.id)}">Approve</button>
                 <button type="button" class="reject-btn" data-approval-action="reject" data-approval-id="${escapeHtml(t.id)}" ${editInfo ? `data-edit-id="${escapeHtml(editInfo.editId)}" data-actor="${escapeHtml(currentUser)}"` : ''}>Reject</button>
             </div>
@@ -2640,21 +2640,54 @@ function toggleApprovalNotice() {
     }
 }
 
-async function uploadPrivatePaymentEvidence(file) {
+async function uploadCloudinaryRawFile(file, upload) {
+    const config = window.cloudinaryConfig || {};
+    if (!upload?.cloudName || !upload?.publicId || !config.uploadPreset) {
+        throw new Error('Cloudinary raw-file uploads are not configured. Check the unsigned upload preset.');
+    }
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    formData.append('upload_preset', config.uploadPreset);
+    formData.append('public_id', upload.publicId);
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(upload.cloudName)}/raw/upload`, {
+        method: 'POST',
+        body: formData
+    });
+    let result;
+    try {
+        result = await response.json();
+    } catch {
+        throw new Error(`Cloudinary returned an invalid response (HTTP ${response.status}).`);
+    }
+    if (!response.ok || result.public_id !== upload.publicId || result.resource_type !== 'raw' || !result.secure_url) {
+        throw new Error(result.error?.message || `File upload failed (HTTP ${response.status}).`);
+    }
+    return result;
+}
+
+async function uploadPaymentEvidence(file) {
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
     if (!allowedTypes.includes(file.type)) throw new Error('Choose a PDF, JPG, or PNG payment receipt.');
     if (!file.size || file.size > 5 * 1024 * 1024) throw new Error('Payment receipts must be no larger than 5 MB.');
+    const header = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+    const isPdf = file.type === 'application/pdf' && new TextDecoder().decode(header.slice(0, 5)) === '%PDF-';
+    const isPng = file.type === 'image/png' && header.length === 8 && header.join(',') === '137,80,78,71,13,10,26,10';
+    const isJpeg = file.type === 'image/jpeg' && header[0] === 255 && header[1] === 216 && header[2] === 255;
+    if (!isPdf && !isPng && !isJpeg) throw new Error('The selected file does not match its declared receipt format.');
     const upload = await callAPI('createPaymentEvidenceUpload', {
         fileName: file.name,
-        contentType: file.type
+        contentType: file.type,
+        size: file.size
     });
-    if (!upload.success) throw new Error(upload.error || 'Could not prepare the private receipt upload.');
-    const response = await fetch(upload.uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file
+    if (!upload.success) throw new Error(upload.error || 'Could not prepare the receipt upload.');
+    const uploaded = await uploadCloudinaryRawFile(file, upload.upload);
+    const completed = await callAPI('completePaymentEvidenceUpload', {
+        evidenceId: upload.evidenceId,
+        publicId: uploaded.public_id,
+        secureUrl: uploaded.secure_url,
+        bytes: uploaded.bytes
     });
-    if (!response.ok) throw new Error(`Receipt upload failed (HTTP ${response.status}). Please try again.`);
+    if (!completed.success) throw new Error(completed.error || 'Could not save the uploaded receipt.');
     return upload.evidenceId;
 }
 
@@ -2721,7 +2754,7 @@ async function addRecord() {
         let evidenceId = '';
         if (evidenceFile) {
             try {
-                evidenceId = await uploadPrivatePaymentEvidence(evidenceFile);
+                evidenceId = await uploadPaymentEvidence(evidenceFile);
             } catch (error) {
                 showToast(error.message || 'Could not upload the payment receipt.', 'error');
                 hideButtonLoading(btn, orig);
@@ -3049,19 +3082,13 @@ async function uploadCompanyFile(event) {
             size: file.size
         });
         if (!upload.success) throw new Error(upload.error || 'Could not prepare the file upload.');
-        let response;
-        try {
-            response = await fetch(upload.uploadUrl, {
-                method: 'PUT',
-                headers: { 'Content-Type': upload.contentType },
-                body: file
-            });
-        } catch (error) {
-            console.error('Company file upload could not reach Firebase Storage:', error);
-            throw new Error('Could not reach Firebase Storage. This is usually a bucket CORS issue. Apply storage-cors.json with `gcloud storage buckets update gs://legacy-builders-group.firebasestorage.app --cors-file=storage-cors.json`, then try again.');
-        }
-        if (!response.ok) throw new Error(`Firebase Storage rejected the upload (HTTP ${response.status}). Check the bucket CORS policy and Storage permissions.`);
-        const saved = await callAPI('completeCompanyFileUpload', { fileId: upload.fileId });
+        const uploaded = await uploadCloudinaryRawFile(file, upload.upload);
+        const saved = await callAPI('completeCompanyFileUpload', {
+            fileId: upload.fileId,
+            publicId: uploaded.public_id,
+            secureUrl: uploaded.secure_url,
+            bytes: uploaded.bytes
+        });
         if (!saved.success) throw new Error(saved.error || 'The file could not be saved.');
         input.value = '';
         status.hidden = false;
@@ -3080,13 +3107,15 @@ async function deleteCompanyFile(fileId) {
         showToast('Only the developer can delete company files.', 'error');
         return;
     }
-    if (!confirm('Delete this company file?')) return;
+    if (!confirm('Remove this file from the app? Its public Cloudinary copy will remain until you delete it in Cloudinary.')) return;
     try {
         const res = await callAPI('deleteCompanyFile', { fileId });
         if (!res.success) throw new Error(res.error || 'Could not delete the file.');
         companyFilesAccessList = companyFilesAccessList.filter(file => file.id !== fileId);
         renderCompanyFilesList();
-        showToast('Company file deleted.', 'success');
+        showToast(res.cloudinaryAssetRetained
+            ? 'Removed from the app. Delete the public file separately in Cloudinary if you want it erased.'
+            : 'Company file deleted.', 'success');
     } catch (error) {
         showToast(error.message || 'Could not delete the file.', 'error');
     }
