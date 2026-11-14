@@ -779,7 +779,7 @@ function showHideDeveloperPortal() {
         devTab.style.display = isDev ? 'flex' : 'none';
         devTab.setAttribute('aria-label', 'Developer portal');
     }
-    if (devSidebar) devSidebar.style.display = 'none';
+    if (devSidebar) devSidebar.style.display = isDev ? 'flex' : 'none';
 }
 
 let developerPortalModal = null;

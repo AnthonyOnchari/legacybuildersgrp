@@ -16398,3 +16398,31 @@ body.finance-ui.dark-mode .company-file-row { border-color: #343a34; background:
     body.finance-ui .company-files-list { max-height: 38vh; }
     body.finance-ui .company-file-upload-controls { align-items: stretch; flex-direction: column; }
 }
+
+/* Shared community backdrop for every signed-in dashboard page. */
+body.finance-ui .app-container.active {
+    background-image:
+        radial-gradient(ellipse at 84% 8%, rgba(209, 230, 204, .46), transparent 38%),
+        linear-gradient(135deg, rgba(237, 245, 234, .67), rgba(244, 247, 241, .72)),
+        url("Assets/connect.jpg");
+    background-position: center, center, center;
+    background-size: auto, auto, cover;
+    background-repeat: no-repeat;
+    background-attachment: local;
+}
+body.finance-ui .scroll-panels,
+body.finance-ui .panel { background-color: transparent; }
+body.finance-ui.dark-mode .app-container.active {
+    background-image:
+        radial-gradient(ellipse at 84% 8%, rgba(43, 91, 61, .3), transparent 38%),
+        linear-gradient(135deg, rgba(5, 12, 8, .78), rgba(9, 17, 12, .82)),
+        url("Assets/connect.jpg");
+}
+body.finance-ui.dark-mode .scroll-panels,
+body.finance-ui.dark-mode .panel { background-color: transparent; }
+body.finance-ui #transactionsPanel.active-panel {
+    box-sizing: border-box;
+    padding: 16px;
+    background: transparent;
+    border-radius: 24px;
+}
